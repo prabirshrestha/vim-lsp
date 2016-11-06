@@ -1,7 +1,7 @@
 let s:save_cpo = &cpo
 set cpo&vim
 
-let s:lsp_clients = {} " { id, opts, req_seq, on_responses, stdout: { max_buffer_size, buffer, next_token, current_content_length, current_content_type } }
+let s:lsp_clients = {} " { id, opts, req_seq, on_notifications, stdout: { max_buffer_size, buffer, next_token, current_content_length, current_content_type } }
 let s:lsp_token_type_contentlength = 'content-length'
 let s:lsp_token_type_contenttype = 'content-type'
 let s:lsp_token_type_message = 'message'
@@ -50,12 +50,14 @@ function! s:_on_lsp_stdout(id, data, event)
                     let l:client.stdout.buffer = l:client.stdout.buffer[l:client.stdout.current_content_length:]
                     let l:client.stdout.next_token = s:lsp_token_type_contentlength
                     let l:response_msg = json_decode(l:response_str)
-                    if has_key(l:response_msg, 'id') && has_key(l:client.on_responses, l:response_msg.id)
-                        call l:client.on_responses[l:response_msg.id](a:id, {
-                            \ 'response': l:response_msg,
-                        \ },
-                        \ 'on_response')
-                        call remove(l:client.on_responses, l:response_msg.id)
+                    if has_key(l:response_msg, 'id')
+                        if has_key(l:client.opts, 'on_notification')
+                            call l:client.opts.on_notification(a:id, l:response_msg, 'on_notification')
+                        endif
+                        if has_key(l:client.on_notifications, l:response_msg.id)
+                            call l:client.on_notifications[l:response_msg.id](a:id, l:response_msg, 'on_notification')
+                            call remove(l:client.on_notifications, l:response_msg.id)
+                        endif
                     endif
                     continue
                 else
@@ -105,7 +107,7 @@ function! s:lsp_start(opts)
         \ 'id': l:lsp_client_id,
         \ 'opts': a:opts,
         \ 'req_seq': 0,
-        \ 'on_responses': {},
+        \ 'on_notifications': {},
         \ 'stdout': {
             \ 'max_buffer_size': l:max_buffer_size,
             \ 'buffer': '',
@@ -120,7 +122,7 @@ function! s:lsp_stop(id)
     call lsp#utils#job#stop(id)
 endfunction
 
-function! s:lsp_send_request(id, opts) " opts = { method, params?, on_response }
+function! s:lsp_send_request(id, opts) " opts = { method, params?, on_notification }
     if has_key(s:lsp_clients, a:id)
         let l:client = s:lsp_clients[a:id]
 
@@ -135,8 +137,8 @@ function! s:lsp_send_request(id, opts) " opts = { method, params?, on_response }
         let l:json = json_encode(l:msg)
         let l:req_data = 'Content-Length: ' . len(l:json) . "\r\n\r\n" . l:json
 
-        if has_key(a:opts, 'on_response')
-            let l:client.on_responses[l:req_seq] = a:opts.on_response
+        if has_key(a:opts, 'on_notification')
+            let l:client.on_notifications[l:req_seq] = a:opts.on_notification
         endif
 
         call lsp#utils#job#send(l:client.id, l:req_data)

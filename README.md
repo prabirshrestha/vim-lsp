@@ -18,15 +18,20 @@ function! s:on_exit(id, status, event)
     echom 'lsp('.a:id.'):exit:'.a:status
 endfunction
 
-function! s:on_res1(id, data, event)
-    echom 'res1'. json_encode(a:data)
+function! s:on_notification(id, data, event)
+    echom 'lsp('.a:id.'):notification:notification receieved'
+endfunction
+
+function! s:on_notification1(id, data, event)
+    echom 'lsp('.a:id.'):notification1:'json_encode(a:data)
 endfunction
 
 " go get github.com/sourcegraph/go-langserver/langserver/cmd/langserver-go
 let s:lsp_id = lsp#lspClient#start({
     \ 'cmd': ['langserver-go', '-trace', '-logfile', expand('~/Desktop/langserver-go.log')],
     \ 'on_stderr': function('s:on_stderr'),
-    \ 'on_exit': function('s:on_exit')
+    \ 'on_exit': function('s:on_exit'),
+    \ 'on_notification': function('s:on_notification')
 \ })
 
 if s:lsp_id > 0
@@ -37,7 +42,7 @@ if s:lsp_id > 0
             \ 'capabilities': {},
             \ 'rootPath': 'file:///D:/go/src/github.com/nsf/gocode'
         \ },
-        \ 'on_response': function('s:on_res1')
+        \ 'on_notification': function('s:on_notification1')
    \ })
 else
     echom 'failed to start lsp server'
