@@ -153,6 +153,10 @@ function! s:lsp_get_last_request_id(id)
     return s:lsp_clients[a:id].req_seq
 endfunction
 
+function! s:lsp_is_error(notification)
+    return has_key(a:notification, 'error')
+endfunction
+
 " public apis {{{
 
 function! lsp#lspClient#start(opts)
@@ -169,6 +173,10 @@ endfunction
 
 function! lsp#lspClient#get_last_request_id(client_id)
     return s:lsp_get_last_request_id(a:client_id)
+endfunction
+
+function! lsp#lspClient#is_error(notification)
+    return s:lsp_is_error(a:notification)
 endfunction
 
 " }}}
