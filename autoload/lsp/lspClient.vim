@@ -7,6 +7,10 @@ let s:lsp_token_type_contenttype = 'content-type'
 let s:lsp_token_type_message = 'message'
 let s:lsp_default_max_buffer = -1
 
+let s:lsp_text_document_sync_kind_none = 0
+let s:lsp_text_document_sync_kind_full = 1
+let s:lsp_text_document_sync_kind_incremental = 2
+
 function! s:_on_lsp_stdout(id, data, event)
     if has_key(s:lsp_clients, a:id)
         let l:client = s:lsp_clients[a:id]
@@ -160,6 +164,10 @@ function! s:lsp_is_error(notification)
 endfunction
 
 " public apis {{{
+
+let lsp#lspClient#text_document_sync_kind_none = s:lsp_text_document_sync_kind_none
+let lsp#lspClient#text_document_sync_kind_full = s:lsp_text_document_sync_kind_full
+let lsp#lspClient#text_document_sync_kind_incremental = s:lsp_text_document_sync_kind_incremental
 
 function! lsp#lspClient#start(opts)
     return s:lsp_start(a:opts)
