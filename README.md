@@ -19,7 +19,11 @@ function! s:on_exit(id, status, event)
 endfunction
 
 function! s:on_notification(id, data, event)
-    echom 'lsp('.a:id.'):notification:notification receieved'
+    if lsp#lspClient#is_error(a:data.response)
+        echom 'lsp('.a:id.'):notification:notification error receieved for '.a:data.request.method
+    else
+        echom 'lsp('.a:id.'):notification:notification success receieved for '.a:data.request.method
+    endif
 endfunction
 
 function! s:on_notification1(id, data, event)
@@ -27,24 +31,26 @@ function! s:on_notification1(id, data, event)
 endfunction
 
 " go get github.com/sourcegraph/go-langserver/langserver/cmd/langserver-go
-let s:lsp_id = lsp#lspClient#start({
+let g:lsp_id = lsp#lspClient#start({
     \ 'cmd': ['langserver-go', '-trace', '-logfile', expand('~/Desktop/langserver-go.log')],
     \ 'on_stderr': function('s:on_stderr'),
     \ 'on_exit': function('s:on_exit'),
     \ 'on_notification': function('s:on_notification')
 \ })
 
-if s:lsp_id > 0
+if g:lsp_id > 0
     echom 'lsp server running'
-    call lsp#lspClient#send(s:lsp_id, {
+    call lsp#lspClient#send(g:lsp_id, {
         \ 'method': 'initialize',
         \ 'params': {
             \ 'capabilities': {},
-            \ 'rootPath': 'file:///D:/go/src/github.com/nsf/gocode'
+            \ 'rootPath': 'file://D:/go/src/github.com/nsf/gocode'
         \ },
         \ 'on_notification': function('s:on_notification1')
    \ })
 else
     echom 'failed to start lsp server'
 endif
+
+" call lsp#lspClient#stop(g:lsp_id)
 ```
