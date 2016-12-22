@@ -1,15 +1,16 @@
 let s:save_cpo = &cpo
 set cpo&vim
 
-let s:lsp_clients = {} " { id, opts, req_seq, on_notifications: { request, on_notification }, stdout: { max_buffer_size, buffer, next_token, current_content_length, current_content_type } }
-let s:lsp_token_type_contentlength = 'content-length'
-let s:lsp_token_type_contenttype = 'content-type'
-let s:lsp_token_type_message = 'message'
+let s:lsp_clients = {} " { id, opts, req_seq, on_notifications: { request, on_notification }, stdout: { max_buffer_size, buffer, content_length, headers } }
 let s:lsp_default_max_buffer = -1
 
 let s:lsp_text_document_sync_kind_none = 0
 let s:lsp_text_document_sync_kind_full = 1
 let s:lsp_text_document_sync_kind_incremental = 2
+
+function! s:trim(str) abort
+  return matchstr(a:str,'^\s*\zs.\{-}\ze\s*$')
+endfunction
 
 function! s:_on_lsp_stdout(id, data, event)
     if has_key(s:lsp_clients, a:id)
@@ -23,50 +24,58 @@ function! s:_on_lsp_stdout(id, data, event)
         endif
 
         while 1
-            if l:client.stdout.next_token == s:lsp_token_type_contentlength
-                let l:new_line_index = stridx(l:client.stdout.buffer, "\r\n")
-                if l:new_line_index >= 0
-                    let l:content_length_str = l:client.stdout.buffer[:l:new_line_index - 1]
-                    let l:client.stdout.buffer = l:client.stdout.buffer[l:new_line_index + 2:]
-                    let l:client.stdout.current_content_length = str2nr(split(l:content_length_str, ':')[1], 10)
-                    let l:client.stdout.next_token = s:lsp_token_type_contenttype
+            if l:client.stdout.content_length == -1         " if content-length is -1 we haven't parsed the headers
+                " wait for all the headers to arrive
+                let l:header_end_index = stridx(l:client.stdout.buffer, "\r\n\r\n")
+                if l:header_end_index >= 0
+                    for l:header in split(l:client.stdout.buffer[:l:header_end_index - 1], "\r\n")
+                        let l:header_key_value_seperator = stridx(l:header, ":")
+                        let l:header_key = s:trim(l:header[:l:header_key_value_seperator - 1])
+                        let l:header_value = s:trim(l:header[l:header_key_value_seperator + 1:])
+                        if l:header_key ==? 'Content-Length'
+                            let l:client.stdout.content_length = str2nr(l:header_value, 10)
+                        endif
+                        let l:client.stdout.headers[l:header_key] = s:trim(l:header_value)
+                    endfor
+                    let l:client.stdout.buffer = l:client.stdout.buffer[l:header_end_index + 4:]
                     continue
                 else
                     " wait for next buffer to arrive
                     break
                 endif
-            elseif l:client.stdout.next_token == s:lsp_token_type_contenttype
-                let l:new_line_index = stridx(l:client.stdout.buffer, "\r\n")
-                if l:new_line_index >= 0
-                    let l:content_type_str = l:client.stdout.buffer[:l:new_line_index - 1]
-                    let l:client.stdout.buffer = l:client.stdout.buffer[l:new_line_index + 4:]
-                    let l:client.stdout.current_content_type = l:content_type_str
-                    let l:client.stdout.next_token = s:lsp_token_type_message
-                    continue
-                else
-                    " wait for next buffer to arrive
-                    break
-                endif
-            else " we are reading a message
-                if len(l:client.stdout.buffer) >= l:client.stdout.current_content_length
-                    " we have complete message
-                    let l:response_str = l:client.stdout.buffer[:l:client.stdout.current_content_length - 1]
-                    let l:client.stdout.buffer = l:client.stdout.buffer[l:client.stdout.current_content_length:]
-                    let l:client.stdout.next_token = s:lsp_token_type_contentlength
+            else
+                if len(l:client.stdout.buffer) >= l:client.stdout.content_length
+                    " we have the full message
+                    let l:response_str = l:client.stdout.buffer[:l:client.stdout.content_length - 1]
+                    let l:client.stdout.buffer = l:client.stdout.buffer[l:client.stdout.content_length:]
+                    let l:client.stdout.content_length = -1 " reset since we are done reading the current message
                     let l:response_msg = json_decode(l:response_str)
-                    if has_key(l:response_msg, 'id') && has_key(l:client.on_notifications, l:response_msg.id)
-                        let l:on_notification_data = { 'request': l:client.on_notifications[l:response_msg.id].request, 'response': l:response_msg }
+                    if has_key(l:response_msg, 'id')
+                        let l:on_notification_data = { 'response': l:response_msg }
+                        if has_key(l:client.on_notifications, l:response_msg.id)
+                            " requests are absent for server instantiated events
+                            let l:on_notification_data.request = l:client.on_notifications[l:response_msg.id].request
+                        endif
                         if has_key(l:client.opts, 'on_notification')
                             call l:client.opts.on_notification(a:id, l:on_notification_data, 'on_notification')
                         endif
                         if has_key(l:client.on_notifications, 'on_notification')
                             call l:client.on_notifications[l:response_msg.id](a:id, l:on_notification_data, 'on_notification')
                         endif
-                        call remove(l:client.on_notifications, l:response_msg.id)
+                        if has_key(l:client.on_notifications, l:response_msg.id)
+                            " requests are absent for server instantiated events
+                            call remove(l:client.on_notifications, l:response_msg.id)
+                        endif
                     endif
-                    continue
+                    if len(l:client.stdout.buffer) > 0
+                        " we have more data in the buffer so try parsing the new headers from top
+                        continue
+                    else
+                        " we are done processing the message here so stop
+                        break
+                    endif
                 else
-                    " wait for next buffer to arrive since we have incomplete message
+                    " we don't have the entire message body, so wait for the next buffer
                     break
                 endif
             endif
@@ -116,7 +125,8 @@ function! s:lsp_start(opts)
         \ 'stdout': {
             \ 'max_buffer_size': l:max_buffer_size,
             \ 'buffer': '',
-            \ 'next_token': s:lsp_token_type_contentlength,
+            \ 'content_length': -1,
+            \ 'headers': {}
         \ },
     \ }
 
@@ -163,6 +173,10 @@ function! s:lsp_is_error(notification)
     return has_key(a:notification, 'error')
 endfunction
 
+function! s:is_server_instantiated_notification(notification)
+    return !has_key(a:notification, 'request')
+endfunction
+
 " public apis {{{
 
 let lsp#lspClient#text_document_sync_kind_none = s:lsp_text_document_sync_kind_none
@@ -187,6 +201,10 @@ endfunction
 
 function! lsp#lspClient#is_error(notification)
     return s:lsp_is_error(a:notification)
+endfunction
+
+function! lsp#lspClient#is_server_instantiated_notification(notification)
+    return s:is_server_instantiated_notification(a:notification)
 endfunction
 
 " }}}
