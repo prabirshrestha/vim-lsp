@@ -20,7 +20,7 @@ function! s:_on_lsp_stdout(id, data, event) abort
 
         if l:client.stdout.max_buffer_size != -1 && len(l:client.stdout.buffer) > l:client.stdout.max_buffer_size
             echom 'lsp: reached max buffer size'
-            call lsp#utils#job#stop(a:id)
+            call async#job#stop(a:id)
         endif
 
         while 1
@@ -106,7 +106,7 @@ function! s:lsp_start(opts) abort
         return -1
     endif
 
-    let l:lsp_client_id = lsp#utils#job#start(a:opts.cmd, {
+    let l:lsp_client_id = async#job#start(a:opts.cmd, {
         \ 'on_stdout': function('s:_on_lsp_stdout'),
         \ 'on_stderr': function('s:_on_lsp_stderr'),
         \ 'on_exit': function('s:_on_lsp_exit'),
@@ -134,7 +134,7 @@ function! s:lsp_start(opts) abort
 endfunction
 
 function! s:lsp_stop(id) abort
-    call lsp#utils#job#stop(a:id)
+    call async#job#stop(a:id)
 endfunction
 
 function! s:lsp_send_request(id, opts) abort " opts = { method, params?, on_notification }
@@ -157,7 +157,7 @@ function! s:lsp_send_request(id, opts) abort " opts = { method, params?, on_noti
             let l:client.on_notifications[l:req_seq].on_notification = a:opts.on_notification
         endif
 
-        call lsp#utils#job#send(l:client.id, l:req_data)
+        call async#job#send(l:client.id, l:req_data)
 
         return l:req_seq
     else
