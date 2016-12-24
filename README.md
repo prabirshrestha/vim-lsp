@@ -21,6 +21,10 @@ endfunction
 function! s:on_notification(id, data, event)
     if lsp#lspClient#is_error(a:data.response)
         echom 'lsp('.a:id.'):notification:notification error receieved for '.a:data.request.method
+    elseif lsp#lspClient#is_server_instantiated_notification(a:data)
+        " request key will not be present in a:data
+        " make sure to check before accessing a:data.request in order to prevent unhandled errors
+        echom 'lsp('.a:id.'):notification:notification success receieved for '.json_encode(a:data.response)
     else
         echom 'lsp('.a:id.'):notification:notification success receieved for '.a:data.request.method
     endif
@@ -44,7 +48,7 @@ if g:lsp_id > 0
         \ 'method': 'initialize',
         \ 'params': {
             \ 'capabilities': {},
-            \ 'rootPath': 'file://D:/go/src/github.com/nsf/gocode'
+            \ 'rootPath': 'file:///D:/go/src/github.com/nsf/gocode'
         \ },
         \ 'on_notification': function('s:on_notification1')
    \ })
