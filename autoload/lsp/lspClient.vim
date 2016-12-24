@@ -12,7 +12,7 @@ function! s:trim(str) abort
   return matchstr(a:str,'^\s*\zs.\{-}\ze\s*$')
 endfunction
 
-function! s:_on_lsp_stdout(id, data, event)
+function! s:_on_lsp_stdout(id, data, event) abort
     if has_key(s:lsp_clients, a:id)
         let l:client = s:lsp_clients[a:id]
 
@@ -83,7 +83,7 @@ function! s:_on_lsp_stdout(id, data, event)
     endif
 endfunction
 
-function! s:_on_lsp_stderr(id, data, event)
+function! s:_on_lsp_stderr(id, data, event) abort
     if has_key(s:lsp_clients, a:id)
         let l:client = s:lsp_clients[a:id]
         if has_key(l:client.opts, 'on_stderr')
@@ -92,7 +92,7 @@ function! s:_on_lsp_stderr(id, data, event)
     endif
 endfunction
 
-function! s:_on_lsp_exit(id, status, event)
+function! s:_on_lsp_exit(id, status, event) abort
     if has_key(s:lsp_clients, a:id)
         let l:client = s:lsp_clients[a:id]
         if has_key(l:client.opts, 'on_exit')
@@ -101,7 +101,7 @@ function! s:_on_lsp_exit(id, status, event)
     endif
 endfunction
 
-function! s:lsp_start(opts)
+function! s:lsp_start(opts) abort
     if !has_key(a:opts, 'cmd')
         return -1
     endif
@@ -133,11 +133,11 @@ function! s:lsp_start(opts)
     return l:lsp_client_id
 endfunction
 
-function! s:lsp_stop(id)
+function! s:lsp_stop(id) abort
     call lsp#utils#job#stop(a:id)
 endfunction
 
-function! s:lsp_send_request(id, opts) " opts = { method, params?, on_notification }
+function! s:lsp_send_request(id, opts) abort " opts = { method, params?, on_notification }
     if has_key(s:lsp_clients, a:id)
         let l:client = s:lsp_clients[a:id]
 
@@ -165,15 +165,15 @@ function! s:lsp_send_request(id, opts) " opts = { method, params?, on_notificati
     endif
 endfunction
 
-function! s:lsp_get_last_request_id(id)
+function! s:lsp_get_last_request_id(id) abort
     return s:lsp_clients[a:id].req_seq
 endfunction
 
-function! s:lsp_is_error(notification)
+function! s:lsp_is_error(notification) abort
     return has_key(a:notification, 'error')
 endfunction
 
-function! s:is_server_instantiated_notification(notification)
+function! s:is_server_instantiated_notification(notification) abort
     return !has_key(a:notification, 'request')
 endfunction
 
@@ -183,23 +183,23 @@ let lsp#lspClient#text_document_sync_kind_none = s:lsp_text_document_sync_kind_n
 let lsp#lspClient#text_document_sync_kind_full = s:lsp_text_document_sync_kind_full
 let lsp#lspClient#text_document_sync_kind_incremental = s:lsp_text_document_sync_kind_incremental
 
-function! lsp#lspClient#start(opts)
+function! lsp#lspClient#start(opts) abort
     return s:lsp_start(a:opts)
 endfunction
 
-function! lsp#lspClient#stop(client_id)
+function! lsp#lspClient#stop(client_id) abort
     return s:lsp_stop(a:client_id)
 endfunction
 
-function! lsp#lspClient#send(client_id, opts)
+function! lsp#lspClient#send(client_id, opts) abort
     return s:lsp_send_request(a:client_id, a:opts)
 endfunction
 
-function! lsp#lspClient#get_last_request_id(client_id)
+function! lsp#lspClient#get_last_request_id(client_id) abort
     return s:lsp_get_last_request_id(a:client_id)
 endfunction
 
-function! lsp#lspClient#is_error(notification)
+function! lsp#lspClient#is_error(notification) abort
     return s:lsp_is_error(a:notification)
 endfunction
 
