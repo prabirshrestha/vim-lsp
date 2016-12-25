@@ -112,6 +112,10 @@ function! s:lsp_start(opts) abort
         \ 'on_exit': function('s:_on_lsp_exit'),
     \ })
 
+    if l:lsp_client_id <= 0
+        return l:lsp_client_id
+    endif
+
     let l:max_buffer_size = s:lsp_default_max_buffer
     if has_key(a:opts, 'max_buffer_size')
         let l:max_buffer_size = a:opts.max_buffer_size
