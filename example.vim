@@ -84,6 +84,54 @@ function! s:get_position() abort
     return { 'line': line('.') - 1, 'character': col('.') -1 }
 endfunction
 
+let s:symbol_kinds = {
+    \ '1': 'file',
+    \ '2': 'module',
+    \ '3': 'namespace',
+    \ '4': 'package',
+    \ '5': 'class',
+    \ '6': 'method',
+    \ '7': 'property',
+    \ '8': 'field',
+    \ '9': 'constructor',
+    \ '10': 'enum',
+    \ '11': 'interface',
+    \ '12': 'function',
+    \ '13': 'variable',
+    \ '14': 'constant',
+    \ '15': 'string',
+    \ '16': 'number',
+    \ '17': 'boolean',
+    \ '18': 'array',
+    \ }
+
+function s:get_symbol_text_from_kind(kind)
+    if has_key(s:symbol_kinds, a:kind)
+        return s:symbol_kinds[a:kind]
+    else
+        return 'unknown symbol ' . a:kind
+    endif
+endfunction
+
+function s:lsp_symbols_to_loclist(symbols) abort
+    let l:list = []
+    for l:symbol in a:symbols
+        let l:location = l:symbol.location
+        if s:is_file_uri(l:location.uri)
+            let l:path = s:uri_to_path(l:location.uri)
+            let l:bufnr = bufnr(path)
+            let l:line = l:location.range.start.line + 1
+            call add(l:list, {
+                \ 'filename': s:uri_to_path(l:location.uri),
+                \ 'lnum': l:line,
+                \ 'col': l:location.range.start.character + 1,
+                \ 'text': s:get_symbol_text_from_kind(l:symbol.kind) . ' : ' . l:symbol.name
+                \ })
+        endif
+    endfor
+    return l:list
+endfunction
+
 function! s:start_lsp() abort
     if s:lsp_id <= 0
         let l:tsconfig_json_path = s:find_nearest_file(bufnr('%'), 'tsconfig.json')
@@ -219,13 +267,48 @@ function! s:on_find_references(id, data, event) abort
     endif
 endfunction
 
+function! s:find_document_symbols() abort
+    if !s:supports_capability('documentSymbolProvider')
+        echom 'FindDocumentSymbols not supported by the language server'
+        return
+    endif
+    let s:lsp_last_request_id = lsp#client#send(s:lsp_id, {
+        \ 'method': 'textDocument/documentSymbol',
+        \ 'params': {
+        \   'textDocument': s:get_text_document_identifier(),
+        \ },
+        \ 'on_notification': function('s:on_find_document_symbols')
+        \})
+    echom 'Finding document symbols'
+endfunction
+
+function! s:on_find_document_symbols(id, data, event) abort
+    if lsp#client#is_error(a:data.response)
+        echom 'error occurred finding document symbols'. json_encode(a:data)
+        return
+    endif
+
+    if !has_key(a:data.response, 'result')  || len(a:data.response.result) == 0
+        echom 'no document symbols found'
+        return
+    endif
+
+    let l:locations = s:lsp_symbols_to_loclist(a:data.response.result)
+
+    call setloclist(0, l:locations, 'r')
+
+    if !empty(l:locations)
+        lwindow
+    endif
+endfunction
+
 function s:get_capabilities() abort
     return s:lsp_init_capabilities
 endfunction
 
 function s:supports_capability(name) abort
     let l:capabilities = s:get_capabilities()
-    if empty(l:capabilities) || !has_key(l:capabilities, 'referencesProvider') || l:capabilities.referencesProvider != v:true
+    if empty(l:capabilities) || !has_key(l:capabilities, a:name) || l:capabilities.referencesProvider != v:true
         return 0
     else
         return 1
@@ -235,6 +318,7 @@ endfunction
 command! GetCapabilities :echom json_encode(s:get_capabilities())
 command! GoToDefinition call s:goto_definition()
 command! FindReferences call s:find_references()
+command! FindDocumentSymbols call s:find_document_symbols()
 
 augroup lsp_ts
     autocmd!
