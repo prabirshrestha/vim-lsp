@@ -88,13 +88,13 @@ function! s:start_lsp() abort
     if s:lsp_id <= 0
         let l:tsconfig_json_path = s:find_nearest_file(bufnr('%'), 'tsconfig.json')
         if !empty(l:tsconfig_json_path)
-            let s:lsp_id = lsp#lspClient#start({
+            let s:lsp_id = lsp#client#start({
                 \ 'cmd': s:cmd,
                 \ 'on_stderr': function('s:on_stderr'),
                 \ 'on_exit': function('s:on_exit'),
                 \ })
             if s:lsp_id > 0
-                let s:lsp_last_request_id = lsp#lspClient#send(s:lsp_id, {
+                let s:lsp_last_request_id = lsp#client#send(s:lsp_id, {
                     \ 'method': 'initialize',
                     \ 'params': {
                     \   'capabilities': {},
@@ -122,13 +122,13 @@ function! s:on_exit(id, status, event) abort
 endfunction
 
 function! s:on_initialize(id, data, event) abort
-    if lsp#lspClient#is_error(a:data.response)
+    if lsp#client#is_error(a:data.response)
         let s:lsp_init_response = {}
     else
         let s:lsp_init_capabilities = a:data.response.result.capabilities
         if s:lsp_last_request_id > 0
             " javascript-typescript-langserver doesn't support this method so don't call it
-            " let s:lsp_last_request_id = lsp#lspClient#send(s:lsp_id, {
+            " let s:lsp_last_request_id = lsp#client#send(s:lsp_id, {
             "     \ 'method': 'textDocument/didOpen',
             "     \ 'params': {
             "     \   'textDocument': s:get_text_document(),
@@ -144,7 +144,7 @@ function! s:goto_definition() abort
         echom 'Go to definition not supported by the language server'
         return
     endif
-    let s:lsp_last_request_id = lsp#lspClient#send(s:lsp_id, {
+    let s:lsp_last_request_id = lsp#client#send(s:lsp_id, {
         \ 'method': 'textDocument/definition',
         \ 'params': {
         \   'textDocument': s:get_text_document_identifier(),
@@ -155,7 +155,7 @@ function! s:goto_definition() abort
 endfunction
 
 function! s:on_goto_definition(id, data, event) abort
-    if lsp#lspClient#is_error(a:data.response)
+    if lsp#client#is_error(a:data.response)
         echom 'error occurred going to definition'. json_encode(a:data)
         return
     endif
@@ -180,7 +180,7 @@ function! s:find_references() abort
         echom 'FindReferences not supported by the language server'
         return
     endif
-    let s:lsp_last_request_id = lsp#lspClient#send(s:lsp_id, {
+    let s:lsp_last_request_id = lsp#client#send(s:lsp_id, {
         \ 'method': 'textDocument/references',
         \ 'params': s:get_reference_params(),
         \ 'on_notification': function('s:on_find_references')
@@ -188,7 +188,7 @@ function! s:find_references() abort
 endfunction
 
 function! s:on_find_references(id, data, event) abort
-    if lsp#lspClient#is_error(a:data.response)
+    if lsp#client#is_error(a:data.response)
         echom 'error occurred finding references'. json_encode(a:data)
         return
     endif

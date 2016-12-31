@@ -185,31 +185,31 @@ endfunction
 
 " public apis {{{
 
-let lsp#lspClient#text_document_sync_kind_none = s:lsp_text_document_sync_kind_none
-let lsp#lspClient#text_document_sync_kind_full = s:lsp_text_document_sync_kind_full
-let lsp#lspClient#text_document_sync_kind_incremental = s:lsp_text_document_sync_kind_incremental
+let lsp#client#text_document_sync_kind_none = s:lsp_text_document_sync_kind_none
+let lsp#client#text_document_sync_kind_full = s:lsp_text_document_sync_kind_full
+let lsp#client#text_document_sync_kind_incremental = s:lsp_text_document_sync_kind_incremental
 
-function! lsp#lspClient#start(opts) abort
+function! lsp#client#start(opts) abort
     return s:lsp_start(a:opts)
 endfunction
 
-function! lsp#lspClient#stop(client_id) abort
+function! lsp#client#stop(client_id) abort
     return s:lsp_stop(a:client_id)
 endfunction
 
-function! lsp#lspClient#send(client_id, opts) abort
+function! lsp#client#send(client_id, opts) abort
     return s:lsp_send_request(a:client_id, a:opts)
 endfunction
 
-function! lsp#lspClient#get_last_request_id(client_id) abort
+function! lsp#client#get_last_request_id(client_id) abort
     return s:lsp_get_last_request_id(a:client_id)
 endfunction
 
-function! lsp#lspClient#is_error(notification) abort
+function! lsp#client#is_error(notification) abort
     return s:lsp_is_error(a:notification)
 endfunction
 
-function! lsp#lspClient#is_server_instantiated_notification(notification)
+function! lsp#client#is_server_instantiated_notification(notification)
     return s:is_server_instantiated_notification(a:notification)
 endfunction
 
