@@ -1,7 +1,7 @@
 let s:save_cpo = &cpo
 set cpo&vim
 
-let s:lsp_clients = {} " { id, opts, req_seq, on_notifications: { request, on_notification }, stdout: { max_buffer_size, buffer, content_length, headers } }
+let s:lsp_clients = {} " { id, opts, req_seq, on_notifications: { 'req_seq': { request, on_notification } }, stdout: { max_buffer_size, buffer, content_length, headers } }
 let s:lsp_default_max_buffer = -1
 
 let s:lsp_text_document_sync_kind_none = 0
@@ -57,10 +57,12 @@ function! s:_on_lsp_stdout(id, data, event) abort
                             let l:on_notification_data.request = l:client.on_notifications[l:response_msg.id].request
                         endif
                         if has_key(l:client.opts, 'on_notification')
+                            " call the client's on_notification
                             call l:client.opts.on_notification(a:id, l:on_notification_data, 'on_notification')
                         endif
-                        if has_key(l:client.on_notifications, 'on_notification')
-                            call l:client.on_notifications[l:response_msg.id](a:id, l:on_notification_data, 'on_notification')
+                        if has_key(l:client.on_notifications, l:response_msg.id) && has_key(l:client.on_notifications[l:response_msg.id], 'on_notification')
+                            " call on notification registered during send
+                            call l:client.on_notifications[l:response_msg.id].on_notification(a:id, l:on_notification_data, 'on_notification')
                         endif
                         if has_key(l:client.on_notifications, l:response_msg.id)
                             " requests are absent for server instantiated events
