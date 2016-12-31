@@ -118,7 +118,7 @@ function! s:on_stderr(id, data, event) abort
 endfunction
 
 function! s:on_exit(id, status, event) abort
-    call s:on_notification_log(a:id, a:status, a:event)
+    echom 'language server exited with code ' . a:status . '. Try uncommenting s:on_stderr to see more details'
 endfunction
 
 function! s:on_initialize(id, data, event) abort
