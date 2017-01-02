@@ -302,6 +302,42 @@ function! s:on_find_document_symbols(id, data, event) abort
     endif
 endfunction
 
+function! s:find_workspace_symbols() abort
+    if !s:supports_capability('workspaceSymbolProvider')
+        echom 'FindWorkspaceSymbols not supported by the language server'
+        return
+    endif
+    let l:query = input('query>')
+    let s:lsp_last_request_id = lsp#client#send(s:lsp_id, {
+        \ 'method': 'workspace/symbol',
+        \ 'params': {
+        \   'query': l:query,
+        \ },
+        \ 'on_notification': function('s:on_find_workspace_symbols')
+        \})
+    echom 'Finding workspace symbols'
+endfunction
+
+function! s:on_find_workspace_symbols(id, data, event) abort
+    if lsp#client#is_error(a:data.response)
+        echom 'error occurred finding workspace symbols'. json_encode(a:data)
+        return
+    endif
+
+    if !has_key(a:data.response, 'result')  || len(a:data.response.result) == 0
+        echom 'no workspace symbols found'
+        return
+    endif
+
+    let l:locations = s:lsp_symbols_to_loclist(a:data.response.result)
+
+    call setloclist(0, l:locations, 'r')
+
+    if !empty(l:locations)
+        lwindow
+    endif
+endfunction
+
 function s:get_capabilities() abort
     return s:lsp_init_capabilities
 endfunction
@@ -319,6 +355,7 @@ command! GetCapabilities :echom json_encode(s:get_capabilities())
 command! GoToDefinition call s:goto_definition()
 command! FindReferences call s:find_references()
 command! FindDocumentSymbols call s:find_document_symbols()
+command! FindWorkspaceSymbols call s:find_workspace_symbols()
 
 augroup lsp_ts
     autocmd!
