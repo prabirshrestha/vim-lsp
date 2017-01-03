@@ -223,6 +223,41 @@ function! s:on_goto_definition(id, data, event) abort
     endif
 endfunction
 
+function! s:hover() abort
+    if !s:supports_capability('hoverProvider')
+        echom 'Hover not supported by the language server'
+        return
+    endif
+    let s:lsp_last_request_id = lsp#client#send(s:lsp_id, {
+        \ 'method': 'textDocument/hover',
+        \ 'params': {
+        \   'textDocument': s:get_text_document_identifier(),
+        \   'position': s:get_position(),
+        \ },
+        \ 'on_notification': function('s:on_hover')
+        \})
+endfunction
+
+function! s:on_hover(id, data, event) abort
+    if lsp#client#is_error(a:data.response)
+        echom 'error occurred going getting hover information '. json_encode(a:data)
+        return
+    endif
+    if !has_key(a:data.response, 'result')  || len(a:data.response.result) == 0
+        echom 'no hover result found'
+        return
+    endif
+    let l:response = []
+    for l:content in a:data.response.result.contents
+        if type(l:content) == v:t_string
+            let l:response += [l:content]
+        else
+            let l:response += [l:content.value]
+        endif
+    endfor
+    echom join(l:response, "\n")
+endfunction
+
 function! s:find_references() abort
     if !s:supports_capability('referencesProvider')
         echom 'FindReferences not supported by the language server'
@@ -353,6 +388,7 @@ endfunction
 
 command! GetCapabilities :echom json_encode(s:get_capabilities())
 command! GoToDefinition call s:goto_definition()
+command! Hover call s:hover()
 command! FindReferences call s:find_references()
 command! FindDocumentSymbols call s:find_document_symbols()
 command! FindWorkspaceSymbols call s:find_workspace_symbols()
