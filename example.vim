@@ -1,7 +1,13 @@
+" npm i -g javascript-typescript-langserver
+if has('win32') || has('win64')
+    let s:cmd = ['cmd', '/c', 'javascript-typescript-stdio']
+else
+    let s:cmd = ['sh', '-c', 'javascript-typescript-stdio']
+endif
+
 let s:lsp_id = 0
 let s:lsp_init_capabilities = {}
 let s:lsp_last_request_id = 0
-let s:cmd = ['node', expand('~/tmp/javascript-typescript-langserver/lib/language-server-stdio.js')]
 
 " Given a buffer and a filename, find the nearest file by searching upwards
 " through the paths relative to the given buffer.
