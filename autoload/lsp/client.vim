@@ -4,10 +4,6 @@ set cpo&vim
 let s:lsp_clients = {} " { id, opts, req_seq, on_notifications: { 'req_seq': { request, on_notification } }, stdout: { max_buffer_size, buffer, content_length, headers } }
 let s:lsp_default_max_buffer = -1
 
-let s:lsp_text_document_sync_kind_none = 0
-let s:lsp_text_document_sync_kind_full = 1
-let s:lsp_text_document_sync_kind_incremental = 2
-
 function! s:trim(str) abort
   return matchstr(a:str,'^\s*\zs.\{-}\ze\s*$')
 endfunction
@@ -184,10 +180,6 @@ function! s:is_server_instantiated_notification(notification) abort
 endfunction
 
 " public apis {{{
-
-let lsp#client#text_document_sync_kind_none = s:lsp_text_document_sync_kind_none
-let lsp#client#text_document_sync_kind_full = s:lsp_text_document_sync_kind_full
-let lsp#client#text_document_sync_kind_incremental = s:lsp_text_document_sync_kind_incremental
 
 function! lsp#client#start(opts) abort
     return s:lsp_start(a:opts)
