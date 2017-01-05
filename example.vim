@@ -385,7 +385,7 @@ endfunction
 
 function s:supports_capability(name) abort
     let l:capabilities = s:get_capabilities()
-    if empty(l:capabilities) || !has_key(l:capabilities, a:name) || l:capabilities.referencesProvider != v:true
+    if empty(l:capabilities) || !has_key(l:capabilities, a:name) || l:capabilities[a:name] != v:true
         return 0
     else
         return 1
