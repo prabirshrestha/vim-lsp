@@ -1,16 +1,40 @@
 " npm i -g javascript-typescript-langserver
-if has('win32') || has('win64')
-    let s:cmd = ['cmd', '/c', 'javascript-typescript-stdio']
-else
-    let s:cmd = ['sh', '-c', 'javascript-typescript-stdio']
-endif
+" go get -u github.com/sourcegraph/go-langserver/langserver/cmd/langserver-go
+
+" langserver configuration {{{
+function! s:get_lsp_server_cmd_for_typescript()
+    if has('win32') || has('win64')
+        return ['cmd', '/c', 'javascript-typescript-stdio']
+    else
+        return ['sh', '-c', 'javascript-typescript-stdio']
+    endif
+endfunction
+
+function! s:get_root_uri_for_typescript()
+    let l:tsconfig_json_path = s:find_nearest_file(bufnr('%'), 'tsconfig.json')
+    if (!empty(l:tsconfig_json_path))
+        return s:path_to_uri(fnamemodify(l:tsconfig_json_path, ':p:h'))
+    else
+        return ''
+    endif
+endfunction
+
+function! s:get_root_uri_for_go()
+    " return s:path_to_uri(expand('%:p:h'))
+    return s:path_to_uri(expand('~/go/src/github.com/sourcegraph/go-langserver/langserver'))
+endfunction
+
+function! s:get_lsp_server_cmd_for_go()
+    return ['langserver-go', '-trace', '-logfile', expand('~/Desktop/langserver-go.log')]
+endfunction
+" }}}
 
 let s:lsp_id = 0
 let s:lsp_init_capabilities = {}
 let s:lsp_last_request_id = 0
 
 " Given a buffer and a filename, find the nearest file by searching upwards
-" through the paths relative to the given buffer.
+" through the paths relative to the given buffer
 " https://github.com/w0rp/ale/blob/master/autoload/ale/util.vim
 function! s:find_nearest_file(buffer, filename) abort
     let l:buffer_filename = fnamemodify(bufname(a:buffer), ':p')
@@ -111,7 +135,7 @@ let s:symbol_kinds = {
     \ '18': 'array',
     \ }
 
-function s:get_symbol_text_from_kind(kind)
+function! s:get_symbol_text_from_kind(kind)
     if has_key(s:symbol_kinds, a:kind)
         return s:symbol_kinds[a:kind]
     else
@@ -119,7 +143,7 @@ function s:get_symbol_text_from_kind(kind)
     endif
 endfunction
 
-function s:lsp_symbols_to_loclist(symbols) abort
+function! s:lsp_symbols_to_loclist(symbols) abort
     let l:list = []
     for l:symbol in a:symbols
         let l:location = l:symbol.location
@@ -140,10 +164,16 @@ endfunction
 
 function! s:start_lsp() abort
     if s:lsp_id <= 0
-        let l:tsconfig_json_path = s:find_nearest_file(bufnr('%'), 'tsconfig.json')
-        if !empty(l:tsconfig_json_path)
+        let l:root_uri = ''
+        if !exists('*s:get_root_uri_for_' . &ft) || !exists('*s:get_lsp_server_cmd_for_' . &ft)
+            echom 'Language server protocol server not defined for ' . &ft
+            return
+        endif
+        call execute('let l:cmd = s:get_lsp_server_cmd_for_' . &ft . '()')
+        call execute('let l:root_uri = s:get_root_uri_for_' . &ft . '()')
+        if !empty(l:root_uri) && !empty(l:cmd)
             let s:lsp_id = lsp#client#start({
-                \ 'cmd': s:cmd,
+                \ 'cmd': l:cmd,
                 \ 'on_stderr': function('s:on_stderr'),
                 \ 'on_exit': function('s:on_exit'),
                 \ })
@@ -152,23 +182,26 @@ function! s:start_lsp() abort
                     \ 'method': 'initialize',
                     \ 'params': {
                     \   'capabilities': {},
-                    \   'rootPath': s:path_to_uri(fnamemodify(l:tsconfig_json_path, ':p:h')),
+                    \   'rootPath': l:root_uri,
+                    \   'rootUri': l:root_uri,
                     \ },
                     \ 'on_notification': function('s:on_initialize')
                     \ })
             else
                 echom 'Failed to start language server'
             endif
+        else
+            echom 'Failed to start language server. ' . json_encode({'root_uri': l:root_uri, 'cmd': l:cmd})
         endif
     endif
 endfunction
 
 function! s:on_notification_log(id, data, event) abort
-    echom json_encode(a:data)
+    " echom json_encode(a:data)
 endfunction
 
 function! s:on_stderr(id, data, event) abort
-    " call s:on_notification_log(a:id, a:data, a:event)
+    call s:on_notification_log(a:id, a:data, a:event)
 endfunction
 
 function! s:on_exit(id, status, event) abort
@@ -181,14 +214,16 @@ function! s:on_initialize(id, data, event) abort
     else
         let s:lsp_init_capabilities = a:data.response.result.capabilities
         if s:lsp_last_request_id > 0
-            " javascript-typescript-langserver doesn't support this method so don't call it
-            " let s:lsp_last_request_id = lsp#client#send(s:lsp_id, {
-            "     \ 'method': 'textDocument/didOpen',
-            "     \ 'params': {
-            "     \   'textDocument': s:get_text_document(),
-            "     \ },
-            "     \ 'on_notification': function('s:on_notification_log')
-            "     \ })
+            " javascript-typescript-langserver doesn't support this method so don't call it for now
+            if &ft != 'typescript'
+                let s:lsp_last_request_id = lsp#client#send(s:lsp_id, {
+                    \ 'method': 'textDocument/didOpen',
+                    \ 'params': {
+                    \   'textDocument': s:get_text_document(),
+                    \ },
+                    \ 'on_notification': function('s:on_notification_log')
+                    \ })
+            endif
         endif
     endif
 endfunction
@@ -379,11 +414,11 @@ function! s:on_find_workspace_symbols(id, data, event) abort
     endif
 endfunction
 
-function s:get_capabilities() abort
+function! s:get_capabilities() abort
     return s:lsp_init_capabilities
 endfunction
 
-function s:supports_capability(name) abort
+function! s:supports_capability(name) abort
     let l:capabilities = s:get_capabilities()
     if empty(l:capabilities) || !has_key(l:capabilities, a:name) || l:capabilities[a:name] != v:true
         return 0
@@ -403,5 +438,5 @@ augroup lsp_ts
     autocmd!
     autocmd FileType typescript map <buffer> <C-]> :GoToDefinition<cr>
     autocmd FileType typescript map <buffer> <C-^> :FindReferences<cr>
-    autocmd BufWinEnter,FileType typescript call s:start_lsp()
+    autocmd BufWinEnter,FileType * call s:start_lsp()
 augroup END
