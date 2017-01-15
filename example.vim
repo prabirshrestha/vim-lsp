@@ -414,6 +414,24 @@ function! s:on_find_workspace_symbols(id, data, event) abort
     endif
 endfunction
 
+function! s:textdocument_did_save() abort
+    if s:lsp_id <= 0 || empty(s:get_capabilities())
+        return
+    endif
+    let s:lsp_last_request_id = lsp#client#send(s:lsp_id, {
+        \ 'method': 'textDocument/didSave',
+        \ 'params': {
+        \   'textDocument': s:get_text_document_identifier(),
+        \   'text': join(getline(1, '$'), "\n"),
+        \ },
+        \ 'on_notification': function('s:on_text_document_did_save')
+        \})
+endfunction
+
+function! s:on_text_document_did_save(id, data, event) abort
+    " do nothing
+endfunction
+
 function! s:get_capabilities() abort
     return s:lsp_init_capabilities
 endfunction
@@ -442,4 +460,5 @@ augroup lsp_ts
     autocmd FileType typescript map <buffer> <C-]> :GoToDefinition<cr>
     autocmd FileType typescript map <buffer> <C-^> :FindReferences<cr>
     autocmd BufWinEnter,FileType * call s:start_lsp()
+    autocmd BufWritePost,FileType * call s:textdocument_did_save()
 augroup END
