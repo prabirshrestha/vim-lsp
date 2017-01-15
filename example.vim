@@ -420,11 +420,14 @@ endfunction
 
 function! s:supports_capability(name) abort
     let l:capabilities = s:get_capabilities()
-    if empty(l:capabilities) || !has_key(l:capabilities, a:name) || l:capabilities[a:name] != v:true
-        return 0
-    else
-        return 1
+    if !empty(l:capabilities) || has_key(l:capabilities, a:name)
+        if type(l:capabilities[a:name]) == v:t_dict
+            return 1
+        elseif type(l:capabilities[a:name]) == v:t_bool && l:capabilities[a:name] == v:true
+            return 1
+        endif
     endif
+    return 0
 endfunction
 
 command! GetCapabilities :echom json_encode(s:get_capabilities())
