@@ -455,7 +455,7 @@ command! FindReferences call s:find_references()
 command! FindDocumentSymbols call s:find_document_symbols()
 command! FindWorkspaceSymbols call s:find_workspace_symbols()
 
-augroup lsp_ts
+augroup lsp_example
     autocmd!
     autocmd FileType typescript map <buffer> <C-]> :GoToDefinition<cr>
     autocmd FileType typescript map <buffer> <C-^> :FindReferences<cr>
