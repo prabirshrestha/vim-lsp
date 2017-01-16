@@ -98,16 +98,16 @@ function! s:get_text_document(...) abort
 endfunction
 
 function! s:get_text_document_position_params(...) abort
-  return {
+    return {
         \ 'textDocument': call('s:get_text_document_identifier', a:000),
         \ 'position': s:get_position(),
         \ }
 endfunction
 
 function! s:get_reference_params(...) abort
-  return extend(call('s:get_text_document_position_params', a:000), {
-    \ 'context': { 'includeDeclaration': v:true }
-    \ })
+    return extend(call('s:get_text_document_position_params', a:000), {
+        \ 'context': { 'includeDeclaration': v:true }
+        \ })
 endfunction
 
 function! s:get_position() abort
@@ -178,7 +178,7 @@ function! s:start_lsp() abort
                 \ 'on_exit': function('s:on_exit'),
                 \ })
             if s:lsp_id > 0
-                let s:lsp_last_request_id = lsp#client#send(s:lsp_id, {
+                let s:lsp_last_request_id = lsp#client#send_request(s:lsp_id, {
                     \ 'method': 'initialize',
                     \ 'params': {
                     \   'capabilities': {},
@@ -214,16 +214,12 @@ function! s:on_initialize(id, data, event) abort
     else
         let s:lsp_init_capabilities = a:data.response.result.capabilities
         if s:lsp_last_request_id > 0
-            " javascript-typescript-langserver doesn't support this method so don't call it for now
-            if &ft != 'typescript'
-                let s:lsp_last_request_id = lsp#client#send(s:lsp_id, {
-                    \ 'method': 'textDocument/didOpen',
-                    \ 'params': {
-                    \   'textDocument': s:get_text_document(),
-                    \ },
-                    \ 'on_notification': function('s:on_notification_log')
-                    \ })
-            endif
+            let s:lsp_last_request_id = lsp#client#send_notification(s:lsp_id, {
+                \ 'method': 'textDocument/didOpen',
+                \ 'params': {
+                \   'textDocument': s:get_text_document(),
+                \ },
+                \ })
         endif
     endif
 endfunction
@@ -233,7 +229,7 @@ function! s:goto_definition() abort
         echom 'Go to definition not supported by the language server'
         return
     endif
-    let s:lsp_last_request_id = lsp#client#send(s:lsp_id, {
+    let s:lsp_last_request_id = lsp#client#send_request(s:lsp_id, {
         \ 'method': 'textDocument/definition',
         \ 'params': {
         \   'textDocument': s:get_text_document_identifier(),
@@ -269,7 +265,7 @@ function! s:hover() abort
         echom 'Hover not supported by the language server'
         return
     endif
-    let s:lsp_last_request_id = lsp#client#send(s:lsp_id, {
+    let s:lsp_last_request_id = lsp#client#send_request(s:lsp_id, {
         \ 'method': 'textDocument/hover',
         \ 'params': {
         \   'textDocument': s:get_text_document_identifier(),
@@ -304,7 +300,7 @@ function! s:find_references() abort
         echom 'FindReferences not supported by the language server'
         return
     endif
-    let s:lsp_last_request_id = lsp#client#send(s:lsp_id, {
+    let s:lsp_last_request_id = lsp#client#send_request(s:lsp_id, {
         \ 'method': 'textDocument/references',
         \ 'params': s:get_reference_params(),
         \ 'on_notification': function('s:on_find_references')
@@ -348,7 +344,7 @@ function! s:find_document_symbols() abort
         echom 'FindDocumentSymbols not supported by the language server'
         return
     endif
-    let s:lsp_last_request_id = lsp#client#send(s:lsp_id, {
+    let s:lsp_last_request_id = lsp#client#send_request(s:lsp_id, {
         \ 'method': 'textDocument/documentSymbol',
         \ 'params': {
         \   'textDocument': s:get_text_document_identifier(),
@@ -384,7 +380,7 @@ function! s:find_workspace_symbols() abort
         return
     endif
     let l:query = input('query>')
-    let s:lsp_last_request_id = lsp#client#send(s:lsp_id, {
+    let s:lsp_last_request_id = lsp#client#send_request(s:lsp_id, {
         \ 'method': 'workspace/symbol',
         \ 'params': {
         \   'query': l:query,
@@ -418,18 +414,41 @@ function! s:textdocument_did_save() abort
     if s:lsp_id <= 0 || empty(s:get_capabilities())
         return
     endif
-    let s:lsp_last_request_id = lsp#client#send(s:lsp_id, {
+    let l:text_document_identifier = s:get_text_document_identifier()
+    if l:text_document_identifier.uri == 'file:///'
+        " ignore loclist
+        return
+    endif
+    call lsp#client#send_notification(s:lsp_id, {
         \ 'method': 'textDocument/didSave',
         \ 'params': {
-        \   'textDocument': s:get_text_document_identifier(),
+        \   'textDocument': l:text_document_identifier,
         \   'text': join(getline(1, '$'), "\n"),
         \ },
-        \ 'on_notification': function('s:on_text_document_did_save')
         \})
 endfunction
 
-function! s:on_text_document_did_save(id, data, event) abort
-    " do nothing
+let s:lsp_will_save_reason = {
+    \ 'manual': 1,
+    \ 'after_delay': 2,
+    \ 'focus_out': 3,
+    \ }
+function! s:textdocument_will_save() abort
+    if s:lsp_id <= 0 || empty(s:get_capabilities())
+        return
+    endif
+    let l:text_document_identifier = s:get_text_document_identifier()
+    if l:text_document_identifier.uri == 'file:///'
+        " ignore loclist
+        return
+    endif
+    call lsp#client#send_notification(s:lsp_id, {
+        \ 'method': 'textDocument/willSave',
+        \ 'params': {
+        \   'textDocument': l:text_document_identifier,
+        \   'reason': s:lsp_will_save_reason.manual,
+        \ },
+        \})
 endfunction
 
 function! s:get_capabilities() abort
@@ -460,5 +479,6 @@ augroup lsp_example
     autocmd FileType typescript map <buffer> <C-]> :GoToDefinition<cr>
     autocmd FileType typescript map <buffer> <C-^> :FindReferences<cr>
     autocmd BufWinEnter,FileType * call s:start_lsp()
+    autocmd BufWritePre,FileType * call s:textdocument_will_save()
     autocmd BufWritePost,FileType * call s:textdocument_did_save()
 augroup END

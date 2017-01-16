@@ -139,14 +139,20 @@ function! s:lsp_stop(id) abort
     call async#job#stop(a:id)
 endfunction
 
-function! s:lsp_send_request(id, opts) abort " opts = { method, params?, on_notification }
+let s:send_type_request = 1
+let s:send_type_notification = 2
+function! s:lsp_send(id, opts, type) abort " opts = { method, params?, on_notification }
     if has_key(s:lsp_clients, a:id)
         let l:client = s:lsp_clients[a:id]
 
-        let l:client.req_seq = l:client.req_seq + 1
-        let l:req_seq = l:client.req_seq
+        let l:msg = { 'jsonrpc': '2.0', 'method': a:opts.method }
 
-        let l:msg = { 'jsonrpc': '2.0', 'id': l:req_seq, 'method': a:opts.method }
+        if (a:type == s:send_type_request)
+            let l:client.req_seq = l:client.req_seq + 1
+            let l:req_seq = l:client.req_seq
+            let l:msg.id = l:req_seq
+        endif
+
         if has_key(a:opts, 'params')
             let l:msg.params = a:opts.params
         endif
@@ -154,14 +160,20 @@ function! s:lsp_send_request(id, opts) abort " opts = { method, params?, on_noti
         let l:json = json_encode(l:msg)
         let l:req_data = 'Content-Length: ' . len(l:json) . "\r\n\r\n" . l:json
 
-        let l:client.on_notifications[l:req_seq] = { 'request': l:msg }
-        if has_key(a:opts, 'on_notification')
-            let l:client.on_notifications[l:req_seq].on_notification = a:opts.on_notification
+        if (a:type == s:send_type_request)
+            let l:client.on_notifications[l:req_seq] = { 'request': l:msg }
+            if has_key(a:opts, 'on_notification')
+                let l:client.on_notifications[l:req_seq].on_notification = a:opts.on_notification
+            endif
         endif
 
         call async#job#send(l:client.id, l:req_data)
 
-        return l:req_seq
+        if (a:type == s:send_type_request)
+            return l:req_seq
+        else
+            return 0
+        endif
     else
         return -1
     endif
@@ -189,8 +201,12 @@ function! lsp#client#stop(client_id) abort
     return s:lsp_stop(a:client_id)
 endfunction
 
-function! lsp#client#send(client_id, opts) abort
-    return s:lsp_send_request(a:client_id, a:opts)
+function! lsp#client#send_request(client_id, opts) abort
+    return s:lsp_send(a:client_id, a:opts, s:send_type_request)
+endfunction
+
+function! lsp#client#send_notification(client_id, opts) abort
+    return s:lsp_send(a:client_id, a:opts, s:send_type_notification)
 endfunction
 
 function! lsp#client#get_last_request_id(client_id) abort
