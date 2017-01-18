@@ -19,6 +19,10 @@ function! s:get_root_uri_for_typescript()
     endif
 endfunction
 
+function! s:get_lsp_server_version_for_typescript()
+    return '2.0'
+endfunction
+
 function! s:get_root_uri_for_go()
     " return s:path_to_uri(expand('%:p:h'))
     return s:path_to_uri(expand('~/go/src/github.com/sourcegraph/go-langserver/langserver'))
@@ -46,6 +50,10 @@ function! s:find_nearest_file(buffer, filename) abort
     endif
 
     return ''
+endfunction
+
+function! s:parse_version(version) abort
+    return split(a:version, '\.')
 endfunction
 
 function! s:is_file_uri(uri) abort
@@ -419,11 +427,27 @@ function! s:textdocument_did_save() abort
         " ignore loclist
         return
     endif
+    let l:text = join(getline(1, '$') ,"\n")
+    if exists('*s:get_lsp_server_version_for_' . &ft)
+        call execute('let l:lsp_server_version = s:get_lsp_server_version_for_' . &ft . '()')
+        if !empty(l:lsp_server_version) && l:lsp_server_version[0] == '2'
+            call lsp#client#send_notification(s:lsp_id, {
+                \ 'method': 'textDocument/didChange',
+                \ 'params': {
+                \   'textDocument': extend(l:text_document_identifier, { 'version': 1 }),
+                \   'contentChanges': [
+                \       { 'text': l:text, }
+                \   ],
+                \ },
+                \})
+            return
+        endif
+    endif
     call lsp#client#send_notification(s:lsp_id, {
         \ 'method': 'textDocument/didSave',
         \ 'params': {
         \   'textDocument': l:text_document_identifier,
-        \   'text': join(getline(1, '$'), "\n"),
+        \   'text': l:text,
         \ },
         \})
 endfunction
