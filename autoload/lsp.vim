@@ -29,6 +29,8 @@ function! s:register_events() abort
     augroup lsp
         autocmd! * <buffer>
         autocmd BufReadPost * call s:on_text_document_did_open()
+        autocmd BufWritePost * call s:on_text_document_did_save()
+        autocmd TextChangedI * call s:on_text_document_did_change()
     augroup END
     call s:on_text_document_did_open()
     call lsp#log('lsp-core', 'registered events')
@@ -36,4 +38,12 @@ endfunction
 
 function! s:on_text_document_did_open() abort
     call lsp#log('lsp-core', 's:on_text_document_did_open()')
+endfunction
+
+function! s:on_text_document_did_save() abort
+    call lsp#log('lsp-core', 's:on_text_document_did_save()')
+endfunction
+
+function! s:on_text_document_did_change() abort
+    call lsp#log('lsp-core', 's:on_text_document_did_change()')
 endfunction
