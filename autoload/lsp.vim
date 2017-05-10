@@ -204,6 +204,7 @@ function! lsp#initialize(name, ...) abort
 endfunction
 
 function! s:on_stderr(id, data, event) abort
+    call lsp#log('lsp-core', 'on_stderr', a:id, a:data)
 endfunction
 
 function! s:on_exit(id, data, event) abort
