@@ -14,13 +14,13 @@ function! lsp#enable() abort
     if s:enabled
         return
     endif
+    call lsp#log('lsp-core', 'enabling')
     if !s:already_setup
         call lsp#log('lsp-core', 'lsp_setup')
         doautocmd User lsp_setup
         let s:already_setup = 1
     endif
     let s:enabled = 1
-    call lsp#log('lsp-core', 'enabling')
     call s:register_events()
     call lsp#log('lsp-core', 'enabled')
 endfunction
@@ -29,6 +29,7 @@ function! lsp#disable() abort
     if !s:enabled
         return
     endif
+    call s:unregister_events()
     let s:enabled = 0
     call lsp#log('lsp-core', 'disabled')
 endfunction
@@ -36,13 +37,22 @@ endfunction
 function! s:register_events() abort
     call lsp#log('lsp-core', 'registering events')
     augroup lsp
-        autocmd! * <buffer>
+        autocmd!
         autocmd BufReadPost * call s:on_text_document_did_open()
         autocmd BufWritePost * call s:on_text_document_did_save()
         autocmd TextChangedI * call s:on_text_document_did_change()
     augroup END
-    call s:on_text_document_did_open()
     call lsp#log('lsp-core', 'registered events')
+    call lsp#log('lsp-core', 'calling s:on_text_document_did_open() from s:register_events()')
+    call s:on_text_document_did_open()
+endfunction
+
+function! s:unregister_events() abort
+    call lsp#log('lsp-core', 'unregistering events')
+    augroup lsp
+        autocmd!
+    augroup END
+    call lsp#log('lsp-core', 'unregistered events')
 endfunction
 
 function! s:on_text_document_did_open() abort
