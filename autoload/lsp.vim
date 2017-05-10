@@ -1,6 +1,6 @@
 let s:enabled = 0
 let s:already_setup = 0
-let s:servers = {} " { server_name: server_info }
+let s:servers = {} " { server_name: { server_info } }
 
 " do nothing, place it here only to avoid the message
 autocmd User lsp_setup silent
@@ -56,7 +56,7 @@ function! lsp#register_server(server_info) abort
         call lsp#log('lsp-core', 'server already registered', a:server_info['name'])
         return -1
     endif
-    let s:servers[a:server_info['name']] = a:server_info
+    let s:servers[a:server_info['name']['server_info']] = a:server_info
     call lsp#log('lsp-core', 'registered server', a:server_info['name'])
     return 1
 endfunction
