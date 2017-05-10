@@ -44,17 +44,23 @@ endfunction
 "
 " @return
 "   -1: Server already registered
+"   -2: Protocol version not specified
 "    1: Server registered successfully
 "
 " @example
 " au User lsp_setup call lsp#register_server({
 "   \ 'name': 'tsc',
+"   \ 'protocol_version': '2.0',
 "   \ })
 function! lsp#register_server(server_info) abort
     call lsp#log('lsp-core', 'registering server', a:server_info['name'])
     if has_key(s:servers, a:server_info['name'])
         call lsp#log('lsp-core', 'server already registered', a:server_info['name'])
         return -1
+    endif
+    if !has_key(a:server_info, 'protocol_version')
+        call lsp#log('lsp-core', 'protocol_version not specified', a:server_info['name'])
+        return -2
     endif
     let s:servers[a:server_info['name']['server_info']] = a:server_info
     call lsp#log('lsp-core', 'registered server', a:server_info['name'])
