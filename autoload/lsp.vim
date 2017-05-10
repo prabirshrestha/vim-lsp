@@ -1,6 +1,7 @@
 let s:enabled = 0
 let s:already_setup = 0
-let s:servers = {} " { server_name: { server_info, protocol_version: { major } }
+let s:servers = {} " { server_name: { lsp_id, server_info, protocol_version: { major }, init_capabilities }
+let s:lsp_id_mappings = {} " { lsp_id: name }
 
 " do nothing, place it here only to avoid the message
 autocmd User lsp_setup silent
@@ -37,20 +38,27 @@ endfunction
 
 " @params
 " server_info = {
-"    'name': 'tsc',             required
-"    'whitelist': [],           optional
-"    'blacklist': [],           optional
+"    'name': 'tsc',                         required
+"    'protocol_version': '3.0',             required
+"    'cmd': [] or {server_info->[]}         optional, refer to lsp#start_server options
+"    'root_uri: '' or {server_info->'' }    optiona, refer to lsp#start_server options
+"    'whitelist': [],                       optional
+"    'blacklist': [],                       optional
 " }
+" even though cmd and root_uri are optional it is highly recommened to set it here
 "
 " @return
+"    1: Server registered successfully
 "   -1: Server already registered
 "   -2: Protocol version not specified
-"    1: Server registered successfully
+"   -3: Failed to parse protocol version
+"   -4: Unsupported protocol version
 "
 " @example
 " au User lsp_setup call lsp#register_server({
 "   \ 'name': 'tsc',
-"   \ 'protocol_version': '2.0',
+"   \ 'protocol_version': '3.0',
+"   \ 'cmd': has('win32') || has('win64') ? ['cmd', '/c', 'javascript-typescript-stdio'] : ['sh', '-c', 'javascript-typescript-stdio']
 "   \ })
 function! lsp#register_server(server_info) abort
     call lsp#log('lsp-core', 'registering server', a:server_info['name'])
@@ -67,10 +75,110 @@ function! lsp#register_server(server_info) abort
         call lsp#log('lsp-core', 'failed to parse major protocol version', a:server_info['name'], a:server_info['protocol_version'])
         return -3
     endif
-    let s:servers[a:server_info['name']['server_info']] = a:server_info
-    let s:servers[a:server_info['name']['protocol_version']] = { 'major': l:major_protocol_version }
+    if l:major_protocol_version <= 2
+        call lsp#log('lsp-core', 'unsupported protocol version', a:server_info['protocol_version'])
+        return -4
+    endif
+    let s:servers[a:server_info['name']] = {
+        \ 'lsp_id': 0,
+        \ 'server_info': a:server_info,
+        \ 'protocol_version': { 'major': l:major_protocol_version },
+        \ }
     call lsp#log('lsp-core', 'registered server', a:server_info['name'], l:major_protocol_version)
     return 1
+endfunction
+
+" @params
+"   name: name of the server                                        " required
+"   options: {                                                      " optional
+"       cmd: ['langserver-go'] or {server_info->[]},                " optional, if not found uses server_info['cmd']
+"       root_uri: 'file:///tmp/project' or {server_info->root_uri}, " optional , if not found uses server_info['root_uri'], if not found uses default root_uri
+"   }
+" functions for cmd and root_uri can be used to use local version of
+" server from node_modules or find root markers like tsconfig.json.
+" imagination is your limitation :)
+" @returns
+"   >=1: server id
+"   -100: unregistered server
+"   -200: cmd not specified
+"   -300: ignore start_server
+function! lsp#start_server(name, ...) abort
+    if !has_key(s:servers, a:name)
+        call lsp#log('lsp-core', 'cannot start unregistered server', a:name)
+        return -100
+    endif
+    let l:server = s:servers[a:name]
+    let l:server_info = l:server['server_info']
+    if l:server['lsp_id'] > 0
+        call lsp#log('lsp-core', 'server already started', a:name)
+        return 1
+    endif
+    if len(a:000) == 0
+        let l:options = {}
+    else
+        let l:options = a:0
+    endif
+    if l:server['protocol_version']['major'] <= 2
+        " todo support v2
+        throw 'unsupported protocol version'
+    else
+        if has_key(l:options, 'root_uri')
+            let l:root_uri = type(l:options['root_uri']) == type('') ? l:options['root_uri'] : l:options['root_uri'](l:server_info)
+        elseif has_key(l:server_info, 'root_uri')
+            let l:root_uri = type(l:server_info['root_uri']) == type([]) ? l:server_info['root_uri'] : l:server_info['root_uri'](l:server_info)
+        else
+            let l:root_uri = s:get_default_root_uri()
+        endif
+        if has_key(l:options, 'cmd')
+            let l:cmd = type(l:options['cmd']) == type([]) ? l:options['cmd'] : l:options['cmd'](l:server_info)
+        elseif has_key(l:server_info, 'cmd')
+            let l:cmd = type(l:server_info['cmd']) == type([]) ? l:server_info['cmd'] : l:server_info['cmd'](l:server_info)
+        else
+            return -200
+        endif
+        if empty(l:root_uri) || empty(l:cmd)
+            " NOTE: if you don't want to start ther server just return empty for root_uri or cmd
+            call lsp#log('lsp-core', 'ignore starting lsp server for ', a:name)
+            return -300
+        endif
+        " start the server
+        let l:lsp_id = lsp#client#start({
+            \ 'cmd': l:cmd,
+            \ 'on_stderr': function('s:on_stderr'),
+            \ 'on_exit': function('s:on_exit'),
+            \ 'on_notification': function('s:on_notification'),
+            \ })
+        if l:lsp_id > 0
+            let l:server['lsp_id'] = l:lsp_id
+            let s:lsp_id_mappings[l:lsp_id] = a:name
+            call lsp#log('lsp-core', 'lsp server started', a:name, l:lsp_id, l:cmd, l:root_uri)
+            return l:lsp_id
+        else
+            call lsp#log('lsp-core', 'failed to start lsp', a:name, l:lsp_id)
+            return l:lsp_id
+        endif
+    endif
+endfunction
+
+function! s:on_stderr(id, data, event) abort
+endfunction
+
+function! s:on_exit(id, data, event) abort
+    if has_key(s:lsp_id_mappings, a:id)
+        let l:name = s:lsp_id_mappings[a:id]
+        let l:server = s:servers[l:name]
+        let l:server['lsp_id'] = 0
+        if has_key(l:server, 'init_capabilities')
+            unlet l:server['init_capabilities']
+        endif
+        unlet s:lsp_id_mappings[a:id]
+        call lsp#log('lsp-core', 'exit', a:id, l:name)
+    else
+        call lsp#log('lsp-core', 'exit', a:id)
+    endif
+endfunction
+
+function! s:on_notification(id, data, event) abort
 endfunction
 
 function! s:register_events() abort
@@ -120,3 +228,17 @@ function! s:parse_major_version(version) abort
         return 0
     endif
 endfunction
+
+function! s:get_default_root_uri() abort
+    return s:path_to_uri(getcwd())
+endfunction
+
+if has('win32') || has('win64')
+    function! s:path_to_uri(path) abort
+        return 'file://' . substitute(a:path, '\', '/', 'g')
+    endfunction
+else
+    function! s:path_to_uri(path) abort
+        return 'file://' . a:path
+    endfunction
+endif
