@@ -1,7 +1,7 @@
 let s:enabled = 0
 let s:already_setup = 0
-let s:servers = {} " { server_name: { lsp_id, server_info, protocol_version: { major }, init_capabilities }
-let s:lsp_id_mappings = {} " { lsp_id: name }
+let s:servers = {} " { server_name: { lsp_id, server_info, protocol_version: { major }, init_response }
+let s:lsp_id_mappings = {} " { lsp_id: server_name }
 
 " do nothing, place it here only to avoid the message
 autocmd User lsp_setup silent
@@ -92,10 +92,8 @@ endfunction
 "   name: name of the server                                        " required
 "   options: {                                                      " optional
 "       cmd: ['langserver-go'] or {server_info->[]},                " optional, if not found uses server_info['cmd']
-"       root_uri: 'file:///tmp/project' or {server_info->root_uri}, " optional , if not found uses server_info['root_uri'], if not found uses default root_uri
 "   }
-" functions for cmd and root_uri can be used to use local version of
-" server from node_modules or find root markers like tsconfig.json.
+" functions for cmd can be used to use local version of server from node_modules or change path based on windows/*nix
 " imagination is your limitation :)
 " @returns
 "   >=1: server id
@@ -111,7 +109,7 @@ function! lsp#start_server(name, ...) abort
     let l:server_info = l:server['server_info']
     if l:server['lsp_id'] > 0
         call lsp#log('lsp-core', 'server already started', a:name)
-        return 1
+        return l:server['lsp_id']
     endif
     if len(a:000) == 0
         let l:options = {}
@@ -122,13 +120,6 @@ function! lsp#start_server(name, ...) abort
         " todo support v2
         throw 'unsupported protocol version'
     else
-        if has_key(l:options, 'root_uri')
-            let l:root_uri = type(l:options['root_uri']) == type('') ? l:options['root_uri'] : l:options['root_uri'](l:server_info)
-        elseif has_key(l:server_info, 'root_uri')
-            let l:root_uri = type(l:server_info['root_uri']) == type([]) ? l:server_info['root_uri'] : l:server_info['root_uri'](l:server_info)
-        else
-            let l:root_uri = s:get_default_root_uri()
-        endif
         if has_key(l:options, 'cmd')
             let l:cmd = type(l:options['cmd']) == type([]) ? l:options['cmd'] : l:options['cmd'](l:server_info)
         elseif has_key(l:server_info, 'cmd')
@@ -136,8 +127,8 @@ function! lsp#start_server(name, ...) abort
         else
             return -200
         endif
-        if empty(l:root_uri) || empty(l:cmd)
-            " NOTE: if you don't want to start ther server just return empty for root_uri or cmd
+        if empty(l:cmd)
+            " NOTE: if you don't want to start ther server just return empty for cmd
             call lsp#log('lsp-core', 'ignore starting lsp server for ', a:name)
             return -300
         endif
@@ -151,13 +142,65 @@ function! lsp#start_server(name, ...) abort
         if l:lsp_id > 0
             let l:server['lsp_id'] = l:lsp_id
             let s:lsp_id_mappings[l:lsp_id] = a:name
-            call lsp#log('lsp-core', 'lsp server started', a:name, l:lsp_id, l:cmd, l:root_uri)
+            call lsp#log('lsp-core', 'lsp server started', a:name, l:lsp_id, l:cmd)
             return l:lsp_id
         else
             call lsp#log('lsp-core', 'failed to start lsp', a:name, l:lsp_id)
             return l:lsp_id
         endif
     endif
+endfunction
+
+" @params
+"   name: name of the server                                        " required
+"   options: {                                                      " optional
+"       root_uri: 'file:///tmp/project' or {server_info->root_uri}, " optional , if not found uses server_info['root_uri'], if not found uses s:get_default_root_uri() which internally use cwd()
+"   }
+" functions for root_uri can be used to find root markers like tsconfig.json.
+" imagination is your limitation :)
+" @returns
+"   >=1: server id
+"   -100: unregistered server
+"   -201: lsp server not started yet
+"   -301: ignore initialize_server
+"   -302: ignore initialization
+function! lsp#initialize(name, ...) abort
+    if !has_key(s:servers, a:name)
+        call lsp#log('lsp-core', 'cannot initialize unregistered server', a:name)
+        return -100
+    endif
+    let l:server = s:servers[a:name]
+    let l:server_info = l:server['server_info']
+    if l:server['lsp_id'] <= 0
+        call lsp#log('lsp-core', 'lsp server not started yet', a:name)
+        return -201
+    endif
+    if has_key(l:server, 'init_response')
+        call lsp#log('lsp-core', 'lsp server already initialized', a:name)
+        return -301
+    endif
+    if len(a:000) == 0
+        let l:options = {}
+    else
+        let l:options = a:0
+    endif
+    if has_key(l:options, 'root_uri')
+        let l:root_uri = type(l:options['root_uri']) == type('') ? l:options['root_uri'] : l:options['root_uri'](l:server_info)
+    elseif has_key(l:server_info, 'root_uri')
+        let l:root_uri = type(l:server_info['root_uri']) == type('') ? l:server_info['root_uri'] : l:server_info['root_uri'](l:server_info)
+    else
+        let l:root_uri = s:get_default_root_uri()
+    endif
+    if empty(l:root_uri)
+        return -302
+    endif
+    return lsp#client#send_request(l:server['lsp_id'], {
+        \ 'method': 'initialize',
+        \ 'params': {
+        \   'capabilities': {},
+        \   'root_uri': l:root_uri,
+        \ },
+        \ })
 endfunction
 
 function! s:on_stderr(id, data, event) abort
@@ -168,8 +211,8 @@ function! s:on_exit(id, data, event) abort
         let l:name = s:lsp_id_mappings[a:id]
         let l:server = s:servers[l:name]
         let l:server['lsp_id'] = 0
-        if has_key(l:server, 'init_capabilities')
-            unlet l:server['init_capabilities']
+        if has_key(l:server, 'init_response')
+            unlet l:server['init_response']
         endif
         unlet s:lsp_id_mappings[a:id]
         call lsp#log('lsp-core', 'exit', a:id, l:name)
@@ -179,6 +222,22 @@ function! s:on_exit(id, data, event) abort
 endfunction
 
 function! s:on_notification(id, data, event) abort
+    call lsp#log('lsp-core', 's:on_notification', a:id, a:event, a:data)
+    if lsp#client#is_error(a:data)
+    elseif lsp#client#is_server_instantiated_notification(a:data)
+    else
+        let l:request = a:data['request']
+        let l:request_method = l:request['method']
+        let l:server_name = s:lsp_id_mappings[a:id]
+        if l:request_method == 'initialize'
+            call s:handle_initialize_notification(a:id, a:data, a:event, l:server_name)
+        endif
+    endif
+endfunction
+
+function s:handle_initialize_notification(id, data, event, server_name) abort
+    let s:servers[a:server_name]['init_response'] = a:data['response']['result']
+    call lsp#log('lsp-core', 'server initialized', a:server_name)
 endfunction
 
 function! s:register_events() abort
