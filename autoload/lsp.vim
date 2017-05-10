@@ -1,10 +1,6 @@
 let s:enabled = 0
 let s:already_setup = 0
-let s:servers = {} " {
-                   "   'tsc': {
-                   "      \ 'name': 'tsc',
-                   "   \ }
-                   " \ }
+let s:servers = {} " { server_name: server_info }
 
 " do nothing, place it here only to avoid the message
 autocmd User lsp_setup silent
@@ -40,7 +36,7 @@ function! lsp#disable() abort
 endfunction
 
 " @params
-" info = {
+" server_info = {
 "    'name': 'tsc',             required
 "    'whitelist': [],           optional
 "    'blacklist': [],           optional
@@ -54,14 +50,14 @@ endfunction
 " au User lsp_setup call lsp#register_server({
 "   \ 'name': 'tsc',
 "   \ })
-function! lsp#register_server(info) abort
-    call lsp#log('lsp-core', 'registering server', a:info['name'])
-    if has_key(s:servers, a:info['name'])
-        call lsp#log('lsp-core', 'server already registered', a:info['name'])
+function! lsp#register_server(server_info) abort
+    call lsp#log('lsp-core', 'registering server', a:server_info['name'])
+    if has_key(s:servers, a:server_info['name'])
+        call lsp#log('lsp-core', 'server already registered', a:server_info['name'])
         return -1
     endif
-    let s:servers[a:info['name']] = a:info
-    call lsp#log('lsp-core', 'registered server', a:info['name'])
+    let s:servers[a:server_info['name']] = a:server_info
+    call lsp#log('lsp-core', 'registered server', a:server_info['name'])
     return 1
 endfunction
 
