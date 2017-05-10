@@ -1,4 +1,8 @@
 let s:enabled = 0
+let s:already_setup = 0
+
+" do nothing, place it here only to avoid the message
+autocmd User lsp_setup silent
 
 function! lsp#log(...) abort
     if !empty(g:lsp_log_file)
@@ -9,6 +13,11 @@ endfunction
 function! lsp#enable() abort
     if s:enabled
         return
+    endif
+    if !s:already_setup
+        call lsp#log('lsp-core', 'lsp_setup')
+        doautocmd User lsp_setup
+        let s:already_setup = 1
     endif
     let s:enabled = 1
     call lsp#log('lsp-core', 'enabling')
