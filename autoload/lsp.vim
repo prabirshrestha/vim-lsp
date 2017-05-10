@@ -1,6 +1,6 @@
 let s:enabled = 0
 let s:already_setup = 0
-let s:servers = {} " { server_name: { server_info } }
+let s:servers = {} " { server_name: { server_info, protocol_version: { major } }
 
 " do nothing, place it here only to avoid the message
 autocmd User lsp_setup silent
@@ -62,8 +62,14 @@ function! lsp#register_server(server_info) abort
         call lsp#log('lsp-core', 'protocol_version not specified', a:server_info['name'])
         return -2
     endif
+    let l:major_protocol_version = s:parse_major_version(a:server_info['protocol_version'])
+    if l:major_protocol_version <= 0
+        call lsp#log('lsp-core', 'failed to parse major protocol version', a:server_info['name'], a:server_info['protocol_version'])
+        return -3
+    endif
     let s:servers[a:server_info['name']['server_info']] = a:server_info
-    call lsp#log('lsp-core', 'registered server', a:server_info['name'])
+    let s:servers[a:server_info['name']['protocol_version']] = { 'major': l:major_protocol_version }
+    call lsp#log('lsp-core', 'registered server', a:server_info['name'], l:major_protocol_version)
     return 1
 endfunction
 
@@ -98,4 +104,19 @@ endfunction
 
 function! s:on_text_document_did_change() abort
     call lsp#log('lsp-core', 's:on_text_document_did_change()')
+endfunction
+
+" @return
+"   0: failed to parse major version
+"   >= 1: parsed major version
+" @example
+" let s:major_version = s:parse_major_version('2.0')
+function! s:parse_major_version(version) abort
+    let l:split_version = split(a:version, '\.')
+    if len(l:split_version) > 0
+        return str2nr(l:split_version[0], 10)
+    else
+        call lsp#log('lsp-core', 'failed to parse major version', a:version)
+        return 0
+    endif
 endfunction
