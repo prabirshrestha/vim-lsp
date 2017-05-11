@@ -151,6 +151,27 @@ function! lsp#start_server(name, ...) abort
     endif
 endfunction
 
+" @returns
+"   -2: server not running
+"   -1: server not registered
+"    1: server force stopped
+function! lsp#exit(name) abort
+    if !has_key(s:servers, a:name)
+        call lsp#log('lsp-core', 'server not registered', a:name)
+        return -1
+    endif
+    let l:server = s:servers[a:name]
+    " for now always force exit
+    if has_key(l:server, 'lsp_id')
+        call lsp#log('lsp-core', 'force exit', a:name, l:server['lsp_id'])
+        call lsp#client#stop(l:server['lsp_id'])
+        return 1
+    else
+        call lsp#log('lsp-core', 'server not running', a:name)
+        return -2
+    endif
+endfunction
+
 " @params
 "   name: name of the server                                        " required
 "   options: {                                                      " optional
