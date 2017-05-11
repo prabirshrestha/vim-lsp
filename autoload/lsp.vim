@@ -203,7 +203,7 @@ function! lsp#initialize(name, ...) abort
     if len(a:000) == 0
         let l:options = {}
     else
-        let l:options = a:0
+        let l:options = a:1
     endif
     if has_key(l:options, 'root_uri')
         let l:root_uri = type(l:options['root_uri']) == type('') ? l:options['root_uri'] : l:options['root_uri'](l:server_info)
@@ -221,6 +221,7 @@ function! lsp#initialize(name, ...) abort
         \   'capabilities': {},
         \   'root_uri': l:root_uri,
         \ },
+        \ 'on_notification': function('s:on_notification_wrapper', [a:name, l:options])
         \ })
 endfunction
 
@@ -323,3 +324,9 @@ else
         return 'file://' . a:path
     endfunction
 endif
+
+function! s:on_notification_wrapper(name, options, id, data, event) abort
+    if has_key(a:options, 'callback')
+        call a:options['callback'](a:name, a:data)
+    endif
+endfunction
