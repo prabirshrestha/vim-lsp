@@ -1,6 +1,6 @@
 let s:enabled = 0
 let s:already_setup = 0
-let s:servers = {} " { lsp_id, server_info, initialize_response?, buffers: { 1: { dirty } }
+let s:servers = {} " { lsp_id, server_info, initialize_response?, buffers: { path: { dirty } }
 
 " do nothing, place it here only to avoid the message
 autocmd User lsp_setup silent
@@ -89,6 +89,21 @@ function! s:ensure_flush(buf, server_names) abort
     for l:server_name in a:server_names
         if s:ensure_start(l:server_name) > 0
             if s:ensure_init(l:server_name) > 0
+                let l:server = s:servers[l:server_name]
+                let l:buffers = l:server['buffers']
+                let l:buffer_uri = s:get_buffer_uri()
+                if !has_key(l:buffers, a:buf)
+                    " buffer isn't open, so open it
+                    let l:buffers[l:buffer_uri] = { 'dirty': 0, 'version': 1 }
+                    call s:send_request(l:server_name, {
+                        \ 'method': 'textDocument/didOpen',
+                        \ 'params': {
+                        \   'textDocument': s:get_text_document(l:buffers[l:buffer_uri]),
+                        \ },
+                        \ })
+                elseif l:buffers[l:buffer_uri]['dirty']
+                    " send didChange event
+                endif
             endif
         endif
     endfor
@@ -239,6 +254,10 @@ function! s:get_default_root_uri() abort
     return s:path_to_uri(getcwd())
 endfunction
 
+function! s:get_buffer_uri() abort
+    return s:path_to_uri(expand('%:p'))
+endfunction
+
 if has('win32') || has('win64')
     function! s:path_to_uri(path) abort
         return 'file:///' . substitute(a:path, '\', '/', 'g')
@@ -248,3 +267,12 @@ else
         return 'file://' . a:path
     endfunction
 endif
+
+function! s:get_text_document(buffer_info) abort
+    return {
+        \ 'uri': s:get_buffer_uri(),
+        \ 'languageId': &filetype,
+        \ 'version': a:buffer_info['version'],
+        \ 'text': join(getline(1, '$'), "\n"),
+        \ }
+endfunction
