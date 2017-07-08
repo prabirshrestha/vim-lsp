@@ -4,6 +4,12 @@ let s:already_setup = 0
 " do nothing, place it here only to avoid the message
 autocmd User lsp_setup silent
 
+function! lsp#log_verbose(...) abort
+    if g:lsp_log_verbose
+        call call(function('lsp#log'), a:000)
+    endif
+endfunction
+
 function! lsp#log(...) abort
     if !empty(g:lsp_log_file)
         call writefile([json_encode(a:000)], g:lsp_log_file, 'a')
