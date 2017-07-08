@@ -13,7 +13,7 @@ endfunction
 
 function! lsp#log(...) abort
     if !empty(g:lsp_log_file)
-        call writefile([json_encode(a:000)], g:lsp_log_file, 'a')
+        call writefile([strftime('%c') . ':' . json_encode(a:000)], g:lsp_log_file, 'a')
     endif
 endfunction
 
@@ -146,6 +146,7 @@ function! s:ensure_flush(buf, server_name, cb) abort
     call lsp#utils#step#start([
         \ {s->s:ensure_start(a:buf, a:server_name, s.callback)},
         \ {s->s:is_step_error(s) ? s.throw_step_error(s) : s:ensure_init(a:buf, a:server_name, s.callback)},
+        \ {s->s:is_step_error(s) ? s.throw_step_error(s) : s:ensure_open(a:buf, a:server_name, s.callback)},
         \ {s->s:is_step_error(s) ? lsp#log('step_error', s.result) : lsp#log('step_success', s.result)}
         \ ])
     " call lsp#utils#step#start([
@@ -240,6 +241,49 @@ function! s:ensure_init(buf, server_name, cb) abort
         \ })
 endfunction
 
+function! s:ensure_open(buf, server_name, cb) abort
+    let l:server = s:servers[a:server_name]
+    let l:path = s:get_buffer_uri(a:buf)
+
+    if empty(l:path)
+        let l:msg = s:new_rpc_error('ignore open since not a valid uri', { 'server_name': a:server_name, 'path': l:path })
+        call lsp#log(l:msg)
+        call a:cb(l:msg)
+        return
+    endif
+
+    let l:buffers = l:server['buffers']
+
+    if has_key(l:buffers, l:path)
+        let l:msg = s:new_rpc_success('already opened', { 'server_name': a:server_name, 'path': l:path })
+        call lsp#log(l:msg)
+        call a:cb(l:msg)
+        return
+    endif
+
+    let l:buffer_info = { 'dirty': 0, 'version': 1, 'uri': l:path }
+    let l:buffers[l:path] = l:buffer_info
+    call s:send_request(a:server_name, {
+        \ 'method': 'textDocument/didOpen',
+        \ 'params': {
+        \   'textDocument': s:get_text_document(l:buffer_info)
+        \ }
+        \ })
+
+    let l:msg = s:new_rpc_success('textDocument/open sent', { 'server_name': a:server_name, 'path': l:path })
+    call lsp#log(l:msg)
+    call a:cb(l:msg)
+endfunction
+
+function! s:get_text_document(buffer_info)
+    return {
+        \ 'langaugeId': &filetype,
+        \ 'text': join(getline(1, '$'), "\n"),
+        \ 'version': a:buffer_info['version'],
+        \ 'uri': a:buffer_info['uri'],
+        \ }
+endfunction
+
 function! s:send_request(server_name, data) abort
     let l:lsp_id = s:servers[a:server_name]['lsp_id']
     call lsp#log_verbose('--->', l:lsp_id, a:server_name, a:data)
@@ -267,27 +311,31 @@ function! s:on_notification(server_name, id, data, event) abort
     let l:response = a:data['response']
     let l:server = s:servers[a:server_name]
 
-    if lsp#client#is_error(l:response)
-        " todo
-    elseif lsp#client#is_server_instantiated_notification(l:response)
+
+    if lsp#client#is_server_instantiated_notification(a:data)
         " todo
     else
         let l:request = a:data['request']
-        let l:method = a:request['method']
-        if l:method == 'initalize'
-            call s:handle_initialize(a:server_name, l:response)
+        let l:method = l:request['method']
+        if l:method == 'initialize'
+            call s:handle_initialize(a:server_name, a:data)
         endif
     endif
 endfunction
 
-function! s:handle_initialize(server_name, response) abort
-    let l:init_callbacks = s:servers[a:server_name]['init_callbacks']
-    unlet s:servers[a:server_name]['init_callbacks']
-    if !lsp#client#is_error(a:response)
-        let l:server['init_result'] = a:response
+function! s:handle_initialize(server_name, data) abort
+    let l:response = a:data['response']
+    let l:server = s:servers[a:server_name]
+
+    let l:init_callbacks = l:server['init_callbacks']
+    unlet l:server['init_callbacks']
+
+    if !lsp#client#is_error(l:response)
+        let l:server['init_result'] = l:response
     endif
+
     for l:Init_callback in l:init_callbacks
-        call l:Init_callback(a:response)
+        call l:Init_callback(a:data)
     endfor
 endfunction
 
@@ -329,8 +377,8 @@ function! s:get_default_root_uri() abort
     return s:path_to_uri(getcwd())
 endfunction
 
-function! s:get_buffer_uri() abort
-    return s:path_to_uri(expand('%:p'))
+function! s:get_buffer_uri(...) abort
+    return s:path_to_uri(expand((a:0 > 0 ? '#' . a:1 : '%') . ':p'))
 endfunction
 
 if has('win32') || has('win64')
