@@ -74,7 +74,7 @@ endfunction
 
 function! s:on_text_document_did_open() abort
     call lsp#log('s:on_text_document_did_open()', bufnr('%'))
-    call s:ensure_flush(bufnr('%'), s:get_active_servers_for_buffer())
+    call s:ensure_flush_all(bufnr('%'), s:get_active_servers_for_buffer())
 endfunction
 
 function! s:on_text_document_did_save() abort
@@ -85,60 +85,111 @@ function! s:on_text_document_did_close() abort
     call lsp#log('s:on_text_document_did_close()', bufnr('%'))
 endfunction
 
-function! s:ensure_flush(buf, server_names) abort
+function! s:ensure_flush_all(buf, server_names) abort
     for l:server_name in a:server_names
-        if s:ensure_start(l:server_name) > 0
-            if s:ensure_init(l:server_name) > 0
-                let l:server = s:servers[l:server_name]
-                let l:buffers = l:server['buffers']
-                let l:buffer_uri = s:get_buffer_uri()
-                if !has_key(l:buffers, a:buf)
-                    " buffer isn't open, so open it
-                    let l:buffers[l:buffer_uri] = { 'dirty': 0, 'version': 1 }
-                    call s:send_request(l:server_name, {
-                        \ 'method': 'textDocument/didOpen',
-                        \ 'params': {
-                        \   'textDocument': s:get_text_document(l:buffers[l:buffer_uri]),
-                        \ },
-                        \ })
-                elseif l:buffers[l:buffer_uri]['dirty']
-                    " send didChange event
-                endif
-            endif
-        endif
+        call s:ensure_flush(a:buf, l:server_name, function('s:Noop'))
+        " if s:ensure_start(l:server_name) > 0
+        "     if s:ensure_init(l:server_name) > 0
+        "         let l:server = s:servers[l:server_name]
+        "         let l:buffers = l:server['buffers']
+        "         let l:buffer_uri = s:get_buffer_uri()
+        "         if !has_key(l:buffers, a:buf)
+        "             " buffer isn't open, so open it
+        "             let l:buffers[l:buffer_uri] = { 'dirty': 0, 'version': 1 }
+        "             call s:send_request(l:server_name, {
+        "                 \ 'method': 'textDocument/didOpen',
+        "                 \ 'params': {
+        "                 \   'textDocument': s:get_text_document(l:buffers[l:buffer_uri]),
+        "                 \ },
+        "                 \ })
+        "         elseif l:buffers[l:buffer_uri]['dirty']
+        "             " send didChange event
+        "         endif
+        "     endif
+        " endif
     endfor
 endfunction
 
-function! s:ensure_start(server_name) abort
+function! s:Noop(...) abort
+endfunction
+
+function! s:is_step_error(s) abort
+    return lsp#client#is_error(a:s.result[0]['response'])
+endfunction
+
+function! s:throw_step_error(s) abort
+    call a:s.callback(s.result[1])
+endfunction
+
+function! s:new_rpc_success(message, data) abort
+    return {
+        \ 'response': {
+        \   'message': a:message,
+        \   'data': extend({ '__data__': 'vim-lsp'}, a:data),
+        \ }
+        \ }
+endfunction
+
+function! s:new_rpc_error(message, data) abort
+    return {
+        \ 'response': {
+        \   'error': {
+        \       'code': 0,
+        \       'message': a:message,
+        \       'data': extend({ '__error__': 'vim-lsp'}, a:data),
+        \   },
+        \ }
+        \ }
+endfunction
+
+function! s:ensure_flush(buf, server_name, cb) abort
+    call lsp#utils#step#start([
+        \ {s->s:ensure_start(a:buf, a:server_name, s.callback)},
+        \ {s->s:is_step_error(s) ? lsp#log('step_error', s.result) : lsp#log('step_success', s.result)}
+        \ ])
+    " call lsp#utils#step#start([
+    "     \ {s->s:ensure_start(a:buf, a:server_name, s.cb)},
+    "     \ {s->s:is_step_error(s) ? s.throw_step_error(s) : s:ensure_init(a:buf, a:server_name, s.callback)},
+    "     \ {s->s:is_step_error(s) ? s.throw_step_error(s) : s:ensure_open(a:buf, a:server_name, s.callback)},
+    "     \ {s->s:is_step_error(s) ? s.throw_step_error(s) : s:ensure_not_dirty(a:buf, a:server_name, s.callback)},
+    "     \ {s->s:is_step_error(s) ? s.throw_step_error(s) : l:Callback()},
+    "     \ ])
+endfunction
+
+function! s:ensure_start(buf, server_name, cb) abort
     let l:server = s:servers[a:server_name]
     let l:server_info = l:server['server_info']
-    if l:server['lsp_id'] <= 0
-        " try starting server since it hasn't started
-        let l:cmd = l:server_info['cmd'](l:server_info)
+    if l:server['lsp_id'] > 0
+        let l:msg = s:new_rpc_sucess('server_started'), { 'server_name': a:server_name }
+        call a:cb(l:msg)
+        return
+    endif
 
-        if empty(l:cmd)
-            call lsp#log('s:ensure_flush()', 'ignore server start since cmd is empty', a:server_name)
-            return -1
-        endif
+    let l:cmd = l:server_info['cmd'](l:server_info)
 
-        let l:lsp_id = lsp#client#start({
-            \ 'cmd': l:cmd,
-            \ 'on_stderr': function('s:on_stderr', [a:server_name]),
-            \ 'on_exit': function('s:on_exit', [a:server_name]),
-            \ 'on_notification': function('s:on_notification', [a:server_name]),
-            \ })
+    if empty(l:cmd)
+        let l:msg = s:new_rpc_error('ignore server start since cmd is empty', { 'server_name': a:server_name }))
+        call lsp#log(l:msg)
+        call a:cb(l:msg)
+        return
+    endif
 
-        if l:lsp_id > 0
-            let l:server['lsp_id'] = l:lsp_id
-            call lsp#log('s:ensure_flush()', 'server started', a:server_name, l:lsp_id, l:cmd)
-            return l:server['lsp_id']
-        else
-            call lsp#log('s:ensure_flush()', 'server failed to start', a:server_name, l:lsp_id, l:cmd)
-            return -1
-        endif
+    let l:lsp_id = lsp#client#start({
+        \ 'cmd': l:cmd,
+        \ 'on_stderr': function('s:on_stderr', [a:server_name]),
+        \ 'on_exit': function('s:on_exit', [a:server_name]),
+        \ 'on_notification': function('s:on_notification', [a:server_name]),
+        \ })
+
+    if l:lsp_id > 0
+        let l:server['lsp_id'] = l:lsp_id
+        let l:msg = s:new_rpc_success('started lsp server', { 'server_name': a:server_name, 'lps_id': l:lsp_id })
+        call lsp#log(l:msg)
+        call a:cb(l:msg)
     else
-        call lsp#log('s:ensure_flush()', 'server already started', a:server_name)
-        return l:server['lsp_id']
+        let l:msg = s:new_rpc_error('failed to start server', { 'server_name': a:server_name, 'cmd': l:cmd })
+        call lsp#log(l:msg)
+        call a:cb(l:msg)
     endif
 endfunction
 
