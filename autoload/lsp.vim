@@ -1,6 +1,6 @@
 let s:enabled = 0
 let s:already_setup = 0
-let s:servers = {} " { lsp_id, server_info, buffers: { 1: { dirty } }
+let s:servers = {} " { lsp_id, server_info, initialize_response?, buffers: { 1: { dirty } }
 
 " do nothing, place it here only to avoid the message
 autocmd User lsp_setup silent
@@ -86,10 +86,10 @@ function! s:on_text_document_did_close() abort
 endfunction
 
 function! s:ensure_flush(buf, server_names) abort
-    call lsp#log('s:ensure_flush', &ft, a:buf, a:server_names)
     for l:server_name in a:server_names
         if s:ensure_start(l:server_name) > 0
-            " ensure init
+            if s:ensure_init(l:server_name) > 0
+            endif
         endif
     endfor
 endfunction
@@ -110,6 +110,7 @@ function! s:ensure_start(server_name) abort
             \ 'cmd': l:cmd,
             \ 'on_stderr': function('s:on_stderr', [a:server_name]),
             \ 'on_exit': function('s:on_exit', [a:server_name]),
+            \ 'on_notification': function('s:on_notification', [a:server_name]),
             \ })
 
         if l:lsp_id > 0
@@ -126,16 +127,77 @@ function! s:ensure_start(server_name) abort
     endif
 endfunction
 
+function! s:ensure_init(server_name) abort
+    let l:server = s:servers[a:server_name]
+    let l:server_info = l:server['server_info']
+    if has_key(l:server, 'initialize_response')
+        " it is either initializing or already initialized
+        return 1
+    endif
+
+    if has_key(l:server_info, 'root_uri')
+        let l:root_uri = l:server_info['root_uri'](l:server_info)
+    else
+        let l:root_uri = s:get_default_root_uri()
+    endif
+
+    if empty(l:root_uri)
+        call lsp#log('s:ensure_init', 'root_uri empty', 'ignoring initialization', a:server_name)
+        return -1
+    endif
+
+    " set to empty so we know that it initialize request is in flight
+    let l:server['initialize_response'] = {}
+
+    call s:send_request(a:server_name, {
+        \ 'method': 'initialize',
+        \ 'params': {
+        \   'capabilities': {},
+        \   'root_uri': l:root_uri,
+        \   'root_path': l:root_uri,
+        \ }
+        \ })
+
+    return 1
+endfunction
+
+function! s:send_request(server_name, data) abort
+    let l:lsp_id = s:servers[a:server_name]['lsp_id']
+    call lsp#log_verbose('--->', l:lsp_id, a:server_name, a:data)
+    call lsp#client#send_request(l:lsp_id, a:data)
+endfunction
+
 function! s:on_stderr(server_name, id, data, event) abort
-    call lsp#log_verbose('s:on_stderr <---', a:server_name, a:id, a:data)
+    call lsp#log_verbose('<---(stderr)', a:id, a:server_name, a:data)
 endfunction
 
 function! s:on_exit(server_name, id, data, event) abort
-    call lsp#log('s:on_exit', a:server_name, 'exited', a:id, a:data)
-    if has_key(s:server, a:server_name)
+    call lsp#log('s:on_exit', a:id, a:server_name, 'exited', a:data)
+    if has_key(s:servers, a:server_name)
         let l:server = s:servers[a:server_name]
         let l:server['lsp_id'] = 0
         let l:server['buffers'] = {}
+        if has_key(l:server, 'initialize_response')
+            unlet l:server['initialize_response']
+        endif
+    endif
+endfunction
+
+function! s:on_notification(server_name, id, data, event) abort
+    call lsp#log_verbose('<---', a:id, a:server_name, a:data)
+    let l:respone = a:data['response']
+    let l:server = s:servers[a:server_name]
+
+    if lsp#client#is_error(l:response)
+        " todo
+    elseif lsp#client#is_server_instantiated_notification(l:response)
+        " todo
+    else
+        let l:request = a:data['request']
+        let l:method = a:request['method']
+        if l:method == 'initalize'
+            let l:server['initialize_response'] = l:response
+        endif
     endif
 endfunction
 
@@ -173,3 +235,16 @@ function! s:get_active_servers_for_buffer() abort
     return l:active_servers
 endfunction
 
+function! s:get_default_root_uri() abort
+    return s:path_to_uri(getcwd())
+endfunction
+
+if has('win32') || has('win64')
+    function! s:path_to_uri(path) abort
+        return 'file:///' . substitute(a:path, '\', '/', 'g')
+    endfunction
+else
+    function! s:path_to_uri(path) abort
+        return 'file://' . a:path
+    endfunction
+endif
