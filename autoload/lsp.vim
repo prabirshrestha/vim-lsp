@@ -1,6 +1,6 @@
 let s:enabled = 0
 let s:already_setup = 0
-let s:servers = {} " { lsp_id, server_info, initialize_response?, buffers: { path: { dirty } }
+let s:servers = {} " { lsp_id, server_info, init_callbacks, init_response?, buffers: { path: { dirty } }
 
 " do nothing, place it here only to avoid the message
 autocmd User lsp_setup silent
@@ -145,6 +145,7 @@ endfunction
 function! s:ensure_flush(buf, server_name, cb) abort
     call lsp#utils#step#start([
         \ {s->s:ensure_start(a:buf, a:server_name, s.callback)},
+        \ {s->s:is_step_error(s) ? s.throw_step_error(s) : s:ensure_init(a:buf, a:server_name, s.callback)},
         \ {s->s:is_step_error(s) ? lsp#log('step_error', s.result) : lsp#log('step_success', s.result)}
         \ ])
     " call lsp#utils#step#start([
@@ -160,7 +161,7 @@ function! s:ensure_start(buf, server_name, cb) abort
     let l:server = s:servers[a:server_name]
     let l:server_info = l:server['server_info']
     if l:server['lsp_id'] > 0
-        let l:msg = s:new_rpc_sucess('server_started'), { 'server_name': a:server_name }
+        let l:msg = s:new_rpc_sucess('server already started'), { 'server_name': a:server_name }
         call a:cb(l:msg)
         return
     endif
@@ -183,7 +184,7 @@ function! s:ensure_start(buf, server_name, cb) abort
 
     if l:lsp_id > 0
         let l:server['lsp_id'] = l:lsp_id
-        let l:msg = s:new_rpc_success('started lsp server', { 'server_name': a:server_name, 'lps_id': l:lsp_id })
+        let l:msg = s:new_rpc_success('started lsp server successfully', { 'server_name': a:server_name, 'lps_id': l:lsp_id })
         call lsp#log(l:msg)
         call a:cb(l:msg)
     else
@@ -193,14 +194,27 @@ function! s:ensure_start(buf, server_name, cb) abort
     endif
 endfunction
 
-function! s:ensure_init(server_name) abort
+function! s:ensure_init(buf, server_name, cb) abort
     let l:server = s:servers[a:server_name]
-    let l:server_info = l:server['server_info']
-    if has_key(l:server, 'initialize_response')
-        " it is either initializing or already initialized
-        return 1
+
+    if has_key(l:server, 'init_result')
+        let l:msg = s:new_rpc_success('lsp server already initialized', { 'server_name': a:server_name, 'lps_id': l:lsp_id, 'init_result': l:server['init_result'] })
+        call lsp#log(l:msg)
+        call a:cb(l:msg)
+        return
     endif
 
+    if has_key(l:server, 'init_callbacks')
+        " waiting for initialize resposne
+        call add(l:server['init_callbacks'], a:cb)
+        let l:msg = s:new_rpc_success('waiting for lsp server to initialize', { 'server_name': a:server_name, 'lps_id': l:lsp_id })
+        call lsp#log(l:msg)
+        return
+    endif
+
+    " server has already started, but not initialized
+
+    let l:server_info = l:server['server_info']
     if has_key(l:server_info, 'root_uri')
         let l:root_uri = l:server_info['root_uri'](l:server_info)
     else
@@ -208,12 +222,13 @@ function! s:ensure_init(server_name) abort
     endif
 
     if empty(l:root_uri)
-        call lsp#log('s:ensure_init', 'root_uri empty', 'ignoring initialization', a:server_name)
-        return -1
+        let l:msg = s:new_rpc_error('ignore initialization lsp server due to empty root_uri', { 'server_name': a:server_name, 'lsp_id': l:lps_id })
+        call lsp#log(l:msg)
+        call a:cb(l:msg)
+        return
     endif
 
-    " set to empty so we know that it initialize request is in flight
-    let l:server['initialize_response'] = {}
+    let l:server['init_callbacks'] = [a:cb]
 
     call s:send_request(a:server_name, {
         \ 'method': 'initialize',
@@ -223,8 +238,6 @@ function! s:ensure_init(server_name) abort
         \   'root_path': l:root_uri,
         \ }
         \ })
-
-    return 1
 endfunction
 
 function! s:send_request(server_name, data) abort
@@ -243,15 +256,15 @@ function! s:on_exit(server_name, id, data, event) abort
         let l:server = s:servers[a:server_name]
         let l:server['lsp_id'] = 0
         let l:server['buffers'] = {}
-        if has_key(l:server, 'initialize_response')
-            unlet l:server['initialize_response']
+        if has_key(l:server, 'init_response')
+            unlet l:server['init_response']
         endif
     endif
 endfunction
 
 function! s:on_notification(server_name, id, data, event) abort
     call lsp#log_verbose('<---', a:id, a:server_name, a:data)
-    let l:respone = a:data['response']
+    let l:response = a:data['response']
     let l:server = s:servers[a:server_name]
 
     if lsp#client#is_error(l:response)
@@ -262,9 +275,20 @@ function! s:on_notification(server_name, id, data, event) abort
         let l:request = a:data['request']
         let l:method = a:request['method']
         if l:method == 'initalize'
-            let l:server['initialize_response'] = l:response
+            call s:handle_initialize(a:server_name, l:response)
         endif
     endif
+endfunction
+
+function! s:handle_initialize(server_name, response) abort
+    let l:init_callbacks = s:servers[a:server_name]['init_callbacks']
+    unlet s:servers[a:server_name]['init_callbacks']
+    if !lsp#client#is_error(a:response)
+        let l:server['init_result'] = a:response
+    endif
+    for l:Init_callback in l:init_callbacks
+        call l:Init_callback(a:response)
+    endfor
 endfunction
 
 function! s:get_active_servers_for_buffer() abort
