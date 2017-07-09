@@ -37,6 +37,14 @@ function! lsp#disable() abort
     let s:enabled = 0
 endfunction
 
+function! lsp#get_server_names() abort
+    return keys(s:servers)
+endfunction
+
+function! lsp#get_server_info(server_name) abort
+    return s:servers[a:server_name]['server_info']
+endfunction
+
 " @params {server_info} = {
 "   'name': 'go-langserver',        " requried, must be unique
 "   'whitelist': ['go'],            " optional, array of filetypes to whitelist, * for all filetypes
@@ -75,7 +83,7 @@ endfunction
 
 function! s:on_text_document_did_open() abort
     call lsp#log('s:on_text_document_did_open()', bufnr('%'))
-    for l:server_name in lsp#get_active_servers_for_buffer()
+    for l:server_name in lsp#get_whitelisted_servers()
         call s:ensure_flush(bufnr('%'), l:server_name, function('s:Noop'))
     endfor
 endfunction
@@ -83,7 +91,7 @@ endfunction
 function! s:on_text_document_did_save() abort
     call lsp#log('s:on_text_document_did_save()', bufnr('%'))
     let l:buf = bufnr('%')
-    for l:server_name in lsp#get_active_servers_for_buffer()
+    for l:server_name in lsp#get_whitelisted_servers()
         call s:ensure_flush(bufnr('%'), l:server_name, {result->s:call_did_save(l:buf, l:server_name, result, function('s:Noop'))})
     endfor
 endfunction
@@ -91,7 +99,7 @@ endfunction
 function! s:on_text_document_did_change() abort
     call lsp#log('s:on_text_document_did_change()', bufnr('%'))
     let l:buf = bufnr('%')
-    for l:server_name in lsp#get_active_servers_for_buffer()
+    for l:server_name in lsp#get_whitelisted_servers()
         call s:ensure_flush(bufnr('%'), l:server_name, function('s:Noop'))
     endfor
 endfunction
@@ -289,7 +297,7 @@ function! s:ensure_changed(buf, server_name, cb) abort
     call s:send_request(a:server_name, {
         \ 'method': 'textDocument/didChange',
         \ 'params': {
-        \   'textDocument': s:get_text_document_identifier(l:buffer_info),
+        \   'textDocument': s:get_text_document_identifier(a:buf, l:buffer_info),
         \   'contentChanges': [
         \       { 'text': join(getline(a:buf, '$'), "\n") },
         \   ],
@@ -390,8 +398,20 @@ function! s:handle_initialize(server_name, data) abort
     endfor
 endfunction
 
-function! lsp#get_active_servers_for_buffer(...) abort
-    let l:buffer_filetype = a:0 > 0 ? getbufvar(a:1, '&filetype') : &filetype
+" call lsp#get_whitelisted_servers()
+" call lsp#get_whitelisted_servers(bufnr('%))
+" call lsp#get_whitelisted_servers('typescript')
+function! lsp#get_whitelisted_servers(...) abort
+    if a:0 == 0
+        let l:buffer_filetype = &filetype
+    else
+        if type(a:1) == type('')
+            let l:buffer_filetype = a:1
+        else
+            let l:buffer_filetype = getbufvar(a:1, '&filetype')
+        endif
+    endif
+
     " TODO: cache active servers per buffer
     let l:active_servers = []
 
