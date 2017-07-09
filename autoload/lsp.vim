@@ -88,25 +88,6 @@ endfunction
 function! s:ensure_flush_all(buf, server_names) abort
     for l:server_name in a:server_names
         call s:ensure_flush(a:buf, l:server_name, function('s:Noop'))
-        " if s:ensure_start(l:server_name) > 0
-        "     if s:ensure_init(l:server_name) > 0
-        "         let l:server = s:servers[l:server_name]
-        "         let l:buffers = l:server['buffers']
-        "         let l:buffer_uri = s:get_buffer_uri()
-        "         if !has_key(l:buffers, a:buf)
-        "             " buffer isn't open, so open it
-        "             let l:buffers[l:buffer_uri] = { 'dirty': 0, 'version': 1 }
-        "             call s:send_request(l:server_name, {
-        "                 \ 'method': 'textDocument/didOpen',
-        "                 \ 'params': {
-        "                 \   'textDocument': s:get_text_document(l:buffers[l:buffer_uri]),
-        "                 \ },
-        "                 \ })
-        "         elseif l:buffers[l:buffer_uri]['dirty']
-        "             " send didChange event
-        "         endif
-        "     endif
-        " endif
     endfor
 endfunction
 
@@ -118,7 +99,7 @@ function! s:is_step_error(s) abort
 endfunction
 
 function! s:throw_step_error(s) abort
-    call a:s.callback(s.result[1])
+    call a:s.callback(a:s.result[0])
 endfunction
 
 function! s:new_rpc_success(message, data) abort
@@ -145,9 +126,9 @@ endfunction
 function! s:ensure_flush(buf, server_name, cb) abort
     call lsp#utils#step#start([
         \ {s->s:ensure_start(a:buf, a:server_name, s.callback)},
-        \ {s->s:is_step_error(s) ? s.throw_step_error(s) : s:ensure_init(a:buf, a:server_name, s.callback)},
-        \ {s->s:is_step_error(s) ? s.throw_step_error(s) : s:ensure_open(a:buf, a:server_name, s.callback)},
-        \ {s->s:is_step_error(s) ? lsp#log('step_error', s.result) : lsp#log('step_success', s.result)}
+        \ {s->s:is_step_error(s) ? s:throw_step_error(s) : s:ensure_init(a:buf, a:server_name, s.callback)},
+        \ {s->s:is_step_error(s) ? s:throw_step_error(s) : s:ensure_open(a:buf, a:server_name, s.callback)},
+        \ {s->s:is_step_error(s) ? lsp#log('step_error') : lsp#log('step_success')}
         \ ])
     " call lsp#utils#step#start([
     "     \ {s->s:ensure_start(a:buf, a:server_name, s.cb)},
@@ -159,10 +140,20 @@ function! s:ensure_flush(buf, server_name, cb) abort
 endfunction
 
 function! s:ensure_start(buf, server_name, cb) abort
+    let l:path = s:get_buffer_path(a:buf)
+
+    if s:is_remote_uri(l:path)
+        let l:msg = s:new_rpc_error('ignoring start server due to remote uri', { 'server_name': a:server_name, 'uri': l:path})
+        call lsp#log(l:msg)
+        call a:cb(l:msg)
+        return
+    endif
+
     let l:server = s:servers[a:server_name]
     let l:server_info = l:server['server_info']
     if l:server['lsp_id'] > 0
-        let l:msg = s:new_rpc_sucess('server already started'), { 'server_name': a:server_name }
+        let l:msg = s:new_rpc_success('server already started', { 'server_name': a:server_name })
+        call lsp#log(l:msg)
         call a:cb(l:msg)
         return
     endif
@@ -199,7 +190,7 @@ function! s:ensure_init(buf, server_name, cb) abort
     let l:server = s:servers[a:server_name]
 
     if has_key(l:server, 'init_result')
-        let l:msg = s:new_rpc_success('lsp server already initialized', { 'server_name': a:server_name, 'lps_id': l:lsp_id, 'init_result': l:server['init_result'] })
+        let l:msg = s:new_rpc_success('lsp server already initialized', { 'server_name': a:server_name, 'init_result': l:server['init_result'] })
         call lsp#log(l:msg)
         call a:cb(l:msg)
         return
@@ -208,7 +199,7 @@ function! s:ensure_init(buf, server_name, cb) abort
     if has_key(l:server, 'init_callbacks')
         " waiting for initialize resposne
         call add(l:server['init_callbacks'], a:cb)
-        let l:msg = s:new_rpc_success('waiting for lsp server to initialize', { 'server_name': a:server_name, 'lps_id': l:lsp_id })
+        let l:msg = s:new_rpc_success('waiting for lsp server to initialize', { 'server_name': a:server_name })
         call lsp#log(l:msg)
         return
     endif
@@ -377,17 +368,21 @@ function! s:get_default_root_uri() abort
     return s:path_to_uri(getcwd())
 endfunction
 
+function! s:get_buffer_path(...) abort
+    return expand((a:0 > 0 ? '#' . a:1 : '%') . ':p')
+endfunction
+
 function! s:get_buffer_uri(...) abort
     return s:path_to_uri(expand((a:0 > 0 ? '#' . a:1 : '%') . ':p'))
 endfunction
 
 if has('win32') || has('win64')
     function! s:path_to_uri(path) abort
-        return 'file:///' . substitute(a:path, '\', '/', 'g')
+        return s:is_remote_uri(a:path) ? a:path : 'file:///' . substitute(a:path, '\', '/', 'g')
     endfunction
 else
     function! s:path_to_uri(path) abort
-        return 'file://' . a:path
+        return s:is_remote_uri(a:path) ? a:path : 'file://' . a:path
     endfunction
 endif
 
@@ -398,4 +393,8 @@ function! s:get_text_document(buffer_info) abort
         \ 'version': a:buffer_info['version'],
         \ 'text': join(getline(1, '$'), "\n"),
         \ }
+endfunction
+
+function! s:is_remote_uri(uri) abort
+    return a:uri =~# '^\w\+::' || a:uri =~# '^\w\+://'
 endfunction
