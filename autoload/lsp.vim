@@ -74,12 +74,41 @@ endfunction
 
 function! s:on_text_document_did_open() abort
     call lsp#log('s:on_text_document_did_open()', bufnr('%'))
-    call s:ensure_flush_all(bufnr('%'), s:get_active_servers_for_buffer())
+    for l:server_name in s:get_active_servers_for_buffer()
+        call s:ensure_flush(bufnr('%'), l:server_name, function('s:Noop'))
+    endfor
 endfunction
 
 function! s:on_text_document_did_save() abort
     call lsp#log('s:on_text_document_did_save()', bufnr('%'))
-    call s:ensure_flush_all(bufnr('%'), s:get_active_servers_for_buffer())
+    let l:buf = bufnr('%')
+    for l:server_name in s:get_active_servers_for_buffer()
+        call s:ensure_flush(bufnr('%'), l:server_name, {result->s:call_did_save(l:buf, l:server_name, result, function('s:Noop'))})
+    endfor
+endfunction
+
+function! s:call_did_save(buf, server_name, result, cb) abort
+    if lsp#client#is_error(a:result['response'])
+        return
+    endif
+
+    let l:server = s:servers[a:server_name]
+    let l:path = s:get_buffer_uri(a:buf)
+    let l:buffers = l:server['buffers']
+    let l:buffer_info = l:buffers[l:path]
+
+    " TODO: handle text when includeText is defined in TextDocumentSaveRegistrationOptions
+
+    call s:send_request(a:server_name, {
+        \ 'method': 'textDocument/didSave',
+        \ 'params': {
+        \   'textDocument': s:get_text_document_identifier(l:buffer_info),
+        \ },
+        \ })
+
+    let l:msg = s:new_rpc_success('textDocument/didSave sent', { 'server_name': a:server_name, 'path': l:path })
+    call lsp#log(l:msg)
+    call a:cb(l:msg)
 endfunction
 
 function! s:on_text_document_did_close() abort
@@ -130,15 +159,8 @@ function! s:ensure_flush(buf, server_name, cb) abort
         \ {s->s:is_step_error(s) ? s:throw_step_error(s) : s:ensure_init(a:buf, a:server_name, s.callback)},
         \ {s->s:is_step_error(s) ? s:throw_step_error(s) : s:ensure_open(a:buf, a:server_name, s.callback)},
         \ {s->s:is_step_error(s) ? s:throw_step_error(s) : s:ensure_changed(a:buf, a:server_name, s.callback)},
-        \ {s->s:is_step_error(s) ? lsp#log('step_error') : lsp#log('step_success')}
+        \ {s->a:cb(s.result[0])}
         \ ])
-    " call lsp#utils#step#start([
-    "     \ {s->s:ensure_start(a:buf, a:server_name, s.cb)},
-    "     \ {s->s:is_step_error(s) ? s.throw_step_error(s) : s:ensure_init(a:buf, a:server_name, s.callback)},
-    "     \ {s->s:is_step_error(s) ? s.throw_step_error(s) : s:ensure_open(a:buf, a:server_name, s.callback)},
-    "     \ {s->s:is_step_error(s) ? s.throw_step_error(s) : s:ensure_not_dirty(a:buf, a:server_name, s.callback)},
-    "     \ {s->s:is_step_error(s) ? s.throw_step_error(s) : l:Callback()},
-    "     \ ])
 endfunction
 
 function! s:ensure_start(buf, server_name, cb) abort
@@ -230,7 +252,7 @@ function! s:ensure_init(buf, server_name, cb) abort
         \   'capabilities': {},
         \   'rootUri': l:root_uri,
         \   'rootPath': l:root_uri,
-        \ }
+        \ },
         \ })
 endfunction
 
@@ -250,6 +272,8 @@ function! s:ensure_changed(buf, server_name, cb) abort
 
     let l:buffer_info['dirty'] = 0
     let l:buffer_info['version'] = l:buffer_info['version'] + 1
+
+    " todo: support range in contentChanges
 
     call s:send_request(a:server_name, {
         \ 'method': 'textDocument/didChange',
