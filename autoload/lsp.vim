@@ -486,3 +486,11 @@ endfunction
 function! s:is_remote_uri(uri) abort
     return a:uri =~# '^\w\+::' || a:uri =~# '^\w\+://'
 endfunction
+
+function! lsp#send_request(server_name, request) abort
+    call lsp#utils#step#start([
+        \ {s->s:ensure_changed(bufnr('%'), a:server_name, s.callback)},
+        \ {s->s:is_step_error(s) ? s:throw_step_error(s) : s:send_request(a:server_name, a:request))},
+        \ {s->s.callback(a:cb)}
+        \ ])
+endfunction
