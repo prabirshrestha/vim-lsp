@@ -79,6 +79,7 @@ endfunction
 
 function! s:on_text_document_did_save() abort
     call lsp#log('s:on_text_document_did_save()', bufnr('%'))
+    call s:ensure_flush_all(bufnr('%'), s:get_active_servers_for_buffer())
 endfunction
 
 function! s:on_text_document_did_close() abort
@@ -128,6 +129,7 @@ function! s:ensure_flush(buf, server_name, cb) abort
         \ {s->s:ensure_start(a:buf, a:server_name, s.callback)},
         \ {s->s:is_step_error(s) ? s:throw_step_error(s) : s:ensure_init(a:buf, a:server_name, s.callback)},
         \ {s->s:is_step_error(s) ? s:throw_step_error(s) : s:ensure_open(a:buf, a:server_name, s.callback)},
+        \ {s->s:is_step_error(s) ? s:throw_step_error(s) : s:ensure_changed(a:buf, a:server_name, s.callback)},
         \ {s->s:is_step_error(s) ? lsp#log('step_error') : lsp#log('step_success')}
         \ ])
     " call lsp#utils#step#start([
@@ -230,6 +232,36 @@ function! s:ensure_init(buf, server_name, cb) abort
         \   'rootPath': l:root_uri,
         \ }
         \ })
+endfunction
+
+function! s:ensure_changed(buf, server_name, cb) abort
+    let l:server = s:servers[a:server_name]
+    let l:path = s:get_buffer_uri(a:buf)
+
+    let l:buffers = l:server['buffers']
+    let l:buffer_info = l:buffers[l:path]
+
+    if !l:buffer_info['dirty']
+        let l:msg = s:new_rpc_success('not dirty', { 'server_name': a:server_name, 'path': l:path })
+        call lsp#log(l:msg)
+        call a:cb(l:msg)
+        return
+    endif
+
+    let l:buffer_info['dirty'] = 0
+    let l:buffer_info['version'] = l:buffer_info['version'] + 1
+
+    call s:send_request(a:server_name, {
+        \ 'method': 'textDocument/didChange',
+        \ 'params': {
+        \   'textDocument': s:get_text_document_identifier(l:buffer_info),
+        \   'contentChanges': [{ "text": join(getline(1, '$'), "\n") }]
+        \ },
+        \ }
+
+    let l:msg = s:new_rpc_success('textDocument/didChange sent', { 'server_name': a:server_name, 'path': l:path })
+    call lsp#log(l:msg)
+    call a:cb(l:msg)
 endfunction
 
 function! s:ensure_open(buf, server_name, cb) abort
@@ -392,6 +424,13 @@ function! s:get_text_document(buffer_info) abort
         \ 'languageId': &filetype,
         \ 'version': a:buffer_info['version'],
         \ 'text': join(getline(1, '$'), "\n"),
+        \ }
+endfunction
+
+function! s:get_text_document_identifier(buffer_info) abort
+    return {
+        \ 'uri': s:get_buffer_uri(),
+        \ 'version': a:buffer_info['version'],
         \ }
 endfunction
 
