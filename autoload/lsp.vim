@@ -1,6 +1,6 @@
 let s:enabled = 0
 let s:already_setup = 0
-let s:servers = {} " { lsp_id, server_info, init_callbacks, init_response?, buffers: { path: { dirty } }
+let s:servers = {} " { lsp_id, server_info, init_callbacks, init_response?, buffers: { path: { changed_tick } }
 
 " do nothing, place it here only to avoid the message
 autocmd User lsp_setup silent
@@ -75,7 +75,7 @@ endfunction
 
 function! s:on_text_document_did_open() abort
     call lsp#log('s:on_text_document_did_open()', bufnr('%'))
-    for l:server_name in s:get_active_servers_for_buffer()
+    for l:server_name in lsp#get_active_servers_for_buffer()
         call s:ensure_flush(bufnr('%'), l:server_name, function('s:Noop'))
     endfor
 endfunction
@@ -83,7 +83,7 @@ endfunction
 function! s:on_text_document_did_save() abort
     call lsp#log('s:on_text_document_did_save()', bufnr('%'))
     let l:buf = bufnr('%')
-    for l:server_name in s:get_active_servers_for_buffer()
+    for l:server_name in lsp#get_active_servers_for_buffer()
         call s:ensure_flush(bufnr('%'), l:server_name, {result->s:call_did_save(l:buf, l:server_name, result, function('s:Noop'))})
     endfor
 endfunction
@@ -91,7 +91,7 @@ endfunction
 function! s:on_text_document_did_change() abort
     call lsp#log('s:on_text_document_did_change()', bufnr('%'))
     let l:buf = bufnr('%')
-    for l:server_name in s:get_active_servers_for_buffer()
+    for l:server_name in lsp#get_active_servers_for_buffer()
         call s:ensure_flush(bufnr('%'), l:server_name, function('s:Noop'))
     endfor
 endfunction
@@ -272,14 +272,18 @@ function! s:ensure_changed(buf, server_name, cb) abort
     let l:buffers = l:server['buffers']
     let l:buffer_info = l:buffers[l:path]
 
-    if !l:buffer_info['dirty']
+    let l:changed_tick = getbufvar(a:buf, 'changedtick')
+
+    call lsp#log('changed tick', l:changed_tick, l:buffer_info['changed_tick'])
+
+    if l:buffer_info['changed_tick'] == l:changed_tick
         let l:msg = s:new_rpc_success('not dirty', { 'server_name': a:server_name, 'path': l:path })
         call lsp#log(l:msg)
         call a:cb(l:msg)
         return
     endif
 
-    let l:buffer_info['dirty'] = 0
+    let l:buffer_info['changed_tick'] = l:changed_tick
     let l:buffer_info['version'] = l:buffer_info['version'] + 1
 
     " todo: support range in contentChanges
@@ -288,9 +292,11 @@ function! s:ensure_changed(buf, server_name, cb) abort
         \ 'method': 'textDocument/didChange',
         \ 'params': {
         \   'textDocument': s:get_text_document_identifier(l:buffer_info),
-        \   'contentChanges': [{ "text": join(getline(1, '$'), "\n") }]
-        \ },
+        \   'contentChanges': [
+        \       { 'text': join(getline(a:buf, '$'), "\n") },
+        \   ],
         \ }
+        \ })
 
     let l:msg = s:new_rpc_success('textDocument/didChange sent', { 'server_name': a:server_name, 'path': l:path })
     call lsp#log(l:msg)
@@ -317,7 +323,7 @@ function! s:ensure_open(buf, server_name, cb) abort
         return
     endif
 
-    let l:buffer_info = { 'dirty': 0, 'version': 1, 'uri': l:path }
+    let l:buffer_info = { 'changed_tick': getbufvar(a:buf, 'changedtick'), 'version': 1, 'uri': l:path }
     let l:buffers[l:path] = l:buffer_info
     call s:send_request(a:server_name, {
         \ 'method': 'textDocument/didOpen',
@@ -395,7 +401,8 @@ function! s:handle_initialize(server_name, data) abort
     endfor
 endfunction
 
-function! s:get_active_servers_for_buffer() abort
+function! lsp#get_active_servers_for_buffer(...) abort
+    let l:buffer_filetype = a:0 > 0 ? getbufvar(a:1, '&filetype') : &filetype
     " TODO: cache active servers per buffer
     let l:active_servers = []
 
@@ -405,7 +412,7 @@ function! s:get_active_servers_for_buffer() abort
 
         if has_key(l:server_info, 'blacklist')
             for l:filetype in l:server_info['blacklist']
-                if l:filetype == &filetype || l:filetype == '*'
+                if l:filetype == l:buffer_filetype || l:filetype == '*'
                     let l:blacklisted = 1
                     break
                 endif
@@ -418,7 +425,7 @@ function! s:get_active_servers_for_buffer() abort
 
         if has_key(l:server_info, 'whitelist')
             for l:filetype in l:server_info['whitelist']
-                if l:filetype == &filetype || l:filetype == '*'
+                if l:filetype == l:buffer_filetype || l:filetype == '*'
                     let l:active_servers += [l:server_name]
                     break
                 endif
