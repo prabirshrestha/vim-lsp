@@ -258,7 +258,7 @@ function! s:ensure_open(buf, server_name, cb) abort
         \ 'method': 'textDocument/didOpen',
         \ 'params': {
         \   'textDocument': s:get_text_document(l:buffer_info)
-        \ }
+        \ },
         \ })
 
     let l:msg = s:new_rpc_success('textDocument/open sent', { 'server_name': a:server_name, 'path': l:path })
