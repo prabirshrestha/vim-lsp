@@ -274,8 +274,6 @@ function! s:ensure_changed(buf, server_name, cb) abort
 
     let l:changed_tick = getbufvar(a:buf, 'changedtick')
 
-    call lsp#log('changed tick', l:changed_tick, l:buffer_info['changed_tick'])
-
     if l:buffer_info['changed_tick'] == l:changed_tick
         let l:msg = s:new_rpc_success('not dirty', { 'server_name': a:server_name, 'path': l:path })
         call lsp#log(l:msg)
