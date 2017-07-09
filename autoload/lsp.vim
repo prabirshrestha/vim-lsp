@@ -226,8 +226,8 @@ function! s:ensure_init(buf, server_name, cb) abort
         \ 'method': 'initialize',
         \ 'params': {
         \   'capabilities': {},
-        \   'root_uri': l:root_uri,
-        \   'root_path': l:root_uri,
+        \   'rootUri': l:root_uri,
+        \   'rootPath': l:root_uri,
         \ }
         \ })
 endfunction
