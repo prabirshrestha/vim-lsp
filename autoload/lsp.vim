@@ -62,6 +62,7 @@ function s:register_events() abort
         autocmd BufReadPost * call s:on_text_document_did_open()
         autocmd BufWritePost * call s:on_text_document_did_save()
         autocmd BufWinLeave * call s:on_text_document_did_close()
+        autocmd InsertLeave * call s:on_text_document_did_change()
     augroup END
     call s:on_text_document_did_open()
 endfunction
@@ -84,6 +85,14 @@ function! s:on_text_document_did_save() abort
     let l:buf = bufnr('%')
     for l:server_name in s:get_active_servers_for_buffer()
         call s:ensure_flush(bufnr('%'), l:server_name, {result->s:call_did_save(l:buf, l:server_name, result, function('s:Noop'))})
+    endfor
+endfunction
+
+function! s:on_text_document_did_change() abort
+    call lsp#log('s:on_text_document_did_change()', bufnr('%'))
+    let l:buf = bufnr('%')
+    for l:server_name in s:get_active_servers_for_buffer()
+        call s:ensure_flush(bufnr('%'), l:server_name, function('s:Noop'))
     endfor
 endfunction
 
