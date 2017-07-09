@@ -111,7 +111,7 @@ function! s:call_did_save(buf, server_name, result, cb) abort
     call s:send_request(a:server_name, {
         \ 'method': 'textDocument/didSave',
         \ 'params': {
-        \   'textDocument': s:get_text_document_identifier(l:buffer_info),
+        \   'textDocument': s:get_text_document_identifier(a:buf, l:buffer_info),
         \ },
         \ })
 
@@ -326,22 +326,13 @@ function! s:ensure_open(buf, server_name, cb) abort
     call s:send_request(a:server_name, {
         \ 'method': 'textDocument/didOpen',
         \ 'params': {
-        \   'textDocument': s:get_text_document(l:buffer_info)
+        \   'textDocument': s:get_text_document(a:buf, l:buffer_info)
         \ },
         \ })
 
     let l:msg = s:new_rpc_success('textDocument/open sent', { 'server_name': a:server_name, 'path': l:path })
     call lsp#log(l:msg)
     call a:cb(l:msg)
-endfunction
-
-function! s:get_text_document(buffer_info)
-    return {
-        \ 'langaugeId': &filetype,
-        \ 'text': join(getline(1, '$'), "\n"),
-        \ 'version': a:buffer_info['version'],
-        \ 'uri': a:buffer_info['uri'],
-        \ }
 endfunction
 
 function! s:send_request(server_name, data) abort
@@ -456,18 +447,18 @@ else
     endfunction
 endif
 
-function! s:get_text_document(buffer_info) abort
+function! s:get_text_document(buf, buffer_info) abort
     return {
-        \ 'uri': s:get_buffer_uri(),
+        \ 'uri': s:get_buffer_uri(a:buf),
         \ 'languageId': &filetype,
         \ 'version': a:buffer_info['version'],
-        \ 'text': join(getline(1, '$'), "\n"),
+        \ 'text': join(getline(a:buf, '$'), "\n"),
         \ }
 endfunction
 
-function! s:get_text_document_identifier(buffer_info) abort
+function! s:get_text_document_identifier(buf, buffer_info) abort
     return {
-        \ 'uri': s:get_buffer_uri(),
+        \ 'uri': s:get_buffer_uri(a:buf),
         \ 'version': a:buffer_info['version'],
         \ }
 endfunction
