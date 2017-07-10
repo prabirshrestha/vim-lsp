@@ -32,18 +32,15 @@ function! s:handle_document_symbol(server, last_req_id, data) abort
         echom 'Failed to retrieve document symbols for ' . a:server
     endif
 
-    echom 'Retrieved document symbols'
-
     let l:list = lsp#ui#vim#utils#to_loc_list(a:data)
     let s:list += l:list
-
-    call lsp#log('---------document_symbol', s:list)
 
     call setqflist(s:list)
 
     if empty(s:list)
         echom 'No document symbols found'
     else
+        echom 'Retrieved document symbols'
         copen
     endif
 endfunction
