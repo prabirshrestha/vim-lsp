@@ -4,6 +4,10 @@ let s:servers = {} " { lsp_id, server_info, init_callbacks, init_response?, buff
 
 " do nothing, place it here only to avoid the message
 autocmd User lsp_setup silent
+autocmd User lsp_register_server silent
+autocmd User lsp_unregister_server silent
+autocmd User lsp_server_init silent
+autocmd User lsp_server_exit silent
 
 function! lsp#log_verbose(...) abort
     if g:lsp_log_verbose
@@ -62,6 +66,7 @@ function! lsp#register_server(server_info) abort
         \ 'buffers': {},
         \ }
     call lsp#log('lsp#register_server', 'server registered', l:server_name)
+    doautocmd User lsp_register_server
 endfunction
 
 function s:register_events() abort
@@ -79,6 +84,7 @@ function! s:unregister_events() abort
     augroup lsp
         autocmd!
     augroup END
+    doautocmd User lsp_unregister_server
 endfunction
 
 function! s:on_text_document_did_open() abort
@@ -376,6 +382,7 @@ function! s:on_exit(server_name, id, data, event) abort
         if has_key(l:server, 'init_response')
             unlet l:server['init_response']
         endif
+        doautocmd User lsp_server_exit
     endif
 endfunction
 
@@ -410,6 +417,8 @@ function! s:handle_initialize(server_name, data) abort
     for l:Init_callback in l:init_callbacks
         call l:Init_callback(a:data)
     endfor
+
+    doautocmd User lsp_server_init
 endfunction
 
 " call lsp#get_whitelisted_servers()
