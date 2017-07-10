@@ -294,7 +294,7 @@ function! s:ensure_changed(buf, server_name, cb) abort
 
     " todo: support range in contentChanges
 
-    call s:send_request(a:server_name, {
+    call s:send_notification(a:server_name, {
         \ 'method': 'textDocument/didChange',
         \ 'params': {
         \   'textDocument': s:get_text_document_identifier(a:buf, l:buffer_info),
@@ -331,22 +331,36 @@ function! s:ensure_open(buf, server_name, cb) abort
 
     let l:buffer_info = { 'changed_tick': getbufvar(a:buf, 'changedtick'), 'version': 1, 'uri': l:path }
     let l:buffers[l:path] = l:buffer_info
-    call s:send_request(a:server_name, {
+    call s:send_notification(a:server_name, {
         \ 'method': 'textDocument/didOpen',
         \ 'params': {
         \   'textDocument': s:get_text_document(a:buf, l:buffer_info)
         \ },
         \ })
 
-    let l:msg = s:new_rpc_success('textDocument/open sent', { 'server_name': a:server_name, 'path': l:path })
+    let l:msg = s:new_rpc_success('textDocument/open sent', { 'server_name': a:server_name, 'path': l:path, 'filetype': getbufvar(a:buf, '&filetype') })
     call lsp#log(l:msg)
     call a:cb(l:msg)
 endfunction
 
 function! s:send_request(server_name, data) abort
     let l:lsp_id = s:servers[a:server_name]['lsp_id']
-    call lsp#log_verbose('--->', l:lsp_id, a:server_name, a:data)
+    let l:data = copy(a:data)
+    if has_key(l:data, 'on_notification')
+        let l:data['on_notification'] = '---funcref---'
+    endif
+    call lsp#log_verbose('--->', l:lsp_id, a:server_name, l:data)
     call lsp#client#send_request(l:lsp_id, a:data)
+endfunction
+
+function! s:send_notification(server_name, data) abort
+    let l:lsp_id = s:servers[a:server_name]['lsp_id']
+    let l:data = copy(a:data)
+    if has_key(l:data, 'on_notification')
+        let l:data['on_notification'] = '---funcref---'
+    endif
+    call lsp#log_verbose('--->', l:lsp_id, a:server_name, l:data)
+    call lsp#client#send_notification(l:lsp_id, a:data)
 endfunction
 
 function! s:on_stderr(server_name, id, data, event) abort
@@ -467,6 +481,16 @@ else
     endfunction
 endif
 
+if has('win32') || has('win64')
+    function! lsp#uri_to_path(uri) abort
+        return substitute(a:uri[len('file:///'):], '/', '\\', 'g')
+    endfunction
+else
+    function! lsp#uri_to_path(uri) abort
+        return a:uri[len('file://'):]
+    endfunction
+endif
+
 function! s:get_text_document(buf, buffer_info) abort
     return {
         \ 'uri': s:get_buffer_uri(a:buf),
@@ -474,6 +498,11 @@ function! s:get_text_document(buf, buffer_info) abort
         \ 'version': a:buffer_info['version'],
         \ 'text': join(getline(a:buf, '$'), "\n"),
         \ }
+endfunction
+
+function! lsp#get_text_document_identifier(...)
+    let l:buf = a:0 > 0 ? a:1 : bufnr('%')
+    return { 'uri': s:get_buffer_uri(l:buf) }
 endfunction
 
 function! s:get_text_document_identifier(buf, buffer_info) abort
@@ -488,9 +517,11 @@ function! s:is_remote_uri(uri) abort
 endfunction
 
 function! lsp#send_request(server_name, request) abort
+    let l:Cb = has_key(a:request, 'on_notification') ? a:request['on_notification'] : function('s:Noop')
+    let l:request = copy(a:request)
+    let l:request['on_notification'] = {id, data, event->l:Cb(data)}
     call lsp#utils#step#start([
-        \ {s->s:ensure_changed(bufnr('%'), a:server_name, s.callback)},
-        \ {s->s:is_step_error(s) ? s:throw_step_error(s) : s:send_request(a:server_name, a:request))},
-        \ {s->s.callback(a:cb)}
+        \ {s->s:ensure_flush(bufnr('%'), a:server_name, s.callback)},
+        \ {s->s:is_step_error(s) ? l:Cb(s.result[0]) : s:send_request(a:server_name, l:request) },
         \ ])
 endfunction
