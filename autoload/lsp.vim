@@ -1,6 +1,6 @@
 let s:enabled = 0
 let s:already_setup = 0
-let s:servers = {} " { lsp_id, server_info, init_callbacks, init_response?, buffers: { path: { changed_tick } }
+let s:servers = {} " { lsp_id, server_info, init_callbacks, init_result, buffers: { path: { changed_tick } }
 
 " do nothing, place it here only to avoid the message
 autocmd User lsp_setup silent
@@ -47,6 +47,11 @@ endfunction
 
 function! lsp#get_server_info(server_name) abort
     return s:servers[a:server_name]['server_info']
+endfunction
+
+function! lsp#get_server_capabilities(server_name) abort
+    let l:server = s:servers[a:server_name]
+    return has_key(l:server, 'init_result') ? l:server['init_result']['result']['capabilities'] : {}
 endfunction
 
 " @params {server_info} = {
@@ -379,8 +384,8 @@ function! s:on_exit(server_name, id, data, event) abort
         let l:server = s:servers[a:server_name]
         let l:server['lsp_id'] = 0
         let l:server['buffers'] = {}
-        if has_key(l:server, 'init_response')
-            unlet l:server['init_response']
+        if has_key(l:server, 'init_result')
+            unlet l:server['init_result']
         endif
         doautocmd User lsp_server_exit
     endif
@@ -509,9 +514,13 @@ function! s:get_text_document(buf, buffer_info) abort
         \ }
 endfunction
 
-function! lsp#get_text_document_identifier(...)
+function! lsp#get_text_document_identifier(...) abort
     let l:buf = a:0 > 0 ? a:1 : bufnr('%')
     return { 'uri': s:get_buffer_uri(l:buf) }
+endfunction
+
+function! lsp#get_position(...) abort
+    return { 'line': line('.') - 1, 'character': col('.') -1 }
 endfunction
 
 function! s:get_text_document_identifier(buf, buffer_info) abort

@@ -59,8 +59,6 @@ function! s:handle_symbol(server, last_req_id, type, data) abort
 
     let l:list = lsp#ui#vim#utils#to_loc_list(a:data)
 
-    call lsp#log('............', len(l:list))
-
     call setqflist(l:list)
 
     if empty(l:list)
