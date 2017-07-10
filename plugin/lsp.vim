@@ -11,3 +11,6 @@ let g:lsp_debug_servers = get(g:, 'lsp_debug_servers', [])
 if g:lsp_auto_enable
     au VimEnter * call lsp#enable()
 endif
+
+command! LspGetWorkspaceSymbols call lsp#ui#vim#get_workspace_symbols()
+command! LspGetDocumentSymbols call lsp#ui#vim#get_document_symbols()
