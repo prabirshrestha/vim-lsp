@@ -24,6 +24,31 @@ function! lsp#ui#vim#definition() abort
     echom 'Retrieving goto definition ...'
 endfunction
 
+function! lsp#ui#vim#references() abort
+    let l:servers = lsp#get_whitelisted_servers()
+    let s:last_req_id = s:last_req_id + 1
+
+    call setqflist([])
+
+    if len(l:servers) == 0
+        echom 'Retrieving references not supported for ' . &filetype
+    endif
+
+    for l:server in l:servers
+        call lsp#send_request(l:server, {
+            \ 'method': 'textDocument/references',
+            \ 'params': {
+            \   'textDocument': lsp#get_text_document_identifier(),
+            \   'position': lsp#get_position(),
+            \   'includeDeclaration': v:false,
+            \ },
+            \ 'on_notification': function('s:handle_location', [l:server, s:last_req_id, 'references']),
+            \ })
+    endfor
+
+    echom 'Retrieving references ...'
+endfunction
+
 function! lsp#ui#vim#get_workspace_symbols() abort
     let l:servers = lsp#get_whitelisted_servers()
     let s:last_req_id = s:last_req_id + 1

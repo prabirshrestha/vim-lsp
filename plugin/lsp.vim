@@ -15,3 +15,4 @@ endif
 command! LspGetWorkspaceSymbols call lsp#ui#vim#get_workspace_symbols()
 command! LspGetDocumentSymbols call lsp#ui#vim#get_document_symbols()
 command! LspDefinition call lsp#ui#vim#definition()
+command! LspReferences call lsp#ui#vim#references()
