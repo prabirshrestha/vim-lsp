@@ -1,3 +1,29 @@
+function! lsp#ui#vim#utils#locations_to_loc_list(result) abort
+    if !has_key(a:result['response'], 'result')
+        return []
+    endif
+
+    let l:list = []
+
+    let l:locations = type(a:result['response']['result']) == type({}) ? [a:result['response']['result']] : a:result['response']['result']
+
+    for l:location in l:locations
+        if s:is_file_uri(l:location['uri'])
+            let l:path = lsp#uri_to_path(l:location['uri'])
+            let l:line = l:location['range']['start']['line'] + 1
+            let l:col = l:location['range']['start']['character'] + 1
+            call add(l:list, {
+                \ 'filename': l:path,
+                \ 'lnum': l:line,
+                \ 'col': l:col,
+                \ 'text': l:path,
+                \ })
+        endif
+    endfor
+
+    return l:list
+endfunction
+
 let s:symbol_kinds = {
     \ '1': 'file',
     \ '2': 'module',
@@ -19,8 +45,7 @@ let s:symbol_kinds = {
     \ '18': 'array',
     \ }
 
-
-function! lsp#ui#vim#utils#to_loc_list(result) abort
+function! lsp#ui#vim#utils#symbols_to_loc_list(result) abort
     if !has_key(a:result['response'], 'result')
         return []
     endif
