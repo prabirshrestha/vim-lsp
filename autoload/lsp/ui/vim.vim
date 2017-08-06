@@ -49,6 +49,30 @@ function! lsp#ui#vim#references() abort
     echom 'Retrieving references ...'
 endfunction
 
+function! lsp#ui#vim#hover() abort
+    let l:servers = lsp#get_whitelisted_servers()
+    let s:last_req_id = s:last_req_id + 1
+
+    call setqflist([])
+
+    if len(l:servers) == 0
+        echom 'Retrieving hover not supported for ' . &filetype
+    endif
+
+    for l:server in l:servers
+        call lsp#send_request(l:server, {
+            \ 'method': 'textDocument/hover',
+            \ 'params': {
+            \   'textDocument': lsp#get_text_document_identifier(),
+            \   'position': lsp#get_position(),
+            \ },
+            \ 'on_notification': function('s:handle_hover', [l:server, s:last_req_id, 'hover']),
+            \ })
+    endfor
+
+    echom 'Retrieving hover ...'
+endfunction
+
 function! lsp#ui#vim#get_workspace_symbols() abort
     let l:servers = lsp#get_whitelisted_servers()
     let s:last_req_id = s:last_req_id + 1
@@ -132,6 +156,33 @@ function! s:handle_location(server, last_req_id, type, data) abort
     call setqflist(l:list)
 
     if empty(l:list)
+        echom 'No ' . a:type .' found'
+    else
+        echom 'Retrieved ' . a:type
+        copen
+    endif
+endfunction
+
+function! s:handle_hover(server, last_req_id, type, data) abort
+    if a:last_req_id != s:last_req_id
+        return
+    endif
+
+    if lsp#client#is_error(a:data)
+        echom 'Failed to retrieve '. a:type . ' for ' . a:server
+    endif
+
+    if !has_key(a:data['response'], 'result')
+        return
+    endif
+
+    let l:contents = a:data['response']['result']['contents']
+
+    call setqflist([{ 'text': l:contents }])
+
+    " autocmd FileType qf setlocal wrap
+
+    if empty(l:contents)
         echom 'No ' . a:type .' found'
     else
         echom 'Retrieved ' . a:type
