@@ -2,6 +2,8 @@ let s:enabled = 0
 let s:already_setup = 0
 let s:servers = {} " { lsp_id, server_info, init_callbacks, init_result, buffers: { path: { changed_tick } }
 
+let s:notification_callbacks = [] " { name, callback }
+
 " do nothing, place it here only to avoid the message
 autocmd User lsp_setup silent
 autocmd User lsp_register_server silent
@@ -72,6 +74,14 @@ function! lsp#register_server(server_info) abort
         \ }
     call lsp#log('lsp#register_server', 'server registered', l:server_name)
     doautocmd User lsp_register_server
+endfunction
+
+function! lsp#register_notifications(name, callback) abort
+    call add(s:notification_callbacks, { 'name': a:name, 'callback': a:callback })
+endfunction
+
+function! lsp#unregister_notifications(name) abort
+    " TODO
 endfunction
 
 function s:register_events() abort
@@ -396,7 +406,6 @@ function! s:on_notification(server_name, id, data, event) abort
     let l:response = a:data['response']
     let l:server = s:servers[a:server_name]
 
-
     if lsp#client#is_server_instantiated_notification(a:data)
         " todo
     else
@@ -406,6 +415,10 @@ function! s:on_notification(server_name, id, data, event) abort
             call s:handle_initialize(a:server_name, a:data)
         endif
     endif
+
+    for l:callback_info in s:notification_callbacks
+        call l:callback_info.callback(a:server_name, a:data)
+    endfor
 endfunction
 
 function! s:handle_initialize(server_name, data) abort
