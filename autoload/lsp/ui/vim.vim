@@ -178,7 +178,20 @@ function! s:handle_hover(server, last_req_id, type, data) abort
 
     let l:contents = a:data['response']['result']['contents']
 
-    call setqflist([{ 'text': l:contents }])
+    if type(l:contents) == type('')
+        let l:contents = [{ 'text': s:markdown_to_text(l:contents) }]
+    elseif type(l:contents) == type([])
+        let l:contents = []
+        for l:content in a:data['response']['result']['contents']
+            if type(l:content) == type('')
+                call add(l:contents, { 'text': s:markdown_to_text(l:content) })
+            elseif type(l:content) == type({})
+                call add(l:contents, { 'text': s:markdown_to_text(l:content['value']) })
+            endif
+        endfor
+    endif
+
+    call setqflist(l:contents)
 
     " autocmd FileType qf setlocal wrap
 
@@ -188,4 +201,9 @@ function! s:handle_hover(server, last_req_id, type, data) abort
         echom 'Retrieved ' . a:type
         copen
     endif
+endfunction
+
+function! s:markdown_to_text(markdown) abort
+    " TODO: convert markdown to normal text
+    return a:markdown
 endfunction
