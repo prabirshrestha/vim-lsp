@@ -23,6 +23,10 @@ function! lsp#capabilities#has_document_formatting_provider(server_name) abort
     return s:has_bool_provider(a:server_name, 'documentFormattingProvider')
 endfunction
 
+function! lsp#capabilities#has_document_range_formatting_provider(server_name) abort
+    return s:has_bool_provider(a:server_name, 'documentRangeFormattingProvider')
+endfunction
+
 function! lsp#capabilities#has_document_symbol_provider(server_name) abort
     return s:has_bool_provider(a:server_name, 'documentSymbolProvider')
 endfunction

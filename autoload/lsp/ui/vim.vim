@@ -128,10 +128,43 @@ function! lsp#ui#vim#document_format() abort
         \       'insertSpaces': getbufvar(bufnr('%'), '&expandtab') ? v:true : v:false,
         \   },
         \ },
-        \ 'on_notification': function('s:handle_text_edit', [l:server, s:last_req_id, 'format']),
+        \ 'on_notification': function('s:handle_text_edit', [l:server, s:last_req_id, 'document format']),
         \ })
 
     echom 'Formatting document ...'
+endfunction
+
+function! lsp#ui#vim#document_range_format() abort
+    let l:servers = filter(lsp#get_whitelisted_servers(), 'lsp#capabilities#has_document_range_formatting_provider(v:val)')
+    let s:last_req_id = s:last_req_id + 1
+
+    if len(l:servers) == 0
+        echom 'Document range formatting not supported for ' . &filetype
+        return
+    endif
+
+    " TODO: ask user to select server for formatting
+    let l:server = l:servers[0]
+    let [l:start_lnum, l:start_col] = getpos("'<")[1:2]
+    let [l:end_lnum, l:end_col] = getpos("'>")[1:2]
+
+    call lsp#send_request(l:server, {
+        \ 'method': 'textDocument/rangeFormatting',
+        \ 'params': {
+        \   'textDocument': lsp#get_text_document_identifier(),
+        \   'range': {
+        \       'start': { 'line': l:start_lnum - 1, 'character': l:start_col - 1 },
+        \       'end': { 'line': l:end_lnum - 1, 'character': l:end_col - 1 },
+        \   },
+        \   'options': {
+        \       'tabSize': getbufvar(bufnr('%'), '&shiftwidth'),
+        \       'insertSpaces': getbufvar(bufnr('%'), '&expandtab') ? v:true : v:false,
+        \   },
+        \ },
+        \ 'on_notification': function('s:handle_text_edit', [l:server, s:last_req_id, 'range format']),
+        \ })
+
+    echom 'Formatting document range ...'
 endfunction
 
 function! lsp#ui#vim#workspace_symbol() abort
