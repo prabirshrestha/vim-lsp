@@ -124,7 +124,7 @@ function! lsp#ui#vim#document_format() abort
         \ 'params': {
         \   'textDocument': lsp#get_text_document_identifier(),
         \   'options': {
-        \       'tabSize': getbufvar(bufnr('%'), '&shiftwidth'),
+        \       'tabSize': getbufvar(bufnr('%'), '&tabstop'),
         \       'insertSpaces': getbufvar(bufnr('%'), '&expandtab') ? v:true : v:false,
         \   },
         \ },
