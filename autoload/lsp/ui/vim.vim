@@ -355,7 +355,7 @@ function! s:apply_text_edits(uri, text_edits) abort
         let l:start_line = l:text_edit['range']['start']['line'] + 1
         let l:start_character = l:text_edit['range']['start']['character'] + 1
         let l:end_line = l:text_edit['range']['end']['line'] + 1
-        let l:end_character = l:text_edit['range']['end']['character'] + 1
+        let l:end_character = l:text_edit['range']['end']['character'] " The end position is exclusive so don't add +1
         let l:new_text = l:text_edit['newText']
         let l:cmd = l:cmd . printf(" | execute 'normal! %dG%d|v%dG%d|c%s'", l:start_line, l:start_character, l:end_line, l:end_character, l:new_text)
     endfor
