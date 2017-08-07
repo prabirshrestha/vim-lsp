@@ -1,13 +1,14 @@
 let s:last_req_id = 0
 
 function! lsp#ui#vim#definition() abort
-    let l:servers = lsp#get_whitelisted_servers()
+    let l:servers = filter(lsp#get_whitelisted_servers(), 'lsp#capabilities#has_definition_provider(v:val)')
     let s:last_req_id = s:last_req_id + 1
 
     call setqflist([])
 
     if len(l:servers) == 0
-        echom 'Retrieving goto definition not supported for ' . &filetype
+        echom 'Retrieving definition not supported for ' . &filetype
+        return
     endif
 
     for l:server in l:servers
@@ -21,17 +22,18 @@ function! lsp#ui#vim#definition() abort
             \ })
     endfor
 
-    echom 'Retrieving goto definition ...'
+    echom 'Retrieving definition ...'
 endfunction
 
 function! lsp#ui#vim#references() abort
-    let l:servers = lsp#get_whitelisted_servers()
+    let l:servers = filter(lsp#get_whitelisted_servers(), 'lsp#capabilities#has_references_provider(v:val)')
     let s:last_req_id = s:last_req_id + 1
 
     call setqflist([])
 
     if len(l:servers) == 0
         echom 'Retrieving references not supported for ' . &filetype
+        return
     endif
 
     for l:server in l:servers
@@ -50,13 +52,14 @@ function! lsp#ui#vim#references() abort
 endfunction
 
 function! lsp#ui#vim#hover() abort
-    let l:servers = lsp#get_whitelisted_servers()
+    let l:servers = filter(lsp#get_whitelisted_servers(), 'lsp#capabilities#has_hover_provider(v:val)')
     let s:last_req_id = s:last_req_id + 1
 
     call setqflist([])
 
     if len(l:servers) == 0
         echom 'Retrieving hover not supported for ' . &filetype
+        return
     endif
 
     for l:server in l:servers
@@ -74,39 +77,46 @@ function! lsp#ui#vim#hover() abort
 endfunction
 
 function! lsp#ui#vim#rename() abort
-    let l:servers = lsp#get_whitelisted_servers()
+    let l:servers = filter(lsp#get_whitelisted_servers(), 'lsp#capabilities#has_rename_provider(v:val)')
     let s:last_req_id = s:last_req_id + 1
 
     if len(l:servers) == 0
-        echom 'Retrieving references not supported for ' . &filetype
+        echom 'Renaming not supported for ' . &filetype
+        return
     endif
 
     let l:new_name = input('new name>')
 
-    for l:server in l:servers
-        " needs to flush existing open buffers
-        call lsp#send_request(l:server, {
-            \ 'method': 'textDocument/rename',
-            \ 'params': {
-            \   'textDocument': lsp#get_text_document_identifier(),
-            \   'position': lsp#get_position(),
-            \   'newName': l:new_name,
-            \ },
-            \ 'on_notification': function('s:handle_workspace_edit', [l:server, s:last_req_id, 'rename']),
-            \ })
-    endfor
+    if empty(l:new_name)
+        echom '... Renaming aborted ...'
+        return
+    endif
+
+    " TODO: ask the user which server it should use to rename if there are multiple
+    let l:server = l:servers[0]
+    " needs to flush existing open buffers
+    call lsp#send_request(l:server, {
+        \ 'method': 'textDocument/rename',
+        \ 'params': {
+        \   'textDocument': lsp#get_text_document_identifier(),
+        \   'position': lsp#get_position(),
+        \   'newName': l:new_name,
+        \ },
+        \ 'on_notification': function('s:handle_workspace_edit', [l:server, s:last_req_id, 'rename']),
+        \ })
 
     echom ' ... Renaming ...'
 endfunction
 
-function! lsp#ui#vim#get_workspace_symbols() abort
-    let l:servers = lsp#get_whitelisted_servers()
+function! lsp#ui#vim#workspace_symbol() abort
+    let l:servers = filter(lsp#get_whitelisted_servers(), 'lsp#capabilities#has_workspace_symbol_provider(v:val)')
     let s:last_req_id = s:last_req_id + 1
 
     call setqflist([])
 
     if len(l:servers) == 0
         echom 'Retrieving workspace symbols not supported for ' . &filetype
+        return
     endif
 
     let l:query = input('query>')
@@ -124,14 +134,15 @@ function! lsp#ui#vim#get_workspace_symbols() abort
     echom 'Retrieving document symbols ...'
 endfunction
 
-function! lsp#ui#vim#get_document_symbols() abort
-    let l:servers = lsp#get_whitelisted_servers()
+function! lsp#ui#vim#document_symbol() abort
+    let l:servers = filter(lsp#get_whitelisted_servers(), 'lsp#capabilities#has_document_symbol_provider(v:val)')
     let s:last_req_id = s:last_req_id + 1
 
     call setqflist([])
 
     if len(l:servers) == 0
         echom 'Retrieving symbols not supported for ' . &filetype
+        return
     endif
 
     for l:server in l:servers
@@ -154,6 +165,7 @@ function! s:handle_symbol(server, last_req_id, type, data) abort
 
     if lsp#client#is_error(a:data)
         echom 'Failed to retrieve '. a:type . ' for ' . a:server
+        return
     endif
 
     let l:list = lsp#ui#vim#utils#symbols_to_loc_list(a:data)
@@ -175,6 +187,7 @@ function! s:handle_location(server, last_req_id, type, data) abort
 
     if lsp#client#is_error(a:data)
         echom 'Failed to retrieve '. a:type . ' for ' . a:server
+        return
     endif
 
     let l:list = lsp#ui#vim#utils#locations_to_loc_list(a:data)
@@ -196,13 +209,17 @@ function! s:handle_hover(server, last_req_id, type, data) abort
 
     if lsp#client#is_error(a:data)
         echom 'Failed to retrieve '. a:type . ' for ' . a:server
+        return
     endif
 
     if !has_key(a:data['response'], 'result')
         return
     endif
 
-    let l:contents = a:data['response']['result']['contents']
+    if !a:data['response']['result']
+        echom 'No ' . a:type .' found'
+        return
+    endif
 
     if type(l:contents) == type('')
         let l:contents = [{ 'text': s:markdown_to_text(l:contents) }]
@@ -236,6 +253,7 @@ function! s:handle_workspace_edit(server, last_req_id, type, data) abort
 
     if lsp#client#is_error(a:data)
         echom 'Failed to retrieve '. a:type . ' for ' . a:server
+        return
     endif
 
     call s:apply_workspace_edits(a:data['response']['result'])
