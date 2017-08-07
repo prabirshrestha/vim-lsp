@@ -73,6 +73,32 @@ function! lsp#ui#vim#hover() abort
     echom 'Retrieving hover ...'
 endfunction
 
+function! lsp#ui#vim#rename() abort
+    let l:servers = lsp#get_whitelisted_servers()
+    let s:last_req_id = s:last_req_id + 1
+
+    if len(l:servers) == 0
+        echom 'Retrieving references not supported for ' . &filetype
+    endif
+
+    let l:new_name = input('new name>')
+
+    for l:server in l:servers
+        " needs to flush existing open buffers
+        call lsp#send_request(l:server, {
+            \ 'method': 'textDocument/rename',
+            \ 'params': {
+            \   'textDocument': lsp#get_text_document_identifier(),
+            \   'position': lsp#get_position(),
+            \   'newName': l:new_name,
+            \ },
+            \ 'on_notification': function('s:handle_workspace_edit', [l:server, s:last_req_id, 'rename']),
+            \ })
+    endfor
+
+    echom ' ... Renaming ...'
+endfunction
+
 function! lsp#ui#vim#get_workspace_symbols() abort
     let l:servers = lsp#get_whitelisted_servers()
     let s:last_req_id = s:last_req_id + 1
@@ -201,6 +227,42 @@ function! s:handle_hover(server, last_req_id, type, data) abort
         echom 'Retrieved ' . a:type
         copen
     endif
+endfunction
+
+function! s:handle_workspace_edit(server, last_req_id, type, data) abort
+    if a:last_req_id != s:last_req_id
+        return
+    endif
+
+    if lsp#client#is_error(a:data)
+        echom 'Failed to retrieve '. a:type . ' for ' . a:server
+    endif
+
+    call s:apply_workspace_edits(a:data['response']['result'])
+
+    echom 'Renamed'
+endfunction
+
+" @params
+"   workspace_edits - https://github.com/Microsoft/language-server-protocol/blob/master/protocol.md#workspaceedit
+function! s:apply_workspace_edits(workspace_edits) abort
+    if has_key(a:workspace_edits, 'changes')
+        for [l:uri, l:text_edits] in items(a:workspace_edits['changes'])
+            let l:path = lsp#uri_to_path(l:uri)
+            let l:cmd = 'edit ' . l:path
+            for l:text_edit in l:text_edits
+                let l:start_line = l:text_edit['range']['start']['line'] + 1
+                let l:start_character = l:text_edit['range']['start']['character'] + 1
+                let l:end_line = l:text_edit['range']['end']['line'] + 1
+                let l:end_character = l:text_edit['range']['end']['character'] + 1
+                let l:new_text = l:text_edit['newText']
+                let l:cmd = l:cmd . printf(' | execute "normal! %dG%d|v%dG%d|c%s"', l:start_line, l:start_character, l:end_line, l:end_character, new_text)
+            endfor
+            call lsp#log('s:apply_workspace_edits', l:cmd)
+            execute l:cmd
+        endfor
+    endif
+    " TODO: support documentChanges
 endfunction
 
 function! s:markdown_to_text(markdown) abort
