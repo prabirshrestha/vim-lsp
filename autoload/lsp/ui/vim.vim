@@ -108,6 +108,32 @@ function! lsp#ui#vim#rename() abort
     echom ' ... Renaming ...'
 endfunction
 
+function! lsp#ui#vim#document_format() abort
+    let l:servers = filter(lsp#get_whitelisted_servers(), 'lsp#capabilities#has_document_formatting_provider(v:val)')
+    let s:last_req_id = s:last_req_id + 1
+
+    if len(l:servers) == 0
+        echom 'Document formatting not supported for ' . &filetype
+        return
+    endif
+
+    " TODO: ask user to select server for formatting
+    let l:server = l:servers[0]
+    call lsp#send_request(l:server, {
+        \ 'method': 'textDocument/formatting',
+        \ 'params': {
+        \   'textDocument': lsp#get_text_document_identifier(),
+        \   'options': {
+        \       'tabSize': getbufvar(bufnr('%'), '&shiftwidth'),
+        \       'insertSpaces': getbufvar(bufnr('%'), '&expandtab') ? v:true : v:false,
+        \   },
+        \ },
+        \ 'on_notification': function('s:handle_text_edit', [l:server, s:last_req_id, 'format']),
+        \ })
+
+    echom 'Formatting document ...'
+endfunction
+
 function! lsp#ui#vim#workspace_symbol() abort
     let l:servers = filter(lsp#get_whitelisted_servers(), 'lsp#capabilities#has_workspace_symbol_provider(v:val)')
     let s:last_req_id = s:last_req_id + 1
@@ -263,26 +289,45 @@ function! s:handle_workspace_edit(server, last_req_id, type, data) abort
     echom 'Renamed'
 endfunction
 
+function! s:handle_text_edit(server, last_req_id, type, data) abort
+    if a:last_req_id != s:last_req_id
+        return
+    endif
+
+    if lsp#client#is_error(a:data['response'])
+        echom 'Failed to '. a:type . ' for ' . a:server
+        return
+    endif
+
+    call s:apply_text_edits(a:data['request']['params']['textDocument']['uri'], a:data['response']['result'])
+
+    echom 'Document formatted'
+endfunction
+
 " @params
 "   workspace_edits - https://github.com/Microsoft/language-server-protocol/blob/master/protocol.md#workspaceedit
 function! s:apply_workspace_edits(workspace_edits) abort
     if has_key(a:workspace_edits, 'changes')
         for [l:uri, l:text_edits] in items(a:workspace_edits['changes'])
-            let l:path = lsp#uri_to_path(l:uri)
-            let l:cmd = 'edit ' . l:path
-            for l:text_edit in l:text_edits
-                let l:start_line = l:text_edit['range']['start']['line'] + 1
-                let l:start_character = l:text_edit['range']['start']['character'] + 1
-                let l:end_line = l:text_edit['range']['end']['line'] + 1
-                let l:end_character = l:text_edit['range']['end']['character'] + 1
-                let l:new_text = l:text_edit['newText']
-                let l:cmd = l:cmd . printf(' | execute "normal! %dG%d|v%dG%d|c%s"', l:start_line, l:start_character, l:end_line, l:end_character, new_text)
-            endfor
-            call lsp#log('s:apply_workspace_edits', l:cmd)
-            execute l:cmd
+            call s:apply_text_edits(l:uri, l:text_edits)
         endfor
     endif
     " TODO: support documentChanges
+endfunction
+
+function! s:apply_text_edits(uri, text_edits) abort
+    let l:path = lsp#uri_to_path(a:uri)
+    let l:cmd = 'edit ' . l:path
+    for l:text_edit in a:text_edits
+        let l:start_line = l:text_edit['range']['start']['line'] + 1
+        let l:start_character = l:text_edit['range']['start']['character'] + 1
+        let l:end_line = l:text_edit['range']['end']['line'] + 1
+        let l:end_character = l:text_edit['range']['end']['character'] + 1
+        let l:new_text = l:text_edit['newText']
+        let l:cmd = l:cmd . printf(" | execute 'normal! %dG%d|v%dG%d|c%s'", l:start_line, l:start_character, l:end_line, l:end_character, l:new_text)
+    endfor
+    call lsp#log('s:apply_text_edits', l:cmd)
+    execute l:cmd
 endfunction
 
 function! s:markdown_to_text(markdown) abort

@@ -19,6 +19,10 @@ function! lsp#capabilities#has_rename_provider(server_name) abort
     return s:has_bool_provider(a:server_name, 'renameProvider')
 endfunction
 
+function! lsp#capabilities#has_document_formatting_provider(server_name) abort
+    return s:has_bool_provider(a:server_name, 'documentFormattingProvider')
+endfunction
+
 function! lsp#capabilities#has_document_symbol_provider(server_name) abort
     return s:has_bool_provider(a:server_name, 'documentSymbolProvider')
 endfunction
