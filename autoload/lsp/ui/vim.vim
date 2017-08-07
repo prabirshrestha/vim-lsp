@@ -216,10 +216,12 @@ function! s:handle_hover(server, last_req_id, type, data) abort
         return
     endif
 
-    if !a:data['response']['result']
+    if empty(a:data['response']['result'])
         echom 'No ' . a:type .' found'
         return
     endif
+
+    let l:contents = a:data['response']['result']['contents']
 
     if type(l:contents) == type('')
         let l:contents = [{ 'text': s:markdown_to_text(l:contents) }]
