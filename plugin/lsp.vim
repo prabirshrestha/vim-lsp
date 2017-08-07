@@ -12,9 +12,9 @@ if g:lsp_auto_enable
     au VimEnter * call lsp#enable()
 endif
 
-command! LspGetWorkspaceSymbols call lsp#ui#vim#get_workspace_symbols()
-command! LspGetDocumentSymbols call lsp#ui#vim#get_document_symbols()
 command! LspDefinition call lsp#ui#vim#definition()
-command! LspReferences call lsp#ui#vim#references()
+command! LspDocumentSymbol call lsp#ui#vim#document_symbol()
 command! LspHover call lsp#ui#vim#hover()
+command! LspReferences call lsp#ui#vim#references()
 command! LspRename call lsp#ui#vim#rename()
+command! LspWorkspaceSymbol call lsp#ui#vim#workspace_symbol()
