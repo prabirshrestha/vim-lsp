@@ -12,7 +12,7 @@ Plug 'prabirshrestha/vim-lsp'
 
 _Note: [async.vim](https://github.com/prabirshrestha/async.vim) is required to normalize jobs between vim8 and neovim._
 
-# Registering Language Protocol Server
+## Registering servers
 
 ```viml
 if executable('pyls')
@@ -27,7 +27,7 @@ endif
 
 More information on how to register different language server protocols can be found at the [wiki](https://github.com/prabirshrestha/vim-lsp/wiki/Servers).
 
-## Autocomplete
+## auto-complete
 
 `vim-lsp` by default doesn't support any auto complete plugins. You need to install additional plugins to enable auto complete.
 
