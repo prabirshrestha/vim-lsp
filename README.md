@@ -31,7 +31,7 @@ More information on how to register different language server protocols can be f
 
 `vim-lsp` by default doesn't support any auto complete plugins. You need to install additional plugins to enable auto complete.
 
-### [asyncomplete.vim](https://github.com/prabirshrestha/asyncomplete.vim)
+### asyncomplete.vim
 
 [asyncomplete.vim](https://github.com/prabirshrestha/asyncomplete.vim) is a async auto complete plugin for vim8 and neovim written in pure vim script without any python dependencies.
 
