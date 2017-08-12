@@ -10,7 +10,7 @@ function! lsp#ui#vim#utils#locations_to_loc_list(result) abort
     if !empty(l:locations) " some servers also return null so check to make sure it isn't empty
         for l:location in l:locations
             if s:is_file_uri(l:location['uri'])
-                let l:path = lsp#uri_to_path(l:location['uri'])
+                let l:path = lsp#utils#uri_to_path(l:location['uri'])
                 let l:line = l:location['range']['start']['line'] + 1
                 let l:col = l:location['range']['start']['character'] + 1
                 call add(l:list, {
@@ -60,7 +60,7 @@ function! lsp#ui#vim#utils#symbols_to_loc_list(result) abort
         for l:symbol in a:result['response']['result']
             let l:location = l:symbol['location']
             if s:is_file_uri(l:location['uri'])
-                let l:path = lsp#uri_to_path(l:location['uri'])
+                let l:path = lsp#utils#uri_to_path(l:location['uri'])
                 let l:bufnr = bufnr(l:path)
                 let l:line = l:location['range']['start']['line'] + 1
                 let l:col = l:location['range']['start']['character'] + 1

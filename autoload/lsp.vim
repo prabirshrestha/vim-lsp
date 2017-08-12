@@ -131,7 +131,7 @@ function! s:call_did_save(buf, server_name, result, cb) abort
     endif
 
     let l:server = s:servers[a:server_name]
-    let l:path = s:get_buffer_uri(a:buf)
+    let l:path = lsp#utils#get_buffer_uri(a:buf)
     let l:buffers = l:server['buffers']
     let l:buffer_info = l:buffers[l:path]
 
@@ -202,9 +202,9 @@ function! s:ensure_flush(buf, server_name, cb) abort
 endfunction
 
 function! s:ensure_start(buf, server_name, cb) abort
-    let l:path = s:get_buffer_path(a:buf)
+    let l:path = lsp#utils#get_buffer_path(a:buf)
 
-    if s:is_remote_uri(l:path)
+    if lsp#utils#is_remote_uri(l:path)
         let l:msg = s:new_rpc_error('ignoring start server due to remote uri', { 'server_name': a:server_name, 'uri': l:path})
         call lsp#log(l:msg)
         call a:cb(l:msg)
@@ -238,7 +238,7 @@ function! s:ensure_start(buf, server_name, cb) abort
 
     if l:lsp_id > 0
         let l:server['lsp_id'] = l:lsp_id
-        let l:msg = s:new_rpc_success('started lsp server successfully', { 'server_name': a:server_name, 'lps_id': l:lsp_id })
+        let l:msg = s:new_rpc_success('started lsp server successfully', { 'server_name': a:server_name, 'lsp_id': l:lsp_id })
         call lsp#log(l:msg)
         call a:cb(l:msg)
     else
@@ -259,7 +259,7 @@ function! s:ensure_init(buf, server_name, cb) abort
     endif
 
     if has_key(l:server, 'init_callbacks')
-        " waiting for initialize resposne
+        " waiting for initialize response
         call add(l:server['init_callbacks'], a:cb)
         let l:msg = s:new_rpc_success('waiting for lsp server to initialize', { 'server_name': a:server_name })
         call lsp#log(l:msg)
@@ -272,11 +272,11 @@ function! s:ensure_init(buf, server_name, cb) abort
     if has_key(l:server_info, 'root_uri')
         let l:root_uri = l:server_info['root_uri'](l:server_info)
     else
-        let l:root_uri = s:get_default_root_uri()
+        let l:root_uri = lsp#utils#get_default_root_uri()
     endif
 
     if empty(l:root_uri)
-        let l:msg = s:new_rpc_error('ignore initialization lsp server due to empty root_uri', { 'server_name': a:server_name, 'lsp_id': l:lps_id })
+        let l:msg = s:new_rpc_error('ignore initialization lsp server due to empty root_uri', { 'server_name': a:server_name, 'lsp_id': l:server['lsp_id'] })
         call lsp#log(l:msg)
         call a:cb(l:msg)
         return
@@ -296,7 +296,7 @@ endfunction
 
 function! s:ensure_changed(buf, server_name, cb) abort
     let l:server = s:servers[a:server_name]
-    let l:path = s:get_buffer_uri(a:buf)
+    let l:path = lsp#utils#get_buffer_uri(a:buf)
 
     let l:buffers = l:server['buffers']
     let l:buffer_info = l:buffers[l:path]
@@ -332,7 +332,7 @@ endfunction
 
 function! s:ensure_open(buf, server_name, cb) abort
     let l:server = s:servers[a:server_name]
-    let l:path = s:get_buffer_uri(a:buf)
+    let l:path = lsp#utils#get_buffer_uri(a:buf)
 
     if empty(l:path)
         let l:msg = s:new_rpc_error('ignore open since not a valid uri', { 'server_name': a:server_name, 'path': l:path })
@@ -486,41 +486,11 @@ function! lsp#get_whitelisted_servers(...) abort
     return l:active_servers
 endfunction
 
-function! s:get_default_root_uri() abort
-    return s:path_to_uri(getcwd())
-endfunction
 
-function! s:get_buffer_path(...) abort
-    return expand((a:0 > 0 ? '#' . a:1 : '%') . ':p')
-endfunction
-
-function! s:get_buffer_uri(...) abort
-    return s:path_to_uri(expand((a:0 > 0 ? '#' . a:1 : '%') . ':p'))
-endfunction
-
-if has('win32') || has('win64')
-    function! s:path_to_uri(path) abort
-        return s:is_remote_uri(a:path) ? a:path : 'file:///' . substitute(a:path, '\', '/', 'g')
-    endfunction
-else
-    function! s:path_to_uri(path) abort
-        return s:is_remote_uri(a:path) ? a:path : 'file://' . a:path
-    endfunction
-endif
-
-if has('win32') || has('win64')
-    function! lsp#uri_to_path(uri) abort
-        return substitute(a:uri[len('file:///'):], '/', '\\', 'g')
-    endfunction
-else
-    function! lsp#uri_to_path(uri) abort
-        return a:uri[len('file://'):]
-    endfunction
-endif
 
 function! s:get_text_document(buf, buffer_info) abort
     return {
-        \ 'uri': s:get_buffer_uri(a:buf),
+        \ 'uri': lsp#utils#get_buffer_uri(a:buf),
         \ 'languageId': &filetype,
         \ 'version': a:buffer_info['version'],
         \ 'text': join(getline(a:buf, '$'), "\n"),
@@ -529,7 +499,7 @@ endfunction
 
 function! lsp#get_text_document_identifier(...) abort
     let l:buf = a:0 > 0 ? a:1 : bufnr('%')
-    return { 'uri': s:get_buffer_uri(l:buf) }
+    return { 'uri': lsp#utils#get_buffer_uri(l:buf) }
 endfunction
 
 function! lsp#get_position(...) abort
@@ -538,13 +508,9 @@ endfunction
 
 function! s:get_text_document_identifier(buf, buffer_info) abort
     return {
-        \ 'uri': s:get_buffer_uri(a:buf),
+        \ 'uri': lsp#utils#get_buffer_uri(a:buf),
         \ 'version': a:buffer_info['version'],
         \ }
-endfunction
-
-function! s:is_remote_uri(uri) abort
-    return a:uri =~# '^\w\+::' || a:uri =~# '^\w\+://'
 endfunction
 
 function! lsp#send_request(server_name, request) abort
