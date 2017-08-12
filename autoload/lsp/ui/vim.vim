@@ -349,7 +349,7 @@ function! s:apply_workspace_edits(workspace_edits) abort
 endfunction
 
 function! s:apply_text_edits(uri, text_edits) abort
-    let l:path = lsp#uri_to_path(a:uri)
+    let l:path = lsp#utils#uri_to_path(a:uri)
     let l:cmd = 'edit ' . l:path
     for l:text_edit in a:text_edits
         let l:start_line = l:text_edit['range']['start']['line'] + 1
