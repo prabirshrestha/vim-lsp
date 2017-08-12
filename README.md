@@ -25,7 +25,7 @@ if executable('pyls')
 endif
 ```
 
-More information on how to register different language server protocols can be found at the [wiki](https://github.com/prabirshrestha/vim-lsp/wiki/Servers).
+**For other languages please refer to the [wiki](https://github.com/prabirshrestha/vim-lsp/wiki/Servers).**
 
 ## auto-complete
 
@@ -39,3 +39,20 @@ More information on how to register different language server protocols can be f
 Plug 'prabirshrestha/asyncomplete.vim'
 Plug 'prabirshrestha/asyncomplete-lsp.vim'
 ```
+
+## Supported commands
+
+**Note:**
+* Some servers may not only support all commands.
+* While it is possible to register multiple servers for the same filetype, some commands will pick only pick the first server that supports it. For example, it doesn't make sense for rename and format commands to be sent to multiple servers.
+
+| Command | Description|
+|--|--|
+|`:LspDefinition`| Go to definition |
+|`:LspDocumentFormat`| Format entire document |
+|`:LspDocumentRangeFormat`| Format document selection |
+|`:LspDocumentSymbol`| Show document symbols |
+|`:LspHover`| Show hover information |
+|`:LspReferences`| Find references |
+|`:LspRename`| Rename symbol |
+|`:LspWorkspaceSymbol`| Search/Show workspace symbol |
