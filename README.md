@@ -56,3 +56,11 @@ Plug 'prabirshrestha/asyncomplete-lsp.vim'
 |`:LspReferences`| Find references |
 |`:LspRename`| Rename symbol |
 |`:LspWorkspaceSymbol`| Search/Show workspace symbol |
+
+## Debugging
+
+In order to enable file logging set `g:lsp_log_file`.
+
+```vim
+let g:lsp_log_file = expand('~/vim-lsp.log')
+```
