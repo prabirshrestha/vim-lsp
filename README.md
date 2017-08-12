@@ -10,7 +10,7 @@ Plug 'prabirshrestha/async.vim'
 Plug 'prabirshrestha/vim-lsp'
 ```
 
-_Note: [async.vim](https://github.com/prabirshrestha/async.vim) is required to normalize jobs between vim8 and neovim._
+_Note: [async.vim](https://github.com/prabirshrestha/async.vim) is required and is used to normalize jobs between vim8 and neovim._
 
 ## Registering servers
 
