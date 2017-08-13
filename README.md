@@ -1,7 +1,6 @@
 # vim-lsp
 
 Async [Language Server Protocol](https://github.com/Microsoft/language-server-protocol) plugin for vim8 and neovim.
-Internally vim-lsp uses [async.vim](https://github.com/prabirshrestha/async.vim).
 
 # Installing
 
@@ -56,7 +55,7 @@ Plug 'prabirshrestha/asyncomplete-lsp.vim'
 ## Supported commands
 
 **Note:**
-* Some servers may not only support all commands.
+* Some servers may only support partial commands.
 * While it is possible to register multiple servers for the same filetype, some commands will pick only pick the first server that supports it. For example, it doesn't make sense for rename and format commands to be sent to multiple servers.
 
 | Command | Description|
