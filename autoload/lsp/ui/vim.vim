@@ -3,7 +3,7 @@ let s:last_req_id = 0
 function! lsp#ui#vim#definition() abort
     let l:servers = filter(lsp#get_whitelisted_servers(), 'lsp#capabilities#has_definition_provider(v:val)')
     let s:last_req_id = s:last_req_id + 1
-
+    let l:ctx = { 'counter': len(l:servers), 'list':[] }
     call setqflist([])
 
     if len(l:servers) == 0
@@ -18,7 +18,7 @@ function! lsp#ui#vim#definition() abort
             \   'textDocument': lsp#get_text_document_identifier(),
             \   'position': lsp#get_position(),
             \ },
-            \ 'on_notification': function('s:handle_location', [l:server, s:last_req_id, 'definition']),
+            \ 'on_notification': function('s:handle_location', [1, l:ctx, l:server, 'definition']),
             \ })
     endfor
 
@@ -44,7 +44,7 @@ function! lsp#ui#vim#references() abort
             \   'position': lsp#get_position(),
             \   'includeDeclaration': v:false,
             \ },
-            \ 'on_notification': function('s:handle_location', [l:server, s:last_req_id, 'references']),
+            \ 'on_notification': function('s:handle_location', [0, l:server, s:last_req_id, 'references']),
             \ })
     endfor
 
@@ -239,25 +239,29 @@ function! s:handle_symbol(server, last_req_id, type, data) abort
     endif
 endfunction
 
-function! s:handle_location(server, last_req_id, type, data) abort
-    if a:last_req_id != s:last_req_id
-        return
-    endif
+function! s:handle_location(jump_if_one, ctx, server, type, data) abort
+    let a:ctx['counter'] = a:ctx['counter'] - 1
 
     if lsp#client#is_error(a:data)
         echom 'Failed to retrieve '. a:type . ' for ' . a:server
-        return
+    else
+        let a:ctx['list'] = a:ctx['list'] + lsp#ui#vim#utils#locations_to_loc_list(a:data)
     endif
 
-    let l:list = lsp#ui#vim#utils#locations_to_loc_list(a:data)
-
-    call setqflist(l:list)
-
-    if empty(l:list)
-        echom 'No ' . a:type .' found'
-    else
-        echom 'Retrieved ' . a:type
-        copen
+    if a:ctx['counter'] == 0
+        if empty(a:ctx['list'])
+            echom 'No ' . a:type .' found'
+        else
+            if len(a:ctx['list']) == 0 && a:jump_if_one
+                let l:loc = a:ctx['list'][0]
+                execute 'e '. l:loc['filename']
+                call cursor(l:loc['lnum'], l:loc['col'])
+            else
+                call setqflist(a:ctx['list'])
+                echom 'Retrieved ' . a:type
+                copen
+            endif
+        endif
     endif
 endfunction
 
