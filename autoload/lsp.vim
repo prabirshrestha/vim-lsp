@@ -320,7 +320,7 @@ function! s:ensure_changed(buf, server_name, cb) abort
         \ 'params': {
         \   'textDocument': s:get_text_document_identifier(a:buf, l:buffer_info),
         \   'contentChanges': [
-        \       { 'text': join(getline(a:buf, '$'), "\n") },
+        \       { 'text': join(getbufline(a:buf, 1, '$'), "\n") },
         \   ],
         \ }
         \ })
@@ -493,7 +493,7 @@ function! s:get_text_document(buf, buffer_info) abort
         \ 'uri': lsp#utils#get_buffer_uri(a:buf),
         \ 'languageId': &filetype,
         \ 'version': a:buffer_info['version'],
-        \ 'text': join(getline(a:buf, '$'), "\n"),
+        \ 'text': join(getbufline(a:buf, 1, '$'), "\n"),
         \ }
 endfunction
 
