@@ -3,7 +3,6 @@ let s:last_req_id = 0
 function! lsp#ui#vim#definition() abort
     let l:servers = filter(lsp#get_whitelisted_servers(), 'lsp#capabilities#has_definition_provider(v:val)')
     let s:last_req_id = s:last_req_id + 1
-    let l:ctx = { 'counter': len(l:servers), 'list':[] }
     call setqflist([])
 
     if len(l:servers) == 0
@@ -11,6 +10,7 @@ function! lsp#ui#vim#definition() abort
         return
     endif
 
+    let l:ctx = { 'counter': len(l:servers), 'list':[] }
     for l:server in l:servers
         call lsp#send_request(l:server, {
             \ 'method': 'textDocument/definition',
@@ -18,7 +18,7 @@ function! lsp#ui#vim#definition() abort
             \   'textDocument': lsp#get_text_document_identifier(),
             \   'position': lsp#get_position(),
             \ },
-            \ 'on_notification': function('s:handle_location', [1, l:ctx, l:server, 'definition']),
+            \ 'on_notification': function('s:handle_location', [1, l:ctx, l:server, s:last_req_id, 'definition']),
             \ })
     endfor
 
@@ -31,6 +31,7 @@ function! lsp#ui#vim#references() abort
 
     call setqflist([])
 
+    let l:ctx = { 'counter': len(l:servers), 'list':[] }
     if len(l:servers) == 0
         echom 'Retrieving references not supported for ' . &filetype
         return
@@ -44,7 +45,7 @@ function! lsp#ui#vim#references() abort
             \   'position': lsp#get_position(),
             \   'includeDeclaration': v:false,
             \ },
-            \ 'on_notification': function('s:handle_location', [0, l:server, s:last_req_id, 'references']),
+            \ 'on_notification': function('s:handle_location', [0, l:ctx, l:server, s:last_req_id, 'references']),
             \ })
     endfor
 
@@ -239,7 +240,11 @@ function! s:handle_symbol(server, last_req_id, type, data) abort
     endif
 endfunction
 
-function! s:handle_location(jump_if_one, ctx, server, type, data) abort
+function! s:handle_location(jump_if_one, ctx, server, last_req_id, type, data) abort "ctx = {counter, list}
+    if a:last_req_id != s:last_req_id
+        return
+    endif
+
     let a:ctx['counter'] = a:ctx['counter'] - 1
 
     if lsp#client#is_error(a:data)
@@ -252,10 +257,10 @@ function! s:handle_location(jump_if_one, ctx, server, type, data) abort
         if empty(a:ctx['list'])
             echom 'No ' . a:type .' found'
         else
-            if len(a:ctx['list']) == 0 && a:jump_if_one
+            if len(a:ctx['list']) == 1 && a:jump_if_one
                 let l:loc = a:ctx['list'][0]
                 execute 'e '. l:loc['filename']
-                call cursor(l:loc['lnum'], l:loc['col'])
+                execute 'norm ' . l:loc['lnum'] . 'G' . l:loc['col'] . '|'
             else
                 call setqflist(a:ctx['list'])
                 echom 'Retrieved ' . a:type
