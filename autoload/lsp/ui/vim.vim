@@ -10,7 +10,7 @@ function! lsp#ui#vim#definition() abort
         return
     endif
 
-    let l:ctx = { 'counter': len(l:servers), 'list':[] }
+    let l:ctx = { 'counter': len(l:servers), 'list':[], 'last_req_id': s:last_req_id, 'jump_if_one': 1 }
     for l:server in l:servers
         call lsp#send_request(l:server, {
             \ 'method': 'textDocument/definition',
@@ -18,7 +18,7 @@ function! lsp#ui#vim#definition() abort
             \   'textDocument': lsp#get_text_document_identifier(),
             \   'position': lsp#get_position(),
             \ },
-            \ 'on_notification': function('s:handle_location', [1, l:ctx, l:server, s:last_req_id, 'definition']),
+            \ 'on_notification': function('s:handle_location', [l:ctx, l:server, 'definition']),
             \ })
     endfor
 
@@ -31,7 +31,7 @@ function! lsp#ui#vim#references() abort
 
     call setqflist([])
 
-    let l:ctx = { 'counter': len(l:servers), 'list':[] }
+    let l:ctx = { 'counter': len(l:servers), 'list':[], 'last_req_id': s:last_req_id, 'jump_if_one': 0 }
     if len(l:servers) == 0
         echom 'Retrieving references not supported for ' . &filetype
         return
@@ -45,7 +45,7 @@ function! lsp#ui#vim#references() abort
             \   'position': lsp#get_position(),
             \   'includeDeclaration': v:false,
             \ },
-            \ 'on_notification': function('s:handle_location', [0, l:ctx, l:server, s:last_req_id, 'references']),
+            \ 'on_notification': function('s:handle_location', [l:ctx, l:server, 'references']),
             \ })
     endfor
 
@@ -240,8 +240,8 @@ function! s:handle_symbol(server, last_req_id, type, data) abort
     endif
 endfunction
 
-function! s:handle_location(jump_if_one, ctx, server, last_req_id, type, data) abort "ctx = {counter, list}
-    if a:last_req_id != s:last_req_id
+function! s:handle_location(ctx, server, type, data) abort "ctx = {counter, list, jump_if_one, last_req_id}
+    if a:ctx['last_req_id'] != s:last_req_id
         return
     endif
 
@@ -257,7 +257,7 @@ function! s:handle_location(jump_if_one, ctx, server, last_req_id, type, data) a
         if empty(a:ctx['list'])
             echom 'No ' . a:type .' found'
         else
-            if len(a:ctx['list']) == 1 && a:jump_if_one
+            if len(a:ctx['list']) == 1 && a:ctx['jump_if_one']
                 let l:loc = a:ctx['list'][0]
                 execute 'e '. l:loc['filename']
                 execute 'norm ' . l:loc['lnum'] . 'G' . l:loc['col'] . '|'
