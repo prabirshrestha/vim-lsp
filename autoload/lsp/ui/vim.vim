@@ -183,7 +183,7 @@ function! lsp#ui#vim#workspace_symbol() abort
 
     for l:server in l:servers
         call lsp#send_request(l:server, {
-            \ 'method': 'workspace/Symbol',
+            \ 'method': 'workspace/symbol',
             \ 'params': {
             \   'query': l:query,
             \ },
