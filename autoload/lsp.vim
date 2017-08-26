@@ -138,7 +138,7 @@ function! s:call_did_save(buf, server_name, result, cb) abort
 
     " TODO: handle text when includeText is defined in TextDocumentSaveRegistrationOptions
 
-    call s:send_request(a:server_name, {
+    call s:send_notification(a:server_name, {
         \ 'method': 'textDocument/didSave',
         \ 'params': {
         \   'textDocument': s:get_text_document_identifier(a:buf, l:buffer_info),
