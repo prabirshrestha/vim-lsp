@@ -533,7 +533,7 @@ function! lsp#complete(findstart, base) abort
             return -1
         endif
 
-        return l:info['findstart']
+        return col('.')
     else
         let l:info = s:find_complete_servers_and_start_pos()
 
