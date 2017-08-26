@@ -41,7 +41,14 @@ endif
 
 ## auto-complete
 
-`vim-lsp` by default doesn't support any auto complete plugins. You need to install additional plugins to enable auto complete.
+`vim-lsp` by default only provides basic omnifunc support for autocomplete.
+If you would like to have more advanced features please use asyncomplete.vim as described below.
+
+### omnifunc
+
+```vim
+autocmd FileType typescript setlocal omnifunc=lsp#complete
+```
 
 ### asyncomplete.vim
 
@@ -74,5 +81,9 @@ Plug 'prabirshrestha/asyncomplete-lsp.vim'
 In order to enable file logging set `g:lsp_log_file`.
 
 ```vim
+let g:lsp_log_verbose = 1
 let g:lsp_log_file = expand('~/vim-lsp.log')
+
+" for asyncomplete.vim log
+let g:asyncomplete_log_file = expand('~/asyncomplete.log')
 ```

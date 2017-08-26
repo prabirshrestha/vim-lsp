@@ -75,3 +75,12 @@ function! lsp#utils#find_nearest_parent_file_directory(path, filename) abort
     endif
 endfunction
 
+if exists('*matchstrpos')
+    function! lsp#utils#matchstrpos(expr, pattern) abort
+        return matchstrpos(a:expr, a:pattern)
+    endfunction
+else
+    function! lsp#utils#matchstrpos(expr, pattern) abort
+        return [matchstr(a:expr, a:pattern), match(a:expr, a:pattern), matchend(a:expr, a:pattern)]
+    endfunction
+endif
