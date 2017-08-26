@@ -41,12 +41,15 @@ endif
 
 ## auto-complete
 
-`vim-lsp` by default only provides basic omnifunc support for autocomplete.
+`vim-lsp` by default only provides basic omnifunc support for autocomplete. Completion can be made asynchronous by setting `g:lsp_async_completion`. Note that this may cause unexpected behavior in some plugins such as MUcomplete.
+
 If you would like to have more advanced features please use asyncomplete.vim as described below.
 
 ### omnifunc
 
 ```vim
+" let g:lsp_async_completion = 1
+
 autocmd FileType typescript setlocal omnifunc=lsp#complete
 ```
 
