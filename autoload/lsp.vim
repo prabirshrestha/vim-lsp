@@ -133,16 +133,29 @@ function! s:call_did_save(buf, server_name, result, cb) abort
 
     let l:server = s:servers[a:server_name]
     let l:path = lsp#utils#get_buffer_uri(a:buf)
+
+    let [l:supports_did_save, l:did_save_options] = lsp#capabilities#get_text_document_save_registration_options(a:server_name)
+    if !l:supports_did_save
+        let l:msg = s:new_rpc_success('---> ignoring textDocument/didSave. not supported by server', { 'server_name': a:server_name, 'path': l:path })
+        call lsp#log(l:msg)
+        call a:cb(l:msg)
+        return
+    endif
+
     let l:buffers = l:server['buffers']
     let l:buffer_info = l:buffers[l:path]
 
-    " TODO: handle text when includeText is defined in TextDocumentSaveRegistrationOptions
+    let l:params = {
+        \ 'textDocument': s:get_text_document_identifier(a:buf, l:buffer_info),
+        \ }
+
+    if l:did_save_options['includeText']
+        let l:params['text'] = s:get_text_document_text(a:buf)
+    endif
 
     call s:send_notification(a:server_name, {
         \ 'method': 'textDocument/didSave',
-        \ 'params': {
-        \   'textDocument': s:get_text_document_identifier(a:buf, l:buffer_info),
-        \ },
+        \ 'params': l:params,
         \ })
 
     let l:msg = s:new_rpc_success('textDocument/didSave sent', { 'server_name': a:server_name, 'path': l:path })
@@ -321,7 +334,7 @@ function! s:ensure_changed(buf, server_name, cb) abort
         \ 'params': {
         \   'textDocument': s:get_text_document_identifier(a:buf, l:buffer_info),
         \   'contentChanges': [
-        \       { 'text': join(getbufline(a:buf, 1, '$'), "\n") },
+        \       { 'text': s:get_text_document_text(a:buf) },
         \   ],
         \ }
         \ })
@@ -487,14 +500,16 @@ function! lsp#get_whitelisted_servers(...) abort
     return l:active_servers
 endfunction
 
-
+function! s:get_text_document_text(buf) abort
+    return join(getbufline(a:buf, 1, '$'), "\n")
+endfunction
 
 function! s:get_text_document(buf, buffer_info) abort
     return {
         \ 'uri': lsp#utils#get_buffer_uri(a:buf),
         \ 'languageId': &filetype,
         \ 'version': a:buffer_info['version'],
-        \ 'text': join(getbufline(a:buf, 1, '$'), "\n"),
+        \ 'text': s:get_text_document_text(a:buf),
         \ }
 endfunction
 
