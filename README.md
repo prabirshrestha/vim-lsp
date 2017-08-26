@@ -13,6 +13,8 @@ _Note: [async.vim](https://github.com/prabirshrestha/async.vim) is required and 
 
 ## Registering servers
 
+**For other languages please refer to the [wiki](https://github.com/prabirshrestha/vim-lsp/wiki/Servers).**
+
 ```viml
 if executable('pyls')
     " pip install python-language-server
@@ -36,8 +38,6 @@ if executable('typescript-language-server')
         \ })
 endif
 ```
-
-**For other languages please refer to the [wiki](https://github.com/prabirshrestha/vim-lsp/wiki/Servers).**
 
 ## auto-complete
 
