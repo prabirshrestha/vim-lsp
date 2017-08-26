@@ -533,9 +533,9 @@ let s:completion_status_pending = 'pending'
 let s:completion = {'status': '', 'matches': []}
 
 function! lsp#complete(findstart, base) abort
-    if a:findstart
-        let l:info = s:find_complete_servers_and_start_pos()
+    let l:info = s:find_complete_servers_and_start_pos()
 
+    if a:findstart
         if len(l:info['server_names']) == 0
             return -1
         endif
@@ -546,8 +546,6 @@ function! lsp#complete(findstart, base) abort
             return l:info['findstart'] - 1
         endif
     else
-        let l:info = s:find_complete_servers_and_start_pos()
-
         if len(l:info['server_names']) == 0
             return []
         endif
