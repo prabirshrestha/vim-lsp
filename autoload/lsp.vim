@@ -525,6 +525,13 @@ function! lsp#send_request(server_name, request) abort
 endfunction
 
 " omnicompletion
+
+let s:completion_status_success = 'success'
+let s:completion_status_failed = 'failed'
+let s:completion_status_pending = 'pending'
+
+let s:completion = {'status': '', 'matches': []}
+
 function! lsp#complete(findstart, base) abort
     if a:findstart
         let l:info = s:find_complete_servers_and_start_pos()
@@ -533,12 +540,20 @@ function! lsp#complete(findstart, base) abort
             return -1
         endif
 
-        return col('.')
+        if g:lsp_async_completion
+            return col('.')
+        else
+            return l:info['findstart'] - 1
+        endif
     else
         let l:info = s:find_complete_servers_and_start_pos()
 
         if len(l:info['server_names']) == 0
             return []
+        endif
+
+        if !g:lsp_async_completion
+            let s:completion['status'] = s:completion_status_pending
         endif
 
         let s:complete_counter = s:complete_counter + 1
@@ -552,7 +567,15 @@ function! lsp#complete(findstart, base) abort
             \ },
             \ 'on_notification': function('s:handle_omnicompletion', [l:server_name, l:info['findstart'], s:complete_counter]),
             \ })
-        return []
+        if g:lsp_async_completion
+            return []
+        else
+            while s:completion['status'] == s:completion_status_pending
+                sleep 10m
+            endwhile
+            let s:completion['matches'] = filter(s:completion['matches'], {_, match -> match['word'] =~ '^' . a:base})
+            let s:completion['status'] = ''
+            return s:completion['matches']
     endif
 endfunction
 
@@ -585,6 +608,7 @@ function! s:handle_omnicompletion(server_name, startcol, complete_counter, data)
     endif
 
     if lsp#client#is_error(a:data) || !has_key(a:data, 'response') || !has_key(a:data['response'], 'result')
+        let s:completion['status'] = s:completion_status_failed
         return
     endif
 
@@ -600,5 +624,10 @@ function! s:handle_omnicompletion(server_name, startcol, complete_counter, data)
 
     let l:matches = []
     let l:matches = map(l:items,'{"word":v:val["label"],"dup":1,"icase":1,"menu": ""}')
-    call complete(a:startcol, l:matches)
+    if g:lsp_async_completion
+        call complete(a:startcol, l:matches)
+    else
+        let s:completion['matches'] = l:matches
+        let s:completion['status'] = s:completion_status_success
+    endif
 endfunction
