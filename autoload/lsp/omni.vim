@@ -1,3 +1,24 @@
+let s:kind_labels = {
+            \ '1': 'text',
+            \ '2': 'method',
+            \ '3': 'function',
+            \ '4': 'constructor',
+            \ '5': 'field',
+            \ '6': 'variable',
+            \ '7': 'class',
+            \ '8': 'interface',
+            \ '9': 'module',
+            \ '10': 'property',
+            \ '11': 'unit',
+            \ '12': 'value',
+            \ '13': 'enum',
+            \ '14': 'keyword',
+            \ '15': 'snippet',
+            \ '16': 'color',
+            \ '17': 'file',
+            \ '18': 'reference',
+            \ }
+
 let s:completion_status_success = 'success'
 let s:completion_status_failed = 'failed'
 let s:completion_status_pending = 'pending'
@@ -71,6 +92,10 @@ function! s:find_complete_servers_and_start_pos() abort
     return { 'findstart': l:findstart, 'server_names': l:server_names }
 endfunction
 
+function! s:get_kind_label(match)
+    return has_key(a:match, 'kind') && has_key(s:kind_labels, a:match['kind']) ? s:kind_labels[a:match['kind']] : ''
+endfunction
+
 function! s:handle_omnicompletion(server_name, startcol, complete_counter, data) abort
     if s:completion['counter'] != a:complete_counter
         " ignore old completion results
@@ -93,7 +118,7 @@ function! s:handle_omnicompletion(server_name, startcol, complete_counter, data)
     endif
 
     let l:matches = []
-    let l:matches = map(l:items,'{"word":v:val["label"],"dup":1,"icase":1,"menu": ""}')
+    let l:matches = map(l:items, {_, m -> {'word':m['label'],'menu':s:get_kind_label(m),'dup':1,'icase':1}})
     if g:lsp_async_completion
         call complete(a:startcol, l:matches)
     else
