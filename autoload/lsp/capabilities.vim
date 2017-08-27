@@ -45,7 +45,7 @@ function! lsp#capabilities#get_text_document_save_registration_options(server_na
                     \ 'includeText': has_key(l:capabilities['textDocumentSync']['save'], 'includeText') ? l:capabilities['textDocumentSync']['save']['includeText'] : 0,
                     \ }]
             else
-                return [1, { 'includeText': 0 }]
+                return [0, { 'includeText': 0 }]
             endif
         else
             return [1, { 'includeText': 0 }]
