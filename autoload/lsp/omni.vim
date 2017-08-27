@@ -1,3 +1,5 @@
+" constants {{{
+
 let s:kind_labels = {
             \ '1': 'text',
             \ '2': 'method',
@@ -23,6 +25,9 @@ let s:completion_status_success = 'success'
 let s:completion_status_failed = 'failed'
 let s:completion_status_pending = 'pending'
 
+" }}}
+
+" completion state
 let s:completion = {'counter': 0, 'status': '', 'matches': []}
 
 function! lsp#omni#complete(findstart, base) abort
@@ -70,32 +75,6 @@ function! lsp#omni#complete(findstart, base) abort
     endif
 endfunction
 
-function! s:find_complete_servers_and_start_pos() abort
-    let l:server_names = []
-    for l:server_name in lsp#get_whitelisted_servers()
-        let l:init_capabilities = lsp#get_server_capabilities(l:server_name)
-        if has_key(l:init_capabilities, 'completionProvider')
-            " TODO: support triggerCharacters
-            call add(l:server_names, l:server_name)
-        endif
-    endfor
-
-    let l:typed = strpart(getline('.'), 0, col('.') - 1)
-    " TODO: allow user to customize refresh patterns
-    let l:refresh_pattern = '\k\+$'
-    let l:matchpos = lsp#utils#matchstrpos(l:typed, l:refresh_pattern)
-    let l:startpos = l:matchpos[1]
-    let l:endpos = l:matchpos[2]
-    let l:typed_len = l:endpos - l:startpos
-    let l:findstart = len(l:typed) - l:typed_len + 1
-
-    return { 'findstart': l:findstart, 'server_names': l:server_names }
-endfunction
-
-function! s:get_kind_label(match)
-    return has_key(a:match, 'kind') && has_key(s:kind_labels, a:match['kind']) ? s:kind_labels[a:match['kind']] : ''
-endfunction
-
 function! s:handle_omnicompletion(server_name, startcol, complete_counter, data) abort
     if s:completion['counter'] != a:complete_counter
         " ignore old completion results
@@ -126,3 +105,33 @@ function! s:handle_omnicompletion(server_name, startcol, complete_counter, data)
         let s:completion['status'] = s:completion_status_success
     endif
 endfunction
+
+" auxiliary functions {{{
+
+function! s:find_complete_servers_and_start_pos() abort
+    let l:server_names = []
+    for l:server_name in lsp#get_whitelisted_servers()
+        let l:init_capabilities = lsp#get_server_capabilities(l:server_name)
+        if has_key(l:init_capabilities, 'completionProvider')
+            " TODO: support triggerCharacters
+            call add(l:server_names, l:server_name)
+        endif
+    endfor
+
+    let l:typed = strpart(getline('.'), 0, col('.') - 1)
+    " TODO: allow user to customize refresh patterns
+    let l:refresh_pattern = '\k\+$'
+    let l:matchpos = lsp#utils#matchstrpos(l:typed, l:refresh_pattern)
+    let l:startpos = l:matchpos[1]
+    let l:endpos = l:matchpos[2]
+    let l:typed_len = l:endpos - l:startpos
+    let l:findstart = len(l:typed) - l:typed_len + 1
+
+    return { 'findstart': l:findstart, 'server_names': l:server_names }
+endfunction
+
+function! s:get_kind_label(match)
+    return has_key(a:match, 'kind') && has_key(s:kind_labels, a:match['kind']) ? s:kind_labels[a:match['kind']] : ''
+endfunction
+
+" }}}
