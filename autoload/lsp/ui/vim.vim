@@ -135,6 +135,21 @@ function! lsp#ui#vim#document_format() abort
     echom 'Formatting document ...'
 endfunction
 
+function! s:get_visual_selection_pos()
+    " https://groups.google.com/d/msg/vim_dev/oCUQzO3y8XE/vfIMJiHCHtEJ
+    " https://stackoverflow.com/a/6271254
+    " getpos("'>'") doesn't give the right column so need to do extra processing
+    let [line_start, column_start] = getpos("'<")[1:2]
+    let [line_end, column_end] = getpos("'>")[1:2]
+    let lines = getline(line_start, line_end)
+    if len(lines) == 0
+        return [0, 0, 0, 0]
+    endif
+    let lines[-1] = lines[-1][: column_end - (&selection == 'inclusive' ? 1 : 2)]
+    let lines[0] = lines[0][column_start - 1:]
+    return [line_start, column_start, line_end, len(lines[-1])]
+endfunction
+
 function! lsp#ui#vim#document_range_format() abort
     let l:servers = filter(lsp#get_whitelisted_servers(), 'lsp#capabilities#has_document_range_formatting_provider(v:val)')
     let s:last_req_id = s:last_req_id + 1
@@ -146,9 +161,8 @@ function! lsp#ui#vim#document_range_format() abort
 
     " TODO: ask user to select server for formatting
     let l:server = l:servers[0]
-    let [l:start_lnum, l:start_col] = getpos("'<")[1:2]
-    let [l:end_lnum, l:end_col] = getpos("'>")[1:2]
 
+    let [l:start_lnum, l:start_col, l:end_lnum, l:end_col] = s:get_visual_selection_pos()
     call lsp#send_request(l:server, {
         \ 'method': 'textDocument/rangeFormatting',
         \ 'params': {
