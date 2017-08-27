@@ -32,37 +32,23 @@ let s:completion = {'counter': 0, 'status': '', 'matches': []}
 
 function! lsp#omni#complete(findstart, base) abort
     let l:info = s:find_complete_servers_and_start_pos()
+    if empty(l:info['server_names'])
+        return a:findstart ? -1 : []
+    endif
 
     if a:findstart
-        if len(l:info['server_names']) == 0
-            return -1
-        endif
-
         if g:lsp_async_completion
             return col('.')
         else
             return l:info['findstart'] - 1
         endif
     else
-        if len(l:info['server_names']) == 0
-            return []
-        endif
-
         if !g:lsp_async_completion
             let s:completion['status'] = s:completion_status_pending
         endif
 
-        let s:completion['counter'] = s:completion['counter'] + 1
-        let l:server_name = l:info['server_names'][0]
-        " TODO: support multiple servers
-        call lsp#send_request(l:server_name, {
-            \ 'method': 'textDocument/completion',
-            \ 'params': {
-            \   'textDocument': lsp#get_text_document_identifier(),
-            \   'position': lsp#get_position(),
-            \ },
-            \ 'on_notification': function('s:handle_omnicompletion', [l:server_name, l:info['findstart'], s:completion['counter']]),
-            \ })
+        call s:send_completion_request(l:info)
+
         if g:lsp_async_completion
             return []
         else
@@ -86,18 +72,9 @@ function! s:handle_omnicompletion(server_name, startcol, complete_counter, data)
         return
     endif
 
-    let l:result = a:data['response']['result']
+    let l:result = s:get_completion_result(a:data)
+    let l:matches = l:result['matches']
 
-    if type(l:result) == type([])
-        let l:items = l:result
-        let l:incomplete = 0
-    else
-        let l:items = l:result['items']
-        let l:incomplete = l:result['isIncomplete']
-    endif
-
-    let l:matches = []
-    let l:matches = map(l:items, {_, m -> {'word':m['label'],'menu':s:get_kind_label(m),'dup':1,'icase':1}})
     if g:lsp_async_completion
         call complete(a:startcol, l:matches)
     else
@@ -130,7 +107,37 @@ function! s:find_complete_servers_and_start_pos() abort
     return { 'findstart': l:findstart, 'server_names': l:server_names }
 endfunction
 
-function! s:get_kind_label(match)
+function! s:send_completion_request(info) abort
+    let s:completion['counter'] = s:completion['counter'] + 1
+    let l:server_name = a:info['server_names'][0]
+    " TODO: support multiple servers
+    call lsp#send_request(l:server_name, {
+                \ 'method': 'textDocument/completion',
+                \ 'params': {
+                \   'textDocument': lsp#get_text_document_identifier(),
+                \   'position': lsp#get_position(),
+                \ },
+                \ 'on_notification': function('s:handle_omnicompletion', [l:server_name, a:info['findstart'], s:completion['counter']]),
+                \ })
+endfunction
+
+function! s:get_completion_result(data) abort
+    let l:result = a:data['response']['result']
+
+    if type(l:result) == type([])
+        let l:items = l:result
+        let l:incomplete = 0
+    else
+        let l:items = l:result['items']
+        let l:incomplete = l:result['isIncomplete']
+    endif
+
+    let l:matches = map(l:items, {_, item -> {'word':item['label'],'menu':s:get_kind_label(item),'dup':1,'icase':1}})
+
+    return {'matches': l:matches, 'incomplete': l:incomplete}
+endfunction
+
+function! s:get_kind_label(match) abort
     return has_key(a:match, 'kind') && has_key(s:kind_labels, a:match['kind']) ? s:kind_labels[a:match['kind']] : ''
 endfunction
 
