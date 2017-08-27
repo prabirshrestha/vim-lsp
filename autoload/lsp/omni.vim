@@ -1,10 +1,8 @@
-let s:complete_counter = 0
-
 let s:completion_status_success = 'success'
 let s:completion_status_failed = 'failed'
 let s:completion_status_pending = 'pending'
 
-let s:completion = {'status': '', 'matches': []}
+let s:completion = {'counter': 0, 'status': '', 'matches': []}
 
 function! lsp#omni#complete(findstart, base) abort
     let l:info = s:find_complete_servers_and_start_pos()
@@ -28,7 +26,7 @@ function! lsp#omni#complete(findstart, base) abort
             let s:completion['status'] = s:completion_status_pending
         endif
 
-        let s:complete_counter = s:complete_counter + 1
+        let s:completion['counter'] = s:completion['counter'] + 1
         let l:server_name = l:info['server_names'][0]
         " TODO: support multiple servers
         call lsp#send_request(l:server_name, {
@@ -37,7 +35,7 @@ function! lsp#omni#complete(findstart, base) abort
             \   'textDocument': lsp#get_text_document_identifier(),
             \   'position': lsp#get_position(),
             \ },
-            \ 'on_notification': function('s:handle_omnicompletion', [l:server_name, l:info['findstart'], s:complete_counter]),
+            \ 'on_notification': function('s:handle_omnicompletion', [l:server_name, l:info['findstart'], s:completion['counter']]),
             \ })
         if g:lsp_async_completion
             return []
@@ -74,7 +72,7 @@ function! s:find_complete_servers_and_start_pos() abort
 endfunction
 
 function! s:handle_omnicompletion(server_name, startcol, complete_counter, data) abort
-    if s:complete_counter != a:complete_counter
+    if s:completion['counter'] != a:complete_counter
         " ignore old completion results
         return
     endif
