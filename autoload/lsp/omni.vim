@@ -1,6 +1,6 @@
 " constants {{{
 
-let s:kind_labels = {
+let s:kind_text_mappings = {
             \ '1': 'text',
             \ '2': 'method',
             \ '3': 'function',
@@ -83,6 +83,10 @@ function! s:handle_omnicompletion(server_name, startcol, complete_counter, data)
     endif
 endfunction
 
+function! lsp#omni#get_kind_text(completion_item) abort
+    return has_key(a:completion_item, 'kind') && has_key(s:kind_text_mappings, a:completion_item['kind']) ? s:kind_text_mappings[a:completion_item['kind']] : ''
+endfunction
+
 " auxiliary functions {{{
 
 function! s:find_complete_servers_and_start_pos() abort
@@ -132,13 +136,9 @@ function! s:get_completion_result(data) abort
         let l:incomplete = l:result['isIncomplete']
     endif
 
-    let l:matches = map(l:items, {_, item -> {'word':item['label'],'menu':s:get_kind_label(item),'dup':1,'icase':1}})
+    let l:matches = map(l:items, {_, item -> {'word':item['label'],'menu':lsp#omni#get_kind_text(item),'dup':1,'icase':1}})
 
     return {'matches': l:matches, 'incomplete': l:incomplete}
-endfunction
-
-function! s:get_kind_label(match) abort
-    return has_key(a:match, 'kind') && has_key(s:kind_labels, a:match['kind']) ? s:kind_labels[a:match['kind']] : ''
 endfunction
 
 " }}}
