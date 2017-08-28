@@ -1,6 +1,6 @@
 " constants {{{
 
-let s:kind_labels = {
+let s:kind_text_mappings = {
             \ '1': 'text',
             \ '2': 'method',
             \ '3': 'function',
@@ -84,7 +84,7 @@ function! s:handle_omnicompletion(server_name, startcol, complete_counter, data)
 endfunction
 
 function! lsp#omni#get_kind(match) abort
-    return has_key(a:match, 'kind') && has_key(s:kind_labels, a:match['kind']) ? s:kind_labels[a:match['kind']] : ''
+    return has_key(a:match, 'kind') && has_key(s:kind_text_mappings, a:match['kind']) ? s:kind_text_mappings[a:match['kind']] : ''
 endfunction
 
 " auxiliary functions {{{
