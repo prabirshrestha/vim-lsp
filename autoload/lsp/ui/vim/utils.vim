@@ -17,7 +17,7 @@ function! lsp#ui#vim#utils#locations_to_loc_list(result) abort
                     \ 'filename': l:path,
                     \ 'lnum': l:line,
                     \ 'col': l:col,
-                    \ 'text': l:path,
+                    \ 'text': s:get_loc_text(l:path, l:line),
                     \ })
             endif
         endfor
@@ -81,6 +81,16 @@ function! s:is_file_uri(uri) abort
     return stridx(a:uri, 'file:///') == 0
 endfunction
 
+if has("unix")
+    function! s:get_loc_text(path, lineno) abort
+        " Use sed to avoid loading the entire file into memory.
+        return system("sed -n " . a:lineno . "p < " . shellescape(a:path))
+    endfunction
+else
+    function! s:get_loc_text(path, lineno) abort
+        return readfile(a:path, a:lineno)[a:lineno - 1]
+    endfunction
+endif
 
 function! s:get_symbol_text_from_kind(kind)
     return has_key(s:symbol_kinds, a:kind) ? s:symbol_kinds[a:kind] : 'unknown symbol ' . a:kind
