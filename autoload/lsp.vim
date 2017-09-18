@@ -303,6 +303,7 @@ function! s:ensure_init(buf, server_name, cb) abort
         \   'capabilities': {},
         \   'rootUri': l:root_uri,
         \   'rootPath': lsp#utils#uri_to_path(l:root_uri),
+        \   'trace': 'off',
         \ },
         \ })
 endfunction
@@ -420,7 +421,11 @@ function! s:on_notification(server_name, id, data, event) abort
     let l:server = s:servers[a:server_name]
 
     if lsp#client#is_server_instantiated_notification(a:data)
-        " todo
+        if has_key(l:response, 'method')
+            if l:response['method'] == 'textDocument/publishDiagnostics'
+                call lsp#ui#vim#handle_text_document_publish_diagnostics(a:server_name, l:response)
+            endif
+        endif
     else
         let l:request = a:data['request']
         let l:method = l:request['method']

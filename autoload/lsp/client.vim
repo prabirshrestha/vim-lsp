@@ -46,10 +46,10 @@ function! s:_on_lsp_stdout(id, data, event) abort
                     let l:client.stdout.buffer = l:client.stdout.buffer[l:client.stdout.content_length:]
                     let l:client.stdout.content_length = -1 " reset since we are done reading the current message
                     let l:response_msg = json_decode(l:response_str)
+                    let l:on_notification_data = { 'response': l:response_msg }
                     if has_key(l:response_msg, 'id')
-                        let l:on_notification_data = { 'response': l:response_msg }
+                        " it is a response
                         if has_key(l:client.on_notifications, l:response_msg.id)
-                            " requests are absent for server instantiated events
                             let l:on_notification_data.request = l:client.on_notifications[l:response_msg.id].request
                         endif
                         if has_key(l:client.opts, 'on_notification')
@@ -61,8 +61,13 @@ function! s:_on_lsp_stdout(id, data, event) abort
                             call l:client.on_notifications[l:response_msg.id].on_notification(a:id, l:on_notification_data, 'on_notification')
                         endif
                         if has_key(l:client.on_notifications, l:response_msg.id)
-                            " requests are absent for server instantiated events
                             call remove(l:client.on_notifications, l:response_msg.id)
+                        endif
+                    else
+                        " it is a notification
+                        if has_key(l:client.opts, 'on_notification')
+                            " call the client's on_notification
+                            call l:client.opts.on_notification(a:id, l:on_notification_data, 'on_notification')
                         endif
                     endif
                     if len(l:client.stdout.buffer) > 0

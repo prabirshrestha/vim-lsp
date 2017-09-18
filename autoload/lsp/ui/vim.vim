@@ -232,6 +232,13 @@ function! lsp#ui#vim#document_symbol() abort
     echom 'Retrieving document symbols ...'
 endfunction
 
+function! lsp#ui#vim#handle_text_document_publish_diagnostics(server_name, data) abort
+    if lsp#client#is_error(a:data)
+        return
+    endif
+    " TODO: handle textDocument/publishDiagnostics
+endfunction
+
 function! s:handle_symbol(server, last_req_id, type, data) abort
     if a:last_req_id != s:last_req_id
         return
