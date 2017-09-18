@@ -59,6 +59,7 @@ function! lsp#ui#vim#hover() abort
 
     call setqflist([])
 
+    let l:ctx = { 'last_req_id': s:last_req_id, 'done': 0 }
     if len(l:servers) == 0
         echom 'Retrieving hover not supported for ' . &filetype
         return
@@ -71,7 +72,7 @@ function! lsp#ui#vim#hover() abort
             \   'textDocument': lsp#get_text_document_identifier(),
             \   'position': lsp#get_position(),
             \ },
-            \ 'on_notification': function('s:handle_hover', [l:server, s:last_req_id, 'hover']),
+            \ 'on_notification': function('s:handle_hover', [l:server, l:ctx, 'hover']),
             \ })
     endfor
 
@@ -323,8 +324,8 @@ function! s:handle_location(ctx, server, type, data) abort "ctx = {counter, list
     endif
 endfunction
 
-function! s:handle_hover(server, last_req_id, type, data) abort
-    if a:last_req_id != s:last_req_id
+function! s:handle_hover(server, ctx, type, data) abort
+    if a:ctx['last_req_id'] != s:last_req_id || a:ctx['done']
         return
     endif
 
@@ -344,28 +345,28 @@ function! s:handle_hover(server, last_req_id, type, data) abort
 
     let l:contents = a:data['response']['result']['contents']
 
-    if type(l:contents) == type('')
-        let l:contents = [{ 'text': s:markdown_to_text(l:contents) }]
-    elseif type(l:contents) == type([])
-        let l:contents = []
-        for l:content in a:data['response']['result']['contents']
-            if type(l:content) == type('')
-                call add(l:contents, { 'text': s:markdown_to_text(l:content) })
-            elseif type(l:content) == type({})
-                call add(l:contents, { 'text': s:markdown_to_text(l:content['value']) })
-            endif
-        endfor
-    endif
-
-    call setqflist(l:contents)
-
-    " autocmd FileType qf setlocal wrap
-
     if empty(l:contents)
         echom 'No ' . a:type .' found'
-    else
-        echom 'Retrieved ' . a:type
-        copen
+        return
+    endif
+
+
+    if type(l:contents) == type('')
+        let l:contents = [l:contents]
+    endif
+
+    if type(l:contents) == type([])
+        let l:hoverText = ""
+        for l:content in l:contents
+            if type(l:content) == type('')
+                let l:hoverText = l:hoverText . "\n" . s:markdown_to_text(l:content)
+            elseif type(l:content) == type({})
+                let l:hoverText = l:hoverText . "\n" . s:markdown_to_text(l:content['value'])
+            endif
+        endfor
+        let a:ctx['done'] = 1
+        " first character will always be a newline so skip it
+        echom l:hoverText[1:]
     endif
 endfunction
 
