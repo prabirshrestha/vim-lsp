@@ -423,7 +423,7 @@ function! s:on_notification(server_name, id, data, event) abort
     if lsp#client#is_server_instantiated_notification(a:data)
         if has_key(l:response, 'method')
             if l:response['method'] == 'textDocument/publishDiagnostics'
-                call lsp#ui#vim#handle_text_document_publish_diagnostics(a:server_name, l:response)
+                call lsp#ui#vim#handle_text_document_publish_diagnostics(a:server_name, a:data)
             endif
         endif
     else

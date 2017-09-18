@@ -47,6 +47,13 @@ let s:symbol_kinds = {
     \ '18': 'array',
     \ }
 
+let s:diagnostic_severity = {
+    \ 1: 'Error',
+    \ 2: 'Warning',
+    \ 3: 'Information',
+    \ 4: 'Hint',
+    \ }
+
 function! lsp#ui#vim#utils#symbols_to_loc_list(result) abort
     if !has_key(a:result['response'], 'result')
         return []
@@ -77,6 +84,45 @@ function! lsp#ui#vim#utils#symbols_to_loc_list(result) abort
     return l:list
 endfunction
 
+function! lsp#ui#vim#utils#diagnostics_to_loc_list(result) abort
+    if !has_key(a:result['response'], 'params')
+        return
+    endif
+
+    let l:uri = a:result['response']['params']['uri']
+    let l:diagnostics = a:result['response']['params']['diagnostics']
+
+    let l:list = []
+
+    if !empty(l:diagnostics) && s:is_file_uri(l:uri)
+        let l:path = lsp#utils#uri_to_path(l:uri)
+        let l:bufnr = bufnr(l:path)
+        for l:item in l:diagnostics
+            let l:text = ''
+            if has_key(l:item, 'source') && !empty(l:item['source'])
+                let l:text .= l:item['source'] . ':'
+            endif
+            if has_key(l:item, 'severity') && !empty(l:item['severity'])
+                let l:text .= s:get_diagnostic_severity_text(l:item['severity']) . ':'
+            endif
+            if has_key(l:item, 'code') && !empty(l:item['code'])
+                let l:text .= l:item['code'] . ':'
+            endif
+            let l:text .= l:item['message']
+            let l:line = l:item['range']['start']['line'] + 1
+            let l:col = l:item['range']['start']['character'] + 1
+            call add(l:list, {
+                \ 'filename': l:path,
+                \ 'lnum': l:line,
+                \ 'col': l:col,
+                \ 'text': l:text,
+                \ })
+        endfor
+    endif
+
+    return l:list
+endfunction
+
 function! s:is_file_uri(uri) abort
     return stridx(a:uri, 'file:///') == 0
 endfunction
@@ -84,4 +130,8 @@ endfunction
 
 function! s:get_symbol_text_from_kind(kind)
     return has_key(s:symbol_kinds, a:kind) ? s:symbol_kinds[a:kind] : 'unknown symbol ' . a:kind
+endfunction
+
+function! s:get_diagnostic_severity_text(severity)
+    return s:diagnostic_severity[a:severity]
 endfunction

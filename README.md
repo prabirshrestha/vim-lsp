@@ -70,6 +70,7 @@ Plug 'prabirshrestha/asyncomplete-lsp.vim'
 
 | Command | Description|
 |--|--|
+|`:LspDocumentDiagnostics`| Get current document diagnostics information |
 |`:LspDefinition`| Go to definition |
 |`:LspDocumentFormat`| Format entire document |
 |`:LspDocumentRangeFormat`| Format document selection |
