@@ -302,7 +302,7 @@ function! s:ensure_init(buf, server_name, cb) abort
         \ 'params': {
         \   'capabilities': {},
         \   'rootUri': l:root_uri,
-        \   'rootPath': l:root_uri,
+        \   'rootPath': lsp#utils#uri_to_path(l:root_uri),
         \ },
         \ })
 endfunction
