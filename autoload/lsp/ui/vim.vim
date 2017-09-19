@@ -265,7 +265,7 @@ function! lsp#ui#vim#document_diagnostics() abort
         echom 'No diagnostics results found'
     else
         echom 'Retrieved diagnostics results'
-        copen
+        botright copen
     endif
 endfunction
 
@@ -287,7 +287,7 @@ function! s:handle_symbol(server, last_req_id, type, data) abort
         echom 'No ' . a:type .' found'
     else
         echom 'Retrieved ' . a:type
-        copen
+        botright copen
     endif
 endfunction
 
@@ -317,7 +317,7 @@ function! s:handle_location(ctx, server, type, data) abort "ctx = {counter, list
             else
                 call setqflist(a:ctx['list'])
                 echom 'Retrieved ' . a:type
-                copen
+                botright copen
             endif
         endif
     endif
@@ -365,7 +365,7 @@ function! s:handle_hover(server, last_req_id, type, data) abort
         echom 'No ' . a:type .' found'
     else
         echom 'Retrieved ' . a:type
-        copen
+        botright copen
     endif
 endfunction
 
