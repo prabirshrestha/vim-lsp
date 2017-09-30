@@ -136,9 +136,18 @@ function! s:get_completion_result(data) abort
         let l:incomplete = l:result['isIncomplete']
     endif
 
-    let l:matches = map(l:items, {_, item -> {'word':item['label'],'menu':lsp#omni#get_kind_text(item),'dup':1,'icase':1}})
+    let l:matches = map(l:items, {_, item -> s:format_completion_item(item) })
 
     return {'matches': l:matches, 'incomplete': l:incomplete}
+endfunction
+
+function! s:format_completion_item(item) abort
+    let l:word = a:item['label']
+    if has_key(a:item, 'insertText') && !empty(a:item['insertText'])
+      let l:word = a:item['insertText']
+    endif
+
+    return {'word': l:word, 'abbr': a:item['label'], 'menu': lsp#omni#get_kind_text(a:item), 'icase': 1, 'dup': 1}
 endfunction
 
 " }}}
