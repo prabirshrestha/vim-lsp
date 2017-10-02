@@ -1,107 +1,170 @@
 let s:save_cpo = &cpo
 set cpo&vim
 
-let s:lsp_clients = {} " { id, opts, req_seq, on_notifications: { 'req_seq': { request, on_notification } }, stdout: { max_buffer_size, buffer, content_length, headers } }
-let s:lsp_default_max_buffer = -1
+let s:clients = {} " { client_id: ctx }
 
-function! s:trim(str) abort
-  return matchstr(a:str,'^\s*\zs.\{-}\ze\s*$')
+function! s:create_context(client_id, opts) abort
+    if a:client_id <= 0
+        return {}
+    endif
+
+    let l:ctx = {
+        \ 'opts': a:opts,
+        \ 'buffer': '',
+        \ 'content-length': -1,
+        \ 'requests': {},
+        \ 'request_sequence': 0,
+        \ 'on_notifications': {},
+        \ }
+
+    let s:clients[a:client_id] = l:ctx
+
+    return l:ctx
 endfunction
 
-function! s:_on_lsp_stdout(id, data, event) abort
-    if has_key(s:lsp_clients, a:id)
-        let l:client = s:lsp_clients[a:id]
+function s:dispose_context(client_id) abort
+    if a:client_id > 0
+        if has_key(s:clients, a:client_id)
+            unlet s:clients[a:client_id]
+        endif
+    endif
+endfunction
 
-        let l:client.stdout.buffer .= join(a:data, "\n")
+function! s:on_stdout(id, data, event) abort
+    let l:ctx = get(s:clients, a:id, {})
 
-        if l:client.stdout.max_buffer_size != -1 && len(l:client.stdout.buffer) > l:client.stdout.max_buffer_size
-            echom 'lsp: reached max buffer size'
-            call async#job#stop(a:id)
+    if empty(l:ctx)
+        return
+    endif
+
+    if empty(l:ctx['buffer'])
+        let l:ctx['buffer'] = join(a:data, "\n")
+    else
+        let l:ctx['buffer'] .= join(a:data, "\n")
+    endif
+
+    while 1
+        if l:ctx['content-length'] < 0
+            " wait for all headers to arrive
+            let l:header_end_index = stridx(l:ctx['buffer'], "\r\n\r\n")
+            if l:header_end_index < 0
+                " no headers found
+                return
+            endif
+            let l:headers = l:ctx['buffer'][:l:header_end_index - 1]
+            let l:ctx['content-length'] = s:get_content_length(l:headers)
+            if l:ctx['content-length'] < 0
+                " invalid content-length
+                call lsp#log('on_stdout', a:id, 'invalid content-length')
+                call s:lsp_stop(a:id)
+                return
+            endif
+            let l:ctx['buffer'] = l:ctx['buffer'][l:header_end_index + 4:] " 4 = len(\r\n\r\n)
         endif
 
-        while 1
-            if l:client.stdout.content_length == -1         " if content-length is -1 we haven't parsed the headers
-                " wait for all the headers to arrive
-                let l:header_end_index = stridx(l:client.stdout.buffer, "\r\n\r\n")
-                if l:header_end_index >= 0
-                    for l:header in split(l:client.stdout.buffer[:l:header_end_index - 1], "\r\n")
-                        let l:header_key_value_seperator = stridx(l:header, ":")
-                        let l:header_key = s:trim(l:header[:l:header_key_value_seperator - 1])
-                        let l:header_value = s:trim(l:header[l:header_key_value_seperator + 1:])
-                        if l:header_key ==? 'Content-Length'
-                            let l:client.stdout.content_length = str2nr(l:header_value, 10)
-                        endif
-                        let l:client.stdout.headers[l:header_key] = s:trim(l:header_value)
-                    endfor
-                    let l:client.stdout.buffer = l:client.stdout.buffer[l:header_end_index + 4:]
-                    continue
-                else
-                    " wait for next buffer to arrive
-                    break
+        if len(l:ctx['buffer']) < l:ctx['content-length']
+            " incomplete message, wait for next buffer to arrive
+            return
+        endif
+
+        " we have full message
+        let l:response_str = l:ctx['buffer'][:l:ctx['content-length'] - 1]
+        let l:ctx['content-length'] = -1
+
+        try
+            let l:response = json_decode(l:response_str)
+        catch
+            call lsp#log('s:on_stdout json_decode failed', v:exception)
+        endtry
+
+        let l:ctx['buffer'] = l:ctx['buffer'][len(l:response_str):]
+
+        if exists('l:response')
+            " call appropriate callbacks
+            let l:on_notification_data = { 'response': l:response }
+            if has_key(l:response, 'id')
+                " it is a request->response
+                if has_key(l:ctx['requests'], l:response['id'])
+                    let l:on_notification_data['request'] = l:ctx['requests'][l:response['id']]
                 endif
+                if has_key(l:ctx['opts'], 'on_notification')
+                    " call client's on_notification first
+                    try
+                        call l:ctx['opts']['on_notification'](a:id, l:on_notification_data, 'on_notification')
+                    catch
+                        call lsp#log('s:on_stdout client option on_notification() error', v:exception)
+                    endtry
+                endif
+                if has_key(l:ctx['on_notifications'], l:response['id'])
+                    " call lsp#client#send({ 'on_notification }) second
+                    try
+                        call l:ctx['on_notifications'][l:response['id']](a:id, l:on_notification_data, 'on_notification')
+                    catch
+                        call lsp#log('s:on_stdout client request on_notification() error', v:exception)
+                    endtry
+                    unlet l:ctx['on_notifications'][l:response['id']]
+                endif
+                unlet l:ctx['requests'][l:response['id']]
             else
-                if len(l:client.stdout.buffer) >= l:client.stdout.content_length
-                    " we have the full message
-                    let l:response_str = l:client.stdout.buffer[:l:client.stdout.content_length - 1]
-                    let l:client.stdout.buffer = l:client.stdout.buffer[l:client.stdout.content_length:]
-                    let l:client.stdout.content_length = -1 " reset since we are done reading the current message
-                    let l:response_msg = json_decode(l:response_str)
-                    let l:on_notification_data = { 'response': l:response_msg }
-                    if has_key(l:response_msg, 'id')
-                        " it is a response
-                        if has_key(l:client.on_notifications, l:response_msg.id)
-                            let l:on_notification_data.request = l:client.on_notifications[l:response_msg.id].request
-                        endif
-                        if has_key(l:client.opts, 'on_notification')
-                            " call the client's on_notification
-                            call l:client.opts.on_notification(a:id, l:on_notification_data, 'on_notification')
-                        endif
-                        if has_key(l:client.on_notifications, l:response_msg.id) && has_key(l:client.on_notifications[l:response_msg.id], 'on_notification')
-                            " call on notification registered during send
-                            call l:client.on_notifications[l:response_msg.id].on_notification(a:id, l:on_notification_data, 'on_notification')
-                        endif
-                        if has_key(l:client.on_notifications, l:response_msg.id)
-                            call remove(l:client.on_notifications, l:response_msg.id)
-                        endif
-                    else
-                        " it is a notification
-                        if has_key(l:client.opts, 'on_notification')
-                            " call the client's on_notification
-                            call l:client.opts.on_notification(a:id, l:on_notification_data, 'on_notification')
-                        endif
-                    endif
-                    if len(l:client.stdout.buffer) > 0
-                        " we have more data in the buffer so try parsing the new headers from top
-                        continue
-                    else
-                        " we are done processing the message here so stop
-                        break
-                    endif
-                else
-                    " we don't have the entire message body, so wait for the next buffer
-                    break
+                " it is a notification
+                if has_key(l:ctx['opts'], 'on_notification')
+                    try
+                        call l:ctx['opts']['on_notification'](a:id, l:on_notification_data, 'on_notification')
+                    catch
+                        call lsp#log('s:on_stdout on_notification() error', v:exception)
+                    endtry
                 endif
             endif
-        endwhile
+        endif
+
+        if empty(l:response_str)
+            " buffer is empty, wait for next message to arrive
+            return
+        endif
+    endwhile
+endfunction
+
+function! s:get_content_length(headers) abort
+    for l:header in split(a:headers, "\r\n")
+        let l:kvp = split(l:header, ':')
+        if len(l:kvp) == 2
+            if l:kvp[0] =~? '^Content-Length'
+                return str2nr(l:kvp[1], 10)
+            endif
+        endif
+    endfor
+    return -1
+endfunction
+
+function! s:on_stderr(id, data, event) abort
+    let l:ctx = get(s:clients, a:id, {})
+    if empty(l:ctx)
+        return
+    endif
+    if has_key(l:ctx['opts'], 'on_stderr')
+        try
+            call l:ctx['opts']['on_stderr'](a:id, a:data, a:event)
+        catch
+            call lsp#log('s:on_stderr exception', v:exception)
+            echom v:exception
+        endtry
     endif
 endfunction
 
-function! s:_on_lsp_stderr(id, data, event) abort
-    if has_key(s:lsp_clients, a:id)
-        let l:client = s:lsp_clients[a:id]
-        if has_key(l:client.opts, 'on_stderr')
-            call l:client.opts.on_stderr(a:id, a:data, a:event)
-        endif
+function! s:on_exit(id, status, event) abort
+    let l:ctx = get(s:clients, a:id, {})
+    if empty(l:ctx)
+        return
     endif
-endfunction
-
-function! s:_on_lsp_exit(id, status, event) abort
-    if has_key(s:lsp_clients, a:id)
-        let l:client = s:lsp_clients[a:id]
-        if has_key(l:client.opts, 'on_exit')
-            call l:client.opts.on_exit(a:id, a:status, a:event)
-        endif
+    if has_key(l:ctx['opts'], 'on_exit')
+        try
+            call l:ctx['opts']['on_exit'](a:id, a:status, a:event)
+        catch
+            call lsp#log('s:on_exit exception', v:exception)
+            echom v:exception
+        endtry
     endif
+    call s:dispose_context(a:id)
 endfunction
 
 function! s:lsp_start(opts) abort
@@ -109,35 +172,16 @@ function! s:lsp_start(opts) abort
         return -1
     endif
 
-    let l:lsp_client_id = async#job#start(a:opts.cmd, {
-        \ 'on_stdout': function('s:_on_lsp_stdout'),
-        \ 'on_stderr': function('s:_on_lsp_stderr'),
-        \ 'on_exit': function('s:_on_lsp_exit'),
-    \ })
+    let l:client_id = async#job#start(a:opts.cmd, {
+        \ 'on_stdout': function('s:on_stdout'),
+        \ 'on_stderr': function('s:on_stderr'),
+        \ 'on_exit': function('s:on_exit'),
+        \ })
 
-    if l:lsp_client_id <= 0
-        return l:lsp_client_id
-    endif
+    let l:ctx = s:create_context(l:client_id, a:opts)
+    let l:ctx['id'] = l:client_id
 
-    let l:max_buffer_size = s:lsp_default_max_buffer
-    if has_key(a:opts, 'max_buffer_size')
-        let l:max_buffer_size = a:opts.max_buffer_size
-    endif
-
-    let s:lsp_clients[l:lsp_client_id] = {
-        \ 'id': l:lsp_client_id,
-        \ 'opts': a:opts,
-        \ 'req_seq': 0,
-        \ 'on_notifications': {},
-        \ 'stdout': {
-            \ 'max_buffer_size': l:max_buffer_size,
-            \ 'buffer': '',
-            \ 'content_length': -1,
-            \ 'headers': {}
-        \ },
-    \ }
-
-    return l:lsp_client_id
+    return l:client_id
 endfunction
 
 function! s:lsp_stop(id) abort
@@ -147,45 +191,40 @@ endfunction
 let s:send_type_request = 1
 let s:send_type_notification = 2
 function! s:lsp_send(id, opts, type) abort " opts = { method, params?, on_notification }
-    if has_key(s:lsp_clients, a:id)
-        let l:client = s:lsp_clients[a:id]
-
-        let l:msg = { 'jsonrpc': '2.0', 'method': a:opts.method }
-
-        if (a:type == s:send_type_request)
-            let l:client.req_seq = l:client.req_seq + 1
-            let l:req_seq = l:client.req_seq
-            let l:msg.id = l:req_seq
-        endif
-
-        if has_key(a:opts, 'params')
-            let l:msg.params = a:opts.params
-        endif
-
-        let l:json = json_encode(l:msg)
-        let l:req_data = 'Content-Length: ' . len(l:json) . "\r\n\r\n" . l:json
-
-        if (a:type == s:send_type_request)
-            let l:client.on_notifications[l:req_seq] = { 'request': l:msg }
-            if has_key(a:opts, 'on_notification')
-                let l:client.on_notifications[l:req_seq].on_notification = a:opts.on_notification
-            endif
-        endif
-
-        call async#job#send(l:client.id, l:req_data)
-
-        if (a:type == s:send_type_request)
-            return l:req_seq
-        else
-            return 0
-        endif
-    else
+    let l:ctx = get(s:clients, a:id, {})
+    if empty(l:ctx)
         return -1
+    endif
+
+    let l:request = { 'jsonrpc': '2.0', 'method': a:opts['method'] }
+
+    if (a:type == s:send_type_request)
+        let l:ctx['request_sequence'] = l:ctx['request_sequence'] + 1
+        let l:request['id'] = l:ctx['request_sequence']
+        let l:ctx['requests'][l:request['id']] = l:request
+        if has_key(a:opts, 'on_notification')
+            let l:ctx['on_notifications'][l:request['id']] = a:opts['on_notification']
+        endif
+    endif
+
+    if has_key(a:opts, 'params')
+        let l:request['params'] = a:opts['params']
+    endif
+
+    let l:json = json_encode(l:request)
+    let l:payload = 'Content-Length: ' . len(l:json) . "\r\n\r\n" . l:json
+
+    call async#job#send(a:id, l:payload)
+
+    if (a:type == s:send_type_request)
+        return l:request['id']
+    else
+        return 0
     endif
 endfunction
 
 function! s:lsp_get_last_request_id(id) abort
-    return s:lsp_clients[a:id].req_seq
+    return s:lsp_clients[a:id]['request_sequence']
 endfunction
 
 function! s:lsp_is_error(notification) abort
