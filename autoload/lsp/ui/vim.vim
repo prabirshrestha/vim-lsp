@@ -310,10 +310,11 @@ function! s:handle_location(ctx, server, type, data) abort "ctx = {counter, list
         else
             if len(a:ctx['list']) == 1 && a:ctx['jump_if_one']
                 let l:loc = a:ctx['list'][0]
-                if lsp#utils#path_to_uri(expand('%:p')) != lsp#utils#path_to_uri(l:loc['filename'])
-                    execute 'e '. l:loc['filename']
+                if lsp#utils#path_to_uri(expand('%:p')) == lsp#utils#path_to_uri(l:loc['filename'])
+                    call cursor(l:loc['lnum'], l:loc['col'])
+                else
+                    execute 'edit +call\ cursor('.l:loc['lnum'].','.l:loc['col'].') '.l:loc['filename']
                 endif
-                execute 'norm ' . l:loc['lnum'] . 'G' . l:loc['col'] . '|'
             else
                 call setqflist(a:ctx['list'])
                 echom 'Retrieved ' . a:type
