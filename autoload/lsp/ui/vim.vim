@@ -136,7 +136,7 @@ function! lsp#ui#vim#document_format() abort
     echom 'Formatting document ...'
 endfunction
 
-function! s:get_visual_selection_pos()
+function! s:get_visual_selection_pos() abort
     " https://groups.google.com/d/msg/vim_dev/oCUQzO3y8XE/vfIMJiHCHtEJ
     " https://stackoverflow.com/a/6271254
     " getpos("'>'") doesn't give the right column so need to do extra processing

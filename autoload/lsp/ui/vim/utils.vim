@@ -128,10 +128,10 @@ function! s:is_file_uri(uri) abort
 endfunction
 
 
-function! s:get_symbol_text_from_kind(kind)
+function! s:get_symbol_text_from_kind(kind) abort
     return has_key(s:symbol_kinds, a:kind) ? s:symbol_kinds[a:kind] : 'unknown symbol ' . a:kind
 endfunction
 
-function! s:get_diagnostic_severity_text(severity)
+function! s:get_diagnostic_severity_text(severity) abort
     return s:diagnostic_severity[a:severity]
 endfunction

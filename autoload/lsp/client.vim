@@ -22,7 +22,7 @@ function! s:create_context(client_id, opts) abort
     return l:ctx
 endfunction
 
-function s:dispose_context(client_id) abort
+function! s:dispose_context(client_id) abort
     if a:client_id > 0
         if has_key(s:clients, a:client_id)
             unlet s:clients[a:client_id]
@@ -261,7 +261,7 @@ function! lsp#client#is_error(notification) abort
     return s:lsp_is_error(a:notification)
 endfunction
 
-function! lsp#client#is_server_instantiated_notification(notification)
+function! lsp#client#is_server_instantiated_notification(notification) abort
     return s:is_server_instantiated_notification(a:notification)
 endfunction
 

@@ -84,7 +84,7 @@ function! lsp#unregister_notifications(name) abort
     " TODO
 endfunction
 
-function s:register_events() abort
+function! s:register_events() abort
     augroup lsp
         autocmd!
         autocmd BufReadPost * call s:on_text_document_did_open()
