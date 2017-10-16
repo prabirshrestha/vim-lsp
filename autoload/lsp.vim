@@ -422,14 +422,14 @@ function! s:on_notification(server_name, id, data, event) abort
 
     if lsp#client#is_server_instantiated_notification(a:data)
         if has_key(l:response, 'method')
-            if l:response['method'] == 'textDocument/publishDiagnostics'
+            if l:response['method'] ==# 'textDocument/publishDiagnostics'
                 call lsp#ui#vim#handle_text_document_publish_diagnostics(a:server_name, a:data)
             endif
         endif
     else
         let l:request = a:data['request']
         let l:method = l:request['method']
-        if l:method == 'initialize'
+        if l:method ==# 'initialize'
             call s:handle_initialize(a:server_name, a:data)
         endif
     endif
@@ -480,7 +480,7 @@ function! lsp#get_whitelisted_servers(...) abort
 
         if has_key(l:server_info, 'blacklist')
             for l:filetype in l:server_info['blacklist']
-                if l:filetype == l:buffer_filetype || l:filetype == '*'
+                if l:filetype ==? l:buffer_filetype || l:filetype ==# '*'
                     let l:blacklisted = 1
                     break
                 endif
@@ -493,7 +493,7 @@ function! lsp#get_whitelisted_servers(...) abort
 
         if has_key(l:server_info, 'whitelist')
             for l:filetype in l:server_info['whitelist']
-                if l:filetype == l:buffer_filetype || l:filetype == '*'
+                if l:filetype ==? l:buffer_filetype || l:filetype ==# '*'
                     let l:active_servers += [l:server_name]
                     break
                 endif
