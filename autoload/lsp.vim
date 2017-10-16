@@ -236,7 +236,7 @@ function! s:ensure_start(buf, server_name, cb) abort
     let l:cmd = l:server_info['cmd'](l:server_info)
 
     if empty(l:cmd)
-        let l:msg = s:new_rpc_error('ignore server start since cmd is empty', { 'server_name': a:server_name }))
+        let l:msg = s:new_rpc_error('ignore server start since cmd is empty', { 'server_name': a:server_name })
         call lsp#log(l:msg)
         call a:cb(l:msg)
         return

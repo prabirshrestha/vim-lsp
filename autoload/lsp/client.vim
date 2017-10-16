@@ -224,7 +224,7 @@ function! s:lsp_send(id, opts, type) abort " opts = { method, params?, on_notifi
 endfunction
 
 function! s:lsp_get_last_request_id(id) abort
-    return s:lsp_clients[a:id]['request_sequence']
+    return s:clients[a:id]['request_sequence']
 endfunction
 
 function! s:lsp_is_error(notification) abort
