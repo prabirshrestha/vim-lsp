@@ -5,11 +5,14 @@ let s:servers = {} " { lsp_id, server_info, init_callbacks, init_result, buffers
 let s:notification_callbacks = [] " { name, callback }
 
 " do nothing, place it here only to avoid the message
-autocmd User lsp_setup silent
-autocmd User lsp_register_server silent
-autocmd User lsp_unregister_server silent
-autocmd User lsp_server_init silent
-autocmd User lsp_server_exit silent
+augroup _lsp_silent_
+    autocmd!
+    autocmd User lsp_setup silent
+    autocmd User lsp_register_server silent
+    autocmd User lsp_unregister_server silent
+    autocmd User lsp_server_init silent
+    autocmd User lsp_server_exit silent
+augroup END
 
 function! lsp#log_verbose(...) abort
     if g:lsp_log_verbose
