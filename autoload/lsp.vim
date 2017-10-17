@@ -5,11 +5,14 @@ let s:servers = {} " { lsp_id, server_info, init_callbacks, init_result, buffers
 let s:notification_callbacks = [] " { name, callback }
 
 " do nothing, place it here only to avoid the message
-autocmd User lsp_setup silent
-autocmd User lsp_register_server silent
-autocmd User lsp_unregister_server silent
-autocmd User lsp_server_init silent
-autocmd User lsp_server_exit silent
+augroup _lsp_silent_
+    autocmd!
+    autocmd User lsp_setup silent
+    autocmd User lsp_register_server silent
+    autocmd User lsp_unregister_server silent
+    autocmd User lsp_server_init silent
+    autocmd User lsp_server_exit silent
+augroup END
 
 function! lsp#log_verbose(...) abort
     if g:lsp_log_verbose
@@ -84,7 +87,7 @@ function! lsp#unregister_notifications(name) abort
     " TODO
 endfunction
 
-function s:register_events() abort
+function! s:register_events() abort
     augroup lsp
         autocmd!
         autocmd BufReadPost * call s:on_text_document_did_open()
@@ -236,7 +239,7 @@ function! s:ensure_start(buf, server_name, cb) abort
     let l:cmd = l:server_info['cmd'](l:server_info)
 
     if empty(l:cmd)
-        let l:msg = s:new_rpc_error('ignore server start since cmd is empty', { 'server_name': a:server_name }))
+        let l:msg = s:new_rpc_error('ignore server start since cmd is empty', { 'server_name': a:server_name })
         call lsp#log(l:msg)
         call a:cb(l:msg)
         return
@@ -422,14 +425,14 @@ function! s:on_notification(server_name, id, data, event) abort
 
     if lsp#client#is_server_instantiated_notification(a:data)
         if has_key(l:response, 'method')
-            if l:response['method'] == 'textDocument/publishDiagnostics'
+            if l:response['method'] ==# 'textDocument/publishDiagnostics'
                 call lsp#ui#vim#handle_text_document_publish_diagnostics(a:server_name, a:data)
             endif
         endif
     else
         let l:request = a:data['request']
         let l:method = l:request['method']
-        if l:method == 'initialize'
+        if l:method ==# 'initialize'
             call s:handle_initialize(a:server_name, a:data)
         endif
     endif
@@ -480,7 +483,7 @@ function! lsp#get_whitelisted_servers(...) abort
 
         if has_key(l:server_info, 'blacklist')
             for l:filetype in l:server_info['blacklist']
-                if l:filetype == l:buffer_filetype || l:filetype == '*'
+                if l:filetype ==? l:buffer_filetype || l:filetype ==# '*'
                     let l:blacklisted = 1
                     break
                 endif
@@ -493,7 +496,7 @@ function! lsp#get_whitelisted_servers(...) abort
 
         if has_key(l:server_info, 'whitelist')
             for l:filetype in l:server_info['whitelist']
-                if l:filetype == l:buffer_filetype || l:filetype == '*'
+                if l:filetype ==? l:buffer_filetype || l:filetype ==# '*'
                     let l:active_servers += [l:server_name]
                     break
                 endif

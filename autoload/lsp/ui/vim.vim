@@ -136,7 +136,7 @@ function! lsp#ui#vim#document_format() abort
     echom 'Formatting document ...'
 endfunction
 
-function! s:get_visual_selection_pos()
+function! s:get_visual_selection_pos() abort
     " https://groups.google.com/d/msg/vim_dev/oCUQzO3y8XE/vfIMJiHCHtEJ
     " https://stackoverflow.com/a/6271254
     " getpos("'>'") doesn't give the right column so need to do extra processing
@@ -146,7 +146,7 @@ function! s:get_visual_selection_pos()
     if len(lines) == 0
         return [0, 0, 0, 0]
     endif
-    let lines[-1] = lines[-1][: column_end - (&selection == 'inclusive' ? 1 : 2)]
+    let lines[-1] = lines[-1][: column_end - (&selection ==# 'inclusive' ? 1 : 2)]
     let lines[0] = lines[0][column_start - 1:]
     return [line_start, column_start, line_end, len(lines[-1])]
 endfunction

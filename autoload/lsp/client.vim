@@ -22,7 +22,7 @@ function! s:create_context(client_id, opts) abort
     return l:ctx
 endfunction
 
-function s:dispose_context(client_id) abort
+function! s:dispose_context(client_id) abort
     if a:client_id > 0
         if has_key(s:clients, a:client_id)
             unlet s:clients[a:client_id]
@@ -224,7 +224,7 @@ function! s:lsp_send(id, opts, type) abort " opts = { method, params?, on_notifi
 endfunction
 
 function! s:lsp_get_last_request_id(id) abort
-    return s:lsp_clients[a:id]['request_sequence']
+    return s:clients[a:id]['request_sequence']
 endfunction
 
 function! s:lsp_is_error(notification) abort
@@ -261,7 +261,7 @@ function! lsp#client#is_error(notification) abort
     return s:lsp_is_error(a:notification)
 endfunction
 
-function! lsp#client#is_server_instantiated_notification(notification)
+function! lsp#client#is_server_instantiated_notification(notification) abort
     return s:is_server_instantiated_notification(a:notification)
 endfunction
 
