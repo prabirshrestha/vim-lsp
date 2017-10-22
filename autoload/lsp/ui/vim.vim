@@ -44,7 +44,7 @@ function! lsp#ui#vim#references() abort
             \ 'params': {
             \   'textDocument': lsp#get_text_document_identifier(),
             \   'position': lsp#get_position(),
-            \   'includeDeclaration': v:false,
+            \   'context': {'includeDeclaration': v:false},
             \ },
             \ 'on_notification': function('s:handle_location', [l:ctx, l:server, 'references']),
             \ })
