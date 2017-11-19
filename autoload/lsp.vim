@@ -298,15 +298,28 @@ function! s:ensure_init(buf, server_name, cb) abort
         return
     endif
 
+    if has_key(l:server_info, 'capabilities')
+        let l:capabilities = l:server_info['capabilities']
+    else
+        let l:capabilities = {}
+    endif
+
+    if has_key(l:server_info, 'initialization_options')
+        let l:initialization_options = l:server_info['initialization_options']
+    else
+        let l:initialization_options = {}
+    endif
+
     let l:server['init_callbacks'] = [a:cb]
 
     call s:send_request(a:server_name, {
         \ 'method': 'initialize',
         \ 'params': {
-        \   'capabilities': {},
+        \   'capabilities': l:capabilities,
         \   'rootUri': l:root_uri,
         \   'rootPath': lsp#utils#uri_to_path(l:root_uri),
         \   'trace': 'off',
+        \   'initializationOptions': l:initialization_options,
         \ },
         \ })
 endfunction
