@@ -308,6 +308,9 @@ function! s:handle_location(ctx, server, type, data) abort "ctx = {counter, list
         if empty(a:ctx['list'])
             echom 'No ' . a:type .' found'
         else
+            if a:type ==# 'definition'
+                normal! m'
+            endif
             if len(a:ctx['list']) == 1 && a:ctx['jump_if_one']
                 let l:loc = a:ctx['list'][0]
                 let l:buffer = bufnr(l:loc['filename'])
