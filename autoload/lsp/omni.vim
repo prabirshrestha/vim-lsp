@@ -143,12 +143,16 @@ function! s:get_completion_result(data) abort
 endfunction
 
 function! s:format_completion_item(item) abort
-    let l:word = a:item['label']
+    let l:comp = {'word': a:item['label'], 'abbr': a:item['label'], 'menu': lsp#omni#get_kind_text(a:item), 'icase': 1, 'dup': 1}
+
     if has_key(a:item, 'insertText') && !empty(a:item['insertText'])
-      let l:word = a:item['insertText']
+      let l:comp['word'] = a:item['insertText']
+    endif
+    if has_key(a:item, 'documentation') && !empty(a:item['documentation'])
+      let l:comp['info'] = a:item['documentation']
     endif
 
-    return {'word': l:word, 'abbr': a:item['label'], 'menu': lsp#omni#get_kind_text(a:item), 'icase': 1, 'dup': 1}
+    return l:comp
 endfunction
 
 " }}}
