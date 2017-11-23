@@ -109,6 +109,9 @@ function! s:on_text_document_did_open() abort
     call lsp#log('s:on_text_document_did_open()', bufnr('%'), &filetype, getcwd(), lsp#utils#get_buffer_uri(bufnr('%')))
     for l:server_name in lsp#get_whitelisted_servers()
         call s:ensure_flush(bufnr('%'), l:server_name, function('s:Noop'))
+        if g:lsp_hover_balloon_eval
+            setlocal ballooneval balloonexpr=lsp#ui#vim#balloon()
+        endif
     endfor
 endfunction
 

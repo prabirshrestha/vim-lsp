@@ -4,6 +4,7 @@ endif
 let g:lsp_loaded = 1
 
 let g:lsp_auto_enable = get(g:, 'lsp_auto_enable', 1)
+let g:lsp_hover_balloon_eval = get(g:, 'lsp_hover_balloon_eval', has('balloon_eval'))
 let g:lsp_async_completion = get(g:, 'lsp_async_completion', 0)
 let g:lsp_log_file = get(g:, 'lsp_log_file', '')
 let g:lsp_log_verbose = get(g:, 'lsp_log_verbose', 1)

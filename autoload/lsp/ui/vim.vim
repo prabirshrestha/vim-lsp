@@ -1,6 +1,30 @@
 let s:last_req_id = 0
 let s:diagnostics = {} " { uri: { 'server_name': response } }
 
+function! lsp#ui#vim#balloon() abort
+    let l:servers = filter(lsp#get_whitelisted_servers(), 'lsp#capabilities#has_hover_provider(v:val)')
+    let s:last_req_id = s:last_req_id + 1
+
+    if len(l:servers) == 0
+        echom 'Retrieving hover not supported for ' . &filetype
+        return ''
+    endif
+
+    for l:server in l:servers
+        call lsp#send_request(l:server, {
+            \ 'method': 'textDocument/hover',
+            \ 'params': {
+            \   'textDocument': lsp#get_text_document_identifier(),
+            \   'position': { 'line': v:beval_lnum - 1, 'character': v:beval_col - 1 }
+            \ },
+            \ 'on_notification': function('s:handle_hover', [l:server, s:last_req_id, 'balloon']),
+            \ })
+    endfor
+
+    echom 'Retrieving hover ...'
+    return ''
+endfunction
+
 function! lsp#ui#vim#definition() abort
     let l:servers = filter(lsp#get_whitelisted_servers(), 'lsp#capabilities#has_definition_provider(v:val)')
     let s:last_req_id = s:last_req_id + 1
@@ -357,6 +381,11 @@ function! s:handle_hover(server, last_req_id, type, data) abort
                 call add(l:contents, { 'text': s:markdown_to_text(l:content['value']) })
             endif
         endfor
+    endif
+
+     if a:type == 'balloon'
+        call balloon_show(join(map(l:contents, 'v:val.text'), "\n"))
+        return
     endif
 
     call setqflist(l:contents)
