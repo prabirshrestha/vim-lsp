@@ -86,6 +86,11 @@ Plug 'prabirshrestha/asyncomplete-lsp.vim'
 let g:lsp_signs_enabled = 1         " enable signs
 let g:lsp_diagnostics_echo_cursor = 1 " enable echo under cursor when in normal mode
 ```
+## Configuration options
+
+* `g:lsp_definition_target` … where should target of `LspDefinition`
+  command be on screen? `t` on top, `z` in the center, `b` bottom.
+  (Defaults to `z`)
 
 ## Debugging
 
