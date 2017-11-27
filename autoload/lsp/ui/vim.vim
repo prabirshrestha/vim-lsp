@@ -308,14 +308,13 @@ function! s:handle_location(ctx, server, type, data) abort "ctx = {counter, list
         if empty(a:ctx['list'])
             echom 'No ' . a:type .' found'
         else
-            if a:type ==# 'definition'
-                normal! m'
-            endif
             if len(a:ctx['list']) == 1 && a:ctx['jump_if_one']
+                normal! m'
                 let l:loc = a:ctx['list'][0]
                 let l:buffer = bufnr(l:loc['filename'])
                 let l:cmd = l:buffer !=# -1 ? 'b ' . l:buffer : 'edit ' . l:loc['filename']
                 execute l:cmd . ' | call cursor('.l:loc['lnum'].','.l:loc['col'].')'
+                redraw
             else
                 call setqflist(a:ctx['list'])
                 echom 'Retrieved ' . a:type
