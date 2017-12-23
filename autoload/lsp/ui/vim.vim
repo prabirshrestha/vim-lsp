@@ -411,7 +411,7 @@ function! s:apply_workspace_edits(workspace_edits) abort
             call s:apply_text_edits(l:uri, l:text_edits)
         endfor
         if l:prev_buffer !=# -1
-          execute 'keepjumps b ' . l:prev_buffer
+            execute 'keepjumps b ' . l:prev_buffer
         endif
         execute 'keepjumps b ' . l:cur_buffer
         call winrestview(l:view)
