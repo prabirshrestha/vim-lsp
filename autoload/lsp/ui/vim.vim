@@ -404,9 +404,17 @@ endfunction
 "   workspace_edits - https://github.com/Microsoft/language-server-protocol/blob/master/protocol.md#workspaceedit
 function! s:apply_workspace_edits(workspace_edits) abort
     if has_key(a:workspace_edits, 'changes')
+        let l:cur_buffer = bufnr('%')
+        let l:prev_buffer = bufnr('#')
+        let l:view = winsaveview()
         for [l:uri, l:text_edits] in items(a:workspace_edits['changes'])
             call s:apply_text_edits(l:uri, l:text_edits)
         endfor
+        if l:prev_buffer !=# -1
+          execute 'keepjumps b ' . l:prev_buffer
+        endif
+        execute 'keepjumps b ' . l:cur_buffer
+        call winrestview(l:view)
     endif
     " TODO: support documentChanges
 endfunction
@@ -415,13 +423,14 @@ function! s:apply_text_edits(uri, text_edits) abort
     let l:path = lsp#utils#uri_to_path(a:uri)
     let l:buffer = bufnr(l:path)
     let l:cmd = l:buffer !=# -1 ? 'b ' . l:buffer : 'edit ' . l:path
+    let l:cmd = 'keepjumps ' . l:cmd
     for l:text_edit in a:text_edits
         let l:start_line = l:text_edit['range']['start']['line'] + 1
         let l:start_character = l:text_edit['range']['start']['character'] + 1
         let l:end_line = l:text_edit['range']['end']['line'] + 1
         let l:end_character = l:text_edit['range']['end']['character'] " The end position is exclusive so don't add +1
         let l:new_text = l:text_edit['newText']
-        let l:cmd = l:cmd . printf(" | execute 'normal! %dG%d|v%dG%d|c%s'", l:start_line, l:start_character, l:end_line, l:end_character, l:new_text)
+        let l:cmd = l:cmd . printf(" | execute 'keepjumps normal! %dG%d|v%dG%d|c%s'", l:start_line, l:start_character, l:end_line, l:end_character, l:new_text)
     endfor
     call lsp#log('s:apply_text_edits', l:cmd)
     execute l:cmd
