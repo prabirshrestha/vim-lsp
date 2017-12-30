@@ -127,7 +127,6 @@ function! s:is_file_uri(uri) abort
     return stridx(a:uri, 'file:///') == 0
 endfunction
 
-
 function! s:get_symbol_text_from_kind(kind) abort
     return has_key(s:symbol_kinds, a:kind) ? s:symbol_kinds[a:kind] : 'unknown symbol ' . a:kind
 endfunction

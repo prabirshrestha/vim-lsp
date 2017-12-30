@@ -16,7 +16,7 @@ endif
 command! LspDefinition call lsp#ui#vim#definition()
 command! LspDocumentSymbol call lsp#ui#vim#document_symbol()
 command! LspDocumentDiagnostics call lsp#ui#vim#document_diagnostics()
-command! LspHover call lsp#ui#vim#hover()
+command! -nargs=? -complete=customlist,lsp#utils#empty_complete LspHover call lsp#ui#vim#hover()
 command! LspReferences call lsp#ui#vim#references()
 command! LspRename call lsp#ui#vim#rename()
 command! LspWorkspaceSymbol call lsp#ui#vim#workspace_symbol()
