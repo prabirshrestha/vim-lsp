@@ -421,7 +421,7 @@ function! s:apply_text_edits(uri, text_edits) abort
         let l:end_line = l:text_edit['range']['end']['line'] + 1
         let l:end_character = l:text_edit['range']['end']['character'] " The end position is exclusive so don't add +1
         let l:new_text = l:text_edit['newText']
-        let l:cmd = l:cmd . printf(" | execute 'normal! %dG%d|v%dG%d|c%s'", l:start_line, l:start_character, l:end_line, l:end_character, l:new_text)
+        let l:cmd = l:cmd . printf(" | set paste | execute 'normal! %dG%d|v%dG%d|c%s' | set nopaste", l:start_line, l:start_character, l:end_line, l:end_character, l:new_text)
     endfor
     call lsp#log('s:apply_text_edits', l:cmd)
     execute l:cmd
