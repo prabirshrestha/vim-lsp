@@ -1,4 +1,6 @@
-function! lsp#ui#vim#output#preview(content) abort
+function! lsp#ui#vim#output#preview(content, ...) abort
+    let l:ft = a:0 > 0 ? a:1 : 'markdown'
+
     if type(a:content) == type([])
         let l:content = copy(a:content)
     else
@@ -11,13 +13,8 @@ function! lsp#ui#vim#output#preview(content) abort
     pclose
 
     execute l:height.'new'
-    setfiletype markdown
-    setlocal previewwindow buftype=nofile bufhidden=wipe noswapfile nobuflisted
-    setlocal nocursorline nofoldenable
 
-    if has('syntax')
-        setlocal nospell
-    endif
+    let &l:filetype = l:ft . '.lsp-hover'
 
     for l:line in l:content
         call append(line('$'), l:line)
