@@ -4,3 +4,5 @@ setlocal nocursorline nofoldenable
 if has('syntax')
     setlocal nospell
 endif
+
+let &l:statusline = ' LSP Hover'
