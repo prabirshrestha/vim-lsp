@@ -84,3 +84,7 @@ else
         return [matchstr(a:expr, a:pattern), match(a:expr, a:pattern), matchend(a:expr, a:pattern)]
     endfunction
 endif
+
+function! lsp#utils#empty_complete(...) abort
+    return []
+endfunction

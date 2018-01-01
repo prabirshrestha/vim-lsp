@@ -1,13 +1,23 @@
 let s:last_req_id = 0
 let s:diagnostics = {} " { uri: { 'server_name': response } }
 
+function! s:error_msg(msg) abort
+    echohl ErrorMsg
+    echom a:msg
+    echohl NONE
+endfunction
+
+function! s:not_supported(what) abort
+    return s:error_msg(a:what.' not supported for '.&filetype)
+endfunction
+
 function! lsp#ui#vim#definition() abort
     let l:servers = filter(lsp#get_whitelisted_servers(), 'lsp#capabilities#has_definition_provider(v:val)')
     let s:last_req_id = s:last_req_id + 1
     call setqflist([])
 
     if len(l:servers) == 0
-        echom 'Retrieving definition not supported for ' . &filetype
+        call s:not_supported('Retrieving definition')
         return
     endif
 
@@ -34,7 +44,7 @@ function! lsp#ui#vim#references() abort
 
     let l:ctx = { 'counter': len(l:servers), 'list':[], 'last_req_id': s:last_req_id, 'jump_if_one': 0 }
     if len(l:servers) == 0
-        echom 'Retrieving references not supported for ' . &filetype
+        call s:not_supported('Retrieving references')
         return
     endif
 
@@ -57,10 +67,8 @@ function! lsp#ui#vim#hover() abort
     let l:servers = filter(lsp#get_whitelisted_servers(), 'lsp#capabilities#has_hover_provider(v:val)')
     let s:last_req_id = s:last_req_id + 1
 
-    call setqflist([])
-
     if len(l:servers) == 0
-        echom 'Retrieving hover not supported for ' . &filetype
+        call s:not_supported('Retrieving hover')
         return
     endif
 
@@ -83,7 +91,7 @@ function! lsp#ui#vim#rename() abort
     let s:last_req_id = s:last_req_id + 1
 
     if len(l:servers) == 0
-        echom 'Renaming not supported for ' . &filetype
+        call s:not_supported('Renaming')
         return
     endif
 
@@ -115,7 +123,7 @@ function! lsp#ui#vim#document_format() abort
     let s:last_req_id = s:last_req_id + 1
 
     if len(l:servers) == 0
-        echom 'Document formatting not supported for ' . &filetype
+        call s:not_supported('Document formatting')
         return
     endif
 
@@ -156,7 +164,7 @@ function! lsp#ui#vim#document_range_format() abort
     let s:last_req_id = s:last_req_id + 1
 
     if len(l:servers) == 0
-        echom 'Document range formatting not supported for ' . &filetype
+        call s:not_supported('Document range formatting')
         return
     endif
 
@@ -190,7 +198,7 @@ function! lsp#ui#vim#workspace_symbol() abort
     call setqflist([])
 
     if len(l:servers) == 0
-        echom 'Retrieving workspace symbols not supported for ' . &filetype
+        call s:not_supported('Retrieving workspace symbols')
         return
     endif
 
@@ -216,7 +224,7 @@ function! lsp#ui#vim#document_symbol() abort
     call setqflist([])
 
     if len(l:servers) == 0
-        echom 'Retrieving symbols not supported for ' . &filetype
+        call s:not_supported('Retrieving symbols')
         return
     endif
 
@@ -247,7 +255,7 @@ endfunction
 function! lsp#ui#vim#document_diagnostics() abort
     let l:uri = lsp#utils#get_buffer_uri()
     if !has_key(s:diagnostics, l:uri)
-        echom 'No diagnostics results'
+        call s:error_msg('No diagnostics results')
         return
     endif
 
@@ -262,7 +270,7 @@ function! lsp#ui#vim#document_diagnostics() abort
     " autocmd FileType qf setlocal wrap
 
     if empty(l:result)
-        echom 'No diagnostics results found'
+        call s:error_msg('No diagnostics results found')
     else
         echom 'Retrieved diagnostics results'
         botright copen
@@ -275,7 +283,7 @@ function! s:handle_symbol(server, last_req_id, type, data) abort
     endif
 
     if lsp#client#is_error(a:data)
-        echom 'Failed to retrieve '. a:type . ' for ' . a:server
+        call s:error_msg('Failed to retrieve '. a:type . ' for ' . a:server)
         return
     endif
 
@@ -284,7 +292,7 @@ function! s:handle_symbol(server, last_req_id, type, data) abort
     call setqflist(l:list)
 
     if empty(l:list)
-        echom 'No ' . a:type .' found'
+        call s:error_msg('No ' . a:type .' found')
     else
         echom 'Retrieved ' . a:type
         botright copen
@@ -299,14 +307,14 @@ function! s:handle_location(ctx, server, type, data) abort "ctx = {counter, list
     let a:ctx['counter'] = a:ctx['counter'] - 1
 
     if lsp#client#is_error(a:data)
-        echom 'Failed to retrieve '. a:type . ' for ' . a:server
+        call s:error_msg('Failed to retrieve '. a:type . ' for ' . a:server)
     else
         let a:ctx['list'] = a:ctx['list'] + lsp#ui#vim#utils#locations_to_loc_list(a:data)
     endif
 
     if a:ctx['counter'] == 0
         if empty(a:ctx['list'])
-            echom 'No ' . a:type .' found'
+            call s:error_msg('No ' . a:type .' found')
         else
             if len(a:ctx['list']) == 1 && a:ctx['jump_if_one']
                 normal! m'
@@ -330,7 +338,7 @@ function! s:handle_hover(server, last_req_id, type, data) abort
     endif
 
     if lsp#client#is_error(a:data)
-        echom 'Failed to retrieve '. a:type . ' for ' . a:server
+        call s:error_msg('Failed to retrieve '. a:type . ' for ' . a:server)
         return
     endif
 
@@ -339,34 +347,16 @@ function! s:handle_hover(server, last_req_id, type, data) abort
     endif
 
     if empty(a:data['response']['result'])
-        echom 'No ' . a:type .' found'
+        call s:error_msg('No ' . a:type .' found')
         return
     endif
 
     let l:contents = a:data['response']['result']['contents']
 
-    if type(l:contents) == type('')
-        let l:contents = [{ 'text': s:markdown_to_text(l:contents) }]
-    elseif type(l:contents) == type([])
-        let l:contents = []
-        for l:content in a:data['response']['result']['contents']
-            if type(l:content) == type('')
-                call add(l:contents, { 'text': s:markdown_to_text(l:content) })
-            elseif type(l:content) == type({})
-                call add(l:contents, { 'text': s:markdown_to_text(l:content['value']) })
-            endif
-        endfor
-    endif
-
-    call setqflist(l:contents)
-
-    " autocmd FileType qf setlocal wrap
-
     if empty(l:contents)
-        echom 'No ' . a:type .' found'
+        call s:error_msg('No ' . a:type .' found')
     else
-        echom 'Retrieved ' . a:type
-        botright copen
+        echo lsp#ui#vim#output#preview(l:contents)
     endif
 endfunction
 
@@ -376,7 +366,7 @@ function! s:handle_workspace_edit(server, last_req_id, type, data) abort
     endif
 
     if lsp#client#is_error(a:data)
-        echom 'Failed to retrieve '. a:type . ' for ' . a:server
+        call s:error_msg('Failed to retrieve '. a:type . ' for ' . a:server)
         return
     endif
 
@@ -391,7 +381,7 @@ function! s:handle_text_edit(server, last_req_id, type, data) abort
     endif
 
     if lsp#client#is_error(a:data['response'])
-        echom 'Failed to '. a:type . ' for ' . a:server
+        call s:error_msg('Failed to '. a:type . ' for ' . a:server)
         return
     endif
 
@@ -439,9 +429,4 @@ function! s:apply_text_edits(uri, text_edits) abort
     finally
         set nopaste
     endtry
-endfunction
-
-function! s:markdown_to_text(markdown) abort
-    " TODO: convert markdown to normal text
-    return a:markdown
 endfunction
