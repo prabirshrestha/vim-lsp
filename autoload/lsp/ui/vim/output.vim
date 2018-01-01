@@ -11,6 +11,8 @@ function! lsp#ui#vim#output#preview(data) abort
     setlocal readonly nomodifiable
 
     let &l:filetype = l:ft . '.lsp-hover'
+
+    return ''
 endfunction
 
 function! s:append(data) abort
