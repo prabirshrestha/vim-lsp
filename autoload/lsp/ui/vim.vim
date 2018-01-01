@@ -424,7 +424,12 @@ function! s:apply_text_edits(uri, text_edits) abort
         let l:cmd = l:cmd . printf(" | execute 'normal! %dG%d|v%dG%d|c%s'", l:start_line, l:start_character, l:end_line, l:end_character, l:new_text)
     endfor
     call lsp#log('s:apply_text_edits', l:cmd)
-    execute l:cmd
+    try
+        set paste
+        execute l:cmd
+    finally
+        set nopaste
+    endtry
 endfunction
 
 function! s:markdown_to_text(markdown) abort
