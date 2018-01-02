@@ -4,7 +4,7 @@
 ===============================================================================
 CONTENTS                                                *vim-lsp-contents*
 
-    1. Introduction        |asyncomplete-introduction|
+    1. Introduction        |vim-lsp-introduction|
 
 
 ===============================================================================
