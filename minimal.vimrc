@@ -1,4 +1,6 @@
+" install: curl https://raw.githubusercontent.com/prabirshrestha/vim-lsp/master/minimal.vimrc -o /tmp/minimal.vimrc
 " uninstall: rm /tmp/plug.vim && rm -rf /tmp/plugged
+" run vim/neovim with minimal.vimrc
 " vim -u minimal.vimrc
 " :PlugInstall
 
