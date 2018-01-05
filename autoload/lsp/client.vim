@@ -227,8 +227,8 @@ function! s:lsp_get_last_request_id(id) abort
     return s:clients[a:id]['request_sequence']
 endfunction
 
-function! s:lsp_is_error(notification) abort
-    return has_key(a:notification, 'error')
+function! s:lsp_is_error(obj_or_response) abort
+    return has_key(a:obj_or_response, 'error')
 endfunction
 
 function! s:is_server_instantiated_notification(notification) abort
@@ -257,8 +257,8 @@ function! lsp#client#get_last_request_id(client_id) abort
     return s:lsp_get_last_request_id(a:client_id)
 endfunction
 
-function! lsp#client#is_error(notification) abort
-    return s:lsp_is_error(a:notification)
+function! lsp#client#is_error(obj_or_response) abort
+    return s:lsp_is_error(a:obj_or_response)
 endfunction
 
 function! lsp#client#is_server_instantiated_notification(notification) abort
