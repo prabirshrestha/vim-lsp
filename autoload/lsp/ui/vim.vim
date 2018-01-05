@@ -282,7 +282,7 @@ function! s:handle_symbol(server, last_req_id, type, data) abort
         return
     endif
 
-    if lsp#client#is_error(a:data)
+    if lsp#client#is_error(a:data['response'])
         call s:error_msg('Failed to retrieve '. a:type . ' for ' . a:server)
         return
     endif
@@ -306,7 +306,7 @@ function! s:handle_location(ctx, server, type, data) abort "ctx = {counter, list
 
     let a:ctx['counter'] = a:ctx['counter'] - 1
 
-    if lsp#client#is_error(a:data)
+    if lsp#client#is_error(a:data['response'])
         call s:error_msg('Failed to retrieve '. a:type . ' for ' . a:server)
     else
         let a:ctx['list'] = a:ctx['list'] + lsp#ui#vim#utils#locations_to_loc_list(a:data)
@@ -337,7 +337,7 @@ function! s:handle_hover(server, last_req_id, type, data) abort
         return
     endif
 
-    if lsp#client#is_error(a:data)
+    if lsp#client#is_error(a:data['response'])
         call s:error_msg('Failed to retrieve '. a:type . ' for ' . a:server)
         return
     endif
