@@ -35,6 +35,9 @@ function! lsp#enable() abort
         let s:already_setup = 1
     endif
     let s:enabled = 1
+    if g:lsp_signs_enabled
+        call lsp#ui#vim#signs#enable()
+    endif
     call s:register_events()
 endfunction
 
@@ -42,6 +45,7 @@ function! lsp#disable() abort
     if !s:enabled
         return
     endif
+    call lsp#ui#vim#signs#disable()
     call s:unregister_events()
     let s:enabled = 0
 endfunction
@@ -439,7 +443,7 @@ function! s:on_notification(server_name, id, data, event) abort
     if lsp#client#is_server_instantiated_notification(a:data)
         if has_key(l:response, 'method')
             if l:response['method'] ==# 'textDocument/publishDiagnostics'
-                call lsp#ui#vim#handle_text_document_publish_diagnostics(a:server_name, a:data)
+                call lsp#ui#vim#diagnostics#handle_text_document_publish_diagnostics(a:server_name, a:data)
             endif
         endif
     else

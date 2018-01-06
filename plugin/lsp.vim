@@ -8,6 +8,8 @@ let g:lsp_async_completion = get(g:, 'lsp_async_completion', 0)
 let g:lsp_log_file = get(g:, 'lsp_log_file', '')
 let g:lsp_log_verbose = get(g:, 'lsp_log_verbose', 1)
 let g:lsp_debug_servers = get(g:, 'lsp_debug_servers', [])
+let g:lsp_signs_enabled = get(g:, 'lsp_signs_enabled', 0)
+let g:lsp_next_sign_id = get(g:, 'lsp_next_sign_id', 6999)
 
 if g:lsp_auto_enable
     au VimEnter * call lsp#enable()
@@ -15,7 +17,7 @@ endif
 
 command! LspDefinition call lsp#ui#vim#definition()
 command! LspDocumentSymbol call lsp#ui#vim#document_symbol()
-command! LspDocumentDiagnostics call lsp#ui#vim#document_diagnostics()
+command! LspDocumentDiagnostics call lsp#ui#vim#diagnostics#document_diagnostics()
 command! -nargs=? -complete=customlist,lsp#utils#empty_complete LspHover call lsp#ui#vim#hover()
 command! LspReferences call lsp#ui#vim#references()
 command! LspRename call lsp#ui#vim#rename()
