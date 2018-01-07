@@ -11,7 +11,8 @@ let g:lsp_debug_servers = get(g:, 'lsp_debug_servers', [])
 let g:lsp_signs_enabled = get(g:, 'lsp_signs_enabled', 0)
 let g:lsp_diagnostics_echo_cursor = get(g:, 'lsp_diagnostics_echo_cursor', 0)
 let g:lsp_diagnostics_echo_delay = get(g:, 'lsp_diagnostics_echo_delay', 500)
-let g:lsp_next_sign_id = get(g:, 'lsp_next_sign_id', 6999)
+let g:lsp_next_sign_id = get(g:, 'lsp_next_sign_id', 7000)
+let g:lsp_dummy_sign_id = get(g:, 'lsp_dummy_sign_id', 6999)
 
 if g:lsp_auto_enable
     au VimEnter * call lsp#enable()
