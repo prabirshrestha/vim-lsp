@@ -80,6 +80,13 @@ Plug 'prabirshrestha/asyncomplete-lsp.vim'
 |`:LspRename`| Rename symbol |
 |`:LspWorkspaceSymbol`| Search/Show workspace symbol |
 
+### Diagnostics
+
+```
+let g:lsp_signs_enabled = 1         " enable signs
+let lsp_diagnostics_echo_cursor = 1 " enable echo under cursor when in normal mode
+```
+
 ## Debugging
 
 In order to enable file logging set `g:lsp_log_file`.
