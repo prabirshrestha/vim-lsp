@@ -114,11 +114,12 @@ function! s:place_signs(server_name, path, diagnostics) abort
             let l:name = 'LspError'
             if has_key(l:item, 'severity') && !empty(l:item['severity'])
                 let l:name = get(s:severity_sign_names_mapping, l:item['severity'], 'LspError')
-                execute ":sign place " . g:lsp_next_sign_id . " name=" . l:name . " line=" . l:line . " file=" . a:path
-                call add(s:signs[a:server_name][a:path], g:lsp_next_sign_id)
-                call lsp#log('add signs')
-                let g:lsp_next_sign_id += 1
             endif
+
+            execute ":sign place " . g:lsp_next_sign_id . " name=" . l:name . " line=" . l:line . " file=" . a:path
+            call add(s:signs[a:server_name][a:path], g:lsp_next_sign_id)
+            call lsp#log('add signs')
+            let g:lsp_next_sign_id += 1
         endfor
     endif
 endfunction
