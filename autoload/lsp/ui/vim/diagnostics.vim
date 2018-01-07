@@ -1,5 +1,11 @@
 let s:diagnostics = {} " { uri: { 'server_name': response } }
 
+function! s:error_msg(msg) abort
+    echohl ErrorMsg
+    echom a:msg
+    echohl NONE
+endfunction
+
 function! lsp#ui#vim#diagnostics#handle_text_document_publish_diagnostics(server_name, data) abort
     if lsp#client#is_error(a:data['response'])
         return
