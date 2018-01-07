@@ -43,3 +43,38 @@ function! lsp#ui#vim#diagnostics#document_diagnostics() abort
         botright copen
     endif
 endfunction
+
+function! lsp#ui#vim#diagnostics#get_diagnostics_under_cursor() abort
+    let l:uri = lsp#utils#get_buffer_uri()
+    if !has_key(s:diagnostics, l:uri)
+        return
+    endif
+
+    let l:diagnostics = s:diagnostics[l:uri]
+
+    let l:line = line('.')
+    let l:col = col('.')
+
+    let l:closeset_diagnostics = {}
+    let l:closeset_distance = -1
+
+    for [l:server_name, l:data] in items(l:diagnostics)
+        for l:diagnostic in l:data['response']['params']['diagnostics']
+            let l:range = l:diagnostic['range']
+            let l:start_line = l:range['start']['line'] + 1
+            let l:start_col = l:range['start']['character'] + 1
+            let l:end_line = l:range['end']['line'] + 1
+            let l:end_character = l:range['end']['character'] + 1
+
+            if l:line == l:start_line
+                let l:distance = abs(l:start_col - l:col)
+                if l:closeset_distance < 0 || l:distance < l:closeset_distance
+                    let l:closeset_diagnostics = l:diagnostic
+                    let l:closeset_distance = l:distance
+                endif
+            endif
+        endfor
+    endfor
+
+    return l:closeset_diagnostics
+endfunction

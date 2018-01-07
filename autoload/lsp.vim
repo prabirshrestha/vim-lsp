@@ -98,6 +98,7 @@ function! s:register_events() abort
         autocmd BufWritePost * call s:on_text_document_did_save()
         autocmd BufWinLeave * call s:on_text_document_did_close()
         autocmd InsertLeave * call s:on_text_document_did_change()
+        autocmd CursorMoved * call s:on_cursor_moved()
     augroup END
     call s:on_text_document_did_open()
 endfunction
@@ -130,6 +131,10 @@ function! s:on_text_document_did_change() abort
     for l:server_name in lsp#get_whitelisted_servers()
         call s:ensure_flush(bufnr('%'), l:server_name, function('s:Noop'))
     endfor
+endfunction
+
+function! s:on_cursor_moved() abort
+    call lsp#ui#vim#diagnostics#echo#cursor_moved()
 endfunction
 
 function! s:call_did_save(buf, server_name, result, cb) abort

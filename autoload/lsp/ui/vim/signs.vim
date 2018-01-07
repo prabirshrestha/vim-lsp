@@ -9,10 +9,10 @@ let s:severity_sign_names_mapping = {
     \ 3: 'LspInformation',
     \ 4: 'LspHint',
     \ }
+
 function! lsp#ui#vim#signs#enable() abort
     if !s:enabled
         call s:define_signs()
-        call s:register_events()
         let s:enabled = 1
         call lsp#log('vim-lsp signs enabled')
     endif
@@ -27,13 +27,6 @@ function! s:define_signs() abort
         sign define LspHint text=H> texthl=Normal
         let s:signs_defined = 1
     endif
-endfunction
-
-function! s:register_events() abort
-    augroup lsp_ui_vim_signs
-        autocmd!
-        autocmd CursorMoved * call s:on_cursor_moved()
-    augroup END
 endfunction
 
 function! lsp#ui#vim#signs#disable() abort
@@ -52,12 +45,6 @@ function! s:undefine_signs() abort
         sign undefine LspHint
         let s:signs_defined = 0
     endif
-endfunction
-
-function! s:unregister_events() abort
-    augroup lsp_ui_vim_signs
-        autocmd!
-    augroup END
 endfunction
 
 function! lsp#ui#vim#signs#set(server_name, data) abort
@@ -114,8 +101,4 @@ function! s:place_signs(server_name, path, diagnostics) abort
             endif
         endfor
     endif
-endfunction
-
-function! s:on_cursor_moved() abort
-    " TODO: show error message using echo
 endfunction
