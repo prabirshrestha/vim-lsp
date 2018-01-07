@@ -84,6 +84,11 @@ function! s:on_stdout(id, data, event) abort
             let l:on_notification_data = { 'response': l:response }
             if has_key(l:response, 'id')
                 " it is a request->response
+                if !(type(l:response['id']) == type(0) || type(l:response['id']) == type(''))
+                    " response['id'] can be number | string | null based on the spec
+                    call lsp#log('invalid response id. ignornig message', l:response)
+                    continue
+                endif
                 if has_key(l:ctx['requests'], l:response['id'])
                     let l:on_notification_data['request'] = l:ctx['requests'][l:response['id']]
                 endif
