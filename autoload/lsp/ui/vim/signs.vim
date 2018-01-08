@@ -3,6 +3,7 @@
 let s:enabled = 0
 let s:signs_defined = 0
 let s:signs = {} " { server_name: { path: {} } }
+let s:saved_signcolumn_values = {} " { window-id: signcolumn }
 let s:severity_sign_names_mapping = {
     \ 1: 'LspError',
     \ 2: 'LspWarning',
@@ -69,8 +70,35 @@ function! lsp#ui#vim#signs#set(server_name, data) abort
         let s:signs[a:server_name][l:path] = []
     endif
 
+    let l:should_restore_signcolumn = 0
+    if !empty(l:diagnostics)
+        call s:force_signcolumn(l:path)
+        let l:should_restore_signcolumn = 1
+    endif
+
     call s:clear_signs(a:server_name, l:path)
     call s:place_signs(a:server_name, l:path, l:diagnostics)
+
+    if l:should_restore_signcolumn
+        call s:restore_signcolumn()
+    endif
+endfunction
+
+function! s:force_signcolumn(path) abort
+    let s:saved_signcolumn_values = {}
+    for l:winid in win_findbuf(bufnr(a:path))
+        let [l:tab, l:win] = win_id2tabwin(l:winid)
+        let s:saved_signcolumn_values[l:winid] = gettabwinvar(l:tab, l:win, '&signcolumn')
+        call settabwinvar(l:tab, l:win, '&signcolumn', 'yes')
+    endfor
+endfunction
+
+function! s:restore_signcolumn() abort
+    for [l:winid, l:saved_signcolumn] in items(s:saved_signcolumn_values)
+        let [l:tab, l:win] = win_id2tabwin(l:winid)
+        call settabwinvar(l:tab, l:win, '&signcolumn', l:saved_signcolumn)
+    endfor
+    let s:saved_signcolumn_values = {}
 endfunction
 
 function! s:clear_signs(server_name, path) abort
