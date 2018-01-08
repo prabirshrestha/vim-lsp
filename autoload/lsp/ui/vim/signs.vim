@@ -25,7 +25,6 @@ function! s:define_signs() abort
         sign define LspWarning text=W> texthl=Todo
         sign define LspInformation text=I> texthl=Normal
         sign define LspHint text=H> texthl=Normal
-        sign define LspDummy
         let s:signs_defined = 1
     endif
 endfunction
@@ -44,7 +43,6 @@ function! s:undefine_signs() abort
         sign undefine LspWarning
         sign undefine LspInformation
         sign undefine LspHint
-        sign undefine LspDummy
         let s:signs_defined = 0
     endif
 endfunction
@@ -71,26 +69,8 @@ function! lsp#ui#vim#signs#set(server_name, data) abort
         let s:signs[a:server_name][l:path] = []
     endif
 
-    let l:dummy_placed = 0
-    if !empty(l:diagnostics)
-        call s:place_dummy_sign(l:path)
-        let l:dummy_placed = 1
-    endif
-
     call s:clear_signs(a:server_name, l:path)
     call s:place_signs(a:server_name, l:path, l:diagnostics)
-
-    if l:dummy_placed
-        call s:clear_dummy_sign(l:path)
-    endif
-endfunction
-
-function! s:place_dummy_sign(path) abort
-    execute ":sign place " . g:lsp_dummy_sign_id . " name=LspDummy line=9999 file=" . a:path
-endfunction
-
-function! s:clear_dummy_sign(path) abort
-    execute ":sign unplace " . g:lsp_dummy_sign_id . " file=" . a:path
 endfunction
 
 function! s:clear_signs(server_name, path) abort
