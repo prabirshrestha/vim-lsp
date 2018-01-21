@@ -13,12 +13,11 @@ function! lsp#ui#vim#utils#locations_to_loc_list(result) abort
                 let l:path = lsp#utils#uri_to_path(l:location['uri'])
                 let l:line = l:location['range']['start']['line'] + 1
                 let l:col = l:location['range']['start']['character'] + 1
-                let l:text = bufnr(l:path) ==# -1 ? 'File not loaded' : getbufline(bufnr(l:path), l:line)[0]
                 call add(l:list, {
                     \ 'filename': l:path,
                     \ 'lnum': l:line,
                     \ 'col': l:col,
-                    \ 'text': l:text,
+                    \ 'text': l:path,
                     \ })
             endif
         endfor
