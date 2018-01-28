@@ -91,6 +91,12 @@ function! lsp#unregister_notifications(name) abort
     " TODO
 endfunction
 
+function! lsp#stop_server(server_name) abort
+    if has_key(s:servers, a:server_name) && s:servers[a:server_name]['lsp_id'] > 0
+        call lsp#client#stop(s:servers[a:server_name]['lsp_id'])
+    endif
+endfunction
+
 function! s:register_events() abort
     augroup lsp
         autocmd!
