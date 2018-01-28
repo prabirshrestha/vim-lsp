@@ -11,6 +11,7 @@ CONTENTS                                                  *vim-lsp-contents*
       Wiki		   |vim-lsp-configure-wiki|
     Functions           |vim-lsp-functions|
       register_server	   |vim-lsp-register_server|
+      stop_server     	   |vim-lsp-stop_server|
     License             |vim-lsp-license|
 
 
@@ -178,6 +179,18 @@ The vim |dict| containing information about the server.
 	    endfunction
 
 	    'cmd': function('s:myserver_cmd')
+
+lsp#stop_server                                        *vim-lsp-stop_server*
+
+Used to stop the server.
+
+    Example:
+	call lsp#stop_server('name-of-server')
+
+    Note:
+	* If the server is not running or is not registered it is a noop.
+	* The server is forcefully stopped without sending shutdown request.
+
 
 ===============================================================================
 License                                                    *vim-lsp-license*
