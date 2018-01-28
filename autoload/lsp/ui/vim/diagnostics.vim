@@ -1,3 +1,4 @@
+let s:is_win = has('win32') || has('win64')
 let s:diagnostics = {} " { uri: { 'server_name': response } }
 
 function! s:error_msg(msg) abort
@@ -21,12 +22,13 @@ endfunction
 
 function! lsp#ui#vim#diagnostics#document_diagnostics() abort
     let l:uri = lsp#utils#get_buffer_uri()
-    if !has_key(s:diagnostics, l:uri)
+
+    let [l:has_diagnostics, l:diagnostics] = s:get_diagnostics(l:uri)
+    if !l:has_diagnostics
         call s:error_msg('No diagnostics results')
         return
     endif
 
-    let l:diagnostics = s:diagnostics[l:uri]
     let l:result = []
     for [l:server_name, l:data] in items(l:diagnostics)
         let l:result += lsp#ui#vim#utils#diagnostics_to_loc_list(l:data)
@@ -46,11 +48,11 @@ endfunction
 
 function! lsp#ui#vim#diagnostics#get_diagnostics_under_cursor() abort
     let l:uri = lsp#utils#get_buffer_uri()
-    if !has_key(s:diagnostics, l:uri)
+
+    let [l:has_diagnostics, l:diagnostics] = s:get_diagnostics(l:uri)
+    if !l:has_diagnostics
         return
     endif
-
-    let l:diagnostics = s:diagnostics[l:uri]
 
     let l:line = line('.')
     let l:col = col('.')
@@ -77,4 +79,20 @@ function! lsp#ui#vim#diagnostics#get_diagnostics_under_cursor() abort
     endfor
 
     return l:closeset_diagnostics
+endfunction
+
+function! s:get_diagnostics(uri) abort
+    if has_key(s:diagnostics, a:uri)
+        return [1, s:diagnostics[a:uri]]
+    else
+        if s:is_win
+            " vim in windows always uses upper case for drive letter, so use lowercase in case lang server uses lowercase
+            " https://github.com/theia-ide/typescript-language-server/issues/23
+            let l:uri = substitute(a:uri, '^' . a:uri[:8], tolower(a:uri[:8]), '')
+            if has_key(s:diagnostics, l:uri)
+                return [1, s:diagnostics[l:uri]]
+            endif
+        endif
+    endif
+    return [0, []]
 endfunction
