@@ -2,6 +2,13 @@ function! lsp#utils#is_remote_uri(uri) abort
     return a:uri =~# '^\w\+::' || a:uri =~# '^\w\+://'
 endfunction
 
+function! lsp#utils#decode_uri(uri) abort
+    let ret = a:uri
+    let ret = substitute(ret, '+', ' ', 'g')
+    let ret = substitute(ret, '%\(\x\x\)', '\=printf("%c", str2nr(submatch(1), 16))', 'g')
+    return ret
+endfunction
+
 if has('win32') || has('win64')
     function! lsp#utils#path_to_uri(path) abort
         if empty(a:path)
@@ -22,11 +29,11 @@ endif
 
 if has('win32') || has('win64')
     function! lsp#utils#uri_to_path(uri) abort
-        return substitute(a:uri[len('file:///'):], '/', '\\', 'g')
+        return lsp#utils#decode_uri(substitute(a:uri[len('file:///'):], '/', '\\', 'g'))
     endfunction
 else
     function! lsp#utils#uri_to_path(uri) abort
-        return a:uri[len('file://'):]
+        return lsp#utils#decode_uri(a:uri[len('file://'):])
     endfunction
 endif
 
