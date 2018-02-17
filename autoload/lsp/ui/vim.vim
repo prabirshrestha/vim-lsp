@@ -285,6 +285,9 @@ function! s:handle_location(ctx, server, type, data) abort "ctx = {counter, list
                 let l:buffer = bufnr(l:loc['filename'])
                 let l:cmd = l:buffer !=# -1 ? 'b ' . l:buffer : 'edit ' . l:loc['filename']
                 execute l:cmd . ' | call cursor('.l:loc['lnum'].','.l:loc['col'].')'
+                if exists('g:lsp_definition_target')
+                    execute "normal! z" . g:lsp_definition_target
+                endif
                 redraw
             else
                 call setqflist(a:ctx['list'])
