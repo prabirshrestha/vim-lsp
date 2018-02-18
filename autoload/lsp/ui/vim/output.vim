@@ -2,6 +2,8 @@ function! lsp#ui#vim#output#preview(data) abort
     " Close any previously opened preview window
     pclose
 
+    let l:current_window_id = win_getid()
+
     execute &previewheight.'new'
 
     let l:ft = s:append(a:data)
@@ -11,6 +13,11 @@ function! lsp#ui#vim#output#preview(data) abort
     setlocal readonly nomodifiable
 
     let &l:filetype = l:ft . '.lsp-hover'
+
+    if g:lsp_preview_keep_focus
+      " restore focus to the previous window
+      call win_gotoid(l:current_window_id)
+    endif
 
     return ''
 endfunction
