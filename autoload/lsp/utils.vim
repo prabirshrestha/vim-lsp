@@ -29,7 +29,7 @@ endif
 
 if has('win32') || has('win64')
     function! lsp#utils#uri_to_path(uri) abort
-        return s:decode_uri(substitute(a:uri[len('file:///'):], '/', '\\', 'g'))
+        return substitute(s:decode_uri(a:uri[len('file:///'):]), '/', '\\', 'g')
     endfunction
 else
     function! lsp#utils#uri_to_path(uri) abort
