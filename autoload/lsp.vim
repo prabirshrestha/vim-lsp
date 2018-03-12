@@ -201,6 +201,12 @@ function! s:throw_step_error(s) abort
     call a:s.callback(a:s.result[0])
 endfunction
 
+function! s:error_msg(msg) abort
+    echohl ErrorMsg
+    echom a:msg
+    echohl NONE
+endfunction
+
 function! s:new_rpc_success(message, data) abort
     return {
         \ 'response': {
@@ -479,6 +485,8 @@ function! s:handle_initialize(server_name, data) abort
 
     if !lsp#client#is_error(l:response)
         let l:server['init_result'] = l:response
+    else
+      call s:error_msg('Failed to initialize ' . a:server_name . ' with error ' . l:response['error']['code'] . ': ' . l:response['error']['message'])
     endif
 
     for l:Init_callback in l:init_callbacks
