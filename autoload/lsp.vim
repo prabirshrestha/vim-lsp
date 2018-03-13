@@ -201,12 +201,6 @@ function! s:throw_step_error(s) abort
     call a:s.callback(a:s.result[0])
 endfunction
 
-function! s:error_msg(msg) abort
-    echohl ErrorMsg
-    echom a:msg
-    echohl NONE
-endfunction
-
 function! s:new_rpc_success(message, data) abort
     return {
         \ 'response': {

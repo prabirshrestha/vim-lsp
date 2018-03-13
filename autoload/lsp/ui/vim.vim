@@ -1,11 +1,5 @@
 let s:last_req_id = 0
 
-function! s:error_msg(msg) abort
-    echohl ErrorMsg
-    echom a:msg
-    echohl NONE
-endfunction
-
 function! s:not_supported(what) abort
     return s:error_msg(a:what.' not supported for '.&filetype)
 endfunction
