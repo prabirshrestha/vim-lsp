@@ -480,7 +480,7 @@ function! s:handle_initialize(server_name, data) abort
     if !lsp#client#is_error(l:response)
         let l:server['init_result'] = l:response
     else
-      call s:error_msg('Failed to initialize ' . a:server_name . ' with error ' . l:response['error']['code'] . ': ' . l:response['error']['message'])
+      call lsp#utils#error('Failed to initialize ' . a:server_name . ' with error ' . l:response['error']['code'] . ': ' . l:response['error']['message'])
     endif
 
     for l:Init_callback in l:init_callbacks

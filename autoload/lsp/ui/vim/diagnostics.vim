@@ -19,7 +19,7 @@ function! lsp#ui#vim#diagnostics#document_diagnostics() abort
 
     let [l:has_diagnostics, l:diagnostics] = s:get_diagnostics(l:uri)
     if !l:has_diagnostics
-        call s:error_msg('No diagnostics results')
+        call lsp#utils#error('No diagnostics results')
         return
     endif
 
@@ -33,7 +33,7 @@ function! lsp#ui#vim#diagnostics#document_diagnostics() abort
     " autocmd FileType qf setlocal wrap
 
     if empty(l:result)
-        call s:error_msg('No diagnostics results found')
+        call lsp#utils#error('No diagnostics results found')
     else
         echom 'Retrieved diagnostics results'
         botright copen
