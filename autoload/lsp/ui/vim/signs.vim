@@ -21,10 +21,10 @@ endfunction
 function! s:define_signs() abort
     if !s:signs_defined
         " TODO: support customization of signs
-        exec 'sign define LspError text=' . g:lsp_signs_error . ' texthl=Error'
-        exec 'sign define LspWarning text=' . g:lsp_signs_warning . ' texthl=Todo'
-        exec 'sign define LspInformation text=' . g:lsp_signs_info . ' texthl=Normal'
-        exec 'sign define LspHint text=' . g:lsp_signs_hint . ' texthl=Normal'
+        exec 'sign define LspError text=' . get(g:lsp_signs_error, 'text', 'E>') . ' texthl=' . get(g:lsp_signs_error, 'texthl', 'Error')
+        exec 'sign define LspWarning text=' . get(g:lsp_signs_warning, 'text', 'W>') . ' texthl=' . get(g:lsp_signs_warning, 'texthl', 'Todo')
+        exec 'sign define LspInformation text=' . get(g:lsp_signs_info, 'text', 'I>') . ' texthl=' . get(g:lsp_signs_info, 'texthl', 'Normal')
+        exec 'sign define LspHint text=' . get(g:lsp_signs_hint, 'text', 'H>') . ' texthl=' . get(g:lsp_signs_hint, 'texthl', 'Normal')
         let s:signs_defined = 1
     endif
 endfunction
