@@ -21,10 +21,10 @@ endfunction
 function! s:define_signs() abort
     if !s:signs_defined
         " TODO: support customization of signs
-        sign define LspError text=E> texthl=Error
-        sign define LspWarning text=W> texthl=Todo
-        sign define LspInformation text=I> texthl=Normal
-        sign define LspHint text=H> texthl=Normal
+        sign define LspError text=g:lsp_signs_error texthl=Error
+        sign define LspWarning text=g:lsp_signs_warning texthl=Todo
+        sign define LspInformation text=g:lsp_signs_info texthl=Normal
+        sign define LspHint text=g:lsp_signs_hint texthl=Normal
         let s:signs_defined = 1
     endif
 endfunction
