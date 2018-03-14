@@ -305,10 +305,11 @@ lua << EOF
 					end
 					vim.api.nvim_set_var('lctx',ctxlist)
 EOF
-                call setqflist(g:lctx)
+                call setloclist(0, g:lctx)
 				unlet g:lctx
                 echom 'Retrieved ' . a:type
-                botright copen
+                "botright copen
+				belowright lopen
             endif
         endif
     endif
