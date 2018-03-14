@@ -290,9 +290,18 @@ function! s:handle_location(ctx, server, type, data) abort "ctx = {counter, list
 				let g:lctx = a:ctx['list']
 lua << EOF
 					local ctxlist = vim.api.nvim_eval("g:lctx")
+					local cwd = vim.api.nvim_call_function("getcwd", {})
 					local lsp_file = require("lsp-file")
 					for k, it in pairs(ctxlist) do
 						it['text'] = lsp_file.readline(it['filename'], it['lnum'])
+						local itlen = #it['filename']
+						local cwdlen = #cwd
+						if itlen > cwdlen then
+							local it_cur = it['filename']:sub(1, cwdlen)
+							if it_cur == cwd then
+								it['filename'] = it['filename']:sub(cwdlen+2, itlen)
+							end
+						end
 					end
 					vim.api.nvim_set_var('lctx',ctxlist)
 EOF
