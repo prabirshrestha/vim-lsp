@@ -18,13 +18,27 @@ function! lsp#ui#vim#signs#enable() abort
     endif
 endfunction
 
+" Set default sign text to handle case when user provides empty dict
+function! s:construct_sign(sign_name, sign_default_text, sign_options) abort
+    let l:sign_string = 'sign define ' . a:sign_name . ' text=' . get(a:sign_options, 'text', a:sign_default_text)
+    if has_key(a:sign_options, 'texthl')
+        let l:sign_string .= ' texthl=' . a:sign_options['texthl']
+    endif
+    if has_key(a:sign_options, 'icon')
+        let l:sign_string .= ' icon=' . a:sign_options['icon']
+    endif
+    if has_key(a:sign_options, 'linehl')
+        let l:sign_string .= ' linehl=' . a:sign_options['linehl']
+    endif
+    exec l:sign_string
+endfunction
+
 function! s:define_signs() abort
     if !s:signs_defined
-        " TODO: support customization of signs
-        exec 'sign define LspError text=' . get(g:lsp_signs_error, 'text', 'E>') . ' texthl=' . get(g:lsp_signs_error, 'texthl', 'Error')
-        exec 'sign define LspWarning text=' . get(g:lsp_signs_warning, 'text', 'W>') . ' texthl=' . get(g:lsp_signs_warning, 'texthl', 'Todo')
-        exec 'sign define LspInformation text=' . get(g:lsp_signs_info, 'text', 'I>') . ' texthl=' . get(g:lsp_signs_info, 'texthl', 'Normal')
-        exec 'sign define LspHint text=' . get(g:lsp_signs_hint, 'text', 'H>') . ' texthl=' . get(g:lsp_signs_hint, 'texthl', 'Normal')
+        call s:construct_sign('LspError', 'E>', g:lsp_signs_error)
+        call s:construct_sign('LspWarning', 'W>', g:lsp_signs_warning)
+        call s:construct_sign('LspInformation', 'I>', g:lsp_signs_information)
+        call s:construct_sign('LspHint', 'H>', g:lsp_signs_hint)
         let s:signs_defined = 1
     endif
 endfunction
