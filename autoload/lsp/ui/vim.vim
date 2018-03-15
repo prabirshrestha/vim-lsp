@@ -354,7 +354,9 @@ function! s:handle_text_edit(server, last_req_id, type, data) abort
         return
     endif
 
+	let l:save_view = winsaveview()
     call s:apply_text_edits(a:data['request']['params']['textDocument']['uri'], a:data['response']['result'])
+	call winrestview(l:save_view)
 
     echom 'Document formatted'
 endfunction
