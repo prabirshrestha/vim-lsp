@@ -9,7 +9,7 @@
 
 local module = {}
 
-function module.readline(filename, line)
+local function _readline(filename, line)
 	if line < 1 then 
 		return
 	end
@@ -19,6 +19,34 @@ function module.readline(filename, line)
 		file:read()
 	end
 	return file:read()
+end
+
+local function _removePrefix(str, prefix)
+	local slen = #str
+	local plen = #prefix
+	if slen <= plen then
+		return str
+	end
+
+	return str:sub(plen + 1, slen)
+end
+
+function module.handle_loc_list(data, cwd)
+	print(cwd)
+	if #data == 0 then
+		return
+	end
+	for k, it in pairs(data) do
+		if it['filename'] ~= nil and it['lnum'] ~= nil then
+			it['text'] = _readline(it['filename'], it['lnum'])
+			it['filename'] = _removePrefix(it['filename'], cwd)
+		end
+	end
+	return data
+end
+
+function module.test(data, cwd)
+	print(data, cwd)
 end
 
 return module
