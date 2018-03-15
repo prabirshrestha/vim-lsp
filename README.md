@@ -82,9 +82,18 @@ Plug 'prabirshrestha/asyncomplete-lsp.vim'
 
 ### Diagnostics
 
-```
+```viml
 let g:lsp_signs_enabled = 1         " enable signs
 let g:lsp_diagnostics_echo_cursor = 1 " enable echo under cursor when in normal mode
+```
+
+This plugin defines four groups of signs: LspError, LspWarning, LspInformation, LspHint. It is possible to customize how this signs are printed on the screen by setting the following global variables:
+`g:lsp_signs_error`, `g:lsp_signs_warning`, `g:lsp_signs_information`, `g:lsp_signs_hint`. They should be set to a dict, where keys are the parameters supported by vim sign command (see `:help sign`). For example:
+
+```viml
+let g:lsp_signs_error = {'text': '✗', 'texthl': 'GruvboxRedSign', 'linehl': 'Error'}
+let g:lsp_signs_warning = {'text': '‼', 'texthl': 'GruvboxYellowSign'}
+let g:lsp_signs_hint = {'info': '/path/to/some/icon'} " icons require GUI
 ```
 
 ## Debugging
