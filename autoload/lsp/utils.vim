@@ -88,3 +88,9 @@ endif
 function! lsp#utils#empty_complete(...) abort
     return []
 endfunction
+
+function! lsp#utils#error(msg) abort
+    echohl ErrorMsg
+    echom a:msg
+    echohl NONE
+endfunction

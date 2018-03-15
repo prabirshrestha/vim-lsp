@@ -1,13 +1,7 @@
 let s:last_req_id = 0
 
-function! s:error_msg(msg) abort
-    echohl ErrorMsg
-    echom a:msg
-    echohl NONE
-endfunction
-
 function! s:not_supported(what) abort
-    return s:error_msg(a:what.' not supported for '.&filetype)
+    return lsp#utils#error(a:what.' not supported for '.&filetype)
 endfunction
 
 function! lsp#ui#vim#definition() abort
@@ -246,7 +240,7 @@ function! s:handle_symbol(server, last_req_id, type, data) abort
     endif
 
     if lsp#client#is_error(a:data['response'])
-        call s:error_msg('Failed to retrieve '. a:type . ' for ' . a:server)
+        call lsp#utils#error('Failed to retrieve '. a:type . ' for ' . a:server)
         return
     endif
 
@@ -255,7 +249,7 @@ function! s:handle_symbol(server, last_req_id, type, data) abort
     call setqflist(l:list)
 
     if empty(l:list)
-        call s:error_msg('No ' . a:type .' found')
+        call lsp#utils#error('No ' . a:type .' found')
     else
         echom 'Retrieved ' . a:type
         botright copen
@@ -270,14 +264,14 @@ function! s:handle_location(ctx, server, type, data) abort "ctx = {counter, list
     let a:ctx['counter'] = a:ctx['counter'] - 1
 
     if lsp#client#is_error(a:data['response'])
-        call s:error_msg('Failed to retrieve '. a:type . ' for ' . a:server)
+        call lsp#utils#error('Failed to retrieve '. a:type . ' for ' . a:server)
     else
         let a:ctx['list'] = a:ctx['list'] + lsp#ui#vim#utils#locations_to_loc_list(a:data)
     endif
 
     if a:ctx['counter'] == 0
         if empty(a:ctx['list'])
-            call s:error_msg('No ' . a:type .' found')
+            call lsp#utils#error('No ' . a:type .' found')
         else
             if len(a:ctx['list']) == 1 && a:ctx['jump_if_one']
                 normal! m'
@@ -301,7 +295,7 @@ function! s:handle_hover(server, last_req_id, type, data) abort
     endif
 
     if lsp#client#is_error(a:data['response'])
-        call s:error_msg('Failed to retrieve '. a:type . ' for ' . a:server)
+        call lsp#utils#error('Failed to retrieve '. a:type . ' for ' . a:server)
         return
     endif
 
@@ -310,14 +304,14 @@ function! s:handle_hover(server, last_req_id, type, data) abort
     endif
 
     if empty(a:data['response']['result'])
-        call s:error_msg('No ' . a:type .' found')
+        call lsp#utils#error('No ' . a:type .' found')
         return
     endif
 
     let l:contents = a:data['response']['result']['contents']
 
     if empty(l:contents)
-        call s:error_msg('No ' . a:type .' found')
+        call lsp#utils#error('No ' . a:type .' found')
     else
         echo lsp#ui#vim#output#preview(l:contents)
     endif
@@ -329,7 +323,7 @@ function! s:handle_workspace_edit(server, last_req_id, type, data) abort
     endif
 
     if lsp#client#is_error(a:data)
-        call s:error_msg('Failed to retrieve '. a:type . ' for ' . a:server)
+        call lsp#utils#error('Failed to retrieve '. a:type . ' for ' . a:server)
         return
     endif
 
@@ -344,7 +338,7 @@ function! s:handle_text_edit(server, last_req_id, type, data) abort
     endif
 
     if lsp#client#is_error(a:data['response'])
-        call s:error_msg('Failed to '. a:type . ' for ' . a:server)
+        call lsp#utils#error('Failed to '. a:type . ' for ' . a:server)
         return
     endif
 
