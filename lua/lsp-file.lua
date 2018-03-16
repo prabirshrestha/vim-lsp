@@ -18,7 +18,9 @@ local function _readline(filename, line)
 	for i = 1, line - 1, 1 do
 		file:read()
 	end
-	return file:read()
+	local data = file:read()
+	io.close(file)
+	return data
 end
 
 local function _removePrefix(str, prefix)
