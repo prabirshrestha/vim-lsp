@@ -361,7 +361,17 @@ function! s:apply_workspace_edits(workspace_edits) abort
         endif
         call winrestview(l:view)
     endif
-    " TODO: support documentChanges
+    if has_key(a:workspace_edits, 'documentChanges')
+        let l:cur_buffer = bufnr('%')
+        let l:view = winsaveview()
+        for l:text_document_edit in a:workspace_edits['documentChanges']
+            call s:apply_text_edits(l:text_document_edit['textDocument']['uri'], l:text_document_edit['edits'])
+        endfor
+        if l:cur_buffer !=# bufnr('%')
+            execute 'keepjumps keepalt b ' . l:cur_buffer
+        endif
+        call winrestview(l:view)
+    endif
 endfunction
 
 function! s:apply_text_edits(uri, text_edits) abort
