@@ -26,7 +26,7 @@ function! lsp#ui#vim#definition() abort
             \ })
     endfor
 
-    echom 'Retrieving definition ...'
+    echo 'Retrieving definition ...'
 endfunction
 
 function! lsp#ui#vim#references() abort
@@ -53,7 +53,7 @@ function! lsp#ui#vim#references() abort
             \ })
     endfor
 
-    echom 'Retrieving references ...'
+    echo 'Retrieving references ...'
 endfunction
 
 function! lsp#ui#vim#hover() abort
@@ -76,7 +76,7 @@ function! lsp#ui#vim#hover() abort
             \ })
     endfor
 
-    echom 'Retrieving hover ...'
+    echo 'Retrieving hover ...'
 endfunction
 
 function! lsp#ui#vim#rename() abort
@@ -91,7 +91,7 @@ function! lsp#ui#vim#rename() abort
     let l:new_name = input('new name>')
 
     if empty(l:new_name)
-        echom '... Renaming aborted ...'
+        echo '... Renaming aborted ...'
         return
     endif
 
@@ -108,7 +108,7 @@ function! lsp#ui#vim#rename() abort
         \ 'on_notification': function('s:handle_workspace_edit', [l:server, s:last_req_id, 'rename']),
         \ })
 
-    echom ' ... Renaming ...'
+    echo ' ... Renaming ...'
 endfunction
 
 function! lsp#ui#vim#document_format() abort
@@ -134,7 +134,7 @@ function! lsp#ui#vim#document_format() abort
         \ 'on_notification': function('s:handle_text_edit', [l:server, s:last_req_id, 'document format']),
         \ })
 
-    echom 'Formatting document ...'
+    echo 'Formatting document ...'
 endfunction
 
 function! s:get_visual_selection_pos() abort
@@ -181,7 +181,7 @@ function! lsp#ui#vim#document_range_format() abort
         \ 'on_notification': function('s:handle_text_edit', [l:server, s:last_req_id, 'range format']),
         \ })
 
-    echom 'Formatting document range ...'
+    echo 'Formatting document range ...'
 endfunction
 
 function! lsp#ui#vim#workspace_symbol() abort
@@ -207,7 +207,7 @@ function! lsp#ui#vim#workspace_symbol() abort
             \ })
     endfor
 
-    echom 'Retrieving document symbols ...'
+    echo 'Retrieving document symbols ...'
 endfunction
 
 function! lsp#ui#vim#document_symbol() abort
@@ -231,7 +231,7 @@ function! lsp#ui#vim#document_symbol() abort
             \ })
     endfor
 
-    echom 'Retrieving document symbols ...'
+    echo 'Retrieving document symbols ...'
 endfunction
 
 function! s:handle_symbol(server, last_req_id, type, data) abort
@@ -251,7 +251,7 @@ function! s:handle_symbol(server, last_req_id, type, data) abort
     if empty(l:list)
         call lsp#utils#error('No ' . a:type .' found')
     else
-        echom 'Retrieved ' . a:type
+        echo 'Retrieved ' . a:type
         botright copen
     endif
 endfunction
@@ -282,7 +282,7 @@ function! s:handle_location(ctx, server, type, data) abort "ctx = {counter, list
                 redraw
             else
                 call setqflist(a:ctx['list'])
-                echom 'Retrieved ' . a:type
+                echo 'Retrieved ' . a:type
                 botright copen
             endif
         endif
@@ -329,7 +329,7 @@ function! s:handle_workspace_edit(server, last_req_id, type, data) abort
 
     call s:apply_workspace_edits(a:data['response']['result'])
 
-    echom 'Renamed'
+    echo 'Renamed'
 endfunction
 
 function! s:handle_text_edit(server, last_req_id, type, data) abort
@@ -344,7 +344,7 @@ function! s:handle_text_edit(server, last_req_id, type, data) abort
 
     call s:apply_text_edits(a:data['request']['params']['textDocument']['uri'], a:data['response']['result'])
 
-    echom 'Document formatted'
+    echo 'Document formatted'
 endfunction
 
 " @params

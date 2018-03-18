@@ -35,7 +35,7 @@ function! lsp#ui#vim#diagnostics#document_diagnostics() abort
     if empty(l:result)
         call lsp#utils#error('No diagnostics results found')
     else
-        echom 'Retrieved diagnostics results'
+        echo 'Retrieved diagnostics results'
         botright copen
     endif
 endfunction
