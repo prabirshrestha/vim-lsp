@@ -9,7 +9,11 @@ CONTENTS                                                  *vim-lsp-contents*
     Language Servers		|vim-lsp-language-servers|
       Configure                   |vim-lsp-configure-source|
       Wiki                        |vim-lsp-configure-wiki|
+    Options			|vim-lsp-options|
+      g:lsp_auto_enable           |g:lsp_auto_enable|
     Functions			|vim-lsp-functions|
+      enable                      |vim-lsp-enable|
+      disable                     |vim-lsp-disable|
       register_server             |vim-lsp-register_server|
       stop_server                 |vim-lsp-stop_server|
     Commands			|vim-lsp-commands|
@@ -76,7 +80,35 @@ For documentation on how to configure other language servers refer
 to https://github.com/prabirshrestha/vim-lsp/wiki/Servers
 
 ===============================================================================
+Options                                                   *vim-lsp-options*
+
+g:lsp_auto_enable                                       *g:lsp_auto_enable*
+    Type: |Number|
+    Default: `1`
+
+    Auto enable vim-lsp plugin during startup. Set to `0` to disable auto
+    enabling vim-lsp during startup.
+
+    Example:
+	let g:lsp_auto_enable = 1
+	let g:lsp_auto_enable = 0
+
+===============================================================================
 FUNCTIONS	                                        *vim-lsp-functions*
+
+lsp#enable                                                 *vim-lsp-enable*
+
+Enables vim-lsp plugin.
+
+    Example:
+	:call lsp#enable()
+
+lsp#disable                                               *vim-lsp-disable*
+
+Disables vim-lsp plugin.
+
+    Example:
+	:call lsp#disable()
 
 lsp#register_server                               *vim-lsp-register_server*
 
