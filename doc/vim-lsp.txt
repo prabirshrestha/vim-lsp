@@ -7,7 +7,7 @@ CONTENTS                                                  *vim-lsp-contents*
     Introduction		|vim-lsp-introduction|
     Install			|vim-lsp-install|
     Language Servers		|vim-lsp-language-servers|
-      Configure                  |vim-lsp-configure-source|
+      Configure                   |vim-lsp-configure-source|
       Wiki			  |vim-lsp-configure-wiki|
     Functions			|vim-lsp-functions|
       register_server		  |vim-lsp-register_server|
