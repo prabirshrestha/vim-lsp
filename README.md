@@ -41,26 +41,7 @@ endif
 
 ## auto-complete
 
-`vim-lsp` by default only provides basic omnifunc support for autocomplete. Completion can be made asynchronous by setting `g:lsp_async_completion`. Note that this may cause unexpected behavior in some plugins such as MUcomplete.
-
-If you would like to have more advanced features please use asyncomplete.vim as described below.
-
-### omnifunc
-
-```vim
-" let g:lsp_async_completion = 1
-
-autocmd FileType typescript setlocal omnifunc=lsp#complete
-```
-
-### asyncomplete.vim
-
-[asyncomplete.vim](https://github.com/prabirshrestha/asyncomplete.vim) is a async auto complete plugin for vim8 and neovim written in pure vim script without any python dependencies.
-
-```viml
-Plug 'prabirshrestha/asyncomplete.vim'
-Plug 'prabirshrestha/asyncomplete-lsp.vim'
-```
+Refer to docs on configuring omnifunc or [asyncomplete.vim](https://github.com/prabirshrestha/asyncomplete.vim).
 
 ## Supported commands
 

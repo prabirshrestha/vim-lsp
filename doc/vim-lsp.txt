@@ -26,6 +26,9 @@ CONTENTS                                                  *vim-lsp-contents*
       LspReferences               |LspReferences|
       LspRename                   |LspRename|
       LspWorkspaceSymbols         |LspWorkspaceSymbols|
+    Autocomplete               |vim-lsp-autocomplete|
+      omnifunc                    |vim-lsp-omnifunc|
+      asyncomplete.vim            |vim-lsp-asyncomplete|
     License			|vim-lsp-license|
 
 
@@ -169,7 +172,7 @@ The vim |dict| containing information about the server.
     Cross-platform compatibility notes:
     It is recommended to use &shell with &shellcmdflag when running script
     files that can be executed specially on windows where *.bat and *.cmd
-    files cannot be started without running the shell first. This is a common
+    files cannot be started without running the shell first. This is common
     for exectuables installed by npm for nodejs.
 
     Example:
@@ -271,6 +274,35 @@ Rename the symbol.
 LspWorkspaceSymbols				       *LspWorkspaceSymbols*
 
 Search and show workspace symbols.
+
+===============================================================================
+Autocomplete                                          *vim-lsp-autocomplete*
+
+omnifunc				                  *vim-lsp-omnifunc*
+
+vim-lsp by default only provides basic omnifunc support for autocomplete.
+
+Completion can be made asynchronous by setting g:lsp_async_completion.
+Note that this may cause unexpected behavior in some plugins such as MUcomplete.
+
+If you would like to have more advanced features please use asyncomplete.vim as
+described below.
+
+    Example:
+	autocmd FileType typescript setlocal omnifunc=lsp#complete
+
+asyncomplete.vim                                      *vim-lsp-asyncomplete*
+
+asyncomplete.vim is a async auto complete plugin for vim8 and neovim written
+in pure vim script. https://github.com/prabirshrestha/asyncomplete.vim
+
+Example:
+    Plug 'prabirshrestha/async.vim'
+    Plug 'prabirshrestha/vim-lsp'
+    Plug 'prabirshrestha/asyncomplete.vim'
+    Plug 'prabirshrestha/asyncomplete-lsp.vim'
+
+For additional configuration refer to asyncomplete.vim docs.
 
 ===============================================================================
 License                                                    *vim-lsp-license*
