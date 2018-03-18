@@ -137,12 +137,12 @@ function! s:get_completion_result(data) abort
         let l:incomplete = l:result['isIncomplete']
     endif
 
-    let l:matches = map(l:items, {_, item -> lsp#omni#format_completion_item(item) })
+    let l:matches = map(l:items, {_, item -> lsp#omni#get_vim_completion_item(item) })
 
     return {'matches': l:matches, 'incomplete': l:incomplete}
 endfunction
 
-function! lsp#omni#format_completion_item(item) abort
+function! lsp#omni#get_vim_completion_item(item) abort
     if has_key(a:item, 'insertText') && !empty(a:item['insertText'])
         if has_key(a:item, 'insertTextFormat') && a:item['insertTextFormat'] != 1
             let l:word = a:item['label']
