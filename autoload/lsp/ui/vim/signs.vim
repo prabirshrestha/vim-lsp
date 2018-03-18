@@ -10,6 +10,22 @@ let s:severity_sign_names_mapping = {
     \ 4: 'LspHint',
     \ }
 
+if !hlexists('LspErrorText')
+    highlight link LspErrorText Error
+endif
+
+if !hlexists('LspWarningText')
+    highlight link LspWarningText Todo
+endif
+
+if !hlexists('LspInformationText')
+    highlight link LspInformationText Normal
+endif
+
+if !hlexists('LspHintText')
+    highlight link LspHintText Normal
+endif
+
 function! lsp#ui#vim#signs#enable() abort
     if !s:enabled
         call s:define_signs()
@@ -18,13 +34,22 @@ function! lsp#ui#vim#signs#enable() abort
     endif
 endfunction
 
+" Set default sign text to handle case when user provides empty dict
+function! s:add_sign(sign_name, sign_default_text, sign_options) abort
+    let l:sign_string = 'sign define ' . a:sign_name
+    let l:sign_string .= ' text=' . get(a:sign_options, 'text', a:sign_default_text)
+    let l:sign_string .= ' icon=' . get(a:sign_options, 'icon', '')
+    let l:sign_string .= ' texthl=' . a:sign_name . 'Text'
+    let l:sign_string .= ' linehl=' . a:sign_name . 'Line'
+    exec l:sign_string
+endfunction
+
 function! s:define_signs() abort
     if !s:signs_defined
-        " TODO: support customization of signs
-        sign define LspError text=E> texthl=Error
-        sign define LspWarning text=W> texthl=Todo
-        sign define LspInformation text=I> texthl=Normal
-        sign define LspHint text=H> texthl=Normal
+        call s:add_sign('LspError', 'E>', g:lsp_signs_error)
+        call s:add_sign('LspWarning', 'W>', g:lsp_signs_warning)
+        call s:add_sign('LspInformation', 'I>', g:lsp_signs_information)
+        call s:add_sign('LspHint', 'H>', g:lsp_signs_hint)
         let s:signs_defined = 1
     endif
 endfunction
