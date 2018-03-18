@@ -4,15 +4,18 @@
 ================================================================================
 CONTENTS                                                  *vim-lsp-contents*
 
-    Introduction        |vim-lsp-introduction|
-    Install             |vim-lsp-install|
-    Language Servers    |vim-lsp-language-servers|
-      Configure           |vim-lsp-configure-source|
-      Wiki		   |vim-lsp-configure-wiki|
-    Functions           |vim-lsp-functions|
-      register_server	   |vim-lsp-register_server|
-      stop_server     	   |vim-lsp-stop_server|
-    License             |vim-lsp-license|
+    Introduction		|vim-lsp-introduction|
+    Install			|vim-lsp-install|
+    Language Servers		|vim-lsp-language-servers|
+      Configure                  |vim-lsp-configure-source|
+      Wiki			  |vim-lsp-configure-wiki|
+    Functions			|vim-lsp-functions|
+      register_server		  |vim-lsp-register_server|
+      stop_server	          |vim-lsp-stop_server|
+    Commands			|vim-lsp-commands|
+      LspDocumentDiagnostics	  |LspDocumentDiagnostics|
+      LspDefinition		  |LspDefinition|
+    License			|vim-lsp-license|
 
 
 ================================================================================
@@ -191,6 +194,17 @@ Used to stop the server.
 	* If the server is not running or is not registered it is a noop.
 	* The server is forcefully stopped without sending shutdown request.
 
+===============================================================================
+Commands	                                          *vim-lsp-commands*
+
+LspDocumentDiagnostics                              *LspDocumentDiagnostics*
+
+Gets the current document diagnostics.
+
+
+LspDefinition						     *LspDefinition*
+
+Go to definition.
 
 ===============================================================================
 License                                                    *vim-lsp-license*
