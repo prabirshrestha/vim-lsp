@@ -38,7 +38,10 @@ endfunction
 function! s:add_sign(sign_name, sign_default_text, sign_options) abort
     let l:sign_string = 'sign define ' . a:sign_name
     let l:sign_string .= ' text=' . get(a:sign_options, 'text', a:sign_default_text)
-    let l:sign_string .= ' icon=' . get(a:sign_options, 'icon', '')
+    let l:sign_icon = get(a:sign_options, 'icon', '')
+    if !empty(l:sign_icon)
+        let l:sign_string .= ' icon=' . l:sign_icon
+    endif
     let l:sign_string .= ' texthl=' . a:sign_name . 'Text'
     let l:sign_string .= ' linehl=' . a:sign_name . 'Line'
     exec l:sign_string
