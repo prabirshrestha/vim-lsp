@@ -82,9 +82,24 @@ Plug 'prabirshrestha/asyncomplete-lsp.vim'
 
 ### Diagnostics
 
-```
+```viml
 let g:lsp_signs_enabled = 1         " enable signs
 let g:lsp_diagnostics_echo_cursor = 1 " enable echo under cursor when in normal mode
+```
+
+Four groups of signs are defined and used: `LspError`, `LspWarning`, `LspInformation`, `LspHint`. It is possible to set custom text or icon that will be used for each sign (note that icons are only available in GUI). To do this, set some of the following globals: `g:lsp_signs_error`, `g:lsp_signs_warning`, `g:lsp_signs_information`, `g:lsp_signs_hint`. They should be set to a dict, that contains either text that will be used as sign in terminal, or icon that will be used for GUI, or both. For example:
+
+```viml
+let g:lsp_signs_error = {'text': '✗'}
+let g:lsp_signs_warning = {'text': '‼', 'icon': '/path/to/some/icon'} " icons require GUI
+let g:lsp_signs_hint = {'icon': '/path/to/some/other/icon'} " icons require GUI
+```
+
+Also two highlight groups for every sign group are defined (for example for LspError these are LspErrorText and LspErrorLine). By default, LspError text is highlighted using Error group, LspWarning is highlighted as Todo, others use Normal group. Line highlighting is not set by default. If your colorscheme of choise does not provide any of these, it is possible to clear them or link to some other group, like so:
+
+```viml
+highlight link LspErrorText GruvboxRedSign " requires gruvbox
+highlight clear LspWarningLine
 ```
 
 ## Debugging
