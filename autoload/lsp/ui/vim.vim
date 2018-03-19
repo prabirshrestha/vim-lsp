@@ -56,29 +56,6 @@ function! lsp#ui#vim#references() abort
     echo 'Retrieving references ...'
 endfunction
 
-function! lsp#ui#vim#hover() abort
-    let l:servers = filter(lsp#get_whitelisted_servers(), 'lsp#capabilities#has_hover_provider(v:val)')
-    let s:last_req_id = s:last_req_id + 1
-
-    if len(l:servers) == 0
-        call s:not_supported('Retrieving hover')
-        return
-    endif
-
-    for l:server in l:servers
-        call lsp#send_request(l:server, {
-            \ 'method': 'textDocument/hover',
-            \ 'params': {
-            \   'textDocument': lsp#get_text_document_identifier(),
-            \   'position': lsp#get_position(),
-            \ },
-            \ 'on_notification': function('s:handle_hover', [l:server, s:last_req_id, 'hover']),
-            \ })
-    endfor
-
-    echo 'Retrieving hover ...'
-endfunction
-
 function! lsp#ui#vim#rename() abort
     let l:servers = filter(lsp#get_whitelisted_servers(), 'lsp#capabilities#has_rename_provider(v:val)')
     let s:last_req_id = s:last_req_id + 1
