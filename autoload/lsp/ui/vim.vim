@@ -266,34 +266,6 @@ function! s:handle_location(ctx, server, type, data) abort "ctx = {counter, list
     endif
 endfunction
 
-function! s:handle_hover(server, last_req_id, type, data) abort
-    if a:last_req_id != s:last_req_id
-        return
-    endif
-
-    if lsp#client#is_error(a:data['response'])
-        call lsp#utils#error('Failed to retrieve '. a:type . ' for ' . a:server)
-        return
-    endif
-
-    if !has_key(a:data['response'], 'result')
-        return
-    endif
-
-    if empty(a:data['response']['result'])
-        call lsp#utils#error('No ' . a:type .' found')
-        return
-    endif
-
-    let l:contents = a:data['response']['result']['contents']
-
-    if empty(l:contents)
-        call lsp#utils#error('No ' . a:type .' found')
-    else
-        echo lsp#ui#vim#output#preview(l:contents)
-    endif
-endfunction
-
 function! s:handle_workspace_edit(server, last_req_id, type, data) abort
     if a:last_req_id != s:last_req_id
         return
