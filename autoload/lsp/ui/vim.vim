@@ -287,7 +287,17 @@ function! s:handle_location(ctx, server, type, data) abort "ctx = {counter, list
                 execute l:cmd . ' | call cursor('.l:loc['lnum'].','.l:loc['col'].')'
                 redraw
             else
-                call setqflist(a:ctx['list'])
+				let g:lctx = a:ctx['list']
+lua << EOF
+					local ctxlist = vim.api.nvim_eval("g:lctx")
+					local lsp_file = require("lsp-file")
+					for k, it in pairs(ctxlist) do
+						it['text'] = lsp_file.readline(it['filename'], it['lnum'])
+					end
+					vim.api.nvim_set_var('lctx',ctxlist)
+EOF
+                call setqflist(g:lctx)
+				unlet g:lctx
                 echom 'Retrieved ' . a:type
                 botright copen
             endif
