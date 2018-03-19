@@ -11,6 +11,7 @@ CONTENTS                                                  *vim-lsp-contents*
       Wiki                        |vim-lsp-configure-wiki|
     Options			|vim-lsp-options|
       g:lsp_auto_enable           |g:lsp_auto_enable|
+      g:lsp_preview_keep_focus    |g:lsp_preview_keep_focus|
     Functions			|vim-lsp-functions|
       enable                      |vim-lsp-enable|
       disable                     |vim-lsp-disable|
@@ -95,6 +96,24 @@ g:lsp_auto_enable                                       *g:lsp_auto_enable*
     Example:
 	let g:lsp_auto_enable = 1
 	let g:lsp_auto_enable = 0
+
+g:lsp_preview_keep_focus                         *g:lsp_preview_keep_focus*
+    Type: |Number|
+    Default: `1`
+
+    Indicates whether to keep the focus on current window or move the focus
+    to the |preview-window| when a |preview-window| is opened by vim-lsp.
+    Certain commands such as |LspHover| opens the result in a |preview-window|.
+
+    Example:
+	" Keep the focus in current window
+	let g:lsp_preview_keep_focus = 1
+
+	" Do not keep the focus in current window.
+	" Move the focus to |preview-window|.
+	let g:lsp_preview_keep_focus = 0
+
+    * |preview-window| can be closed using the default vim mapping - `<c-w><c-z>`.
 
 ===============================================================================
 FUNCTIONS	                                        *vim-lsp-functions*
@@ -261,7 +280,11 @@ Gets the symbols for the current document.
 
 LspHover							  *LspHover*
 
-Gets the hover information.
+Gets the hover information and displays it in the |preview-window|.
+
+ * |preview-window| can be closed using the default vim mapping - `<c-w><c-z>`.
+ * To control the default focus of |preview-window| for |LspHover|
+   configure |g:lsp_preview_keep_focus|.
 
 LspReferences						     *LspReferences*
 
