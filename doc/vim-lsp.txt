@@ -236,9 +236,9 @@ The vim |dict| containing information about the server.
 		let l:config = get(a:server_info, 'config', {})
 		let l:prefer_local = get(l:config, 'prefer_local', 1)
 		if (l:prefer_local)
-		    " return ['./local-executable']
+		    return ['./local-executable']
 		else
-		    " return ['/bin/global-exectuable']
+		    return ['/bin/global-exectuable']
 		endif
 	    endfunction
 
