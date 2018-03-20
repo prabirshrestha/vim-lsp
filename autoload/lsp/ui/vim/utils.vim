@@ -8,16 +8,18 @@ function! lsp#ui#vim#utils#locations_to_loc_list(result) abort
     let l:locations = type(a:result['response']['result']) == type({}) ? [a:result['response']['result']] : a:result['response']['result']
 
     if !empty(l:locations) " some servers also return null so check to make sure it isn't empty
+        let l:cache={}
         for l:location in l:locations
             if s:is_file_uri(l:location['uri'])
                 let l:path = lsp#utils#uri_to_path(l:location['uri'])
                 let l:line = l:location['range']['start']['line'] + 1
                 let l:col = l:location['range']['start']['character'] + 1
+                let l:text = get(l:cache, l:path, readfile(l:path))[l:line - 1]
                 call add(l:list, {
                     \ 'filename': l:path,
                     \ 'lnum': l:line,
                     \ 'col': l:col,
-                    \ 'text': l:path,
+                    \ 'text': l:text,
                     \ })
             endif
         endfor
