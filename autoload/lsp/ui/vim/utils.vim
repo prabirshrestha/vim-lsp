@@ -14,7 +14,13 @@ function! lsp#ui#vim#utils#locations_to_loc_list(result) abort
                 let l:path = lsp#utils#uri_to_path(l:location['uri'])
                 let l:line = l:location['range']['start']['line'] + 1
                 let l:col = l:location['range']['start']['character'] + 1
-                let l:text = get(l:cache, l:path, readfile(l:path))[l:line - 1]
+                if has_key(l:cache, l:path)
+                    let l:text = l:cache[l:path][l:line]
+                else
+                    let l:contents = readfile(l:path)
+                    let l:cache[l:path] = l:contents
+                    let l:text = l:contents[l:line]
+                endif
                 call add(l:list, {
                     \ 'filename': l:path,
                     \ 'lnum': l:line,
