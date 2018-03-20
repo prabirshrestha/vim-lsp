@@ -1,12 +1,6 @@
 let s:is_win = has('win32') || has('win64')
 let s:diagnostics = {} " { uri: { 'server_name': response } }
 
-function! s:error_msg(msg) abort
-    echohl ErrorMsg
-    echom a:msg
-    echohl NONE
-endfunction
-
 function! lsp#ui#vim#diagnostics#handle_text_document_publish_diagnostics(server_name, data) abort
     if lsp#client#is_error(a:data['response'])
         return
@@ -25,7 +19,7 @@ function! lsp#ui#vim#diagnostics#document_diagnostics() abort
 
     let [l:has_diagnostics, l:diagnostics] = s:get_diagnostics(l:uri)
     if !l:has_diagnostics
-        call s:error_msg('No diagnostics results')
+        call lsp#utils#error('No diagnostics results')
         return
     endif
 
@@ -39,9 +33,9 @@ function! lsp#ui#vim#diagnostics#document_diagnostics() abort
     " autocmd FileType qf setlocal wrap
 
     if empty(l:result)
-        call s:error_msg('No diagnostics results found')
+        call lsp#utils#error('No diagnostics results found')
     else
-        echom 'Retrieved diagnostics results'
+        echo 'Retrieved diagnostics results'
         botright copen
     endif
 endfunction

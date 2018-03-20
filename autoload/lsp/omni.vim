@@ -137,22 +137,31 @@ function! s:get_completion_result(data) abort
         let l:incomplete = l:result['isIncomplete']
     endif
 
-    let l:matches = map(l:items, {_, item -> s:format_completion_item(item) })
+    let l:matches = map(l:items, {_, item -> lsp#omni#get_vim_completion_item(item) })
 
     return {'matches': l:matches, 'incomplete': l:incomplete}
 endfunction
 
-function! s:format_completion_item(item) abort
-    let l:comp = {'word': a:item['label'], 'abbr': a:item['label'], 'menu': lsp#omni#get_kind_text(a:item), 'icase': 1, 'dup': 1}
-
+function! lsp#omni#get_vim_completion_item(item) abort
     if has_key(a:item, 'insertText') && !empty(a:item['insertText'])
-      let l:comp['word'] = a:item['insertText']
+        if has_key(a:item, 'insertTextFormat') && a:item['insertTextFormat'] != 1
+            let l:word = a:item['label']
+        else
+            let l:word = a:item['insertText']
+        endif
+        let l:abbr = a:item['label']
+    else
+        let l:word = a:item['label']
+        let l:abbr = a:item['label']
     endif
-    if has_key(a:item, 'documentation') && !empty(a:item['documentation'])
-      let l:comp['info'] = a:item['documentation']
+    let l:menu = lsp#omni#get_kind_text(a:item)
+    let l:completion = { 'word': l:word, 'abbr': l:abbr, 'menu': l:menu, 'icase': 1, 'dup': 1 }
+    if has_key(a:item, 'documentation')
+        if type(a:item['documentation']) == type('')
+            let l:completion['info'] = a:item['documentation']
+        endif
     endif
-
-    return l:comp
+    return l:completion
 endfunction
 
 " }}}

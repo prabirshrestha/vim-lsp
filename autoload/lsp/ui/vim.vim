@@ -1,13 +1,7 @@
 let s:last_req_id = 0
 
-function! s:error_msg(msg) abort
-    echohl ErrorMsg
-    echom a:msg
-    echohl NONE
-endfunction
-
 function! s:not_supported(what) abort
-    return s:error_msg(a:what.' not supported for '.&filetype)
+    return lsp#utils#error(a:what.' not supported for '.&filetype)
 endfunction
 
 function! lsp#ui#vim#definition() abort
@@ -32,7 +26,7 @@ function! lsp#ui#vim#definition() abort
             \ })
     endfor
 
-    echom 'Retrieving definition ...'
+    echo 'Retrieving definition ...'
 endfunction
 
 function! lsp#ui#vim#references() abort
@@ -59,30 +53,7 @@ function! lsp#ui#vim#references() abort
             \ })
     endfor
 
-    echom 'Retrieving references ...'
-endfunction
-
-function! lsp#ui#vim#hover() abort
-    let l:servers = filter(lsp#get_whitelisted_servers(), 'lsp#capabilities#has_hover_provider(v:val)')
-    let s:last_req_id = s:last_req_id + 1
-
-    if len(l:servers) == 0
-        call s:not_supported('Retrieving hover')
-        return
-    endif
-
-    for l:server in l:servers
-        call lsp#send_request(l:server, {
-            \ 'method': 'textDocument/hover',
-            \ 'params': {
-            \   'textDocument': lsp#get_text_document_identifier(),
-            \   'position': lsp#get_position(),
-            \ },
-            \ 'on_notification': function('s:handle_hover', [l:server, s:last_req_id, 'hover']),
-            \ })
-    endfor
-
-    echom 'Retrieving hover ...'
+    echo 'Retrieving references ...'
 endfunction
 
 function! lsp#ui#vim#rename() abort
@@ -97,7 +68,7 @@ function! lsp#ui#vim#rename() abort
     let l:new_name = input('new name>')
 
     if empty(l:new_name)
-        echom '... Renaming aborted ...'
+        echo '... Renaming aborted ...'
         return
     endif
 
@@ -114,7 +85,7 @@ function! lsp#ui#vim#rename() abort
         \ 'on_notification': function('s:handle_workspace_edit', [l:server, s:last_req_id, 'rename']),
         \ })
 
-    echom ' ... Renaming ...'
+    echo ' ... Renaming ...'
 endfunction
 
 function! lsp#ui#vim#document_format() abort
@@ -140,7 +111,7 @@ function! lsp#ui#vim#document_format() abort
         \ 'on_notification': function('s:handle_text_edit', [l:server, s:last_req_id, 'document format']),
         \ })
 
-    echom 'Formatting document ...'
+    echo 'Formatting document ...'
 endfunction
 
 function! s:get_visual_selection_pos() abort
@@ -187,7 +158,7 @@ function! lsp#ui#vim#document_range_format() abort
         \ 'on_notification': function('s:handle_text_edit', [l:server, s:last_req_id, 'range format']),
         \ })
 
-    echom 'Formatting document range ...'
+    echo 'Formatting document range ...'
 endfunction
 
 function! lsp#ui#vim#workspace_symbol() abort
@@ -213,7 +184,7 @@ function! lsp#ui#vim#workspace_symbol() abort
             \ })
     endfor
 
-    echom 'Retrieving document symbols ...'
+    echo 'Retrieving document symbols ...'
 endfunction
 
 function! lsp#ui#vim#document_symbol() abort
@@ -237,7 +208,7 @@ function! lsp#ui#vim#document_symbol() abort
             \ })
     endfor
 
-    echom 'Retrieving document symbols ...'
+    echo 'Retrieving document symbols ...'
 endfunction
 
 function! s:handle_symbol(server, last_req_id, type, data) abort
@@ -246,7 +217,7 @@ function! s:handle_symbol(server, last_req_id, type, data) abort
     endif
 
     if lsp#client#is_error(a:data['response'])
-        call s:error_msg('Failed to retrieve '. a:type . ' for ' . a:server)
+        call lsp#utils#error('Failed to retrieve '. a:type . ' for ' . a:server)
         return
     endif
 
@@ -255,9 +226,9 @@ function! s:handle_symbol(server, last_req_id, type, data) abort
     call setqflist(l:list)
 
     if empty(l:list)
-        call s:error_msg('No ' . a:type .' found')
+        call lsp#utils#error('No ' . a:type .' found')
     else
-        echom 'Retrieved ' . a:type
+        echo 'Retrieved ' . a:type
         botright copen
     endif
 endfunction
@@ -270,14 +241,14 @@ function! s:handle_location(ctx, server, type, data) abort "ctx = {counter, list
     let a:ctx['counter'] = a:ctx['counter'] - 1
 
     if lsp#client#is_error(a:data['response'])
-        call s:error_msg('Failed to retrieve '. a:type . ' for ' . a:server)
+        call lsp#utils#error('Failed to retrieve '. a:type . ' for ' . a:server)
     else
         let a:ctx['list'] = a:ctx['list'] + lsp#ui#vim#utils#locations_to_loc_list(a:data)
     endif
 
     if a:ctx['counter'] == 0
         if empty(a:ctx['list'])
-            call s:error_msg('No ' . a:type .' found')
+            call lsp#utils#error('No ' . a:type .' found')
         else
             if len(a:ctx['list']) == 1 && a:ctx['jump_if_one']
                 normal! m'
@@ -301,47 +272,19 @@ function! s:handle_location(ctx, server, type, data) abort "ctx = {counter, list
     endif
 endfunction
 
-function! s:handle_hover(server, last_req_id, type, data) abort
-    if a:last_req_id != s:last_req_id
-        return
-    endif
-
-    if lsp#client#is_error(a:data['response'])
-        call s:error_msg('Failed to retrieve '. a:type . ' for ' . a:server)
-        return
-    endif
-
-    if !has_key(a:data['response'], 'result')
-        return
-    endif
-
-    if empty(a:data['response']['result'])
-        call s:error_msg('No ' . a:type .' found')
-        return
-    endif
-
-    let l:contents = a:data['response']['result']['contents']
-
-    if empty(l:contents)
-        call s:error_msg('No ' . a:type .' found')
-    else
-        echo lsp#ui#vim#output#preview(l:contents)
-    endif
-endfunction
-
 function! s:handle_workspace_edit(server, last_req_id, type, data) abort
     if a:last_req_id != s:last_req_id
         return
     endif
 
     if lsp#client#is_error(a:data)
-        call s:error_msg('Failed to retrieve '. a:type . ' for ' . a:server)
+        call lsp#utils#error('Failed to retrieve '. a:type . ' for ' . a:server)
         return
     endif
 
     call s:apply_workspace_edits(a:data['response']['result'])
 
-    echom 'Renamed'
+    echo 'Renamed'
 endfunction
 
 function! s:handle_text_edit(server, last_req_id, type, data) abort
@@ -350,7 +293,7 @@ function! s:handle_text_edit(server, last_req_id, type, data) abort
     endif
 
     if lsp#client#is_error(a:data['response'])
-        call s:error_msg('Failed to '. a:type . ' for ' . a:server)
+        call lsp#utils#error('Failed to '. a:type . ' for ' . a:server)
         return
     endif
 
@@ -358,7 +301,7 @@ function! s:handle_text_edit(server, last_req_id, type, data) abort
     call s:apply_text_edits(a:data['request']['params']['textDocument']['uri'], a:data['response']['result'])
 	call winrestview(l:save_view)
 
-    echom 'Document formatted'
+    echo 'Document formatted'
 endfunction
 
 " @params
@@ -375,7 +318,17 @@ function! s:apply_workspace_edits(workspace_edits) abort
         endif
         call winrestview(l:view)
     endif
-    " TODO: support documentChanges
+    if has_key(a:workspace_edits, 'documentChanges')
+        let l:cur_buffer = bufnr('%')
+        let l:view = winsaveview()
+        for l:text_document_edit in a:workspace_edits['documentChanges']
+            call s:apply_text_edits(l:text_document_edit['textDocument']['uri'], l:text_document_edit['edits'])
+        endfor
+        if l:cur_buffer !=# bufnr('%')
+            execute 'keepjumps keepalt b ' . l:cur_buffer
+        endif
+        call winrestview(l:view)
+    endif
 endfunction
 
 function! s:apply_text_edits(uri, text_edits) abort

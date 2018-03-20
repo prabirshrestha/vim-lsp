@@ -4,15 +4,33 @@
 ================================================================================
 CONTENTS                                                  *vim-lsp-contents*
 
-    Introduction        |vim-lsp-introduction|
-    Install             |vim-lsp-install|
-    Language Servers    |vim-lsp-language-servers|
-      Configure           |vim-lsp-configure-source|
-      Wiki		   |vim-lsp-configure-wiki|
-    Functions           |vim-lsp-functions|
-      register_server	   |vim-lsp-register_server|
-      stop_server     	   |vim-lsp-stop_server|
-    License             |vim-lsp-license|
+    Introduction		|vim-lsp-introduction|
+    Install			|vim-lsp-install|
+    Language Servers		|vim-lsp-language-servers|
+      Configure                   |vim-lsp-configure-source|
+      Wiki                        |vim-lsp-configure-wiki|
+    Options			|vim-lsp-options|
+      g:lsp_auto_enable           |g:lsp_auto_enable|
+      g:lsp_preview_keep_focus    |g:lsp_preview_keep_focus|
+    Functions			|vim-lsp-functions|
+      enable                      |vim-lsp-enable|
+      disable                     |vim-lsp-disable|
+      register_server             |vim-lsp-register_server|
+      stop_server                 |vim-lsp-stop_server|
+    Commands			|vim-lsp-commands|
+      LspDocumentDiagnostics      |LspDocumentDiagnostics|
+      LspDefinition               |LspDefinition|
+      LspDocumentFormat           |LspDocumentFormat|
+      LspDocumentRangeFormat      |LspDocumentRangeFormat|
+      LspDocumentSymbol           |LspDocumentSymbol|
+      LspHover                    |LspHover|
+      LspReferences               |LspReferences|
+      LspRename                   |LspRename|
+      LspWorkspaceSymbols         |LspWorkspaceSymbols|
+    Autocomplete               |vim-lsp-autocomplete|
+      omnifunc                    |vim-lsp-omnifunc|
+      asyncomplete.vim            |vim-lsp-asyncomplete|
+    License			|vim-lsp-license|
 
 
 ================================================================================
@@ -66,7 +84,53 @@ For documentation on how to configure other language servers refer
 to https://github.com/prabirshrestha/vim-lsp/wiki/Servers
 
 ===============================================================================
+Options                                                   *vim-lsp-options*
+
+g:lsp_auto_enable                                       *g:lsp_auto_enable*
+    Type: |Number|
+    Default: `1`
+
+    Auto enable vim-lsp plugin during startup. Set to `0` to disable auto
+    enabling vim-lsp during startup.
+
+    Example:
+	let g:lsp_auto_enable = 1
+	let g:lsp_auto_enable = 0
+
+g:lsp_preview_keep_focus                         *g:lsp_preview_keep_focus*
+    Type: |Number|
+    Default: `1`
+
+    Indicates whether to keep the focus on current window or move the focus
+    to the |preview-window| when a |preview-window| is opened by vim-lsp.
+    Certain commands such as |LspHover| opens the result in a |preview-window|.
+
+    Example:
+	" Keep the focus in current window
+	let g:lsp_preview_keep_focus = 1
+
+	" Do not keep the focus in current window.
+	" Move the focus to |preview-window|.
+	let g:lsp_preview_keep_focus = 0
+
+    * |preview-window| can be closed using the default vim mapping - `<c-w><c-z>`.
+
+===============================================================================
 FUNCTIONS	                                        *vim-lsp-functions*
+
+lsp#enable                                                 *vim-lsp-enable*
+
+Enables vim-lsp plugin.
+
+    Example:
+	:call lsp#enable()
+
+lsp#disable                                               *vim-lsp-disable*
+
+Disables vim-lsp plugin.
+
+    Example:
+	:call lsp#disable()
 
 lsp#register_server                               *vim-lsp-register_server*
 
@@ -127,7 +191,7 @@ The vim |dict| containing information about the server.
     Cross-platform compatibility notes:
     It is recommended to use &shell with &shellcmdflag when running script
     files that can be executed specially on windows where *.bat and *.cmd
-    files cannot be started without running the shell first. This is a common
+    files cannot be started without running the shell first. This is common
     for exectuables installed by npm for nodejs.
 
     Example:
@@ -172,9 +236,9 @@ The vim |dict| containing information about the server.
 		let l:config = get(a:server_info, 'config', {})
 		let l:prefer_local = get(l:config, 'prefer_local', 1)
 		if (l:prefer_local)
-		    " return ['./local-executable']
+		    return ['./local-executable']
 		else
-		    " return ['/bin/global-exectuable']
+		    return ['/bin/global-exectuable']
 		endif
 	    endfunction
 
@@ -191,6 +255,77 @@ Used to stop the server.
 	* If the server is not running or is not registered it is a noop.
 	* The server is forcefully stopped without sending shutdown request.
 
+===============================================================================
+Commands	                                          *vim-lsp-commands*
+
+LspDocumentDiagnostics                              *LspDocumentDiagnostics*
+
+Gets the current document diagnostics.
+
+LspDefinition						     *LspDefinition*
+
+Go to definition.
+
+LspDocumentFormat					 *LspDocumentFormat*
+
+Format the entire document.
+
+LspDocumentRangeFormat				    *LspDocumentRangeFormat*
+
+Format the current document selection.
+
+LspDocumentSymbol				         *LspDocumentSymbol*
+
+Gets the symbols for the current document.
+
+LspHover							  *LspHover*
+
+Gets the hover information and displays it in the |preview-window|.
+
+ * |preview-window| can be closed using the default vim mapping - `<c-w><c-z>`.
+ * To control the default focus of |preview-window| for |LspHover|
+   configure |g:lsp_preview_keep_focus|.
+
+LspReferences						     *LspReferences*
+
+Find all references.
+
+LspRename						         *LspRename*
+
+Rename the symbol.
+
+LspWorkspaceSymbols				       *LspWorkspaceSymbols*
+
+Search and show workspace symbols.
+
+===============================================================================
+Autocomplete                                          *vim-lsp-autocomplete*
+
+omnifunc				                  *vim-lsp-omnifunc*
+
+vim-lsp by default only provides basic omnifunc support for autocomplete.
+
+Completion can be made asynchronous by setting g:lsp_async_completion.
+Note that this may cause unexpected behavior in some plugins such as MUcomplete.
+
+If you would like to have more advanced features please use asyncomplete.vim as
+described below.
+
+    Example:
+	autocmd FileType typescript setlocal omnifunc=lsp#complete
+
+asyncomplete.vim                                      *vim-lsp-asyncomplete*
+
+asyncomplete.vim is a async auto complete plugin for vim8 and neovim written
+in pure vim script. https://github.com/prabirshrestha/asyncomplete.vim
+
+Example:
+    Plug 'prabirshrestha/async.vim'
+    Plug 'prabirshrestha/vim-lsp'
+    Plug 'prabirshrestha/asyncomplete.vim'
+    Plug 'prabirshrestha/asyncomplete-lsp.vim'
+
+For additional configuration refer to asyncomplete.vim docs.
 
 ===============================================================================
 License                                                    *vim-lsp-license*
