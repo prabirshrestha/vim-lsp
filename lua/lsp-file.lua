@@ -30,7 +30,10 @@ local function _removePrefix(str, prefix)
 		return str
 	end
 
-	return str:sub(plen + 1, slen)
+	if str:sub(1, plen) == prefix then
+		return str:sub(plen + 1, slen)
+	end
+	return str
 end
 
 function module.handle_loc_list(data, cwd)
