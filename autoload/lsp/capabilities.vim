@@ -35,6 +35,10 @@ function! lsp#capabilities#has_workspace_symbol_provider(server_name) abort
     return s:has_bool_provider(a:server_name, 'workspaceSymbolProvider')
 endfunction
 
+function! lsp#capabilities#has_implementation_provider(server_name) abort
+    return s:has_bool_provider(a:server_name, 'implementationProvider')
+endfunction
+
 " [supports_did_save (boolean), { 'includeText': boolean }]
 function! lsp#capabilities#get_text_document_save_registration_options(server_name) abort
     let l:capabilities = lsp#get_server_capabilities(a:server_name)

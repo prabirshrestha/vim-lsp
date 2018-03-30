@@ -57,6 +57,7 @@ Refer to docs on configuring omnifunc or [asyncomplete.vim](https://github.com/p
 |`:LspDocumentRangeFormat`| Format document selection |
 |`:LspDocumentSymbol`| Show document symbols |
 |`:LspHover`| Show hover information |
+|`:LspImplementation` | Show implementation of interface |
 |`:LspReferences`| Find references |
 |`:LspRename`| Rename symbol |
 |`:LspWorkspaceSymbol`| Search/Show workspace symbol |
