@@ -24,7 +24,7 @@ CONTENTS                                                  *vim-lsp-contents*
       LspDocumentRangeFormat      |LspDocumentRangeFormat|
       LspDocumentSymbol           |LspDocumentSymbol|
       LspHover                    |LspHover|
-      LspImplementation                    |LspImplementation|
+      LspImplementation           |LspImplementation|
       LspReferences               |LspReferences|
       LspRename                   |LspRename|
       LspWorkspaceSymbols         |LspWorkspaceSymbols|
