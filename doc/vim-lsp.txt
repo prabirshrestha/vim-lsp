@@ -287,7 +287,7 @@ Gets the hover information and displays it in the |preview-window|.
  * To control the default focus of |preview-window| for |LspHover|
    configure |g:lsp_preview_keep_focus|.
 
-LspImplementation						     *LspImplementation*
+LspImplementation                                        *LspImplementation*
 
 Find all implementation of interface.
 
