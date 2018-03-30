@@ -184,7 +184,7 @@ function! lsp#ui#vim#workspace_symbol() abort
             \ })
     endfor
 
-    echo 'Retrieving document symbols ...'
+    echo 'Retrieving workspace symbols ...'
 endfunction
 
 function! lsp#ui#vim#document_symbol() abort
