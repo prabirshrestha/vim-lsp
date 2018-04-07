@@ -117,9 +117,10 @@ function! s:unregister_events() abort
 endfunction
 
 function! s:on_text_document_did_open() abort
-    call lsp#log('s:on_text_document_did_open()', bufnr('%'), &filetype, getcwd(), lsp#utils#get_buffer_uri(bufnr('%')))
+    let l:buf = bufnr('%')
+    call lsp#log('s:on_text_document_did_open()', l:buf, &filetype, getcwd(), lsp#utils#get_buffer_uri(l:buf))
     for l:server_name in lsp#get_whitelisted_servers()
-        call s:ensure_flush(bufnr('%'), l:server_name, function('s:Noop'))
+        call s:ensure_flush(l:buf, l:server_name, function('s:Noop'))
     endfor
 endfunction
 
