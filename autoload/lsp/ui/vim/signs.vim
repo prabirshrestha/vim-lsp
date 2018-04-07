@@ -54,6 +54,10 @@ function! lsp#ui#vim#signs#next_err() abort
 	endif
 
 	let l:view.lnum = l:next_line
+	let l:height = winheight(0) / 2
+	if l:view.lnum > l:height
+		let l:view.topline = l:next_line - l:height
+	endif
 	call winrestview(l:view)
 endfunction
 
@@ -78,6 +82,10 @@ function! lsp#ui#vim#signs#pre_err() abort
 	endif
 
 	let l:view.lnum = l:next_line
+	let l:height = winheight(0) / 2
+	if l:view.lnum > l:height
+		let l:view.topline = l:next_line - l:height
+	endif
 	call winrestview(l:view)
 endfunction
 
