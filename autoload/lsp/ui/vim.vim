@@ -282,9 +282,15 @@ function! s:handle_location(ctx, server, type, data) abort "ctx = {counter, list
                 execute l:cmd . ' | call cursor('.l:loc['lnum'].','.l:loc['col'].')'
                 redraw
             else
-                call setqflist(a:ctx['list'])
-                echo 'Retrieved ' . a:type
-                botright copen
+				let l:cwd = getcwd() . "/"
+				let l:ctxlist = luaeval("require('lsp-file').handle_loc_list(_A.data, _A.cwd)", {
+							\ "data": a:ctx['list'],
+							\ "cwd": l:cwd,
+							\ })
+                call setloclist(0, l:ctxlist)
+                echom 'Retrieved ' . a:type
+                "botright copen
+				belowright lopen
             endif
         endif
     endif
@@ -315,7 +321,9 @@ function! s:handle_text_edit(server, last_req_id, type, data) abort
         return
     endif
 
+	let l:save_view = winsaveview()
     call s:apply_text_edits(a:data['request']['params']['textDocument']['uri'], a:data['response']['result'])
+	call winrestview(l:save_view)
 
     echo 'Document formatted'
 endfunction
