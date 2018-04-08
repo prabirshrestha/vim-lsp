@@ -54,9 +54,16 @@ function! lsp#ui#vim#signs#next_err() abort
 	endif
 
 	let l:view.lnum = l:next_line
-	let l:height = winheight(0) / 2
-	if l:view.lnum > l:height
-		let l:view.topline = l:next_line - l:height
+	let l:view.topline = 1
+	let l:height = winheight(0)
+	let totalnum = line("$")
+	if totalnum > l:height
+		let l:half = l:height / 2
+		if l:totalnum - l:half < l:view.lnum
+			let l:view.topline = l:totalnum - l:height + 1
+		else
+			let l:view.topline = l:view.lnum - l:half
+		endif
 	endif
 	call winrestview(l:view)
 endfunction
@@ -82,9 +89,16 @@ function! lsp#ui#vim#signs#pre_err() abort
 	endif
 
 	let l:view.lnum = l:next_line
-	let l:height = winheight(0) / 2
-	if l:view.lnum > l:height
-		let l:view.topline = l:next_line - l:height
+	let l:view.topline = 1
+	let l:height = winheight(0)
+	let totalnum = line("$")
+	if totalnum > l:height
+		let l:half = l:height / 2
+		if l:totalnum - l:half < l:view.lnum
+			let l:view.topline = l:totalnum - l:height + 1
+		else
+			let l:view.topline = l:view.lnum - l:half
+		endif
 	endif
 	call winrestview(l:view)
 endfunction
