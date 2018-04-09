@@ -197,7 +197,7 @@ The vim |dict| containing information about the server.
 
     Example:
 	'cmd': {server_info->
-	    \ [&shell, &shellcmdflag, 'typescript-language-server', '--stdio']}
+	    \ [&shell, &shellcmdflag, 'typescript-language-server --stdio']}
 
  * whitelist:
     optional
