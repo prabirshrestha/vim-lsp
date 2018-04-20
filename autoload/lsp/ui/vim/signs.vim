@@ -126,6 +126,7 @@ function! s:place_signs(server_name, path, diagnostics) abort
                 call add(s:signs[a:server_name][a:path], g:lsp_next_sign_id)
                 call lsp#log('add signs')
                 let g:lsp_next_sign_id += 1
+                execute ":laddexpr '" .  a:path . ":" . l:line . ":1'"
             endif
         endfor
     endif
