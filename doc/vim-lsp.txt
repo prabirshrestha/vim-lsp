@@ -256,6 +256,17 @@ Used to stop the server.
 	* If the server is not running or is not registered it is a noop.
 	* The server is forcefully stopped without sending shutdown request.
 
+lsp#get_server_status                                  *vim-lsp-get_server_status*
+
+Get the status of a server.
+
+
+    Example:
+  call lsp#get_server_status('name-of-server')
+
+    Returns one of "unknown server", " "exited", "starting", "failed",
+    "running", "not running".
+
 ===============================================================================
 Commands	                                          *vim-lsp-commands*
 
@@ -302,6 +313,10 @@ Rename the symbol.
 LspWorkspaceSymbols				       *LspWorkspaceSymbols*
 
 Search and show workspace symbols.
+
+LspStatus                     *LspStatus*
+
+Prints the status of all registered servers.
 
 ===============================================================================
 Autocomplete                                          *vim-lsp-autocomplete*

@@ -63,32 +63,36 @@ function! lsp#get_server_capabilities(server_name) abort
     return has_key(l:server, 'init_result') ? l:server['init_result']['result']['capabilities'] : {}
 endfunction
 
-" Returns the current status of the given server. Can be one of
-" "unknown server", "exited", "starting", "failed", "running", "not running"
-function! lsp#get_server_status(server_name) abort
+function! s:server_status(server_name) abort
     if !has_key(s:servers, a:server_name)
-      return "unknown server"
+        return "unknown server"
     endif
     let l:server = s:servers[a:server_name]
     if has_key(l:server, 'exited')
-      return "exited"
+        return "exited"
     endif
     if has_key(l:server, 'init_callbacks')
-      return "starting"
+        return "starting"
     endif
     if has_key(l:server, 'failed')
-      return "failed"
+        return "failed"
     endif
     if has_key(l:server, 'init_result')
-      return "running"
+        return "running"
     endif
     return "not running"
 endfunction
 
-function! lsp#server_status() abort
-  for i in keys(s:servers)
-    echo i . ": " .lsp#get_server_status(i)
-  endfor
+" Returns the current status of all servers (if called with no arguments) or
+" the given server (if given an argument). Can be one of "unknown server",
+" "exited", "starting", "failed", "running", "not running"
+function! lsp#get_server_status(...) abort
+    if a:0 == 0
+        let l:strs = map(keys(s:servers), {k, v -> v . ": " . s:server_status(v)})
+        return join(l:strs, "\n")
+    else
+        return s:server_status(a:1)
+    endif
 endfunction
 
 " @params {server_info} = {
