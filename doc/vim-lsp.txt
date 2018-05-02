@@ -70,7 +70,7 @@ on pyls (https://github.com/palantir/python-language-server)
 
 2. Register the language server in your .vimrc
 
-	if (exectuable('pyls'))
+	if (executable('pyls'))
 	    au User lsp_setup call lsp#register_server({
 		\ 'name': 'pyls',
 		\ 'cmd': {server_info->['pyls']},
