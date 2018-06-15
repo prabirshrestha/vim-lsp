@@ -146,6 +146,7 @@ one parameter which is a vim |dict| and is refered to as |vim-lsp-server-info|
 		\ 'whitelist': ['filetype to whitelist'],
 		\ 'blacklist': ['filetype to blacklist'],
 		\ 'config': {},
+		\ 'workspace_conf': {'param': {'enabled': v:true}},
 		\ })
 	endif
 
@@ -165,6 +166,7 @@ The vim |dict| containing information about the server.
 	'whitelist': ['filetype'],
 	'blacklist': ['filetype'],
 	'config': {},
+	'workspace_conf': {},
     }
 
  * name:
@@ -244,6 +246,16 @@ The vim |dict| containing information about the server.
 	    endfunction
 
 	    'cmd': function('s:myserver_cmd')
+
+  * workspace_conf:
+    optional vim |dict|
+    Used to pass workspace configuration to the server after
+    initialization. Configuration settings are language-server specific.
+
+    Example:
+	'workspace_conf': {'pyls': {'plugins': \
+		{'pydocstyle': {'enabled': v:true}}}}
+
 
 lsp#stop_server                                        *vim-lsp-stop_server*
 
