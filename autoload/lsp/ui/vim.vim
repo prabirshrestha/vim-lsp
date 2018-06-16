@@ -357,7 +357,9 @@ function! s:apply_text_edits(uri, text_edits) abort
         let l:end_line = l:text_edit['range']['end']['line'] + 1
         let l:end_character = l:text_edit['range']['end']['character'] " The end position is exclusive so don't add +1
         let l:new_text = l:text_edit['newText']
-        let l:cmd = l:cmd . printf(" | execute 'keepjumps normal! %dG%d|v%dG%d|c%s'", l:start_line, l:start_character, l:end_line, l:end_character, l:new_text)
+        let l:sub_cmd = printf("%dG%d|v%dG%d|c%s", l:start_line, l:start_character, l:end_line, l:end_character, l:new_text)
+        let l:escaped_sub_cmd = substitute(l:sub_cmd, '''', '''''', 'g')
+        let l:cmd = l:cmd . " | execute 'keepjumps normal! " . l:escaped_sub_cmd . "'"
     endfor
     call lsp#log('s:apply_text_edits', l:cmd)
     try
