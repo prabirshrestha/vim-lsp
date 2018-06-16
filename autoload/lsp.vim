@@ -63,6 +63,38 @@ function! lsp#get_server_capabilities(server_name) abort
     return has_key(l:server, 'init_result') ? l:server['init_result']['result']['capabilities'] : {}
 endfunction
 
+function! s:server_status(server_name) abort
+    if !has_key(s:servers, a:server_name)
+        return "unknown server"
+    endif
+    let l:server = s:servers[a:server_name]
+    if has_key(l:server, 'exited')
+        return "exited"
+    endif
+    if has_key(l:server, 'init_callbacks')
+        return "starting"
+    endif
+    if has_key(l:server, 'failed')
+        return "failed"
+    endif
+    if has_key(l:server, 'init_result')
+        return "running"
+    endif
+    return "not running"
+endfunction
+
+" Returns the current status of all servers (if called with no arguments) or
+" the given server (if given an argument). Can be one of "unknown server",
+" "exited", "starting", "failed", "running", "not running"
+function! lsp#get_server_status(...) abort
+    if a:0 == 0
+        let l:strs = map(keys(s:servers), {k, v -> v . ": " . s:server_status(v)})
+        return join(l:strs, "\n")
+    else
+        return s:server_status(a:1)
+    endif
+endfunction
+
 " @params {server_info} = {
 "   'name': 'go-langserver',        " requried, must be unique
 "   'whitelist': ['go'],            " optional, array of filetypes to whitelist, * for all filetypes
@@ -440,6 +472,7 @@ function! s:on_exit(server_name, id, data, event) abort
         let l:server = s:servers[a:server_name]
         let l:server['lsp_id'] = 0
         let l:server['buffers'] = {}
+        let l:server['exited'] = 1
         if has_key(l:server, 'init_result')
             unlet l:server['init_result']
         endif
@@ -481,6 +514,7 @@ function! s:handle_initialize(server_name, data) abort
     if !lsp#client#is_error(l:response)
         let l:server['init_result'] = l:response
     else
+      let l:server['failed'] = l:response['error']
       call lsp#utils#error('Failed to initialize ' . a:server_name . ' with error ' . l:response['error']['code'] . ': ' . l:response['error']['message'])
     endif
 
