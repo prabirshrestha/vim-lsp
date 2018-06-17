@@ -111,6 +111,8 @@ function! s:on_stdout(id, data, event) abort
                 endif
                 if has_key(l:ctx['requests'], l:response['id'])
                     unlet l:ctx['requests'][l:response['id']]
+                else
+                    call lsp#log('cannot find the request corresponding to response: ', l:response)
                 endif
             else
                 " it is a notification
