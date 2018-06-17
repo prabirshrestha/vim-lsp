@@ -376,19 +376,18 @@ endfunction
 function! s:ensure_conf(buf, server_name, cb) abort
     let l:server = s:servers[a:server_name]
     let l:server_info = l:server['server_info']
-    if has_key(l:server_info, 'workspace_conf')
-        let l:workspace_conf = l:server_info['workspace_conf']
+    if has_key(l:server_info, 'workspace_config')
+        let l:workspace_config = l:server_info['workspace_config']
         call s:send_notification(a:server_name, {
             \ 'method': 'workspace/didChangeConfiguration',
             \ 'params': {
-            \   'settings': l:workspace_conf,
+            \   'settings': l:workspace_config,
             \ }
             \ })
     endif
     let l:msg = s:new_rpc_success('configuration sent', { 'server_name': a:server_name })
     call lsp#log(l:msg)
     call a:cb(l:msg)
-
 endfunction
 
 function! s:ensure_changed(buf, server_name, cb) abort
