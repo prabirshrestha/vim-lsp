@@ -109,7 +109,11 @@ function! s:on_stdout(id, data, event) abort
                     endtry
                     unlet l:ctx['on_notifications'][l:response['id']]
                 endif
-                unlet l:ctx['requests'][l:response['id']]
+                if has_key(l:ctx['requests'], l:response['id'])
+                    unlet l:ctx['requests'][l:response['id']]
+                else
+                    call lsp#log('cannot find the request corresponding to response: ', l:response)
+                endif
             else
                 " it is a notification
                 if has_key(l:ctx['opts'], 'on_notification')
