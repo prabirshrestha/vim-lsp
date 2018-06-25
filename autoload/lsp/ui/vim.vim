@@ -89,7 +89,7 @@ function! lsp#ui#vim#rename() abort
         return
     endif
 
-    let l:new_name = input('new name>')
+    let l:new_name = input('new name: ', expand('<cWORD>'))
 
     if empty(l:new_name)
         echo '... Renaming aborted ...'
