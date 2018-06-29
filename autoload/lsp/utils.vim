@@ -40,7 +40,9 @@ if has('win32') || has('win64')
         if empty(a:path)
             return a:path
         else
-            return s:encode_uri(substitute(a:path, '\', '/', 'g'), 'file:///')
+            " TODO: figure out if encode_uri is needed
+            "return s:encode_uri(substitute(a:path, '\', '/', 'g'), 'file:///')
+            return 'file:///'.substitute(a:path, '\', '/', 'g')
         endif
     endfunction
 else
