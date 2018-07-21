@@ -10,11 +10,11 @@ function! s:decode_uri(uri) abort
 endfunction
 
 function! s:urlencode_char(c) abort
-  return printf('%%%02X', char2nr(a:c))
+    return printf('%%%02X', char2nr(a:c))
 endfunction
 
 function! s:get_prefix(path) abort
-  return matchstr(a:path, '\(^\w\+::\|^\w\+://\)')
+    return matchstr(a:path, '\(^\w\+::\|^\w\+://\)')
 endfunction
 
 function! s:encode_uri(path, start_pos_encode, default_prefix) abort
@@ -26,7 +26,7 @@ function! s:encode_uri(path, start_pos_encode, default_prefix) abort
 
     let l:result = strpart(a:path, 0, a:start_pos_encode)
 
-    for i in range(a:start_pos_encode, len(l:path))
+    for i in range(a:start_pos_encode, len(l:path) - 1)
         " Don't encode '/' here, `path` is expected to be a valid path.
         if l:path[i] =~# '^[a-zA-Z0-9_.~/-]$'
             let l:result .= l:path[i]
