@@ -24,6 +24,8 @@ CONTENTS                                                  *vim-lsp-contents*
       LspDocumentRangeFormat      |LspDocumentRangeFormat|
       LspDocumentSymbol           |LspDocumentSymbol|
       LspHover                    |LspHover|
+      LspNextError                |LspNextError|
+      LspPreviousError            |LspPreviousError|
       LspImplementation           |LspImplementation|
       LspReferences               |LspReferences|
       LspRename                   |LspRename|
@@ -309,6 +311,15 @@ Gets the hover information and displays it in the |preview-window|.
  * |preview-window| can be closed using the default vim mapping - `<c-w><c-z>`.
  * To control the default focus of |preview-window| for |LspHover|
    configure |g:lsp_preview_keep_focus|.
+
+
+LspNextError						 *LspNextError*
+
+Jump to Next err diagnostics
+
+LspPreviousError					 *LspPreviousError*
+
+Jump to Previous err diagnostics
 
 LspImplementation                                        *LspImplementation*
 
