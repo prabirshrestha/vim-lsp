@@ -35,7 +35,7 @@ function! lsp#ui#vim#signs#enable() abort
     endif
 endfunction
 
-function! lsp#ui#vim#signs#next_err() abort
+function! lsp#ui#vim#signs#next_error() abort
 	if empty(s:err_loc)
 		return
 	endif
@@ -68,7 +68,7 @@ function! lsp#ui#vim#signs#next_err() abort
 	call winrestview(l:view)
 endfunction
 
-function! lsp#ui#vim#signs#pre_err() abort
+function! lsp#ui#vim#signs#previous_error() abort
 	if empty(s:err_loc)
 		return
 	endif
