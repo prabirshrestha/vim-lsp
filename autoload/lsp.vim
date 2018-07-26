@@ -591,7 +591,9 @@ function! lsp#get_whitelisted_servers(...) abort
 endfunction
 
 function! s:get_text_document_text(buf) abort
-    return join(getbufline(a:buf, 1, '$'), "\n")
+    let l:buf_fileformat = getbufvar(a:buf, '&fileformat')
+    let l:line_ending = {'unix': "\n", 'dos': "\r\n", 'mac': "\r"}[l:buf_fileformat]
+    return join(getbufline(a:buf, 1, '$'), l:line_ending)
 endfunction
 
 function! s:get_text_document(buf, buffer_info) abort
