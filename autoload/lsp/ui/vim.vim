@@ -235,6 +235,43 @@ function! lsp#ui#vim#document_symbol() abort
     echo 'Retrieving document symbols ...'
 endfunction
 
+" https://microsoft.github.io/language-server-protocol/specification#textDocument_codeAction
+function! lsp#ui#vim#code_action() abort
+    let l:servers = filter(lsp#get_whitelisted_servers(), 'lsp#capabilities#has_code_action_provider(v:val)')
+    let s:last_req_id = s:last_req_id + 1
+
+    call setqflist([])
+
+    if len(l:servers) == 0
+        call s:not_supported('Code action')
+        return
+    endif
+
+    if len(lsp#ui#vim#diagnostics#get_diagnostics_under_cursor()) == 0
+        echo 'No diagnostic found onder the cursors'
+        return
+    endif
+
+    for l:server in l:servers
+        call lsp#send_request(l:server, {
+            \ 'method': 'textDocument/codeAction',
+            \ 'params': {
+            \   'textDocument': lsp#get_text_document_identifier(),
+            \   'range': {
+            \       'start': lsp#get_position(),
+            \       'end': lsp#get_position(),
+            \   },
+            \   'context': {
+            \       'diagnostics' : [lsp#ui#vim#diagnostics#get_diagnostics_under_cursor()],
+            \   },
+            \ },
+            \ 'on_notification': function('s:handle_code_action', [l:server, s:last_req_id, 'codeAction']),
+            \ })
+    endfor
+
+    echo 'Retrieving code actions ...'
+endfunction
+
 function! s:handle_symbol(server, last_req_id, type, data) abort
     if a:last_req_id != s:last_req_id
         return
@@ -318,6 +355,32 @@ function! s:handle_text_edit(server, last_req_id, type, data) abort
     call s:apply_text_edits(a:data['request']['params']['textDocument']['uri'], a:data['response']['result'])
 
     echo 'Document formatted'
+endfunction
+
+function! s:handle_code_action(server, last_req_id, type, data) abort
+    let l:codeActions = a:data['response']['result']
+    let l:index = 0
+    let l:choices = []
+
+    call lsp#log('s:handle_code_action', l:codeActions)
+
+    if len(l:codeActions) == 0
+        echo 'No code actions found'
+        return
+    endif
+
+    while l:index < len(l:codeActions)
+        call add(l:choices, string(l:index + 1) . ' - ' . l:codeActions[index]['title'])
+
+        let l:index += 1
+    endwhile
+
+    let l:choice = inputlist(l:choices)
+
+    if l:choice > 0 && l:choice <= l:index
+        call lsp#log('s:handle_code_action', l:codeActions[l:choice - 1]['arguments'][0])
+        call s:apply_workspace_edits(l:codeActions[l:choice - 1]['arguments'][0])
+    endif
 endfunction
 
 " @params
