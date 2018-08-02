@@ -347,17 +347,28 @@ function! s:apply_workspace_edits(workspace_edits) abort
     endif
 endfunction
 
+function! s:generate_move_cmd(line_pos, character_pos) abort
+    let l:result = printf("%dG0", a:line_pos) " move the line and set to the cursor at the beggining
+    if a:character_pos > 0
+        let l:result .= printf("%dl", a:character_pos) " Move right until the character
+    endif
+    return l:result
+endfunction
+
 function! s:apply_text_edits(uri, text_edits) abort
     let l:path = lsp#utils#uri_to_path(a:uri)
     let l:buffer = bufnr(l:path)
     let l:cmd = 'keepjumps keepalt ' . (l:buffer !=# -1 ? 'b ' . l:buffer : 'edit ' . l:path)
     for l:text_edit in a:text_edits
         let l:start_line = l:text_edit['range']['start']['line'] + 1
-        let l:start_character = l:text_edit['range']['start']['character'] + 1
+        let l:start_character = l:text_edit['range']['start']['character']
         let l:end_line = l:text_edit['range']['end']['line'] + 1
-        let l:end_character = l:text_edit['range']['end']['character'] " The end position is exclusive so don't add +1
+        let l:end_character = l:text_edit['range']['end']['character'] - 1  " -1 since the last character is excluded
         let l:new_text = l:text_edit['newText']
-        let l:sub_cmd = printf("%dG%d|v%dG%d|c%s", l:start_line, l:start_character, l:end_line, l:end_character, l:new_text)
+        let l:sub_cmd = s:generate_move_cmd(l:start_line, l:start_character) " move to the first position 
+        let l:sub_cmd .= "v" " visual mode 
+        let l:sub_cmd .= s:generate_move_cmd(l:end_line, l:end_character) " move to the last position 
+        let l:sub_cmd .= printf("c%s", l:new_text) " change text
         let l:escaped_sub_cmd = substitute(l:sub_cmd, '''', '''''', 'g')
         let l:cmd = l:cmd . " | execute 'keepjumps normal! " . l:escaped_sub_cmd . "'"
     endfor
