@@ -248,7 +248,7 @@ function! lsp#ui#vim#code_action() abort
     endif
 
     if len(lsp#ui#vim#diagnostics#get_diagnostics_under_cursor()) == 0
-        echo 'No diagnostic found onder the cursors'
+        echo 'No diagnostic found under the cursors'
         return
     endif
 
@@ -384,7 +384,7 @@ function! s:handle_code_action(server, last_req_id, type, data) abort
 endfunction
 
 " @params
-"   workspace_edits - https://github.com/Microsoft/language-server-protocol/blob/master/protocol.md#workspaceedit
+"   workspace_edits - https://microsoft.github.io/language-server-protocol/specification#workspaceedit
 function! s:apply_workspace_edits(workspace_edits) abort
     if has_key(a:workspace_edits, 'changes')
         let l:cur_buffer = bufnr('%')
@@ -410,36 +410,141 @@ function! s:apply_workspace_edits(workspace_edits) abort
     endif
 endfunction
 
+
+function! s:apply_text_edits(uri, text_edits) abort
+    " https://microsoft.github.io/language-server-protocol/specification#textedit
+    " The order in the array defines the order in which the inserted string
+    " appear in the resulting text.
+    "
+    " The edits must be applied in the reverse order so the early edits will
+    " not interfere with the position of later edits, they need to be applied
+    " one at the time or put together as a single command.
+    "
+    " Example: {"range": {"end": {"character": 45, "line": 5}, "start":
+    " {"character": 45, "line": 5}}, "newText": "\n"}, {"range": {"end":
+    " {"character": 45, "line": 5}, "start": {"character": 45, "line": 5}},
+    " "newText": "import javax.ws.rs.Consumes;"}]}}
+    "
+    " If we apply the \n first we will need adjust the line range of the next
+    " command (so the import will be written on the next line) , but if we
+    " write the import first and then the \n everything will be fine.
+    " If you do not apply a command one at  time, you will need to adjust the
+    " range columns after which edit. You will get this (only one execution):
+    "
+    " execute 'keepjumps normal! 6G045laimport javax.ws.rs.Consumes;'" |
+    " execute 'keepjumps normal! 6G045la\n'
+    "
+    " resulting in this:
+    " import javax.servlet.http.HttpServletRequest;i
+    " mport javax.ws.rs.Consumes;
+    "
+    " instead of this (multiple executions):
+    " execute 'keepjumps normal! 6G045laimport javax.ws.rs.Consumes;'"
+    " execute 'keepjumps normal! 6G045li\n'
+    "
+    " resulting in this:
+    " import javax.servlet.http.HttpServletRequest;
+    " import javax.ws.rs.Consumes;
+    for l:text_edit in reverse(a:text_edits)
+        let l:cmd = s:build_cmd(a:uri, l:text_edit)
+
+        try
+            let l:was_paste = &paste
+            set paste
+            execute l:cmd
+        finally
+            let &paste = l:was_paste
+        endtry
+    endfor
+
+endfunction
+
+function! s:build_cmd(uri, text_edit) abort
+    let l:path = lsp#utils#uri_to_path(a:uri)
+    let l:buffer = bufnr(l:path)
+    let l:cmd = 'keepjumps keepalt ' . (l:buffer !=# -1 ? 'b ' . l:buffer : 'edit ' . l:path)
+
+    call s:parse_range(a:text_edit['range'])
+    let l:sub_cmd = s:generate_sub_cmd(a:text_edit)
+    let l:escaped_sub_cmd = substitute(l:sub_cmd, '''', '''''', 'g')
+    let l:cmd = l:cmd . " | execute 'keepjumps normal! " . l:escaped_sub_cmd . "'"
+
+    call lsp#log('s:build_cmd', l:cmd)
+
+    return l:cmd
+endfunction
+
+function! s:generate_sub_cmd(text_edit) abort
+    if a:text_edit['range']['start']['line'] == a:text_edit['range']['end']['line'] &&
+        \ a:text_edit['range']['start']['character'] == a:text_edit['range']['end']['character']
+        return s:generate_sub_cmd_insert(a:text_edit)
+    else
+        return s:generate_sub_cmd_replace(a:text_edit)
+    endif
+endfunction
+
+function! s:generate_sub_cmd_insert(text_edit) abort
+    let l:start_line = a:text_edit['range']['start']['line']
+    let l:start_character = a:text_edit['range']['start']['character']
+    call lsp#log('REMOVE', a:text_edit['newText'])
+    let l:new_text = s:parse(a:text_edit['newText'])
+    call lsp#log('REMOVE', l:new_text)
+
+    let l:sub_cmd = s:generate_move_cmd(l:start_line, l:start_character)
+
+    if len(l:new_text) == 0
+        let l:sub_cmd .= 'x'
+    else
+        if a:text_edit['range']['start']['character'] >= len(getline(a:text_edit['range']['start']['line']))
+            let l:sub_cmd .= 'a'
+        else
+            let l:sub_cmd .= 'i'
+        endif
+    endif
+
+    let l:sub_cmd .= printf('%s', l:new_text)
+
+    return l:sub_cmd
+endfunction
+
+function! s:generate_sub_cmd_replace(text_edit) abort
+    let l:start_line = a:text_edit['range']['start']['line']
+    let l:start_character = a:text_edit['range']['start']['character']
+    let l:end_line = a:text_edit['range']['end']['line']
+    let l:end_character = a:text_edit['range']['end']['character'] - 1  " -1 since the last character is excluded
+    let l:new_text = a:text_edit['newText']
+
+    let l:sub_cmd = s:generate_move_cmd(l:start_line, l:start_character) " move to the first position
+
+    if len(l:new_text) == 0
+        let l:sub_cmd .= 'x'
+    else
+        let l:sub_cmd .= 'v'
+    endif
+
+    let l:sub_cmd .= s:generate_move_cmd(l:end_line, l:end_character) " move to the last position
+    let l:sub_cmd .= printf('c%s', l:new_text) " change text
+
+    return l:sub_cmd
+endfunction
+
 function! s:generate_move_cmd(line_pos, character_pos) abort
-    let l:result = printf("%dG0", a:line_pos) " move the line and set to the cursor at the beggining
+    let l:result = printf('%dG0', a:line_pos) " move the line and set to the cursor at the beginning
     if a:character_pos > 0
-        let l:result .= printf("%dl", a:character_pos) " Move right until the character
+        let l:result .= printf('%dl', a:character_pos) " Move right until the character
     endif
     return l:result
 endfunction
 
-function! s:apply_text_edits(uri, text_edits) abort
-    let l:path = lsp#utils#uri_to_path(a:uri)
-    let l:buffer = bufnr(l:path)
-    let l:cmd = 'keepjumps keepalt ' . (l:buffer !=# -1 ? 'b ' . l:buffer : 'edit ' . l:path)
-    for l:text_edit in a:text_edits
-        let l:start_line = l:text_edit['range']['start']['line'] + 1
-        let l:start_character = l:text_edit['range']['start']['character']
-        let l:end_line = l:text_edit['range']['end']['line'] + 1
-        let l:end_character = l:text_edit['range']['end']['character'] - 1  " -1 since the last character is excluded
-        let l:new_text = l:text_edit['newText']
-        let l:sub_cmd = s:generate_move_cmd(l:start_line, l:start_character) " move to the first position 
-        let l:sub_cmd .= "v" " visual mode 
-        let l:sub_cmd .= s:generate_move_cmd(l:end_line, l:end_character) " move to the last position 
-        let l:sub_cmd .= printf("c%s", l:new_text) " change text
-        let l:escaped_sub_cmd = substitute(l:sub_cmd, '''', '''''', 'g')
-        let l:cmd = l:cmd . " | execute 'keepjumps normal! " . l:escaped_sub_cmd . "'"
-    endfor
-    call lsp#log('s:apply_text_edits', l:cmd)
-    try
-        set paste
-        execute l:cmd
-    finally
-        set nopaste
-    endtry
+function! s:parse(text) abort
+    " https://stackoverflow.com/questions/71417/why-is-r-a-newline-for-vim
+    return substitute(a:text, '\(\n$\|\r\n\)', '\r', 'g')
+endfunction
+
+" https://microsoft.github.io/language-server-protocol/specification#text-documents
+" Position in a text document expressed as zero-based line and zero-based
+" character offset.
+function! s:parse_range(range) abort
+   let a:range['start']['line'] =  a:range['start']['line'] + 1
+   let a:range['end']['line'] = a:range['end']['line'] + 1
 endfunction
