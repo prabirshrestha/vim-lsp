@@ -29,6 +29,7 @@ CONTENTS                                                  *vim-lsp-contents*
       LspImplementation           |LspImplementation|
       LspReferences               |LspReferences|
       LspRename                   |LspRename|
+      LspTypeDefinition           |LspTypeDefinition|
       LspWorkspaceSymbols         |LspWorkspaceSymbols|
     Autocomplete               |vim-lsp-autocomplete|
       omnifunc                    |vim-lsp-omnifunc|
@@ -313,7 +314,7 @@ Gets the hover information and displays it in the |preview-window|.
    configure |g:lsp_preview_keep_focus|.
 
 
-LspNextError						 *LspNextError*
+LspNextError						     *LspNextError*
 
 Jump to Next err diagnostics
 
@@ -333,11 +334,15 @@ LspRename						         *LspRename*
 
 Rename the symbol.
 
+LspTypeDefinition				  	 *LspTypeDefinition*
+
+Go to the type definition.
+
 LspWorkspaceSymbols				       *LspWorkspaceSymbols*
 
 Search and show workspace symbols.
 
-LspStatus                     *LspStatus*
+LspStatus                                                        *LspStatus*
 
 Prints the status of all registered servers.
 
