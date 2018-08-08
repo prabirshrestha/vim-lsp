@@ -239,16 +239,15 @@ endfunction
 function! lsp#ui#vim#code_action() abort
     let l:servers = filter(lsp#get_whitelisted_servers(), 'lsp#capabilities#has_code_action_provider(v:val)')
     let s:last_req_id = s:last_req_id + 1
-
-    call setqflist([])
+    let s:diagnostics = lsp#ui#vim#diagnostics#get_diagnostics_under_cursor()
 
     if len(l:servers) == 0
         call s:not_supported('Code action')
         return
     endif
 
-    if len(lsp#ui#vim#diagnostics#get_diagnostics_under_cursor()) == 0
-        echo 'No diagnostic found under the cursors'
+    if len(s:diagnostics) == 0
+        echo 'No diagnostics found under the cursors'
         return
     endif
 
@@ -257,12 +256,9 @@ function! lsp#ui#vim#code_action() abort
             \ 'method': 'textDocument/codeAction',
             \ 'params': {
             \   'textDocument': lsp#get_text_document_identifier(),
-            \   'range': {
-            \       'start': lsp#get_position(),
-            \       'end': lsp#get_position(),
-            \   },
+            \   'range': s:diagnostics['range'],
             \   'context': {
-            \       'diagnostics' : [lsp#ui#vim#diagnostics#get_diagnostics_under_cursor()],
+            \       'diagnostics' : [s:diagnostics],
             \   },
             \ },
             \ 'on_notification': function('s:handle_code_action', [l:server, s:last_req_id, 'codeAction']),
@@ -463,9 +459,10 @@ function! s:build_cmd(uri, text_edit) abort
     let l:path = lsp#utils#uri_to_path(a:uri)
     let l:buffer = bufnr(l:path)
     let l:cmd = 'keepjumps keepalt ' . (l:buffer !=# -1 ? 'b ' . l:buffer : 'edit ' . l:path)
+    let s:text_edit = a:text_edit
 
-    call s:parse_range(a:text_edit['range'])
-    let l:sub_cmd = s:generate_sub_cmd(a:text_edit)
+    let s:text_edit['range'] = s:parse_range(s:text_edit['range'])
+    let l:sub_cmd = s:generate_sub_cmd(s:text_edit)
     let l:escaped_sub_cmd = substitute(l:sub_cmd, '''', '''''', 'g')
     let l:cmd = l:cmd . " | execute 'keepjumps normal! " . l:escaped_sub_cmd . "'"
 
@@ -545,6 +542,9 @@ endfunction
 " Position in a text document expressed as zero-based line and zero-based
 " character offset.
 function! s:parse_range(range) abort
-   let a:range['start']['line'] =  a:range['start']['line'] + 1
-   let a:range['end']['line'] = a:range['end']['line'] + 1
+    let s:range = a:range
+    let s:range['start']['line'] =  a:range['start']['line'] + 1
+    let s:range['end']['line'] = a:range['end']['line'] + 1
+
+    return s:range
 endfunction
