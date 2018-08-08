@@ -28,6 +28,30 @@ function! lsp#ui#vim#implementation() abort
     echo 'Retrieving implementation ...'
 endfunction
 
+function! lsp#ui#vim#type_definition() abort
+    let l:servers = filter(lsp#get_whitelisted_servers(), 'lsp#capabilities#has_type_definition_provider(v:val)')
+    let s:last_req_id = s:last_req_id + 1
+    call setqflist([])
+
+    if len(l:servers) == 0
+        call s:not_supported('Retrieving type definition')
+        return
+    endif
+    let l:ctx = { 'counter': len(l:servers), 'list':[], 'last_req_id': s:last_req_id, 'jump_if_one': 1 }
+    for l:server in l:servers
+        call lsp#send_request(l:server, {
+            \ 'method': 'textDocument/typeDefinition',
+            \ 'params': {
+            \   'textDocument': lsp#get_text_document_identifier(),
+            \   'position': lsp#get_position(),
+            \ },
+            \ 'on_notification': function('s:handle_location', [l:ctx, l:server, 'type definition']),
+            \ })
+    endfor
+
+    echo 'Retrieving type definition ...'
+endfunction
+
 function! lsp#ui#vim#definition() abort
     let l:servers = filter(lsp#get_whitelisted_servers(), 'lsp#capabilities#has_definition_provider(v:val)')
     let s:last_req_id = s:last_req_id + 1

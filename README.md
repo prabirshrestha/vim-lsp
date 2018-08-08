@@ -63,6 +63,7 @@ Refer to docs on configuring omnifunc or [asyncomplete.vim](https://github.com/p
 |`:LspImplementation` | Show implementation of interface |
 |`:LspReferences`| Find references |
 |`:LspRename`| Rename symbol |
+|`:LspTypeDefinition`| Go to type definition |
 |`:LspWorkspaceSymbol`| Search/Show workspace symbol |
 
 ### Diagnostics
