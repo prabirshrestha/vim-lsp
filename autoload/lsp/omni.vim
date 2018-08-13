@@ -19,6 +19,13 @@ let s:kind_text_mappings = {
             \ '16': 'color',
             \ '17': 'file',
             \ '18': 'reference',
+            \ '19': 'folder',
+            \ '21': 'enum member',
+            \ '22': 'constant',
+            \ '23': 'struct',
+            \ '24': 'event',
+            \ '25': 'operator',
+            \ '26': 'type parameter',
             \ }
 
 let s:completion_status_success = 'success'

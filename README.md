@@ -47,7 +47,7 @@ Refer to docs on configuring omnifunc or [asyncomplete.vim](https://github.com/p
 
 **Note:**
 * Some servers may only support partial commands.
-* While it is possible to register multiple servers for the same filetype, some commands will pick only pick the first server that supports it. For example, it doesn't make sense for rename and format commands to be sent to multiple servers.
+* While it is possible to register multiple servers for the same filetype, some commands will pick only the first server that supports it. For example, it doesn't make sense for rename and format commands to be sent to multiple servers.
 
 | Command | Description|
 |--|--|
@@ -57,9 +57,12 @@ Refer to docs on configuring omnifunc or [asyncomplete.vim](https://github.com/p
 |`:LspDocumentRangeFormat`| Format document selection |
 |`:LspDocumentSymbol`| Show document symbols |
 |`:LspHover`| Show hover information |
+|`:LspNextError`| jump to next error |
+|`:LspPreviousError`| jump to previous error |
 |`:LspImplementation` | Show implementation of interface |
 |`:LspReferences`| Find references |
 |`:LspRename`| Rename symbol |
+|`:LspTypeDefinition`| Go to type definition |
 |`:LspWorkspaceSymbol`| Search/Show workspace symbol |
 
 ### Diagnostics

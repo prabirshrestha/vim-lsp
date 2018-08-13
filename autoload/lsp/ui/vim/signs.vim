@@ -3,6 +3,7 @@
 let s:enabled = 0
 let s:signs_defined = 0
 let s:signs = {} " { server_name: { path: {} } }
+let s:err_loc = [] " {errlinelist}
 let s:severity_sign_names_mapping = {
     \ 1: 'LspError',
     \ 2: 'LspWarning',
@@ -32,6 +33,74 @@ function! lsp#ui#vim#signs#enable() abort
         let s:enabled = 1
         call lsp#log('vim-lsp signs enabled')
     endif
+endfunction
+
+function! lsp#ui#vim#signs#next_error() abort
+	if empty(s:err_loc)
+		return
+	endif
+
+	let l:view = winsaveview()
+	let l:next_line = 0
+	for l:line in s:err_loc
+		if l:line > l:view.lnum
+			let l:next_line = l:line
+			break
+		endif
+	endfor
+
+	if l:next_line == 0
+		return
+	endif
+
+	let l:view.lnum = l:next_line
+	let l:view.topline = 1
+	let l:height = winheight(0)
+	let totalnum = line("$")
+	if totalnum > l:height
+		let l:half = l:height / 2
+		if l:totalnum - l:half < l:view.lnum
+			let l:view.topline = l:totalnum - l:height + 1
+		else
+			let l:view.topline = l:view.lnum - l:half
+		endif
+	endif
+	call winrestview(l:view)
+endfunction
+
+function! lsp#ui#vim#signs#previous_error() abort
+	if empty(s:err_loc)
+		return
+	endif
+
+	let l:view = winsaveview()
+	let l:next_line = 0
+	let l:index = len(s:err_loc) - 1
+	while l:index >= 0
+		if s:err_loc[l:index] < l:view.lnum
+			let l:next_line = s:err_loc[l:index]
+			break
+		endif
+		let l:index = l:index - 1
+	endwhile
+
+	if l:next_line == 0
+		return
+	endif
+
+	let l:view.lnum = l:next_line
+	let l:view.topline = 1
+	let l:height = winheight(0)
+	let totalnum = line("$")
+	if totalnum > l:height
+		let l:half = l:height / 2
+		if l:totalnum - l:half < l:view.lnum
+			let l:view.topline = l:totalnum - l:height + 1
+		else
+			let l:view.topline = l:view.lnum - l:half
+		endif
+	endif
+	call winrestview(l:view)
 endfunction
 
 " Set default sign text to handle case when user provides empty dict
@@ -82,6 +151,7 @@ function! lsp#ui#vim#signs#set(server_name, data) abort
     endif
 
     if lsp#client#is_error(a:data['response'])
+		let s:err_loc = []
         return
     endif
 
@@ -115,6 +185,7 @@ function! s:clear_signs(server_name, path) abort
 endfunction
 
 function! s:place_signs(server_name, path, diagnostics) abort
+	let s:err_loc = []
     if !empty(a:diagnostics)
         for l:item in a:diagnostics
             let l:line = l:item['range']['start']['line'] + 1
@@ -126,6 +197,11 @@ function! s:place_signs(server_name, path, diagnostics) abort
                 call add(s:signs[a:server_name][a:path], g:lsp_next_sign_id)
                 call lsp#log('add signs')
                 let g:lsp_next_sign_id += 1
+
+				if l:name == 'LspError'
+					call add(s:err_loc, l:line)
+				endif
+				let s:err_loc = sort(s:err_loc)
             endif
         endfor
     endif

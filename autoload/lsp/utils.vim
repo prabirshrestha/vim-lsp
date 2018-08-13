@@ -10,29 +10,32 @@ function! s:decode_uri(uri) abort
 endfunction
 
 function! s:urlencode_char(c) abort
-  return printf('%%%02X', char2nr(a:c))
+    return printf('%%%02X', char2nr(a:c))
 endfunction
 
 function! s:get_prefix(path) abort
-  return matchstr(a:path, '\(^\w\+::\|^\w\+://\)')
+    return matchstr(a:path, '\(^\w\+::\|^\w\+://\)')
 endfunction
 
-function! s:encode_uri(path, default_prefix) abort
-  let l:prefix = s:get_prefix(a:path)
-  let l:path = a:path[len(l:prefix):]
-  if len(l:prefix) == 0
-      let l:prefix = a:default_prefix
-  endif
-  let l:result = ''
-  for i in range(len(l:path))
-    " Don't encode '/' here, `path` is expected to be a valid path.
-    if l:path[i] =~# '^[a-zA-Z0-9_.~/-]$'
-      let l:result .= l:path[i]
-    else
-      let l:result .= s:urlencode_char(l:path[i])
+function! s:encode_uri(path, start_pos_encode, default_prefix) abort
+    let l:prefix = s:get_prefix(a:path)
+    let l:path = a:path[len(l:prefix):]
+    if len(l:prefix) == 0
+        let l:prefix = a:default_prefix
     endif
-  endfor
-  return l:prefix . l:result
+
+    let l:result = strpart(a:path, 0, a:start_pos_encode)
+
+    for i in range(a:start_pos_encode, len(l:path) - 1)
+        " Don't encode '/' here, `path` is expected to be a valid path.
+        if l:path[i] =~# '^[a-zA-Z0-9_.~/-]$'
+            let l:result .= l:path[i]
+        else
+            let l:result .= s:urlencode_char(l:path[i])
+        endif
+    endfor
+
+    return l:prefix . l:result
 endfunction
 
 if has('win32') || has('win64')
@@ -40,7 +43,15 @@ if has('win32') || has('win64')
         if empty(a:path)
             return a:path
         else
-            return s:encode_uri(substitute(a:path, '\', '/', 'g'), 'file:///')
+            " You must not encode the volume information on the path if
+            " present
+            let l:end_pos_volume = matchstrpos(a:path, '\C[A-Z]:')[2]
+
+            if l:end_pos_volume == -1
+                let l:end_pos_volume = 0
+            endif
+
+            return s:encode_uri(substitute(a:path, '\', '/', 'g'), l:end_pos_volume, 'file:///')
         endif
     endfunction
 else
@@ -48,7 +59,7 @@ else
         if empty(a:path)
             return a:path
         else
-            return s:encode_uri(a:path, 'file://')
+            return s:encode_uri(a:path, 0, 'file://')
         endif
     endfunction
 endif

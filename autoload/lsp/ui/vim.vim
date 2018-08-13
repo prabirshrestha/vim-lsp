@@ -28,6 +28,30 @@ function! lsp#ui#vim#implementation() abort
     echo 'Retrieving implementation ...'
 endfunction
 
+function! lsp#ui#vim#type_definition() abort
+    let l:servers = filter(lsp#get_whitelisted_servers(), 'lsp#capabilities#has_type_definition_provider(v:val)')
+    let s:last_req_id = s:last_req_id + 1
+    call setqflist([])
+
+    if len(l:servers) == 0
+        call s:not_supported('Retrieving type definition')
+        return
+    endif
+    let l:ctx = { 'counter': len(l:servers), 'list':[], 'last_req_id': s:last_req_id, 'jump_if_one': 1 }
+    for l:server in l:servers
+        call lsp#send_request(l:server, {
+            \ 'method': 'textDocument/typeDefinition',
+            \ 'params': {
+            \   'textDocument': lsp#get_text_document_identifier(),
+            \   'position': lsp#get_position(),
+            \ },
+            \ 'on_notification': function('s:handle_location', [l:ctx, l:server, 'type definition']),
+            \ })
+    endfor
+
+    echo 'Retrieving type definition ...'
+endfunction
+
 function! lsp#ui#vim#definition() abort
     let l:servers = filter(lsp#get_whitelisted_servers(), 'lsp#capabilities#has_definition_provider(v:val)')
     let s:last_req_id = s:last_req_id + 1
@@ -89,7 +113,7 @@ function! lsp#ui#vim#rename() abort
         return
     endif
 
-    let l:new_name = input('new name>')
+    let l:new_name = input('new name: ', expand('<cWORD>'))
 
     if empty(l:new_name)
         echo '... Renaming aborted ...'
@@ -347,17 +371,30 @@ function! s:apply_workspace_edits(workspace_edits) abort
     endif
 endfunction
 
+function! s:generate_move_cmd(line_pos, character_pos) abort
+    let l:result = printf("%dG0", a:line_pos) " move the line and set to the cursor at the beggining
+    if a:character_pos > 0
+        let l:result .= printf("%dl", a:character_pos) " Move right until the character
+    endif
+    return l:result
+endfunction
+
 function! s:apply_text_edits(uri, text_edits) abort
     let l:path = lsp#utils#uri_to_path(a:uri)
     let l:buffer = bufnr(l:path)
     let l:cmd = 'keepjumps keepalt ' . (l:buffer !=# -1 ? 'b ' . l:buffer : 'edit ' . l:path)
     for l:text_edit in a:text_edits
         let l:start_line = l:text_edit['range']['start']['line'] + 1
-        let l:start_character = l:text_edit['range']['start']['character'] + 1
+        let l:start_character = l:text_edit['range']['start']['character']
         let l:end_line = l:text_edit['range']['end']['line'] + 1
-        let l:end_character = l:text_edit['range']['end']['character'] " The end position is exclusive so don't add +1
+        let l:end_character = l:text_edit['range']['end']['character'] - 1  " -1 since the last character is excluded
         let l:new_text = l:text_edit['newText']
-        let l:cmd = l:cmd . printf(" | execute 'keepjumps normal! %dG%d|v%dG%d|c%s'", l:start_line, l:start_character, l:end_line, l:end_character, l:new_text)
+        let l:sub_cmd = s:generate_move_cmd(l:start_line, l:start_character) " move to the first position 
+        let l:sub_cmd .= "v" " visual mode 
+        let l:sub_cmd .= s:generate_move_cmd(l:end_line, l:end_character) " move to the last position 
+        let l:sub_cmd .= printf("c%s", l:new_text) " change text
+        let l:escaped_sub_cmd = substitute(l:sub_cmd, '''', '''''', 'g')
+        let l:cmd = l:cmd . " | execute 'keepjumps normal! " . l:escaped_sub_cmd . "'"
     endfor
     call lsp#log('s:apply_text_edits', l:cmd)
     try
