@@ -483,7 +483,7 @@ function! s:build_cmd(uri, text_edit) abort
     let l:path = lsp#utils#uri_to_path(a:uri)
     let l:buffer = bufnr(l:path)
     let l:cmd = 'keepjumps keepalt ' . (l:buffer !=# -1 ? 'b ' . l:buffer : 'edit ' . l:path)
-    let s:text_edit = a:text_edit
+    let s:text_edit = copy(a:text_edit)
 
     let s:text_edit['range'] = s:parse_range(s:text_edit['range'])
     let l:sub_cmd = s:generate_sub_cmd(s:text_edit)
@@ -507,11 +507,10 @@ endfunction
 function! s:generate_sub_cmd_insert(text_edit) abort
     let l:start_line = a:text_edit['range']['start']['line']
     let l:start_character = a:text_edit['range']['start']['character']
-    call lsp#log('REMOVE', a:text_edit['newText'])
     let l:new_text = s:parse(a:text_edit['newText'])
-    call lsp#log('REMOVE', l:new_text)
 
-    let l:sub_cmd = s:generate_move_cmd(l:start_line, l:start_character)
+    let l:sub_cmd = s:preprocess_cmd(a:text_edit['range'])
+    let l:sub_cmd .= s:generate_move_cmd(l:start_line, l:start_character)
 
     if len(l:new_text) == 0
         let l:sub_cmd .= 'x'
@@ -535,16 +534,17 @@ function! s:generate_sub_cmd_replace(text_edit) abort
     let l:end_character = a:text_edit['range']['end']['character'] - 1  " -1 since the last character is excluded
     let l:new_text = a:text_edit['newText']
 
-    let l:sub_cmd = s:generate_move_cmd(l:start_line, l:start_character) " move to the first position
+    let l:sub_cmd = s:preprocess_cmd(a:text_edit['range'])
+    let l:sub_cmd .= s:generate_move_cmd(l:start_line, l:start_character) " move to the first position
+    let l:sub_cmd .= 'v'
+    let l:sub_cmd .= s:generate_move_cmd(l:end_line, l:end_character) " move to the last position
 
     if len(l:new_text) == 0
         let l:sub_cmd .= 'x'
     else
-        let l:sub_cmd .= 'v'
+        let l:sub_cmd .= 'c'
+        let l:sub_cmd .= printf('%s', l:new_text) " change text
     endif
-
-    let l:sub_cmd .= s:generate_move_cmd(l:end_line, l:end_character) " move to the last position
-    let l:sub_cmd .= printf('c%s', l:new_text) " change text
 
     return l:sub_cmd
 endfunction
@@ -552,7 +552,7 @@ endfunction
 function! s:generate_move_cmd(line_pos, character_pos) abort
     let l:result = printf('%dG0', a:line_pos) " move the line and set to the cursor at the beginning
     if a:character_pos > 0
-        let l:result .= printf('%dl', a:character_pos) " Move right until the character
+        let l:result .= printf('%dl', a:character_pos) " move right until the character
     endif
     return l:result
 endfunction
@@ -562,11 +562,17 @@ function! s:parse(text) abort
     return substitute(a:text, '\(\n$\|\r\n\)', '\r', 'g')
 endfunction
 
+function! s:preprocess_cmd(range) abort
+    " preprocess by opening the folds, this is needed because the line you are
+    " going might have a folding
+    return printf('%dGzo%dGzo', a:range['start']['line'], a:range['end']['line'])
+endfunction
+
 " https://microsoft.github.io/language-server-protocol/specification#text-documents
 " Position in a text document expressed as zero-based line and zero-based
 " character offset.
 function! s:parse_range(range) abort
-    let s:range = a:range
+    let s:range = copy(a:range)
     let s:range['start']['line'] =  a:range['start']['line'] + 1
     let s:range['end']['line'] = a:range['end']['line'] + 1
 
