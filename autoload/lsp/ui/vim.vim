@@ -379,19 +379,55 @@ function! s:generate_move_cmd(line_pos, character_pos) abort
     return l:result
 endfunction
 
+" Sorts the elements in `array` in ascending order, but preserves the relative
+" order of the elements with equivalent values.
+"
+" `array` is a List.
+" `cmp` is a Funcref, that has the same semantic as second argument of builtin
+" `sort` function.
+function! s:stable_sort(array, cmp) abort
+  let l:array_with_index = map(a:array, {idx, val -> [idx, val]})
+  let l:array_with_index = sort(l:array_with_index, {a, b -> a:cmp(a[1], b[1]) == 0 ? a[0] - b[0] : a:cmp(a[1], b[1])})
+  return map(l:array_with_index, {idx, val -> val[1]})
+endfunction
+
+" Compares two text edits, based on the starting position of the range.
+"
+" `text_edit1` and `text_edit2` are dictionaries and represent LSP TextEdit type.
+"
+" Returns 0 if both text edits starts at the same position, negative value if
+" `text_edit1` starts before `text_edit2` and positive value otherwise.
+function! s:compare_text_edits(text_edit1, text_edit2) abort
+    if a:text_edit1['range']['start']['line'] !=# a:text_edit2['range']['start']['line']
+        return a:text_edit1['range']['start']['line'] - a:text_edit2['range']['start']['line']
+    endif
+    if a:text_edit1['range']['start']['character'] !=# a:text_edit2['range']['start']['character']
+        return a:text_edit1['range']['start']['character'] - a:text_edit2['range']['start']['character']
+    endif
+    return 0
+endfunction
+
+" Applies given text edits to buffer containing given URI as defined by LSP.
 function! s:apply_text_edits(uri, text_edits) abort
     let l:path = lsp#utils#uri_to_path(a:uri)
     let l:buffer = bufnr(l:path)
     let l:cmd = 'keepjumps keepalt ' . (l:buffer !=# -1 ? 'b ' . l:buffer : 'edit ' . l:path)
-    for l:text_edit in a:text_edits
+    " Because all `text_edits` ranges refer to positions in the original
+    " document, we need to apply all edits starting from the end of the
+    " document (which is why we sort and reverse). Otherwise, first edit would
+    " invalidate positions of all other edits. We use stable sort, because if
+    " two edits start at the same position, they have to be applied in the
+    " order they appear in the array.
+    let l:text_edits = reverse(s:stable_sort(a:text_edits, function('s:compare_text_edits')))
+    for l:text_edit in l:text_edits
         let l:start_line = l:text_edit['range']['start']['line'] + 1
         let l:start_character = l:text_edit['range']['start']['character']
         let l:end_line = l:text_edit['range']['end']['line'] + 1
         let l:end_character = l:text_edit['range']['end']['character'] - 1  " -1 since the last character is excluded
         let l:new_text = l:text_edit['newText']
-        let l:sub_cmd = s:generate_move_cmd(l:start_line, l:start_character) " move to the first position 
-        let l:sub_cmd .= "v" " visual mode 
-        let l:sub_cmd .= s:generate_move_cmd(l:end_line, l:end_character) " move to the last position 
+        let l:sub_cmd = s:generate_move_cmd(l:start_line, l:start_character) " move to the first position
+        let l:sub_cmd .= "v" " visual mode
+        let l:sub_cmd .= s:generate_move_cmd(l:end_line, l:end_character) " move to the last position
         let l:sub_cmd .= printf("c%s", l:new_text) " change text
         let l:escaped_sub_cmd = substitute(l:sub_cmd, '''', '''''', 'g')
         let l:cmd = l:cmd . " | execute 'keepjumps normal! " . l:escaped_sub_cmd . "'"
