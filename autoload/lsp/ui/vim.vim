@@ -483,7 +483,7 @@ function! s:build_cmd(uri, text_edit) abort
     let l:path = lsp#utils#uri_to_path(a:uri)
     let l:buffer = bufnr(l:path)
     let l:cmd = 'keepjumps keepalt ' . (l:buffer !=# -1 ? 'b ' . l:buffer : 'edit ' . l:path)
-    let s:text_edit = copy(a:text_edit)
+    let s:text_edit = deepcopy(a:text_edit)
 
     let s:text_edit['range'] = s:parse_range(s:text_edit['range'])
     let l:sub_cmd = s:generate_sub_cmd(s:text_edit)
@@ -572,7 +572,7 @@ endfunction
 " Position in a text document expressed as zero-based line and zero-based
 " character offset.
 function! s:parse_range(range) abort
-    let s:range = copy(a:range)
+    let s:range = deepcopy(a:range)
     let s:range['start']['line'] =  a:range['start']['line'] + 1
     let s:range['end']['line'] = a:range['end']['line'] + 1
 
