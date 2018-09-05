@@ -430,7 +430,6 @@ function! s:apply_workspace_edits(workspace_edits) abort
     endif
 endfunction
 
-
 function! s:apply_text_edits(uri, text_edits) abort
     " https://microsoft.github.io/language-server-protocol/specification#textedit
     " The order in the array defines the order in which the inserted string
@@ -465,7 +464,18 @@ function! s:apply_text_edits(uri, text_edits) abort
     " resulting in this:
     " import javax.servlet.http.HttpServletRequest;
     " import javax.ws.rs.Consumes;
-    for l:text_edit in reverse(a:text_edits)
+    "
+    "
+    " The sort is also necessary since the LSP specification does not
+    " guarantee that text edits are sorted.
+    "
+    " Example:
+    " Initial text:  "abcdef"
+    " Edits:
+    " ((0,0), (0, 1), "") - remove first character 'a'
+    " ((0, 4), (0, 5), "") - remove fifth character 'e'
+    " ((0, 2), (0, 3), "") - remove third character 'c'
+    for l:text_edit in reverse(s:stable_sort(a:text_edits, function('s:compare_text_edits')))
         let l:cmd = s:build_cmd(a:uri, l:text_edit)
 
         try
@@ -477,6 +487,34 @@ function! s:apply_text_edits(uri, text_edits) abort
         endtry
     endfor
 
+endfunction
+
+" Sorts the elements in `array` in ascending order, but preserves the relative
+" order of the elements with equivalent values.
+"
+" `array` is a List.
+" `cmp` is a Funcref, that has the same semantic as second argument of built in
+" `sort` function.
+function! s:stable_sort(array, cmp) abort
+  let l:array_with_index = map(a:array, {idx, val -> [idx, val]})
+  let l:array_with_index = sort(l:array_with_index, {a, b -> a:cmp(a[1], b[1]) == 0 ? b[0] - a[0] : a:cmp(a[1], b[1])})
+  return map(l:array_with_index, {idx, val -> val[1]})
+endfunction
+
+" Compares two text edits, based on the starting position of the range.
+"
+" `text_edit1` and `text_edit2` are dictionaries and represent LSP TextEdit type.
+"
+" Returns 0 if both text edits starts at the same position, negative value if
+" `text_edit1` starts before `text_edit2` and positive value otherwise.
+function! s:compare_text_edits(text_edit1, text_edit2) abort
+    if a:text_edit1['range']['start']['line'] !=# a:text_edit2['range']['start']['line']
+        return a:text_edit1['range']['start']['line'] - a:text_edit2['range']['start']['line']
+    endif
+    if a:text_edit1['range']['start']['character'] !=# a:text_edit2['range']['start']['character']
+        return a:text_edit1['range']['start']['character'] - a:text_edit2['range']['start']['character']
+    endif
+    return 0
 endfunction
 
 function! s:build_cmd(uri, text_edit) abort
@@ -565,7 +603,19 @@ endfunction
 function! s:preprocess_cmd(range) abort
     " preprocess by opening the folds, this is needed because the line you are
     " going might have a folding
-    return printf('%dGzo%dGzo', a:range['start']['line'], a:range['end']['line'])
+    let l:preprocess = ''
+
+    if foldlevel(a:range['start']['line']) > 0
+        let l:preprocess .= a:range['start']['line']
+        let l:preprocess .= 'GzO'
+    endif
+
+    if foldlevel(a:range['end']['line']) > 0
+        let l:preprocess .= a:range['end']['line']
+        let l:preprocess .= 'GzO'
+    endif
+
+    return l:preprocess
 endfunction
 
 " https://microsoft.github.io/language-server-protocol/specification#text-documents
