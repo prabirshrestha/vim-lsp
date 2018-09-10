@@ -133,7 +133,7 @@ function! lsp#ui#vim#utils#diagnostics_to_loc_list(result) abort
 endfunction
 
 function! s:is_file_uri(uri) abort
-    return stridx(a:uri, 'file:///') == 0
+    return stridx(a:uri, 'file:') == 0
 endfunction
 
 function! s:get_symbol_text_from_kind(kind) abort

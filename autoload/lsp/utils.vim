@@ -70,7 +70,7 @@ if has('win32') || has('win64')
     endfunction
 else
     function! lsp#utils#uri_to_path(uri) abort
-        return s:decode_uri(a:uri[len('file://'):])
+        return s:decode_uri(substitute(a:uri, '\v^file:/*', '/', 'g'))
     endfunction
 endif
 
