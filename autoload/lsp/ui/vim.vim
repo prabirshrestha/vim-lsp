@@ -475,8 +475,12 @@ function! s:apply_text_edits(uri, text_edits) abort
     " ((0,0), (0, 1), "") - remove first character 'a'
     " ((0, 4), (0, 5), "") - remove fifth character 'e'
     " ((0, 2), (0, 3), "") - remove third character 'c'
-    for l:text_edit in reverse(s:stable_sort(a:text_edits, function('s:compare_text_edits')))
-        let l:cmd = s:build_cmd(a:uri, l:text_edit)
+    let l:text_edits = sort(deepcopy(a:text_edits), '<SID>sort_text_edit_desc')
+    let l:i = 0
+
+    while l:i < len(l:text_edits)
+        let l:merged_text_edit = s:merge_same_range(l:i, l:text_edits)
+        let l:cmd = s:build_cmd(a:uri, l:merged_text_edit['merged'])
 
         try
             let l:was_paste = &paste
@@ -485,36 +489,62 @@ function! s:apply_text_edits(uri, text_edits) abort
         finally
             let &paste = l:was_paste
         endtry
-    endfor
 
+        let l:i = l:merged_text_edit['end_index']
+    endwhile
 endfunction
 
-" Sorts the elements in `array` in ascending order, but preserves the relative
-" order of the elements with equivalent values.
-"
-" `array` is a List.
-" `cmp` is a Funcref, that has the same semantic as second argument of built in
-" `sort` function.
-function! s:stable_sort(array, cmp) abort
-  let l:array_with_index = map(a:array, {idx, val -> [idx, val]})
-  let l:array_with_index = sort(l:array_with_index, {a, b -> a:cmp(a[1], b[1]) == 0 ? b[0] - a[0] : a:cmp(a[1], b[1])})
-  return map(l:array_with_index, {idx, val -> val[1]})
+" Merge the edits on the same range so we do not have to reverse the
+" text_edits  that are inserts, also from the specification:
+" If multiple inserts have the same position, the order in the array
+" defines the order in which the inserted strings appear in the
+" resulting text
+function! s:merge_same_range(start_index, text_edits) abort
+    let l:i = a:start_index + 1
+    let l:merged = deepcopy(a:text_edits[a:start_index])
+
+    while l:i < len(a:text_edits) &&
+        \ s:is_same_range(l:merged['range'], a:text_edits[l:i]['range'])
+
+        let l:merged['newText'] .= a:text_edits[l:i]['newText']
+        let l:i += 1
+    endwhile
+
+    return {'merged': l:merged, 'end_index': l:i}
+endfunction
+
+function! s:is_same_range(range1, range2) abort
+    return a:range1['start']['line'] == a:range2['start']['line'] &&
+        \ a:range1['end']['line'] == a:range2['end']['line'] &&
+        \ a:range1['start']['character'] == a:range2['start']['character'] &&
+        \ a:range1['end']['character'] == a:range2['end']['character']
+endfunction
+
+" https://microsoft.github.io/language-server-protocol/specification#textedit
+function! s:is_insert(range) abort
+    return a:range['start']['line'] == a:range['end']['line'] &&
+        \ a:range['start']['character'] == a:range['end']['character']
 endfunction
 
 " Compares two text edits, based on the starting position of the range.
+" Assumes that edits have non-overlapping ranges.
 "
 " `text_edit1` and `text_edit2` are dictionaries and represent LSP TextEdit type.
 "
-" Returns 0 if both text edits starts at the same position, negative value if
-" `text_edit1` starts before `text_edit2` and positive value otherwise.
-function! s:compare_text_edits(text_edit1, text_edit2) abort
-    if a:text_edit1['range']['start']['line'] !=# a:text_edit2['range']['start']['line']
-        return a:text_edit1['range']['start']['line'] - a:text_edit2['range']['start']['line']
+" Returns 0 if both text edits starts at the same position (insert text),
+" positive value if `text_edit1` starts before `text_edit2` and negative value
+" otherwise.
+function! s:sort_text_edit_desc(text_edit1, text_edit2) abort
+    if a:text_edit1['range']['start']['line'] != a:text_edit2['range']['start']['line']
+        return a:text_edit2['range']['start']['line'] - a:text_edit1['range']['start']['line']
     endif
-    if a:text_edit1['range']['start']['character'] !=# a:text_edit2['range']['start']['character']
-        return a:text_edit1['range']['start']['character'] - a:text_edit2['range']['start']['character']
+
+    if a:text_edit1['range']['start']['character'] != a:text_edit2['range']['start']['character']
+        return a:text_edit2['range']['start']['character'] - a:text_edit1['range']['start']['character']
     endif
-    return 0
+
+    return !s:is_insert(a:text_edit1['range']) ? -1 :
+        \ s:is_insert(a:text_edit2['range']) ? 0 : 1
 endfunction
 
 function! s:build_cmd(uri, text_edit) abort
@@ -534,8 +564,7 @@ function! s:build_cmd(uri, text_edit) abort
 endfunction
 
 function! s:generate_sub_cmd(text_edit) abort
-    if a:text_edit['range']['start']['line'] == a:text_edit['range']['end']['line'] &&
-        \ a:text_edit['range']['start']['character'] == a:text_edit['range']['end']['character']
+    if s:is_insert(a:text_edit['range'])
         return s:generate_sub_cmd_insert(a:text_edit)
     else
         return s:generate_sub_cmd_replace(a:text_edit)
@@ -597,7 +626,7 @@ endfunction
 
 function! s:parse(text) abort
     " https://stackoverflow.com/questions/71417/why-is-r-a-newline-for-vim
-    return substitute(a:text, '\(\n$\|\r\n\)', '\r', 'g')
+    return substitute(a:text, '\(^\n|\n$\|\r\n\)', '\r', 'g')
 endfunction
 
 function! s:preprocess_cmd(range) abort
