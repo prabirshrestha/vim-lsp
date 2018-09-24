@@ -23,8 +23,6 @@ function! s:echo_diagnostics_under_cursor(...) abort
     let l:diagnostic = lsp#ui#vim#diagnostics#get_diagnostics_under_cursor()
     if !empty(l:diagnostic) && has_key(l:diagnostic, 'message')
         echo 'LSP: '. substitute(l:diagnostic['message'], '\n\+', ' ', 'g')
-    else
-        echo ''
     endif
 endfunction
 
