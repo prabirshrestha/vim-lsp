@@ -12,6 +12,8 @@ CONTENTS                                                  *vim-lsp-contents*
     Options			|vim-lsp-options|
       g:lsp_auto_enable           |g:lsp_auto_enable|
       g:lsp_preview_keep_focus    |g:lsp_preview_keep_focus|
+      g:lsp_preview_position      |g:lsp_preview_position|
+      g:lsp_preview_auto_resize   |g:lsp_preview_auto_resize|
     Functions			|vim-lsp-functions|
       enable                      |vim-lsp-enable|
       disable                     |vim-lsp-disable|
@@ -118,6 +120,20 @@ g:lsp_preview_keep_focus                         *g:lsp_preview_keep_focus*
 	let g:lsp_preview_keep_focus = 0
 
     * |preview-window| can be closed using the default vim mapping - `<c-w><c-z>`.
+
+g:lsp_preview_position                             *g:lsp_preview_position*
+    Type: |String|
+    Default: `above`
+
+    Indicates the position of the |preview-window| when a |preview-window| is
+    opened by vim-lsp. It can be `above` or `below`.
+
+g:lsp_preview_auto_resize                       *g:lsp_preview_auto_resize*
+    Type: |Number|
+    Default: `0`
+
+    Indicates if the |preview-window| should be automatically resized to fit
+    its content when it is opened by vim-lsp.
 
 ===============================================================================
 FUNCTIONS	                                        *vim-lsp-functions*
@@ -312,6 +328,10 @@ Gets the hover information and displays it in the |preview-window|.
  * |preview-window| can be closed using the default vim mapping - `<c-w><c-z>`.
  * To control the default focus of |preview-window| for |LspHover|
    configure |g:lsp_preview_keep_focus|.
+ * To control the default position of |preview-window| for |LspHover|
+   configure |g:lsp_preview_position|.
+ * To control the auto-resizing of the |preview-window| for |LspHover|
+   configure |g:lsp_preview_auto_resize|.
 
 
 LspNextError						     *LspNextError*

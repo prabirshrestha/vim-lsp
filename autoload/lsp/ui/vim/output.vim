@@ -4,11 +4,15 @@ function! lsp#ui#vim#output#preview(data) abort
 
     let l:current_window_id = win_getid()
 
-    execute &previewheight.'new'
+    execute g:lsp_preview_position.' '.&previewheight.'new'
 
     let l:ft = s:append(a:data)
     " Delete first empty line
     0delete
+
+    if g:lsp_preview_auto_resize
+      execute 'resize ' . line('$')
+    endif
 
     setlocal readonly nomodifiable
 

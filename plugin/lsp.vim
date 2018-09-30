@@ -17,6 +17,8 @@ let g:lsp_diagnostics_echo_cursor = get(g:, 'lsp_diagnostics_echo_cursor', 0)
 let g:lsp_diagnostics_echo_delay = get(g:, 'lsp_diagnostics_echo_delay', 500)
 let g:lsp_next_sign_id = get(g:, 'lsp_next_sign_id', 6999)
 let g:lsp_preview_keep_focus = get(g:, 'lsp_preview_keep_focus', 1)
+let g:lsp_preview_position = get(g:, 'lsp_preview_position', 'above')
+let g:lsp_preview_auto_resize = get(g:, 'lsp_preview_auto_resize', 0)
 
 if g:lsp_auto_enable
     au VimEnter * call lsp#enable()
