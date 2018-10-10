@@ -1,3 +1,4 @@
+let s:debounce = 0
 let s:enabled = 0
 let s:already_setup = 0
 let s:servers = {} " { lsp_id, server_info, init_callbacks, init_result, buffers: { path: { changed_tick } }
@@ -136,7 +137,7 @@ function! s:register_events() abort
         autocmd BufWritePost * call s:on_text_document_did_save()
         autocmd BufWinLeave * call s:on_text_document_did_close()
         autocmd InsertLeave * call s:on_text_document_did_change()
-        autocmd TextChanged * call s:on_text_document_did_change()
+        autocmd TextChanged * call s:on_text_document_did_change_with_debounce()
         autocmd CursorMoved * call s:on_cursor_moved()
     augroup END
     call s:on_text_document_did_open()
@@ -171,6 +172,11 @@ function! s:on_text_document_did_change() abort
     for l:server_name in lsp#get_whitelisted_servers()
         call s:ensure_flush(bufnr('%'), l:server_name, function('s:Noop'))
     endfor
+endfunction
+
+function! s:on_text_document_did_change_with_debounce() abort
+    if  s:debounce | call timer_stop(s:debounce) | endif
+    let s:debounce = timer_start(500, {t -> s:on_text_document_did_change()})
 endfunction
 
 function! s:on_cursor_moved() abort
