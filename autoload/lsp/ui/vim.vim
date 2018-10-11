@@ -601,10 +601,6 @@ function! s:generate_sub_cmd_replace(text_edit) abort
     let l:end_character = a:text_edit['range']['end']['character']
     let l:new_text = a:text_edit['newText']
 
-
-    call lsp#log('before', l:start_line, l:start_character, l:end_line, l:end_character)
-
-
     " This is necessary since you are removing lines, because when in normal
     " mode it cannot grab the last character + 1 (\n).
     if l:start_character >= len(getline(l:start_line)) && l:end_character == 0
@@ -620,7 +616,6 @@ function! s:generate_sub_cmd_replace(text_edit) abort
         let l:end_character = len(getline(l:end_line))
     endif
 
-    call lsp#log('after', l:start_line, l:start_character, l:end_line, l:end_character)
     let l:sub_cmd = s:preprocess_cmd(a:text_edit['range'])
     let l:sub_cmd .= s:generate_move_cmd(l:start_line, l:start_character) " move to the first position
     let l:sub_cmd .= 'v'

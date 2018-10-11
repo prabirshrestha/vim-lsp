@@ -350,7 +350,11 @@ function! s:ensure_init(buf, server_name, cb) abort
     if has_key(l:server_info, 'capabilities')
         let l:capabilities = l:server_info['capabilities']
     else
-        let l:capabilities = {}
+        let l:capabilities = {
+        \   'workspace': {
+        \       'applyEdit ': {'_TYPE': v:msgpack_types.boolean, '_VAL': 1}
+        \   }
+        \ }
     endif
 
     if has_key(l:server_info, 'initialization_options')
