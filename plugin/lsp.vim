@@ -22,6 +22,7 @@ if g:lsp_auto_enable
     au VimEnter * call lsp#enable()
 endif
 
+command! LspCodeAction call lsp#ui#vim#code_action()
 command! LspDefinition call lsp#ui#vim#definition()
 command! LspDocumentSymbol call lsp#ui#vim#document_symbol()
 command! LspDocumentDiagnostics call lsp#ui#vim#diagnostics#document_diagnostics()

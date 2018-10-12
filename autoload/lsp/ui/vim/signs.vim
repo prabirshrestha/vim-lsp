@@ -186,7 +186,8 @@ endfunction
 
 function! s:place_signs(server_name, path, diagnostics) abort
 	let s:err_loc = []
-    if !empty(a:diagnostics)
+
+    if !empty(a:diagnostics) && bufnr(a:path) >= 0
         for l:item in a:diagnostics
             let l:line = l:item['range']['start']['line'] + 1
 

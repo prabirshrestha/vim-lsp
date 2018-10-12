@@ -18,6 +18,7 @@ CONTENTS                                                  *vim-lsp-contents*
       register_server             |vim-lsp-register_server|
       stop_server                 |vim-lsp-stop_server|
     Commands			|vim-lsp-commands|
+      LspCodeAction               |LspCodeAction|
       LspDocumentDiagnostics      |LspDocumentDiagnostics|
       LspDefinition               |LspDefinition|
       LspDocumentFormat           |LspDocumentFormat|
@@ -284,6 +285,11 @@ Get the status of a server.
 
 ===============================================================================
 Commands	                                          *vim-lsp-commands*
+
+LspCodeAction                                                *LspCodeAction*
+
+Gets a list of possible commands that can be applied to a file so it can be
+fixed (quick fix).
 
 LspDocumentDiagnostics                              *LspDocumentDiagnostics*
 
