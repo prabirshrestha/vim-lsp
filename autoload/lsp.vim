@@ -352,7 +352,7 @@ function! s:ensure_init(buf, server_name, cb) abort
     else
         let l:capabilities = {
         \   'workspace': {
-        \       'applyEdit ': {'_TYPE': v:msgpack_types.boolean, '_VAL': 1}
+        \       'applyEdit ': v:true
         \   }
         \ }
     endif
