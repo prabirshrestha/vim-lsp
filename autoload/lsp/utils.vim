@@ -142,9 +142,10 @@ endfunction
 function! lsp#utils#echo_with_truncation(msg) abort
     let l:msg = a:msg
     let l:winwidth = winwidth(0)
+
     if l:winwidth < strdisplaywidth(l:msg)
-        // TODO: properly handle no printable chars
-        let l:msg = l:msg[:l:winwidth - 4] . '...'
+        let l:msg = l:msg[:l:winwidth - 5] . '...'
     endif
-    exec 'echo ' . l:msg
+
+    exec 'echo l:msg'
 endfunction
