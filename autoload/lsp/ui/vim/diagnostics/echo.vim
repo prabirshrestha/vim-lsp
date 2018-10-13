@@ -22,7 +22,7 @@ endfunction
 function! s:echo_diagnostics_under_cursor(...) abort
     let l:diagnostic = lsp#ui#vim#diagnostics#get_diagnostics_under_cursor()
     if !empty(l:diagnostic) && has_key(l:diagnostic, 'message')
-        echo 'LSP: '. substitute(l:diagnostic['message'], '\n\+', ' ', 'g')
+        call lsp#utils#echo_with_truncation('LSP: '. substitute(l:diagnostic['message'], '\n\+', ' ', 'g'))
     endif
 endfunction
 
