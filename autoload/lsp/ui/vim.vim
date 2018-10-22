@@ -484,10 +484,18 @@ function! s:apply_text_edits(uri, text_edits) abort
 
         try
             let l:was_paste = &paste
+            let l:was_selection = &selection
+            let l:was_virtualedit = &virtualedit
+
             set paste
+            set selection=exclusive
+            set virtualedit=onemore
+
             execute l:cmd
         finally
             let &paste = l:was_paste
+            let &selection = l:was_selection
+            let &virtualedit = l:was_virtualedit
         endtry
 
         let l:i = l:merged_text_edit['end_index']
@@ -600,21 +608,6 @@ function! s:generate_sub_cmd_replace(text_edit) abort
     let l:end_line = a:text_edit['range']['end']['line']
     let l:end_character = a:text_edit['range']['end']['character']
     let l:new_text = a:text_edit['newText']
-
-    " This is necessary since you are removing lines, because when in normal
-    " mode it cannot grab the last character + 1 (\n).
-    if l:start_character >= len(getline(l:start_line)) && l:end_character == 0
-        let l:start_line += 1
-        let l:start_character = 0
-
-    endif
-
-    " Since the columns in vim is one-based index, this validation is necessary as
-    " well
-    if l:end_character == 0
-        let l:end_line -= 1
-        let l:end_character = len(getline(l:end_line))
-    endif
 
     let l:sub_cmd = s:preprocess_cmd(a:text_edit['range'])
     let l:sub_cmd .= s:generate_move_cmd(l:start_line, l:start_character) " move to the first position
