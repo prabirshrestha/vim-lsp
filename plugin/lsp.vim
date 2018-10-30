@@ -15,6 +15,7 @@ let g:lsp_signs_information = get(g:, 'lsp_signs_information', {})
 let g:lsp_signs_hint = get(g:, 'lsp_signs_hint', {})
 let g:lsp_diagnostics_echo_cursor = get(g:, 'lsp_diagnostics_echo_cursor', 0)
 let g:lsp_diagnostics_echo_delay = get(g:, 'lsp_diagnostics_echo_delay', 500)
+let g:lsp_diagnostics_use_loclist = get(g:, 'lsp_diagnostics_use_loclist', 0)
 let g:lsp_next_sign_id = get(g:, 'lsp_next_sign_id', 6999)
 let g:lsp_preview_keep_focus = get(g:, 'lsp_preview_keep_focus', 1)
 

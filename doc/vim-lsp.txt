@@ -12,6 +12,7 @@ CONTENTS                                                  *vim-lsp-contents*
     Options			|vim-lsp-options|
       g:lsp_auto_enable           |g:lsp_auto_enable|
       g:lsp_preview_keep_focus    |g:lsp_preview_keep_focus|
+      g:lsp_diagnostics_use_loclist    |g:lsp_diagnostics_use_loclist|
     Functions			|vim-lsp-functions|
       enable                      |vim-lsp-enable|
       disable                     |vim-lsp-disable|
@@ -119,6 +120,17 @@ g:lsp_preview_keep_focus                         *g:lsp_preview_keep_focus*
 	let g:lsp_preview_keep_focus = 0
 
     * |preview-window| can be closed using the default vim mapping - `<c-w><c-z>`.
+
+g:lsp_diagnostics_use_loclist               *g:lsp_diagnostics_use_loclist*
+    Type: |Number|
+    Default: `0`
+
+    Indicates whether the |location-list| should be used instead of |quickfix|
+    to display document diagnostics.
+
+    Example:
+	" Use location-list instead of quickfix
+	let g:lsp_diagnostics_use_loclist = 1
 
 ===============================================================================
 FUNCTIONS	                                        *vim-lsp-functions*
