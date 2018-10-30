@@ -11,10 +11,12 @@ function! lsp#ui#vim#diagnostics#handle_text_document_publish_diagnostics(server
     endif
     let s:diagnostics[l:uri][a:server_name] = a:data
 
+    call lsp#ui#vim#diagnostics#document_diagnostics(0)
     call lsp#ui#vim#signs#set(a:server_name, a:data)
 endfunction
 
-function! lsp#ui#vim#diagnostics#document_diagnostics() abort
+function! lsp#ui#vim#diagnostics#document_diagnostics(...) abort
+    let l:open_results = get(a:, 1, 1)
     let l:uri = lsp#utils#get_buffer_uri()
 
     let [l:has_diagnostics, l:diagnostics] = s:get_diagnostics(l:uri)
@@ -38,7 +40,7 @@ function! lsp#ui#vim#diagnostics#document_diagnostics() abort
 
     if empty(l:result)
         call lsp#utils#error('No diagnostics results found')
-    else
+    elseif l:open_results
         echo 'Retrieved diagnostics results'
         if g:lsp_diagnostics_use_loclist
           botright lopen
