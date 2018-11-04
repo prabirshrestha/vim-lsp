@@ -68,6 +68,18 @@ Refer to docs on configuring omnifunc or [asyncomplete.vim](https://github.com/p
 
 ### Diagnostics
 
+Document diagnostics (e.g. warnings, errors) are enabled by default, but if you
+preferred to turn them off and use other plugins instead (like
+[Neomake](https://github.com/neomake/neomake) or
+[ALE](https://github.com/neomake/neomake), set `g:lsp_diagnostics_enabled` to
+`0`:
+
+```viml
+let g:lsp_diagnostics_enabled = 0         " disable diagnostics support
+```
+
+#### Signs
+
 ```viml
 let g:lsp_signs_enabled = 1         " enable signs
 let g:lsp_diagnostics_echo_cursor = 1 " enable echo under cursor when in normal mode

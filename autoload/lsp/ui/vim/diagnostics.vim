@@ -15,6 +15,11 @@ function! lsp#ui#vim#diagnostics#handle_text_document_publish_diagnostics(server
 endfunction
 
 function! lsp#ui#vim#diagnostics#document_diagnostics() abort
+    if !g:lsp_diagnostics_enabled
+        call lsp#utils#error('Diagnostics manually disabled -- g:lsp_diagnostics_enabled = 0')
+        return
+    endif
+
     let l:uri = lsp#utils#get_buffer_uri()
 
     let [l:has_diagnostics, l:diagnostics] = s:get_diagnostics(l:uri)
