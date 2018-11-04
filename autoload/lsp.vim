@@ -36,7 +36,7 @@ function! lsp#enable() abort
     endif
     let s:enabled = 1
     if g:lsp_diagnostics_enabled && g:lsp_signs_enabled
-          call lsp#ui#vim#signs#enable()
+        call lsp#ui#vim#signs#enable()
     endif
     call s:register_events()
 endfunction
