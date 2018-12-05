@@ -147,7 +147,7 @@ function! lsp#utils#echo_with_truncation(msg) abort
         let l:winwidth -= 11
     endif
 
-    if &laststatus == 0 && &ruler
+    if &laststatus != 2 && &ruler
         let l:winwidth -= 18
     endif
 
