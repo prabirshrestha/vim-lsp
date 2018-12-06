@@ -138,3 +138,14 @@ function! lsp#utils#error(msg) abort
     echom a:msg
     echohl NONE
 endfunction
+
+function! lsp#utils#echo_with_truncation(msg) abort
+    let l:msg = a:msg
+    let l:winwidth = winwidth(0)
+
+    if l:winwidth < strdisplaywidth(l:msg)
+        let l:msg = l:msg[:l:winwidth - 5] . '...'
+    endif
+
+    exec 'echo l:msg'
+endfunction

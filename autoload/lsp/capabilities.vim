@@ -39,6 +39,10 @@ function! lsp#capabilities#has_implementation_provider(server_name) abort
     return s:has_bool_provider(a:server_name, 'implementationProvider')
 endfunction
 
+function! lsp#capabilities#has_code_action_provider(server_name) abort
+    return s:has_bool_provider(a:server_name, 'codeActionProvider')
+endfunction
+
 function! lsp#capabilities#has_type_definition_provider(server_name) abort
     return s:has_bool_provider(a:server_name, 'typeDefinitionProvider')
 endfunction

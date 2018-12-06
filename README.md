@@ -51,6 +51,7 @@ Refer to docs on configuring omnifunc or [asyncomplete.vim](https://github.com/p
 
 | Command | Description|
 |--|--|
+|`:LspCodeAction`| Gets a list of possible commands that can be applied to a file so it can be fixed (quick fix) |
 |`:LspDocumentDiagnostics`| Get current document diagnostics information |
 |`:LspDefinition`| Go to definition |
 |`:LspDocumentFormat`| Format entire document |
