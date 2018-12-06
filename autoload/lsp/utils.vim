@@ -142,6 +142,14 @@ endfunction
 function! lsp#utils#echo_with_truncation(msg) abort
     let l:msg = a:msg
     let l:winwidth = winwidth(0)
+    
+    if &showcmd
+        let l:winwidth -= 11
+    endif
+
+    if &laststatus != 2 && &ruler
+        let l:winwidth -= 18
+    endif
 
     if l:winwidth < strdisplaywidth(l:msg)
         let l:msg = l:msg[:l:winwidth - 5] . '...'
