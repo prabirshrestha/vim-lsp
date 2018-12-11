@@ -45,7 +45,7 @@ if has('win32') || has('win64')
         else
             " You must not encode the volume information on the path if
             " present
-            let l:end_pos_volume = matchstrpos(a:path, '\C[A-Z]:')[2]
+            let l:end_pos_volume = matchstrpos(a:path, '\c[A-Z]:')[2]
 
             if l:end_pos_volume == -1
                 let l:end_pos_volume = 0
