@@ -486,7 +486,7 @@ function! s:apply_text_edits(uri, text_edits) abort
             let l:was_paste = &paste
             let l:was_selection = &selection
             let l:was_virtualedit = &virtualedit
-            let l:was_pos = getpos('.')
+            let l:was_view = winsaveview()
 
             set paste
             set selection=inclusive
@@ -497,7 +497,7 @@ function! s:apply_text_edits(uri, text_edits) abort
             let &paste = l:was_paste
             let &selection = l:was_selection
             let &virtualedit = l:was_virtualedit
-            call setpos('.', l:was_pos)
+            call winrestview(l:was_view)
         endtry
 
         let l:i = l:merged_text_edit['end_index']
