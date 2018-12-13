@@ -472,7 +472,7 @@ function! s:apply_text_edits(uri, text_edits) abort
     " Example:
     " Initial text:  "abcdef"
     " Edits:
-    " ((0,0), (0, 1), "") - remove first character 'a'
+    " ((0, 0), (0, 1), "") - remove first character 'a'
     " ((0, 4), (0, 5), "") - remove fifth character 'e'
     " ((0, 2), (0, 3), "") - remove third character 'c'
     let l:text_edits = sort(deepcopy(a:text_edits), '<SID>sort_text_edit_desc')
