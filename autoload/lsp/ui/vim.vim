@@ -609,7 +609,7 @@ function! s:generate_sub_cmd_replace(text_edit) abort
     let l:start_character = a:text_edit['range']['start']['character']
     let l:end_line = a:text_edit['range']['end']['line']
     let l:end_character = a:text_edit['range']['end']['character']
-    let l:new_text = a:text_edit['newText']
+    let l:new_text = substitute(a:text_edit['newText'], '\n$', '', '')
 
     let l:sub_cmd = s:preprocess_cmd(a:text_edit['range'])
     let l:sub_cmd .= s:generate_move_cmd(l:start_line, l:start_character) " move to the first position
