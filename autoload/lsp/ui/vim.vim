@@ -489,7 +489,7 @@ function! s:apply_text_edits(uri, text_edits) abort
             let l:was_pos = getpos('.')
 
             set paste
-            set selection=exclusive
+            set selection=inclusive
             set virtualedit=onemore
 
             execute l:cmd
