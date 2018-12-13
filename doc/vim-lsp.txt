@@ -12,6 +12,7 @@ CONTENTS                                                  *vim-lsp-contents*
     Options			|vim-lsp-options|
       g:lsp_auto_enable           |g:lsp_auto_enable|
       g:lsp_preview_keep_focus    |g:lsp_preview_keep_focus|
+      g:lsp_fzf_enable            |g:lsp_fzf_enable|
     Functions			|vim-lsp-functions|
       enable                      |vim-lsp-enable|
       disable                     |vim-lsp-disable|
@@ -119,6 +120,19 @@ g:lsp_preview_keep_focus                         *g:lsp_preview_keep_focus*
 	let g:lsp_preview_keep_focus = 0
 
     * |preview-window| can be closed using the default vim mapping - `<c-w><c-z>`.
+
+g:lsp_fzf_enable                                       *g:lsp_fzf_enable*
+    Type: |Number|
+    Default: `1`
+
+    If optional dependency FZF is installed, symbols will be displayed in
+    a FZF prompt, selecting one of the symbol will then goto the symbol's
+    definition.
+
+    Example:
+	let g:lsp_fzf_enable = 1
+	let g:lsp_fzf_enable = 0
+
 
 ===============================================================================
 FUNCTIONS	                                        *vim-lsp-functions*

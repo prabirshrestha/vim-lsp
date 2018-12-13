@@ -292,6 +292,21 @@ function! lsp#ui#vim#code_action() abort
     echo 'Retrieving code actions ...'
 endfunction
 
+function! s:jump_to_location(loc) abort
+    let l:idx = split(a:loc, ' ')[0]
+    execute 'cc' l:idx + 1
+endfunction
+
+function! s:show_locations() abort
+    if !get(g:, 'lsp_fzf_enable') || !get(g:, 'loaded_fzf')
+        botright copen
+    else
+        let l:qfl = getqflist()
+        call map(l:qfl, {idx, item -> string(idx) . ' ' . fnamemodify(expand(bufname(item['bufnr'])), ":~:.") . ':' . string(item['lnum']) . ':' . string(item['col']) . ':' . item['text']})
+        call fzf#run(fzf#wrap({'source': l:qfl, 'sink': function('s:jump_to_location'), 'options': '--with-nth 2..'}))
+    endif
+endfunction
+
 function! s:handle_symbol(server, last_req_id, type, data) abort
     if a:last_req_id != s:last_req_id
         return
@@ -310,7 +325,7 @@ function! s:handle_symbol(server, last_req_id, type, data) abort
         call lsp#utils#error('No ' . a:type .' found')
     else
         echo 'Retrieved ' . a:type
-        botright copen
+        call s:show_locations()
     endif
 endfunction
 
@@ -341,7 +356,7 @@ function! s:handle_location(ctx, server, type, data) abort "ctx = {counter, list
             else
                 call setqflist(a:ctx['list'])
                 echo 'Retrieved ' . a:type
-                botright copen
+                call s:show_locations()
             endif
         endif
     endif
