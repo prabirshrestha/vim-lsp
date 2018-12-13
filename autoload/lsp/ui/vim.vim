@@ -271,8 +271,7 @@ function! lsp#ui#vim#workspace_executecommand(command) abort
     let l:info = printf('Executing command [%s]', a:command.command)
 
     if len(l:servers) == 0
-        call s:not_supported(l:info)
-        return
+        return -1
     endif
 
     call lsp#log('lsp#ui#vim#workspace_executecommand', a:command)
@@ -286,6 +285,7 @@ function! lsp#ui#vim#workspace_executecommand(command) abort
     endfor
 
     echo l:info . ' ...'
+    return 0
 endfunction
 
 " https://microsoft.github.io/language-server-protocol/specification#textDocument_codeAction
@@ -322,8 +322,8 @@ function! lsp#ui#vim#code_action() abort
 endfunction
 
 function! s:jump_to_location(loc) abort
-    let l:idx = split(a:loc, ' ')[0]
-    execute 'cc' l:idx + 1
+    let l:idx = split(a:loc, '\.')[0]
+    execute 'cc' l:idx
 endfunction
 
 function! s:show_locations() abort
@@ -331,8 +331,8 @@ function! s:show_locations() abort
         botright copen
     else
         let l:qfl = getqflist()
-        call map(l:qfl, {idx, item -> string(idx) . ' ' . fnamemodify(expand(bufname(item['bufnr'])), ":~:.") . ':' . string(item['lnum']) . ':' . string(item['col']) . ':' . item['text']})
-        call fzf#run(fzf#wrap({'source': l:qfl, 'sink': function('s:jump_to_location'), 'options': '--with-nth 2..'}))
+        call map(l:qfl, {idx, item -> string(idx + 1) . '. ' . fnamemodify(expand(bufname(item['bufnr'])), ":~:.") . ':' . string(item['lnum']) . ':' . string(item['col']) . ':' . item['text']})
+        call fzf#run(fzf#wrap({'source': l:qfl, 'sink': function('s:jump_to_location'), 'options': '--reverse +m --prompt="Jump> "'}))
     endif
 endfunction
 
@@ -421,30 +421,74 @@ function! s:handle_text_edit(server, last_req_id, type, data) abort
     echo 'Document formatted'
 endfunction
 
+function! s:fix_it(action) abort
+    let l:ret = 0
+
+    if has_key(a:action, 'edit')
+        call s:apply_workspace_edits(a:action['edit'])
+    endif
+
+    if has_key(a:action, 'command')
+        if type(a:action['command']) == type('')
+            let l:ret = lsp#ui#vim#workspace_executecommand(a:action)
+        else
+            let l:ret = lsp#ui#vim#workspace_executecommand(a:action['command'])
+        endif
+    endif
+
+    if l:ret == 0
+        return
+    endif
+
+    if a:action['command'] ==# 'cquery._applyFixIt'
+        call s:apply_workspace_edits({'changes': {a:action['arguments'][0]: a:action['arguments'][1]}})
+    endif
+
+endfunction
+
+function! s:fzf_fix_it(actions, action) abort
+    let l:idx = split(a:action, '\.')[0]
+    call s:fix_it(a:actions[l:idx - 1])
+endfunction
+
+function! s:show_actions(actions) abort
+    let l:idx = 0
+    let l:actlist = []
+
+    for l:action in a:actions
+        if has_key(l:action, 'command')
+            if type(l:action['command']) == type('')
+                call add(l:actlist, string(l:idx + 1) . '. ' . l:action['command'] . ': ' . l:action['title'])
+            else
+                call add(l:actlist, string(l:idx + 1) . '. ' . l:action['command']['command'] . ': ' . l:action['title'])
+            endif
+        else
+            call add(l:actlist, string(l:idx + 1) . '. ' . 'NA' . ': ' . l:action['title'])
+        endif
+        let l:idx += 1
+    endfor
+
+    if !get(g:, 'lsp_fzf_enable') || !get(g:, 'loaded_fzf')
+        let l:idx = inputlist(l:actlist)
+        if l:idx >= 1 && l:idx <= len(l:actlist)
+            call s:fix_it(a:actions[l:idx - 1])
+        endif
+    else
+        call fzf#run(fzf#wrap({'source': l:actlist, 'sink': function('s:fzf_fix_it', [a:actions]), 'options': '--reverse +m --prompt="FixIt> "'}))
+    endif
+endfunction
+
 function! s:handle_code_action(server, last_req_id, type, data) abort
     let l:codeActions = a:data['response']['result']
-    let l:index = 0
-    let l:choices = []
 
     call lsp#log('s:handle_code_action', l:codeActions)
 
-    if len(l:codeActions) == 0
+    if empty(l:codeActions)
         echo 'No code actions found'
         return
     endif
 
-    while l:index < len(l:codeActions)
-        call add(l:choices, string(l:index + 1) . ' - ' . l:codeActions[index]['title'])
-
-        let l:index += 1
-    endwhile
-
-    let l:choice = inputlist(l:choices)
-
-    if l:choice > 0 && l:choice <= l:index
-        call lsp#log('s:handle_code_action', l:codeActions[l:choice - 1]['arguments'][0])
-        call s:apply_workspace_edits(l:codeActions[l:choice - 1]['arguments'][0])
-    endif
+    call s:show_actions(l:codeActions)
 endfunction
 
 " @params
@@ -704,9 +748,20 @@ endfunction
 " character offset, and since we are using the character as a offset position
 " we do not have to fix its position
 function! s:parse_range(range) abort
-    let s:range = deepcopy(a:range)
-    let s:range['start']['line'] =  a:range['start']['line'] + 1
-    let s:range['end']['line'] = a:range['end']['line'] + 1
+    let l:range = deepcopy(a:range)
+    let l:range['start']['line'] += 1
 
-    return s:range
+    if a:range['end']['character'] == 0
+        let l:range['end']['character'] = len(getline(l:range['end']['line']))
+    else
+        let l:range['end']['line'] += 1
+        let l:range['end']['character'] -= 1
+
+        let l:linelen = len(getline(l:range['end']['line']))
+        if l:range['end']['character'] > l:linelen
+            let l:range['end']['character'] = l:linelen
+        endif
+    endif
+
+    return l:range
 endfunction
