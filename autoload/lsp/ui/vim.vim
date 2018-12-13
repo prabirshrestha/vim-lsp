@@ -259,6 +259,35 @@ function! lsp#ui#vim#document_symbol() abort
     echo 'Retrieving document symbols ...'
 endfunction
 
+function! s:handle_executecommand(server, type, data) abort
+    " TODO(Richard):
+    call lsp#log('s:executecommand', a:data)
+endfunction
+
+function! lsp#ui#vim#workspace_executecommand(command) abort
+    let l:servers = filter(lsp#get_whitelisted_servers(), 'lsp#capabilities#has_execute_command_provider(v:val, a:command.command)')
+    let s:last_req_id = s:last_req_id + 1
+
+    let l:info = printf('Executing command [%s]', a:command.command)
+
+    if len(l:servers) == 0
+        call s:not_supported(l:info)
+        return
+    endif
+
+    call lsp#log('lsp#ui#vim#workspace_executecommand', a:command)
+
+    for l:server in l:servers
+        call lsp#send_request(l:server, {
+            \ 'method': 'workspace/executeCommand',
+            \ 'params': a:command,
+            \ 'on_notification': function('s:handle_executecommand', [l:server, l:info]),
+            \ })
+    endfor
+
+    echo l:info . ' ...'
+endfunction
+
 " https://microsoft.github.io/language-server-protocol/specification#textDocument_codeAction
 function! lsp#ui#vim#code_action() abort
     let l:servers = filter(lsp#get_whitelisted_servers(), 'lsp#capabilities#has_code_action_provider(v:val)')
