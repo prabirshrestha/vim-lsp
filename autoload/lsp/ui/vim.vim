@@ -452,6 +452,11 @@ function! s:fzf_fix_it(actions, action) abort
 endfunction
 
 function! s:show_actions(actions) abort
+    if len(a:actions) == 1
+        call s:fix_it(a:actions[0])
+        return
+    endif
+
     let l:idx = 0
     let l:actlist = []
 
