@@ -3,6 +3,16 @@ function! s:has_bool_provider(server_name, provider) abort
     return !empty(l:capabilities) && has_key(l:capabilities, a:provider) && l:capabilities[a:provider] == v:true
 endfunction
 
+function! s:has_command_provider(server_name, command) abort
+    let l:capabilities = lsp#get_server_capabilities(a:server_name)
+    return !empty(l:capabilities) &&
+                \ has_key(l:capabilities, 'executeCommandProvider') &&
+                \ type(l:capabilities['executeCommandProvider']) == type({}) &&
+                \ has_key(l:capabilities['executeCommandProvider'], 'commands') &&
+                \ type(l:capabilities['executeCommandProvider']['commands']) == type([]) &&
+                \ index(l:capabilities['executeCommandProvider']['commands'], a:command) != -1
+endfunction
+
 function! lsp#capabilities#has_definition_provider(server_name) abort
     return s:has_bool_provider(a:server_name, 'definitionProvider')
 endfunction
@@ -45,6 +55,10 @@ endfunction
 
 function! lsp#capabilities#has_type_definition_provider(server_name) abort
     return s:has_bool_provider(a:server_name, 'typeDefinitionProvider')
+endfunction
+
+function! lsp#capabilities#has_execute_command_provider(server_name, command) abort
+    return s:has_command_provider(a:server_name, a:command)
 endfunction
 
 " [supports_did_save (boolean), { 'includeText': boolean }]
