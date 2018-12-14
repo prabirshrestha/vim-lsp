@@ -19,6 +19,8 @@ function! lsp#ui#vim#output#preview(data) abort
       call win_gotoid(l:current_window_id)
     endif
 
+    echo ''
+
     return ''
 endfunction
 
@@ -30,17 +32,17 @@ function! s:append(data) abort
 
         return 'markdown'
     elseif type(a:data) == type('')
-        put =a:data
+        silent put =a:data
 
         return 'markdown'
     elseif type(a:data) == type({}) && has_key(a:data, 'language')
-        put ='```'.a:data.language
-        put =a:data.value
-        put ='```'
+        silent put ='```'.a:data.language
+        silent put =a:data.value
+        silent put ='```'
 
         return 'markdown'
     elseif type(a:data) == type({}) && has_key(a:data, 'kind')
-        put =a:data.value
+        silent put =a:data.value
 
         return a:data.kind == 'plaintext' ? 'text' : a:data.kind
     endif
