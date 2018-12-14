@@ -472,7 +472,7 @@ function! s:apply_text_edits(uri, text_edits) abort
     " Example:
     " Initial text:  "abcdef"
     " Edits:
-    " ((0,0), (0, 1), "") - remove first character 'a'
+    " ((0, 0), (0, 1), "") - remove first character 'a'
     " ((0, 4), (0, 5), "") - remove fifth character 'e'
     " ((0, 2), (0, 3), "") - remove third character 'c'
     let l:text_edits = sort(deepcopy(a:text_edits), '<SID>sort_text_edit_desc')
@@ -486,9 +486,10 @@ function! s:apply_text_edits(uri, text_edits) abort
             let l:was_paste = &paste
             let l:was_selection = &selection
             let l:was_virtualedit = &virtualedit
+            let l:was_view = winsaveview()
 
             set paste
-            set selection=exclusive
+            set selection=inclusive
             set virtualedit=onemore
 
             execute l:cmd
@@ -496,6 +497,7 @@ function! s:apply_text_edits(uri, text_edits) abort
             let &paste = l:was_paste
             let &selection = l:was_selection
             let &virtualedit = l:was_virtualedit
+            call winrestview(l:was_view)
         endtry
 
         let l:i = l:merged_text_edit['end_index']
@@ -607,7 +609,7 @@ function! s:generate_sub_cmd_replace(text_edit) abort
     let l:start_character = a:text_edit['range']['start']['character']
     let l:end_line = a:text_edit['range']['end']['line']
     let l:end_character = a:text_edit['range']['end']['character']
-    let l:new_text = a:text_edit['newText']
+    let l:new_text = substitute(a:text_edit['newText'], '\n$', '', '')
 
     let l:sub_cmd = s:preprocess_cmd(a:text_edit['range'])
     let l:sub_cmd .= s:generate_move_cmd(l:start_line, l:start_character) " move to the first position
