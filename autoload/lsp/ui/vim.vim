@@ -441,7 +441,13 @@ function! s:fix_it(action) abort
     endif
 
     if a:action['command'] ==# 'cquery._applyFixIt'
-        call s:apply_workspace_edits({'changes': {a:action['arguments'][0]: a:action['arguments'][1]}})
+        let l:edits = []
+        for l:edit in a:action['arguments'][1]
+            let l:e = deepcopy(l:edit)
+            let l:e['range']['end']['character'] -= 1
+            call add(l:edits, l:e)
+        endfor
+        call s:apply_workspace_edits({'changes': {a:action['arguments'][0]: l:edits}})
     endif
 
 endfunction
@@ -755,17 +761,12 @@ endfunction
 function! s:parse_range(range) abort
     let l:range = deepcopy(a:range)
     let l:range['start']['line'] += 1
+    let l:range['end']['line'] += 1
 
-    if a:range['end']['character'] == 0
-        let l:range['end']['character'] = len(getline(l:range['end']['line']))
-    else
+    let l:linelen = len(getline(l:range['end']['line']))
+    if l:range['end']['character'] > l:linelen
         let l:range['end']['line'] += 1
-        let l:range['end']['character'] -= 1
-
-        let l:linelen = len(getline(l:range['end']['line']))
-        if l:range['end']['character'] > l:linelen
-            let l:range['end']['character'] = l:linelen
-        endif
+        let l:range['end']['character'] = 0
     endif
 
     return l:range
