@@ -3,36 +3,33 @@ function! lsp#ui#vim#utils#locations_to_loc_list(result) abort
         return []
     endif
 
-    let l:list = []
-
     let l:locations = type(a:result['response']['result']) == type({}) ? [a:result['response']['result']] : a:result['response']['result']
 
-    if !empty(l:locations) " some servers also return null so check to make sure it isn't empty
-        let l:cache={}
-        for l:location in l:locations
-            if s:is_file_uri(l:location['uri'])
-                let l:path = lsp#utils#uri_to_path(l:location['uri'])
-                let l:line = l:location['range']['start']['line'] + 1
-                let l:col = l:location['range']['start']['character'] + 1
-                let l:index = l:line - 1
-                if has_key(l:cache, l:path)
-                    let l:text = l:cache[l:path][l:index]
-                else
-                    let l:contents = readfile(l:path)
-                    let l:cache[l:path] = l:contents
-                    let l:text = l:contents[l:index]
-                endif
-                call add(l:list, {
-                    \ 'filename': l:path,
-                    \ 'lnum': l:line,
-                    \ 'col': l:col,
-                    \ 'text': l:text,
-                    \ })
-            endif
-        endfor
+    if empty(l:locations) " some servers also return null so check to make sure it isn't empty
+        return []
     endif
 
-    return l:list
+    let l:list = {}
+    for l:location in l:locations
+        let l:cache = {}
+        if !s:is_file_uri(l:location['uri'])
+            continue
+        endif
+        let l:path = resolve(lsp#utils#uri_to_path(l:location['uri']))
+        let l:line = l:location['range']['start']['line'] + 1
+        let l:col = l:location['range']['start']['character'] + 1
+        let l:index = l:line - 1
+        if has_key(l:cache, l:path)
+            let l:text = l:cache[l:path][l:index]
+        else
+            let l:contents = readfile(l:path)
+            let l:cache[l:path] = l:contents
+            let l:text = l:contents[l:index]
+        endif
+        let l:list[l:path . string(l:line) . string(l:col)] = {'filename': l:path, 'lnum': l:line, 'col': l:col, 'text': l:text}
+    endfor
+
+    return values(l:list)
 endfunction
 
 let s:symbol_kinds = {
@@ -68,29 +65,28 @@ function! lsp#ui#vim#utils#symbols_to_loc_list(result) abort
         return []
     endif
 
-    let l:list = []
+    let l:list = {}
 
     let l:locations = type(a:result['response']['result']) == type({}) ? [a:result['response']['result']] : a:result['response']['result']
 
-    if !empty(l:locations) " some servers also return null so check to make sure it isn't empty
-        for l:symbol in a:result['response']['result']
-            let l:location = l:symbol['location']
-            if s:is_file_uri(l:location['uri'])
-                let l:path = lsp#utils#uri_to_path(l:location['uri'])
-                let l:bufnr = bufnr(l:path)
-                let l:line = l:location['range']['start']['line'] + 1
-                let l:col = l:location['range']['start']['character'] + 1
-                call add(l:list, {
-                    \ 'filename': l:path,
-                    \ 'lnum': l:line,
-                    \ 'col': l:col,
-                    \ 'text': s:get_symbol_text_from_kind(l:symbol['kind']) . ' : ' . l:symbol['name'],
-                    \ })
-            endif
-        endfor
+    if empty(l:locations)
+        return []
     endif
 
-    return l:list
+    for l:symbol in a:result['response']['result']
+        let l:location = l:symbol['location']
+        if !s:is_file_uri(l:location['uri'])
+            continue
+        endif
+        let l:path = resolve(lsp#utils#uri_to_path(l:location['uri']))
+        let l:line = l:location['range']['start']['line'] + 1
+        let l:col = l:location['range']['start']['character'] + 1
+
+        let l:list[l:path . string(l:line) . string(l:col)] = {'filename': l:path, 'lnum': l:line, 'col': l:col, 'text': s:get_symbol_text_from_kind(l:symbol['kind']) . ' : ' . l:symbol['name']}
+
+    endfor
+
+    return values(l:list)
 endfunction
 
 function! lsp#ui#vim#utils#diagnostics_to_loc_list(result) abort
@@ -101,35 +97,32 @@ function! lsp#ui#vim#utils#diagnostics_to_loc_list(result) abort
     let l:uri = a:result['response']['params']['uri']
     let l:diagnostics = a:result['response']['params']['diagnostics']
 
-    let l:list = []
+    let l:list = {}
 
-    if !empty(l:diagnostics) && s:is_file_uri(l:uri)
-        let l:path = lsp#utils#uri_to_path(l:uri)
-        let l:bufnr = bufnr(l:path)
-        for l:item in l:diagnostics
-            let l:text = ''
-            if has_key(l:item, 'source') && !empty(l:item['source'])
-                let l:text .= l:item['source'] . ':'
-            endif
-            if has_key(l:item, 'severity') && !empty(l:item['severity'])
-                let l:text .= s:get_diagnostic_severity_text(l:item['severity']) . ':'
-            endif
-            if has_key(l:item, 'code') && !empty(l:item['code'])
-                let l:text .= l:item['code'] . ':'
-            endif
-            let l:text .= l:item['message']
-            let l:line = l:item['range']['start']['line'] + 1
-            let l:col = l:item['range']['start']['character'] + 1
-            call add(l:list, {
-                \ 'filename': l:path,
-                \ 'lnum': l:line,
-                \ 'col': l:col,
-                \ 'text': l:text,
-                \ })
-        endfor
+    if empty(l:diagnostics) || !s:is_file_uri(l:uri)
+        return []
     endif
 
-    return l:list
+    let l:path = resolve(lsp#utils#uri_to_path(l:uri))
+    for l:item in l:diagnostics
+        let l:text = ''
+        if has_key(l:item, 'source') && !empty(l:item['source'])
+            let l:text .= l:item['source'] . ':'
+        endif
+        if has_key(l:item, 'severity') && !empty(l:item['severity'])
+            let l:text .= s:get_diagnostic_severity_text(l:item['severity']) . ':'
+        endif
+        if has_key(l:item, 'code') && !empty(l:item['code'])
+            let l:text .= l:item['code'] . ':'
+        endif
+        let l:text .= l:item['message']
+        let l:line = l:item['range']['start']['line'] + 1
+        let l:col = l:item['range']['start']['character'] + 1
+
+        let l:list[l:path . string(l:line) . string(l:col) . l:text] = {'filename': l:path, 'lnum': l:line, 'col': l:col, 'text': l:text}
+    endfor
+
+    return values(l:list)
 endfunction
 
 function! s:is_file_uri(uri) abort
