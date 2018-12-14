@@ -33,7 +33,8 @@ CONTENTS                                                  *vim-lsp-contents*
       LspRename                   |LspRename|
       LspTypeDefinition           |LspTypeDefinition|
       LspWorkspaceSymbols         |LspWorkspaceSymbols|
-    Autocomplete               |vim-lsp-autocomplete|
+    Mappings			|vim-lsp-mappings|
+    Autocomplete		|vim-lsp-autocomplete|
       omnifunc                    |vim-lsp-omnifunc|
       asyncomplete.vim            |vim-lsp-asyncomplete|
     License			|vim-lsp-license|
@@ -365,6 +366,33 @@ Search and show workspace symbols.
 LspStatus                                                        *LspStatus*
 
 Prints the status of all registered servers.
+
+===============================================================================
+Mappings	                                          *vim-lsp-mappings*
+
+To map keys to the feature of vim-lsp, use <plug> mappings:
+>
+  autocmd FileType python,go nmap gd <plug>(lsp-definition)
+<
+Available plug mappings are following:
+
+  (lsp-code-action)
+  (lsp-definition)
+  (lsp-document-symbol)
+  (lsp-document-diagnostics)
+  (lsp-hover)
+  (lsp-next-error)
+  (lsp-previous-error)
+  (lsp-references)
+  (lsp-rename)
+  (lsp-workspace-symbol)
+  (lsp-document-format)
+  (lsp-document-format)
+  (lsp-implementation)
+  (lsp-type-definition)
+  (lsp-status)
+
+See also *vim-lsp-commands*
 
 ===============================================================================
 Autocomplete                                          *vim-lsp-autocomplete*
