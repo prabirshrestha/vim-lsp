@@ -577,30 +577,30 @@ function! s:apply_text_edits(uri, text_edits) abort
     let l:text_edits = sort(deepcopy(a:text_edits), '<SID>sort_text_edit_desc')
     let l:i = 0
 
-    while l:i < len(l:text_edits)
-        let l:merged_text_edit = s:merge_same_range(l:i, l:text_edits)
-        let l:cmd = s:build_cmd(a:uri, l:merged_text_edit['merged'])
+    try
+        let l:was_paste = &paste
+        let l:was_selection = &selection
+        let l:was_virtualedit = &virtualedit
+        let l:was_view = winsaveview()
 
-        try
-            let l:was_paste = &paste
-            let l:was_selection = &selection
-            let l:was_virtualedit = &virtualedit
-            let l:was_view = winsaveview()
+        set paste
+        set selection=exclusive
+        set virtualedit=onemore
 
-            set paste
-            set selection=inclusive
-            set virtualedit=onemore
-
+        while l:i < len(l:text_edits)
+            let l:merged_text_edit = s:merge_same_range(l:i, l:text_edits)
+            let l:cmd = s:build_cmd(a:uri, l:merged_text_edit['merged'])
             execute l:cmd
-        finally
-            let &paste = l:was_paste
-            let &selection = l:was_selection
-            let &virtualedit = l:was_virtualedit
-            call winrestview(l:was_view)
-        endtry
+            let l:i = l:merged_text_edit['end_index']
+        endwhile
 
-        let l:i = l:merged_text_edit['end_index']
-    endwhile
+    finally
+        let &paste = l:was_paste
+        let &selection = l:was_selection
+        let &virtualedit = l:was_virtualedit
+        call winrestview(l:was_view)
+    endtry
+
 endfunction
 
 " Merge the edits on the same range so we do not have to reverse the
@@ -726,11 +726,7 @@ function! s:generate_sub_cmd_replace(text_edit) abort
 endfunction
 
 function! s:generate_move_cmd(line_pos, character_pos) abort
-    let l:result = printf('%dG0', a:line_pos) " move the line and set to the cursor at the beginning
-    if a:character_pos > 0
-        let l:result .= printf('%dl', a:character_pos) " move right until the character
-    endif
-    return l:result
+    return printf('%dG%d|', a:line_pos, a:character_pos + 1)
 endfunction
 
 function! s:parse(text) abort
