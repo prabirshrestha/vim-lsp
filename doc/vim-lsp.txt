@@ -378,7 +378,7 @@ Available plug mappings are following:
   (lsp-type-definition)
   (lsp-status)
 
-See also *vim-lsp-commands*
+See also |vim-lsp-commands|
 
 ===============================================================================
 Autocomplete                                          *vim-lsp-autocomplete*
