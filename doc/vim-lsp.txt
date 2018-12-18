@@ -13,6 +13,7 @@ CONTENTS                                                  *vim-lsp-contents*
       g:lsp_auto_enable           |g:lsp_auto_enable|
       g:lsp_preview_keep_focus    |g:lsp_preview_keep_focus|
       g:lsp_fzf_enable            |g:lsp_fzf_enable|
+      g:lsp_sort_locations        |g:lsp_sort_locations|
     Functions			|vim-lsp-functions|
       enable                      |vim-lsp-enable|
       disable                     |vim-lsp-disable|
@@ -122,7 +123,7 @@ g:lsp_preview_keep_focus                         *g:lsp_preview_keep_focus*
 
     * |preview-window| can be closed using the default vim mapping - `<c-w><c-z>`.
 
-g:lsp_fzf_enable                                       *g:lsp_fzf_enable*
+g:lsp_fzf_enable                                         *g:lsp_fzf_enable*
     Type: |Number|
     Default: `1`
 
@@ -134,6 +135,16 @@ g:lsp_fzf_enable                                       *g:lsp_fzf_enable*
 	let g:lsp_fzf_enable = 1
 	let g:lsp_fzf_enable = 0
 
+g:lsp_sort_locations                                 *g:lsp_sort_locations*
+    Type: |Number|
+    Default: `1`
+
+    Indicates whether sort the location list.
+
+    Example:
+	let g:lsp_sort_locations = 1
+	let g:lsp_sort_locations = 0
+lsp_sort_locations
 
 ===============================================================================
 FUNCTIONS	                                        *vim-lsp-functions*

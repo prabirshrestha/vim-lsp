@@ -29,7 +29,11 @@ function! lsp#ui#vim#utils#locations_to_loc_list(result) abort
         call add(l:list, {'filename': l:path, 'lnum': l:line, 'col': l:col, 'text': l:text})
     endfor
 
-    return sort(uniq(l:list, function('s:loc_compare')), function('s:loc_compare'))
+    call uniq(l:list, function('s:loc_compare'))
+    if get(g:, 'lsp_sort_locations')
+        call sort(l:list, function('s:loc_compare'))
+    endif
+    return l:list
 endfunction
 
 let s:symbol_kinds = {
@@ -105,10 +109,13 @@ function! lsp#ui#vim#utils#symbols_to_loc_list(result) abort
         let l:col = l:location['range']['start']['character'] + 1
 
         call add(l:list, {'filename': l:path, 'lnum': l:line, 'col': l:col, 'text': s:get_symbol_text_from_kind(l:symbol['kind']) . ' : ' . l:symbol['name']})
-
     endfor
 
-    return sort(uniq(l:list, function('s:loc_compare')), function('s:loc_compare'))
+    call uniq(l:list, function('s:loc_compare'))
+    if get(g:, 'lsp_sort_locations')
+        call sort(l:list, function('s:loc_compare'))
+    endif
+    return l:list
 endfunction
 
 function! lsp#ui#vim#utils#diagnostics_to_loc_list(result) abort
@@ -144,7 +151,11 @@ function! lsp#ui#vim#utils#diagnostics_to_loc_list(result) abort
         call add(l:list, {'filename': l:path, 'lnum': l:line, 'col': l:col, 'text': l:text})
     endfor
 
-    return sort(uniq(l:list, function('s:loc_compare')), function('s:loc_compare'))
+    call uniq(l:list, function('s:loc_compare'))
+    if get(g:, 'lsp_sort_locations')
+        call sort(l:list, function('s:loc_compare'))
+    endif
+    return l:list
 endfunction
 
 function! s:is_file_uri(uri) abort
