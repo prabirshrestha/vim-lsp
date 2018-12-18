@@ -9,7 +9,7 @@ function! lsp#ui#vim#utils#locations_to_loc_list(result) abort
         return []
     endif
 
-    let l:list = {}
+    let l:list = []
     for l:location in l:locations
         let l:cache = {}
         if !s:is_file_uri(l:location['uri'])
@@ -26,10 +26,10 @@ function! lsp#ui#vim#utils#locations_to_loc_list(result) abort
             let l:cache[l:path] = l:contents
             let l:text = l:contents[l:index]
         endif
-        let l:list[l:path . string(l:line) . string(l:col)] = {'filename': l:path, 'lnum': l:line, 'col': l:col, 'text': l:text}
+        call add(l:list, {'filename': l:path, 'lnum': l:line, 'col': l:col, 'text': l:text})
     endfor
 
-    return values(l:list)
+    return sort(uniq(l:list, function('s:loc_compare')), function('s:loc_compare'))
 endfunction
 
 let s:symbol_kinds = {
@@ -60,12 +60,34 @@ let s:diagnostic_severity = {
     \ 4: 'Hint',
     \ }
 
+function! s:loc_compare(loc0, loc1)
+    if a:loc0['filename'] ># a:loc1['filename']
+        return 1
+    elseif a:loc0['filename'] <# a:loc1['filename']
+        return -1
+    elseif a:loc0['lnum'] ># a:loc1['lnum']
+        return 1
+    elseif a:loc0['lnum'] <# a:loc1['lnum']
+        return -1
+    elseif a:loc0['col'] ># a:loc1['col']
+        return 1
+    elseif a:loc0['col'] <# a:loc1['col']
+        return -1
+    elseif a:loc0['text'] ># a:loc1['text']
+        return 1
+    elseif a:loc0['text'] <# a:loc1['text']
+        return -1
+    else
+        return 0
+    endif
+endfunction
+
 function! lsp#ui#vim#utils#symbols_to_loc_list(result) abort
     if !has_key(a:result['response'], 'result')
         return []
     endif
 
-    let l:list = {}
+    let l:list = []
 
     let l:locations = type(a:result['response']['result']) == type({}) ? [a:result['response']['result']] : a:result['response']['result']
 
@@ -82,11 +104,11 @@ function! lsp#ui#vim#utils#symbols_to_loc_list(result) abort
         let l:line = l:location['range']['start']['line'] + 1
         let l:col = l:location['range']['start']['character'] + 1
 
-        let l:list[l:path . string(l:line) . string(l:col)] = {'filename': l:path, 'lnum': l:line, 'col': l:col, 'text': s:get_symbol_text_from_kind(l:symbol['kind']) . ' : ' . l:symbol['name']}
+        call add(l:list, {'filename': l:path, 'lnum': l:line, 'col': l:col, 'text': s:get_symbol_text_from_kind(l:symbol['kind']) . ' : ' . l:symbol['name']})
 
     endfor
 
-    return values(l:list)
+    return sort(uniq(l:list, function('s:loc_compare')), function('s:loc_compare'))
 endfunction
 
 function! lsp#ui#vim#utils#diagnostics_to_loc_list(result) abort
@@ -97,7 +119,7 @@ function! lsp#ui#vim#utils#diagnostics_to_loc_list(result) abort
     let l:uri = a:result['response']['params']['uri']
     let l:diagnostics = a:result['response']['params']['diagnostics']
 
-    let l:list = {}
+    let l:list = []
 
     if empty(l:diagnostics) || !s:is_file_uri(l:uri)
         return []
@@ -119,10 +141,10 @@ function! lsp#ui#vim#utils#diagnostics_to_loc_list(result) abort
         let l:line = l:item['range']['start']['line'] + 1
         let l:col = l:item['range']['start']['character'] + 1
 
-        let l:list[l:path . string(l:line) . string(l:col) . l:text] = {'filename': l:path, 'lnum': l:line, 'col': l:col, 'text': l:text}
+        call add(l:list, {'filename': l:path, 'lnum': l:line, 'col': l:col, 'text': l:text})
     endfor
 
-    return values(l:list)
+    return sort(uniq(l:list, function('s:loc_compare')), function('s:loc_compare'))
 endfunction
 
 function! s:is_file_uri(uri) abort
