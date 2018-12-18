@@ -52,17 +52,18 @@ Refer to docs on configuring omnifunc or [asyncomplete.vim](https://github.com/p
 | Command | Description|
 |--|--|
 |`:LspCodeAction`| Gets a list of possible commands that can be applied to a file so it can be fixed (quick fix) |
-|`:LspDocumentDiagnostics`| Get current document diagnostics information |
 |`:LspDefinition`| Go to definition |
+|`:LspDocumentDiagnostics`| Get current document diagnostics information |
 |`:LspDocumentFormat`| Format entire document |
 |`:LspDocumentRangeFormat`| Format document selection |
 |`:LspDocumentSymbol`| Show document symbols |
 |`:LspHover`| Show hover information |
+|`:LspImplementation` | Show implementation of interface |
 |`:LspNextError`| jump to next error |
 |`:LspPreviousError`| jump to previous error |
-|`:LspImplementation` | Show implementation of interface |
 |`:LspReferences`| Find references |
 |`:LspRename`| Rename symbol |
+|`:LspStatus` | Show the status of the language server |
 |`:LspTypeDefinition`| Go to type definition |
 |`:LspWorkspaceSymbol`| Search/Show workspace symbol |
 
