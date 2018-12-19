@@ -19,6 +19,7 @@ let g:lsp_next_sign_id = get(g:, 'lsp_next_sign_id', 6999)
 let g:lsp_preview_keep_focus = get(g:, 'lsp_preview_keep_focus', 1)
 let g:lsp_fzf_enable = get(g:, 'lsp_fzf_enable', 1)
 let g:lsp_sort_locations = get(g:, 'lsp_sort_locations', 1)
+let g:lsp_document_highlight = get(g:, 'lsp_document_highlight', {1: 'SpellCap', 2: 'SpellLocal', 3: 'SpellRare'})
 
 if g:lsp_auto_enable
     au VimEnter * call lsp#enable()

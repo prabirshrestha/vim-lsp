@@ -57,6 +57,10 @@ function! lsp#capabilities#has_type_definition_provider(server_name) abort
     return s:has_bool_provider(a:server_name, 'typeDefinitionProvider')
 endfunction
 
+function! lsp#capabilities#has_document_highlight_provider(server_name) abort
+    return s:has_bool_provider(a:server_name, 'documentHighlightProvider')
+endfunction
+
 function! lsp#capabilities#has_execute_command_provider(server_name, command) abort
     return s:has_command_provider(a:server_name, a:command)
 endfunction

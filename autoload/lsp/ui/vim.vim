@@ -288,6 +288,35 @@ function! lsp#ui#vim#workspace_executecommand(command) abort
     return 0
 endfunction
 
+function! lsp#ui#vim#document_highlight() abort
+    let l:servers = filter(lsp#get_whitelisted_servers(), 'lsp#capabilities#has_document_highlight_provider(v:val)')
+    call setqflist([])
+
+    if len(l:servers) == 0
+        call s:not_supported('Retrieving document highlights')
+        return
+    endif
+
+    for l:server in l:servers
+        call lsp#send_request(l:server, {
+            \ 'method': 'textDocument/documentHighlight',
+            \ 'params': {
+            \   'textDocument': lsp#get_text_document_identifier(),
+            \   'position': lsp#get_position(),
+            \ },
+            \ 'on_notification': function('s:handle_document_highlight'),
+            \ })
+    endfor
+
+    echo 'Retrieving document highlights ...'
+endfunction
+
+function! lsp#ui#vim#clear_document_highlight() abort
+    echo 'Clearing document highlights ...'
+    call nvim_buf_clear_namespace(0, 1024, 0, -1)
+    echo 'Document highlights cleared'
+endfunction
+
 " https://microsoft.github.io/language-server-protocol/specification#textDocument_codeAction
 function! lsp#ui#vim#code_action() abort
     let l:servers = filter(lsp#get_whitelisted_servers(), 'lsp#capabilities#has_code_action_provider(v:val)')
@@ -404,6 +433,31 @@ function! s:handle_workspace_edit(server, last_req_id, type, data) abort
     call s:apply_workspace_edits(a:data['response']['result'])
 
     echo 'Renamed'
+endfunction
+
+function! s:parse_highlight(hl)
+    let l:list = []
+    let l:hl = get(g:, 'lsp_document_highlight')[a:hl['kind']]
+    let l:rg = a:hl['range']
+    let l:sl = l:rg['start']['line']
+    let l:el = l:rg['end']['line']
+
+    for l:line in range(l:sl, l:el)
+        let l:sc = l:line == l:sl ? l:rg['start']['character'] : 0
+        let l:ec = l:line == l:el ? l:rg['end']['character'] : -1
+        call add(l:list, [l:hl , l:line, l:sc, l:ec])
+    endfor
+
+    return l:list
+endfunction
+
+function! s:handle_document_highlight(data) abort
+    for l:hl in a:data['response']['result']
+        for [l:hl, l:line, l:sc, l:ec] in s:parse_highlight(l:hl)
+            call nvim_buf_add_highlight(0, 1024, l:hl, l:line, l:sc, l:ec)
+        endfor
+    endfor
+    echo 'Document highlighted'
 endfunction
 
 function! s:handle_text_edit(server, last_req_id, type, data) abort
