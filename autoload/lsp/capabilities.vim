@@ -70,6 +70,42 @@ function! lsp#capabilities#has_signature_help_provider(server_name) abort
     endtry
 endfunction
 
+function! lsp#capabilities#has_code_lens_provider(server_name) abort
+    let l:capabilities = lsp#get_server_capabilities(a:server_name)
+    try
+        return has_key(l:capabilities, 'codeLensProvider')
+    catch
+        return 0
+    endtry
+endfunction
+
+function! lsp#capabilities#has_code_lens_resolve_provider(server_name) abort
+    let l:capabilities = lsp#get_server_capabilities(a:server_name)
+    try
+        return l:capabilities['codeLensProvider']['resolveProvider'] == v:true
+    catch
+        return 0
+    endtry
+endfunction
+
+function! lsp#capabilities#has_document_link_provider(server_name) abort
+    let l:capabilities = lsp#get_server_capabilities(a:server_name)
+    try
+        return has_key(l:capabilities, 'documentLinkProvider')
+    catch
+        return 0
+    endtry
+endfunction
+
+function! lsp#capabilities#has_document_link_resolve_provider(server_name) abort
+    let l:capabilities = lsp#get_server_capabilities(a:server_name)
+    try
+        return l:capabilities['documentLinkProvider']['resolveProvider'] == v:true
+    catch
+        return 0
+    endtry
+endfunction
+
 function! lsp#capabilities#has_execute_command_provider(server_name, command) abort
     return s:has_command_provider(a:server_name, a:command)
 endfunction

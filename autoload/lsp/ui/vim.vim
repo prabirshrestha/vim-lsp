@@ -315,6 +315,113 @@ function! lsp#ui#vim#signature_help() abort
     echo 'Retrieving signature help ...'
 endfunction
 
+function! s:handle_code_lens_resolved(codelens) abort
+    " TODO(Richard)
+    call lsp#log('s:handle_code_lens_resolved', a:codelens)
+endfunction
+
+function! s:handle_document_link_resolved(doclink) abort
+    " TODO(Richard)
+    call lsp#log('s:handle_document_link_resolved', a:doclink)
+endfunction
+
+function! s:handle_code_lens_resolve(server, data) abort
+    call handle_code_lens_resolved(a:data['response']['result'])
+endfunction
+
+function! s:handle_document_link_resolve(server, data) abort
+    call handle_document_link_resolved(a:data['response']['result'])
+endfunction
+
+function! s:code_lens_resolve(server, codelens) abort
+    call lsp#log('s:code_lens_resolve', a:codelens)
+    call lsp#send_request(a:server, {
+        \ 'method': 'codeLens/resolve',
+        \ 'params': a:codelens,
+        \ 'on_notification': function('s:handle_code_lens_resolve', [a:server]),
+        \ })
+endfunction
+
+function! s:document_link_resolve(server, doclink) abort
+    call lsp#log('s:document_link_resolve', a:doclink)
+    call lsp#send_request(a:server, {
+        \ 'method': 'documentLink/resolve',
+        \ 'params': a:doclink,
+        \ 'on_notification': function('s:handle_document_link_resolve', [a:server]),
+        \ })
+endfunction
+
+function! s:handle_code_lens(server, data) abort
+    if lsp#capabilities#has_code_lens_resolve_provider(a:server)
+        for l:codelens in a:data['response']['result']
+            call s:code_lens_resolve(a:server, l:codelens)
+        endfor
+    else
+        for l:codelens in a:data['response']['result']
+            call s:handle_code_lens_resolved(l:codelens)
+        endfor
+    endif
+
+    echo 'Code lens retrieved'
+endfunction
+
+function! s:handle_document_link(server, data) abort
+    if lsp#capabilities#has_document_link_resolve_provider(a:server)
+        for l:doclink in a:data['response']['result']
+            call s:document_link_resolve(a:server, l:doclink)
+        endfor
+    else
+        for l:doclink in a:data['response']['result']
+            call s:handle_document_link_resolved(l:doclink)
+        endfor
+    endif
+
+    echo 'Document link retrieved'
+endfunction
+
+function! lsp#ui#vim#code_lens() abort
+    let l:servers = filter(lsp#get_whitelisted_servers(), 'lsp#capabilities#has_code_lens_provider(v:val)')
+
+    if len(l:servers) == 0
+        call s:not_supported('Retrieving code lens')
+        return
+    endif
+
+    for l:server in l:servers
+        call lsp#send_request(l:server, {
+            \ 'method': 'textDocument/codeLens',
+            \ 'params': {
+            \   'textDocument': lsp#get_text_document_identifier(),
+            \ },
+            \ 'on_notification': function('s:handle_code_lens', [l:server]),
+            \ })
+    endfor
+
+    echo 'Retrieving code lens ...'
+endfunction
+
+function! lsp#ui#vim#document_link() abort
+    let l:servers = filter(lsp#get_whitelisted_servers(), 'lsp#capabilities#has_document_link_provider(v:val)')
+    let s:last_req_id = s:last_req_id + 1
+
+    if len(l:servers) == 0
+        call s:not_supported('Retrieving document link')
+        return
+    endif
+
+    for l:server in l:servers
+        call lsp#send_request(l:server, {
+            \ 'method': 'textDocument/documentLink',
+            \ 'params': {
+            \   'textDocument': lsp#get_text_document_identifier(),
+            \ },
+            \ 'on_notification': function('s:handle_document_link', [l:server]),
+            \ })
+    endfor
+
+    echo 'Retrieving document link ...'
+endfunction
+
 function! lsp#ui#vim#document_highlight() abort
     let l:servers = filter(lsp#get_whitelisted_servers(), 'lsp#capabilities#has_document_highlight_provider(v:val)')
     call setqflist([])
