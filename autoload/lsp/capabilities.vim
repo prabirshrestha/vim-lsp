@@ -61,6 +61,15 @@ function! lsp#capabilities#has_document_highlight_provider(server_name) abort
     return s:has_bool_provider(a:server_name, 'documentHighlightProvider')
 endfunction
 
+function! lsp#capabilities#has_signature_help_provider(server_name) abort
+    let l:capabilities = lsp#get_server_capabilities(a:server_name)
+    try
+        return !empty(l:capabilities['signatureHelpProvider']['triggerCharacters'])
+    catch
+        return 0
+    endtry
+endfunction
+
 function! lsp#capabilities#has_execute_command_provider(server_name, command) abort
     return s:has_command_provider(a:server_name, a:command)
 endfunction

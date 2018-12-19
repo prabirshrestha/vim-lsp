@@ -288,6 +288,33 @@ function! lsp#ui#vim#workspace_executecommand(command) abort
     return 0
 endfunction
 
+function! s:handle_signature_help(server, data) abort
+    " TODO(Richard)
+    call lsp#log('s:handle_signature_help', a:data)
+endfunction
+
+function! lsp#ui#vim#signature_help() abort
+    let l:servers = filter(lsp#get_whitelisted_servers(), 'lsp#capabilities#has_signature_help_provider(v:val)')
+
+    if len(l:servers) == 0
+        call s:not_supported('Retrieving signature help')
+        return
+    endif
+
+    for l:server in l:servers
+        call lsp#send_request(l:server, {
+            \ 'method': 'textDocument/signatureHelp',
+            \ 'params': {
+            \   'textDocument': lsp#get_text_document_identifier(),
+            \   'position': lsp#get_position(),
+            \ },
+            \ 'on_notification': function('s:handle_signature_help', [l:server]),
+            \ })
+    endfor
+
+    echo 'Retrieving signature help ...'
+endfunction
+
 function! lsp#ui#vim#document_highlight() abort
     let l:servers = filter(lsp#get_whitelisted_servers(), 'lsp#capabilities#has_document_highlight_provider(v:val)')
     call setqflist([])
