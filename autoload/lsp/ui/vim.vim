@@ -291,7 +291,7 @@ function! lsp#ui#vim#workspace_executecommand(command) abort
     return 0
 endfunction
 
-function! s:handle_signature_help(server, data) abort
+function! s:handle_signature_help(server, last_req_id, data) abort
     if a:last_req_id != s:last_req_id
         return
     endif
@@ -339,8 +339,8 @@ endfunction
 function! s:handle_document_link_resolved(doclinks) abort
     for l:dl in a:doclinks
         let l:line = l:dl['range']['start']['line']
-        let l:text = fnamemodify(resolve(lsp#utils#uri_to_path(l:dl['target'])), ":~:.")
-        call nvim_buf_set_virtual_text(0, 1025, str2nr(l:line), [['| ' . l:text . ' |', 'Comment']], {})
+        let l:text = fnamemodify(resolve(lsp#utils#uri_to_path(l:dl['target'])), ':~:.')
+        call nvim_buf_set_virtual_text(0, 1026, l:line, [['| ' . l:text . ' |', 'Comment']], {})
     endfor
 endfunction
 
@@ -407,6 +407,20 @@ function! lsp#ui#vim#code_lens() abort
     echo 'Retrieving code lens ...'
 endfunction
 
+function! lsp#ui#vim#code_lens_clear() abort
+    call nvim_buf_clear_namespace(0, 1025, 0, -1)
+endfunction
+
+function! lsp#ui#vim#code_lens_stop() abort
+    let g:lsp_auto_show_codelens = 0
+    call nvim_buf_clear_namespace(0, 1025, 0, -1)
+endfunction
+
+function! lsp#ui#vim#code_lens_resume() abort
+    let g:lsp_auto_show_codelens = 1
+    call lsp#ui#vim#code_lens()
+endfunction
+
 function! lsp#ui#vim#document_link() abort
     let l:servers = filter(lsp#get_whitelisted_servers(), 'lsp#capabilities#has_document_link_provider(v:val)')
     let s:last_req_id = s:last_req_id + 1
@@ -427,6 +441,12 @@ function! lsp#ui#vim#document_link() abort
     endfor
 
     echo 'Retrieving document link ...'
+endfunction
+
+function! lsp#ui#vim#document_link_clear() abort
+    echo 'Clearing document link ...'
+    call nvim_buf_clear_namespace(0, 1026, 0, -1)
+    echo 'Document link cleared'
 endfunction
 
 function! lsp#ui#vim#document_highlight() abort
@@ -451,7 +471,7 @@ function! lsp#ui#vim#document_highlight() abort
     echo 'Retrieving document highlights ...'
 endfunction
 
-function! lsp#ui#vim#clear_document_highlight() abort
+function! lsp#ui#vim#document_highlight_clear() abort
     echo 'Clearing document highlights ...'
     call nvim_buf_clear_namespace(0, 1024, 0, -1)
     echo 'Document highlights cleared'
@@ -499,7 +519,7 @@ function! s:show_locations() abort
     if !get(g:, 'lsp_fzf_enable') || !get(g:, 'loaded_fzf')
         botright copen
     else
-        let l:qfl = getqflist()))
+        let l:qfl = getqflist()
         call map(l:qfl, {idx, item -> string(idx + 1) . '. ' . fnamemodify(expand(bufname(item['bufnr'])), ":~:.") . ':' . string(item['lnum']) . ':' . string(item['col']) . ':' . item['text']})
         call fzf#run(fzf#wrap({'source': l:qfl, 'sink': function('s:jump_to_location'), 'options': '--reverse +m --prompt="Jump> "'}))
     endif

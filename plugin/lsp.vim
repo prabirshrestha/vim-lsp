@@ -20,6 +20,7 @@ let g:lsp_preview_keep_focus = get(g:, 'lsp_preview_keep_focus', 1)
 let g:lsp_fzf_enable = get(g:, 'lsp_fzf_enable', 1)
 let g:lsp_sort_locations = get(g:, 'lsp_sort_locations', 1)
 let g:lsp_document_highlight = get(g:, 'lsp_document_highlight', {1: 'SpellCap', 2: 'SpellLocal', 3: 'SpellRare'})
+let g:lsp_auto_show_codelens = get(g:, 'lsp_auto_show_codelens', 1)
 
 if g:lsp_auto_enable
     au VimEnter * call lsp#enable()
@@ -39,6 +40,14 @@ command! LspDocumentFormat call lsp#ui#vim#document_format()
 command! -range LspDocumentRangeFormat call lsp#ui#vim#document_range_format()
 command! LspImplementation call lsp#ui#vim#implementation()
 command! LspTypeDefinition call lsp#ui#vim#type_definition()
+command! LspDocumentHighlight call lsp#ui#vim#document_highlight()
+command! LspDocumentHighlightClear call lsp#ui#vim#document_highlight_clear()
+command! LspCodeLens call lsp#ui#vim#code_lens()
+command! LspCodeLensClear call lsp#ui#vim#code_lens_clear()
+command! LspCodeLensStop call lsp#ui#vim#code_lens_stop()
+command! LspCodeLensResume call lsp#ui#vim#code_lens_resume()
+command! LspDocumentLink call lsp#ui#vim#document_link()
+command! LspDocumentLinkClear call lsp#ui#vim#document_link_clear()
 command! -nargs=0 LspStatus echo lsp#get_server_status()
 
 nnoremap <expr> <plug>(lsp-code-action) [lsp#ui#vim#code_action(),''][1]
@@ -55,4 +64,12 @@ nnoremap <expr> <plug>(lsp-document-format) [lsp#ui#vim#document_format(),''][1]
 vnoremap <expr> <plug>(lsp-document-format) [lsp#ui#vim#document_range_format(),''][1]
 nnoremap <expr> <plug>(lsp-implementation) [lsp#ui#vim#implementation(),''][1]
 nnoremap <expr> <plug>(lsp-type-definition) [lsp#ui#vim#type_definition(),''][1]
+nnoremap <expr> <plug>(lsp-document-highlight) [lsp#ui#vim#document_highlight,''][1]
+nnoremap <expr> <plug>(lsp-document-highlight-clear) [lsp#ui#vim#document_highlight_clear,''][1]
+nnoremap <expr> <plug>(lsp-document-link) [lsp#ui#vim#document_link(),''][1]
+nnoremap <expr> <plug>(lsp-document-link-clear) [lsp#ui#vim#document_link_clear(),''][1]
+nnoremap <expr> <plug>(lsp-code-lens) [lsp#ui#vim#code_lens(),''][1]
+nnoremap <expr> <plug>(lsp-code-lens-clear) [lsp#ui#vim#code_lens_clear(),''][1]
+nnoremap <expr> <plug>(lsp-code-lens-stop) [lsp#ui#vim#code_lens_stop(),''][1]
+nnoremap <expr> <plug>(lsp-code-lens-resume) [lsp#ui#vim#code_lens_resume(),''][1]
 nnoremap <expr> <plug>(lsp-status) [execute("echo lsp#get_server_status()",1),''][1]

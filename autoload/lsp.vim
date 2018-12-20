@@ -1,6 +1,8 @@
 let s:enabled = 0
 let s:already_setup = 0
+let s:code_lens_tmr = 0
 let s:servers = {} " { lsp_id, server_info, init_callbacks, init_result, buffers: { path: { changed_tick } }
+
 
 let s:notification_callbacks = [] " { name, callback }
 
@@ -65,22 +67,22 @@ endfunction
 
 function! s:server_status(server_name) abort
     if !has_key(s:servers, a:server_name)
-        return "unknown server"
+        return 'unknown server'
     endif
     let l:server = s:servers[a:server_name]
     if has_key(l:server, 'exited')
-        return "exited"
+        return 'exited'
     endif
     if has_key(l:server, 'init_callbacks')
-        return "starting"
+        return 'starting'
     endif
     if has_key(l:server, 'failed')
-        return "failed"
+        return 'failed'
     endif
     if has_key(l:server, 'init_result')
-        return "running"
+        return 'running'
     endif
-    return "not running"
+    return 'not running'
 endfunction
 
 " Returns the current status of all servers (if called with no arguments) or
@@ -135,7 +137,7 @@ function! s:register_events() abort
         autocmd BufReadPost * call s:on_text_document_did_open()
         autocmd BufWritePost * call s:on_text_document_did_save()
         autocmd BufWinLeave * call s:on_text_document_did_close()
-        autocmd InsertLeave * call s:on_text_document_did_change()
+        autocmd InsertLeave,TextChanged * call s:on_text_document_did_change()
         autocmd CursorMoved * call s:on_cursor_moved()
     augroup END
     call s:on_text_document_did_open()
@@ -148,28 +150,55 @@ function! s:unregister_events() abort
     doautocmd User lsp_unregister_server
 endfunction
 
+function! s:on_update(...)
+    call lsp#ui#vim#code_lens_clear()
+    call lsp#ui#vim#code_lens()
+endfunction
+
+function! s:update_code_lens(time)
+    if !get(g:, 'lsp_auto_show_codelens')
+        return
+    endif
+    if !empty(timer_info(s:code_lens_tmr))
+        call timer_stop(s:code_lens_tmr)
+    endif
+    let s:code_lens_tmr = timer_start(a:time, function('s:on_update'))
+endfunction
+
 function! s:on_text_document_did_open() abort
     let l:buf = bufnr('%')
     call lsp#log('s:on_text_document_did_open()', l:buf, &filetype, getcwd(), lsp#utils#get_buffer_uri(l:buf))
-    for l:server_name in lsp#get_whitelisted_servers()
+    let l:servers = lsp#get_whitelisted_servers()
+    for l:server_name in l:servers
         call s:ensure_flush(l:buf, l:server_name, function('s:Noop'))
     endfor
+    call s:update_code_lens(200)
 endfunction
 
 function! s:on_text_document_did_save() abort
     call lsp#log('s:on_text_document_did_save()', bufnr('%'))
     let l:buf = bufnr('%')
-    for l:server_name in lsp#get_whitelisted_servers()
+    let l:servers = lsp#get_whitelisted_servers()
+    for l:server_name in l:servers
         call s:ensure_flush(bufnr('%'), l:server_name, {result->s:call_did_save(l:buf, l:server_name, result, function('s:Noop'))})
     endfor
+    if empty(filter(l:servers, 'lsp#capabilities#has_code_lens_provider(v:val)'))
+        return
+    endif
+    call s:update_code_lens(500)
 endfunction
 
 function! s:on_text_document_did_change() abort
     call lsp#log('s:on_text_document_did_change()', bufnr('%'))
     let l:buf = bufnr('%')
-    for l:server_name in lsp#get_whitelisted_servers()
+    let l:servers = lsp#get_whitelisted_servers()
+    for l:server_name in l:servers
         call s:ensure_flush(bufnr('%'), l:server_name, function('s:Noop'))
     endfor
+    if empty(filter(l:servers, 'lsp#capabilities#has_code_lens_provider(v:val)'))
+        return
+    endif
+    call s:update_code_lens(500)
 endfunction
 
 function! s:on_cursor_moved() abort
