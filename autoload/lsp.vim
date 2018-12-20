@@ -621,7 +621,7 @@ function! lsp#get_text_document_identifier(...) abort
     return { 'uri': lsp#utils#get_buffer_uri(l:buf) }
 endfunction
 
-function! lsp#get_position(...) abort
+function! lsp#get_position() abort
     return { 'line': line('.') - 1, 'character': col('.') -1 }
 endfunction
 
