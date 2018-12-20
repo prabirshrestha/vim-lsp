@@ -259,7 +259,10 @@ function! lsp#ui#vim#document_symbol() abort
     echo 'Retrieving document symbols ...'
 endfunction
 
-function! s:handle_executecommand(server, type, data) abort
+function! s:handle_executecommand(server, last_req_id, type, data) abort
+    if a:last_req_id != s:last_req_id
+        return
+    endif
     " TODO(Richard):
     call lsp#log('s:executecommand', a:data)
 endfunction
@@ -280,7 +283,7 @@ function! lsp#ui#vim#workspace_executecommand(command) abort
         call lsp#send_request(l:server, {
             \ 'method': 'workspace/executeCommand',
             \ 'params': a:command,
-            \ 'on_notification': function('s:handle_executecommand', [l:server, l:info]),
+            \ 'on_notification': function('s:handle_executecommand', [l:server, s:last_req_id, l:info]),
             \ })
     endfor
 
@@ -289,6 +292,9 @@ function! lsp#ui#vim#workspace_executecommand(command) abort
 endfunction
 
 function! s:handle_signature_help(server, data) abort
+    if a:last_req_id != s:last_req_id
+        return
+    endif
     " TODO(Richard)
     call lsp#log('s:handle_signature_help', a:data)
 endfunction
@@ -308,21 +314,34 @@ function! lsp#ui#vim#signature_help() abort
             \   'textDocument': lsp#get_text_document_identifier(),
             \   'position': lsp#get_position(),
             \ },
-            \ 'on_notification': function('s:handle_signature_help', [l:server]),
+            \ 'on_notification': function('s:handle_signature_help', [l:server, s:last_req_id]),
             \ })
     endfor
 
     echo 'Retrieving signature help ...'
 endfunction
 
-function! s:handle_code_lens_resolved(codelens) abort
-    " TODO(Richard)
-    call lsp#log('s:handle_code_lens_resolved', a:codelens)
+function! s:handle_code_lens_resolved(codelenses) abort
+    let l:dict = {}
+
+    for l:codelens in a:codelenses
+        let l:line = l:codelens['command']['arguments'][1]['line']
+        let l:dict[l:line] = add(get(l:dict, l:line, []), l:codelens['command'])
+    endfor
+
+    for [l:line, l:commands] in items(l:dict)
+        call sort(l:commands, {x, y -> x['arguments'][1]['character'] - y['arguments'][1]['character']})
+        call map(l:commands, {_, x -> x['title']})
+        call nvim_buf_set_virtual_text(0, 1025, str2nr(l:line), [['| ' . join(l:commands, ' | ') . ' |', 'Comment']], {})
+    endfor
 endfunction
 
-function! s:handle_document_link_resolved(doclink) abort
-    " TODO(Richard)
-    call lsp#log('s:handle_document_link_resolved', a:doclink)
+function! s:handle_document_link_resolved(doclinks) abort
+    for l:dl in a:doclinks
+        let l:line = l:dl['range']['start']['line']
+        let l:text = fnamemodify(resolve(lsp#utils#uri_to_path(l:dl['target'])), ":~:.")
+        call nvim_buf_set_virtual_text(0, 1025, str2nr(l:line), [['| ' . l:text . ' |', 'Comment']], {})
+    endfor
 endfunction
 
 function! s:handle_code_lens_resolve(server, data) abort
@@ -351,31 +370,19 @@ function! s:document_link_resolve(server, doclink) abort
         \ })
 endfunction
 
-function! s:handle_code_lens(server, data) abort
-    if lsp#capabilities#has_code_lens_resolve_provider(a:server)
-        for l:codelens in a:data['response']['result']
-            call s:code_lens_resolve(a:server, l:codelens)
-        endfor
-    else
-        for l:codelens in a:data['response']['result']
-            call s:handle_code_lens_resolved(l:codelens)
-        endfor
+function! s:handle_code_lens(server, last_req_id, data) abort
+    if a:last_req_id != s:last_req_id
+        return
     endif
-
+    call s:handle_code_lens_resolved(a:data['response']['result'])
     echo 'Code lens retrieved'
 endfunction
 
-function! s:handle_document_link(server, data) abort
-    if lsp#capabilities#has_document_link_resolve_provider(a:server)
-        for l:doclink in a:data['response']['result']
-            call s:document_link_resolve(a:server, l:doclink)
-        endfor
-    else
-        for l:doclink in a:data['response']['result']
-            call s:handle_document_link_resolved(l:doclink)
-        endfor
+function! s:handle_document_link(server, last_req_id, data) abort
+    if a:last_req_id != s:last_req_id
+        return
     endif
-
+    call s:handle_document_link_resolved(a:data['response']['result'])
     echo 'Document link retrieved'
 endfunction
 
@@ -393,7 +400,7 @@ function! lsp#ui#vim#code_lens() abort
             \ 'params': {
             \   'textDocument': lsp#get_text_document_identifier(),
             \ },
-            \ 'on_notification': function('s:handle_code_lens', [l:server]),
+            \ 'on_notification': function('s:handle_code_lens', [l:server, s:last_req_id]),
             \ })
     endfor
 
@@ -415,7 +422,7 @@ function! lsp#ui#vim#document_link() abort
             \ 'params': {
             \   'textDocument': lsp#get_text_document_identifier(),
             \ },
-            \ 'on_notification': function('s:handle_document_link', [l:server]),
+            \ 'on_notification': function('s:handle_document_link', [l:server, s:last_req_id]),
             \ })
     endfor
 
@@ -431,16 +438,15 @@ function! lsp#ui#vim#document_highlight() abort
         return
     endif
 
-    for l:server in l:servers
-        call lsp#send_request(l:server, {
-            \ 'method': 'textDocument/documentHighlight',
-            \ 'params': {
-            \   'textDocument': lsp#get_text_document_identifier(),
-            \   'position': lsp#get_position(),
-            \ },
-            \ 'on_notification': function('s:handle_document_highlight'),
-            \ })
-    endfor
+    let l:server = l:servers[0]
+    call lsp#send_request(l:server, {
+        \ 'method': 'textDocument/documentHighlight',
+        \ 'params': {
+        \   'textDocument': lsp#get_text_document_identifier(),
+        \   'position': lsp#get_position(),
+        \ },
+        \ 'on_notification': function('s:handle_document_highlight', [l:server, s:last_req_id]),
+        \ })
 
     echo 'Retrieving document highlights ...'
 endfunction
@@ -493,7 +499,7 @@ function! s:show_locations() abort
     if !get(g:, 'lsp_fzf_enable') || !get(g:, 'loaded_fzf')
         botright copen
     else
-        let l:qfl = getqflist()
+        let l:qfl = getqflist()))
         call map(l:qfl, {idx, item -> string(idx + 1) . '. ' . fnamemodify(expand(bufname(item['bufnr'])), ":~:.") . ':' . string(item['lnum']) . ':' . string(item['col']) . ':' . item['text']})
         call fzf#run(fzf#wrap({'source': l:qfl, 'sink': function('s:jump_to_location'), 'options': '--reverse +m --prompt="Jump> "'}))
     endif
@@ -571,6 +577,7 @@ endfunction
 
 function! s:parse_highlight(hl)
     let l:list = []
+
     let l:hl = get(g:, 'lsp_document_highlight')[a:hl['kind']]
     let l:rg = a:hl['range']
     let l:sl = l:rg['start']['line']
@@ -585,7 +592,10 @@ function! s:parse_highlight(hl)
     return l:list
 endfunction
 
-function! s:handle_document_highlight(data) abort
+function! s:handle_document_highlight(server, last_req_id, data) abort
+    if a:last_req_id != s:last_req_id
+        return
+    endif
     for l:hl in a:data['response']['result']
         for [l:hl, l:line, l:sc, l:ec] in s:parse_highlight(l:hl)
             call nvim_buf_add_highlight(0, 1024, l:hl, l:line, l:sc, l:ec)
