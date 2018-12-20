@@ -490,7 +490,7 @@ function! s:apply_text_edits(uri, text_edits) abort
             let l:was_view = winsaveview()
 
             set paste
-            set selection=inclusive
+            set selection=exclusive
             set virtualedit=onemore
 
             execute l:cmd
@@ -640,7 +640,7 @@ function! s:generate_move_end_cmd(line_pos, character_pos) abort
     if a:character_pos > 0
         let l:result .= printf('%dl', a:character_pos) " move right until the character
     else
-        let l:result .= '$' " move most right
+        let l:result = printf('%dG$', a:line_pos - 1) " move most right
     endif
     return l:result
 endfunction
