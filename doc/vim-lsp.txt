@@ -307,7 +307,8 @@ Format the entire document.
 
 LspDocumentFormatSync				     *LspDocumentFormatSync*
 
-Same as |LspDocumentFormat| but synchronous. Useful when running |autocmd| commands such as formatting before save.
+Same as |LspDocumentFormat| but synchronous. Useful when running |autocmd|
+commands such as formatting before save.
 
     Example:
         autocmd BufWritePre <buffer> LspDocumentFormatSync
