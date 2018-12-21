@@ -72,11 +72,6 @@ function! s:handle_hover(server, data) abort
         return
     endif
 
-     if a:type == 'balloon'
-        call balloon_show(join(map(l:contents, 'v:val.text'), "\n"))
-        return
-    endif
-
     if !empty(a:data['response']['result']) && !empty(a:data['response']['result']['contents'])
         call lsp#ui#vim#output#preview(a:data['response']['result']['contents'])
         return
