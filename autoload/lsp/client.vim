@@ -240,6 +240,11 @@ function! s:lsp_is_error(obj_or_response) abort
     return has_key(a:obj_or_response, 'error')
 endfunction
 
+function! s:lsp_is_error(obj_or_response) abort
+    return has_key(a:obj_or_response, 'error')
+endfunction
+
+
 function! s:is_server_instantiated_notification(notification) abort
     return !has_key(a:notification, 'request')
 endfunction
@@ -268,6 +273,18 @@ endfunction
 
 function! lsp#client#is_error(obj_or_response) abort
     return s:lsp_is_error(a:obj_or_response)
+endfunction
+
+function! lsp#client#error_message(obj_or_response) abort
+    try
+        return a:obj_or_response['error']['data']['message']
+    catch
+    endtry
+    try
+        return a:obj_or_response['error']['message']
+    catch
+    endtry
+    return string(a:obj_or_response)
 endfunction
 
 function! lsp#client#is_server_instantiated_notification(notification) abort
