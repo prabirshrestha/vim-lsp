@@ -22,6 +22,7 @@ CONTENTS                                                  *vim-lsp-contents*
       LspDocumentDiagnostics      |LspDocumentDiagnostics|
       LspDefinition               |LspDefinition|
       LspDocumentFormat           |LspDocumentFormat|
+      LspDocumentFormatSync       |LspDocumentFormatSync|
       LspDocumentRangeFormat      |LspDocumentRangeFormat|
       LspDocumentSymbol           |LspDocumentSymbol|
       LspHover                    |LspHover|
@@ -303,6 +304,16 @@ Go to definition.
 LspDocumentFormat					 *LspDocumentFormat*
 
 Format the entire document.
+
+LspDocumentFormatSync				     *LspDocumentFormatSync*
+
+Same as |LspDocumentFormat| but synchronous. Useful when running |autocmd|
+commands such as formatting before save.
+
+    Example:
+        autocmd BufWritePre <buffer> LspDocumentFormatSync
+
+Note that this may slow down vim.
 
 LspDocumentRangeFormat				    *LspDocumentRangeFormat*
 
