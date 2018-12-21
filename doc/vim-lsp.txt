@@ -22,6 +22,7 @@ CONTENTS                                                  *vim-lsp-contents*
       LspDocumentDiagnostics      |LspDocumentDiagnostics|
       LspDefinition               |LspDefinition|
       LspDocumentFormat           |LspDocumentFormat|
+      LspDocumentFormatSync       |LspDocumentFormatSync|
       LspDocumentRangeFormat      |LspDocumentRangeFormat|
       LspDocumentSymbol           |LspDocumentSymbol|
       LspHover                    |LspHover|
@@ -303,6 +304,10 @@ Go to definition.
 LspDocumentFormat					 *LspDocumentFormat*
 
 Format the entire document.
+
+LspDocumentFormatSync				     *LspDocumentFormatSync*
+
+Same as LspDocumentFormat but synchronized.
 
 LspDocumentRangeFormat				    *LspDocumentRangeFormat*
 
