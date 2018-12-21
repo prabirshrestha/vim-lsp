@@ -1,29 +1,5 @@
 let s:last_req_id = 0
 
-function! lsp#ui#vim#balloon() abort
-    let l:servers = filter(lsp#get_whitelisted_servers(), 'lsp#capabilities#has_hover_provider(v:val)')
-    let s:last_req_id = s:last_req_id + 1
-
-    if len(l:servers) == 0
-        echom 'Retrieving hover not supported for ' . &filetype
-        return ''
-    endif
-
-    for l:server in l:servers
-        call lsp#send_request(l:server, {
-            \ 'method': 'textDocument/hover',
-            \ 'params': {
-            \   'textDocument': lsp#get_text_document_identifier(),
-            \   'position': { 'line': v:beval_lnum - 1, 'character': v:beval_col - 1 }
-            \ },
-            \ 'on_notification': function('s:handle_hover', [l:server, s:last_req_id, 'balloon']),
-            \ })
-    endfor
-
-    echom 'Retrieving hover ...'
-    return ''
-endfunction
-
 function! s:not_supported(what) abort
     return lsp#utils#error(a:what.' not supported for '.&filetype)
 endfunction
@@ -388,26 +364,6 @@ function! s:handle_workspace_edit(server, last_req_id, type, data) abort
 
     if lsp#client#is_error(a:data['response'])
         call lsp#utils#error('Failed to retrieve '. a:type . ' for ' . a:server . ': ' . lsp#client#error_message(a:data['response']))
-        return
-    endif
-
-    let l:contents = a:data['response']['result']['contents']
-
-    if type(l:contents) == type('')
-        let l:contents = [{ 'text': s:markdown_to_text(l:contents) }]
-    elseif type(l:contents) == type([])
-        let l:contents = []
-        for l:content in a:data['response']['result']['contents']
-            if type(l:content) == type('')
-                call add(l:contents, { 'text': s:markdown_to_text(l:content) })
-            elseif type(l:content) == type({})
-                call add(l:contents, { 'text': s:markdown_to_text(l:content['value']) })
-            endif
-        endfor
-    endif
-
-     if a:type == 'balloon'
-        call balloon_show(join(map(l:contents, 'v:val.text'), "\n"))
         return
     endif
 

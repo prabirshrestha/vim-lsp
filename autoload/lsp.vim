@@ -154,7 +154,7 @@ function! s:on_text_document_did_open() abort
     for l:server_name in lsp#get_whitelisted_servers()
         call s:ensure_flush(l:buf, l:server_name, function('s:Noop'))
         if g:lsp_hover_balloon_eval
-            setlocal ballooneval balloonexpr=lsp#ui#vim#balloon()
+            setlocal ballooneval balloonexpr=lsp#ui#vim#hover#balloon()
         endif
     endfor
 endfunction

@@ -2,6 +2,30 @@ function! s:not_supported(what) abort
     return lsp#utils#error(a:what.' not supported for '.&filetype)
 endfunction
 
+function! lsp#ui#vim#hover#balloon() abort
+    let l:servers = filter(lsp#get_whitelisted_servers(), 'lsp#capabilities#has_hover_provider(v:val)')
+
+    if len(l:servers) == 0
+        echom 'Retrieving hover not supported for ' . &filetype
+        return ''
+    endif
+
+    for l:server in l:servers
+        call lsp#send_request(l:server, {
+            \ 'method': 'textDocument/hover',
+            \ 'params': {
+            \   'textDocument': lsp#get_text_document_identifier(),
+            \   'position': { 'line': v:beval_lnum - 1, 'character': v:beval_col - 1 }
+            \ },
+            \ 'on_notification': function('s:handle_hover', [l:server, 'balloon']),
+            \ })
+    endfor
+
+    echom 'Retrieving hover ...'
+    return ''
+endfunction
+
+
 function! lsp#ui#vim#hover#get_hover_under_cursor() abort
     let l:servers = filter(lsp#get_whitelisted_servers(), 'lsp#capabilities#has_hover_provider(v:val)')
 
@@ -31,6 +55,11 @@ function! s:handle_hover(server, data) abort
     endif
 
     if !has_key(a:data['response'], 'result')
+        return
+    endif
+
+     if a:type == 'balloon'
+        call balloon_show(join(map(l:contents, 'v:val.text'), "\n"))
         return
     endif
 
