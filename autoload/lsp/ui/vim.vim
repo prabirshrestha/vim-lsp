@@ -16,13 +16,13 @@ function! lsp#ui#vim#implementation() abort
     let l:ctx = { 'counter': len(l:servers), 'list':[], 'last_req_id': s:last_req_id, 'jump_if_one': 1 }
     for l:server in l:servers
         call lsp#send_request(l:server, {
-            \ 'method': 'textDocument/implementation',
-            \ 'params': {
-            \   'textDocument': lsp#get_text_document_identifier(),
-            \   'position': lsp#get_position(),
-            \ },
-            \ 'on_notification': function('s:handle_location', [l:ctx, l:server, 'implementation']),
-            \ })
+                    \ 'method': 'textDocument/implementation',
+                    \ 'params': {
+                    \   'textDocument': lsp#get_text_document_identifier(),
+                    \   'position': lsp#get_position(),
+                    \ },
+                    \ 'on_notification': function('s:handle_location', [l:ctx, l:server, 'implementation']),
+                    \ })
     endfor
 
     echo 'Retrieving implementation ...'
@@ -40,13 +40,13 @@ function! lsp#ui#vim#type_definition() abort
     let l:ctx = { 'counter': len(l:servers), 'list':[], 'last_req_id': s:last_req_id, 'jump_if_one': 1 }
     for l:server in l:servers
         call lsp#send_request(l:server, {
-            \ 'method': 'textDocument/typeDefinition',
-            \ 'params': {
-            \   'textDocument': lsp#get_text_document_identifier(),
-            \   'position': lsp#get_position(),
-            \ },
-            \ 'on_notification': function('s:handle_location', [l:ctx, l:server, 'type definition']),
-            \ })
+                    \ 'method': 'textDocument/typeDefinition',
+                    \ 'params': {
+                    \   'textDocument': lsp#get_text_document_identifier(),
+                    \   'position': lsp#get_position(),
+                    \ },
+                    \ 'on_notification': function('s:handle_location', [l:ctx, l:server, 'type definition']),
+                    \ })
     endfor
 
     echo 'Retrieving type definition ...'
@@ -65,13 +65,13 @@ function! lsp#ui#vim#definition() abort
     let l:ctx = { 'counter': len(l:servers), 'list':[], 'last_req_id': s:last_req_id, 'jump_if_one': 1 }
     for l:server in l:servers
         call lsp#send_request(l:server, {
-            \ 'method': 'textDocument/definition',
-            \ 'params': {
-            \   'textDocument': lsp#get_text_document_identifier(),
-            \   'position': lsp#get_position(),
-            \ },
-            \ 'on_notification': function('s:handle_location', [l:ctx, l:server, 'definition']),
-            \ })
+                    \ 'method': 'textDocument/definition',
+                    \ 'params': {
+                    \   'textDocument': lsp#get_text_document_identifier(),
+                    \   'position': lsp#get_position(),
+                    \ },
+                    \ 'on_notification': function('s:handle_location', [l:ctx, l:server, 'definition']),
+                    \ })
     endfor
 
     echo 'Retrieving definition ...'
@@ -91,14 +91,14 @@ function! lsp#ui#vim#references() abort
 
     for l:server in l:servers
         call lsp#send_request(l:server, {
-            \ 'method': 'textDocument/references',
-            \ 'params': {
-            \   'textDocument': lsp#get_text_document_identifier(),
-            \   'position': lsp#get_position(),
-            \   'context': {'includeDeclaration': v:false},
-            \ },
-            \ 'on_notification': function('s:handle_location', [l:ctx, l:server, 'references']),
-            \ })
+                    \ 'method': 'textDocument/references',
+                    \ 'params': {
+                    \   'textDocument': lsp#get_text_document_identifier(),
+                    \   'position': lsp#get_position(),
+                    \   'context': {'includeDeclaration': v:false},
+                    \ },
+                    \ 'on_notification': function('s:handle_location', [l:ctx, l:server, 'references']),
+                    \ })
     endfor
 
     echo 'Retrieving references ...'
@@ -124,14 +124,14 @@ function! lsp#ui#vim#rename() abort
     let l:server = l:servers[0]
     " needs to flush existing open buffers
     call lsp#send_request(l:server, {
-        \ 'method': 'textDocument/rename',
-        \ 'params': {
-        \   'textDocument': lsp#get_text_document_identifier(),
-        \   'position': lsp#get_position(),
-        \   'newName': l:new_name,
-        \ },
-        \ 'on_notification': function('s:handle_workspace_edit', [l:server, s:last_req_id, 'rename']),
-        \ })
+                \ 'method': 'textDocument/rename',
+                \ 'params': {
+                \   'textDocument': lsp#get_text_document_identifier(),
+                \   'position': lsp#get_position(),
+                \   'newName': l:new_name,
+                \ },
+                \ 'on_notification': function('s:handle_workspace_edit', [l:server, s:last_req_id, 'rename']),
+                \ })
 
     echo ' ... Renaming ...'
 endfunction
@@ -148,16 +148,16 @@ function! lsp#ui#vim#document_format() abort
     " TODO: ask user to select server for formatting
     let l:server = l:servers[0]
     call lsp#send_request(l:server, {
-        \ 'method': 'textDocument/formatting',
-        \ 'params': {
-        \   'textDocument': lsp#get_text_document_identifier(),
-        \   'options': {
-        \       'tabSize': getbufvar(bufnr('%'), '&tabstop'),
-        \       'insertSpaces': getbufvar(bufnr('%'), '&expandtab') ? v:true : v:false,
-        \   },
-        \ },
-        \ 'on_notification': function('s:handle_text_edit', [l:server, s:last_req_id, 'document format']),
-        \ })
+                \ 'method': 'textDocument/formatting',
+                \ 'params': {
+                \   'textDocument': lsp#get_text_document_identifier(),
+                \   'options': {
+                \       'tabSize': getbufvar(bufnr('%'), '&tabstop'),
+                \       'insertSpaces': getbufvar(bufnr('%'), '&expandtab') ? v:true : v:false,
+                \   },
+                \ },
+                \ 'on_notification': function('s:handle_text_edit', [l:server, s:last_req_id, 'document format']),
+                \ })
 
     echo 'Formatting document ...'
 endfunction
@@ -191,20 +191,20 @@ function! lsp#ui#vim#document_range_format() abort
 
     let [l:start_lnum, l:start_col, l:end_lnum, l:end_col] = s:get_visual_selection_pos()
     call lsp#send_request(l:server, {
-        \ 'method': 'textDocument/rangeFormatting',
-        \ 'params': {
-        \   'textDocument': lsp#get_text_document_identifier(),
-        \   'range': {
-        \       'start': { 'line': l:start_lnum - 1, 'character': l:start_col - 1 },
-        \       'end': { 'line': l:end_lnum - 1, 'character': l:end_col - 1 },
-        \   },
-        \   'options': {
-        \       'tabSize': getbufvar(bufnr('%'), '&shiftwidth'),
-        \       'insertSpaces': getbufvar(bufnr('%'), '&expandtab') ? v:true : v:false,
-        \   },
-        \ },
-        \ 'on_notification': function('s:handle_text_edit', [l:server, s:last_req_id, 'range format']),
-        \ })
+                \ 'method': 'textDocument/rangeFormatting',
+                \ 'params': {
+                \   'textDocument': lsp#get_text_document_identifier(),
+                \   'range': {
+                \       'start': { 'line': l:start_lnum - 1, 'character': l:start_col - 1 },
+                \       'end': { 'line': l:end_lnum - 1, 'character': l:end_col - 1 },
+                \   },
+                \   'options': {
+                \       'tabSize': getbufvar(bufnr('%'), '&shiftwidth'),
+                \       'insertSpaces': getbufvar(bufnr('%'), '&expandtab') ? v:true : v:false,
+                \   },
+                \ },
+                \ 'on_notification': function('s:handle_text_edit', [l:server, s:last_req_id, 'range format']),
+                \ })
 
     echo 'Formatting document range ...'
 endfunction
@@ -224,12 +224,12 @@ function! lsp#ui#vim#workspace_symbol() abort
 
     for l:server in l:servers
         call lsp#send_request(l:server, {
-            \ 'method': 'workspace/symbol',
-            \ 'params': {
-            \   'query': l:query,
-            \ },
-            \ 'on_notification': function('s:handle_symbol', [l:server, s:last_req_id, 'workspaceSymbol']),
-            \ })
+                    \ 'method': 'workspace/symbol',
+                    \ 'params': {
+                    \   'query': l:query,
+                    \ },
+                    \ 'on_notification': function('s:handle_symbol', [l:server, s:last_req_id, 'workspaceSymbol']),
+                    \ })
     endfor
 
     echo 'Retrieving workspace symbols ...'
@@ -248,12 +248,12 @@ function! lsp#ui#vim#document_symbol() abort
 
     for l:server in l:servers
         call lsp#send_request(l:server, {
-            \ 'method': 'textDocument/documentSymbol',
-            \ 'params': {
-            \   'textDocument': lsp#get_text_document_identifier(),
-            \ },
-            \ 'on_notification': function('s:handle_symbol', [l:server, s:last_req_id, 'documentSymbol']),
-            \ })
+                    \ 'method': 'textDocument/documentSymbol',
+                    \ 'params': {
+                    \   'textDocument': lsp#get_text_document_identifier(),
+                    \ },
+                    \ 'on_notification': function('s:handle_symbol', [l:server, s:last_req_id, 'documentSymbol']),
+                    \ })
     endfor
 
     echo 'Retrieving document symbols ...'
@@ -281,10 +281,10 @@ function! lsp#ui#vim#workspace_executecommand(command) abort
 
     for l:server in l:servers
         call lsp#send_request(l:server, {
-            \ 'method': 'workspace/executeCommand',
-            \ 'params': a:command,
-            \ 'on_notification': function('s:handle_executecommand', [l:server, s:last_req_id, l:info]),
-            \ })
+                    \ 'method': 'workspace/executeCommand',
+                    \ 'params': a:command,
+                    \ 'on_notification': function('s:handle_executecommand', [l:server, s:last_req_id, l:info]),
+                    \ })
     endfor
 
     echo l:info . ' ...'
@@ -309,13 +309,13 @@ function! lsp#ui#vim#signature_help() abort
 
     for l:server in l:servers
         call lsp#send_request(l:server, {
-            \ 'method': 'textDocument/signatureHelp',
-            \ 'params': {
-            \   'textDocument': lsp#get_text_document_identifier(),
-            \   'position': lsp#get_position(),
-            \ },
-            \ 'on_notification': function('s:handle_signature_help', [l:server, s:last_req_id]),
-            \ })
+                    \ 'method': 'textDocument/signatureHelp',
+                    \ 'params': {
+                    \   'textDocument': lsp#get_text_document_identifier(),
+                    \   'position': lsp#get_position(),
+                    \ },
+                    \ 'on_notification': function('s:handle_signature_help', [l:server, s:last_req_id]),
+                    \ })
     endfor
 
     echo 'Retrieving signature help ...'
@@ -355,19 +355,19 @@ endfunction
 function! s:code_lens_resolve(server, codelens) abort
     call lsp#log('s:code_lens_resolve', a:codelens)
     call lsp#send_request(a:server, {
-        \ 'method': 'codeLens/resolve',
-        \ 'params': a:codelens,
-        \ 'on_notification': function('s:handle_code_lens_resolve', [a:server]),
-        \ })
+                \ 'method': 'codeLens/resolve',
+                \ 'params': a:codelens,
+                \ 'on_notification': function('s:handle_code_lens_resolve', [a:server]),
+                \ })
 endfunction
 
 function! s:document_link_resolve(server, doclink) abort
     call lsp#log('s:document_link_resolve', a:doclink)
     call lsp#send_request(a:server, {
-        \ 'method': 'documentLink/resolve',
-        \ 'params': a:doclink,
-        \ 'on_notification': function('s:handle_document_link_resolve', [a:server]),
-        \ })
+                \ 'method': 'documentLink/resolve',
+                \ 'params': a:doclink,
+                \ 'on_notification': function('s:handle_document_link_resolve', [a:server]),
+                \ })
 endfunction
 
 function! s:handle_code_lens(server, last_req_id, data) abort
@@ -396,12 +396,12 @@ function! lsp#ui#vim#code_lens() abort
 
     for l:server in l:servers
         call lsp#send_request(l:server, {
-            \ 'method': 'textDocument/codeLens',
-            \ 'params': {
-            \   'textDocument': lsp#get_text_document_identifier(),
-            \ },
-            \ 'on_notification': function('s:handle_code_lens', [l:server, s:last_req_id]),
-            \ })
+                    \ 'method': 'textDocument/codeLens',
+                    \ 'params': {
+                    \   'textDocument': lsp#get_text_document_identifier(),
+                    \ },
+                    \ 'on_notification': function('s:handle_code_lens', [l:server, s:last_req_id]),
+                    \ })
     endfor
 
     echo 'Retrieving code lens ...'
@@ -432,12 +432,12 @@ function! lsp#ui#vim#document_link() abort
 
     for l:server in l:servers
         call lsp#send_request(l:server, {
-            \ 'method': 'textDocument/documentLink',
-            \ 'params': {
-            \   'textDocument': lsp#get_text_document_identifier(),
-            \ },
-            \ 'on_notification': function('s:handle_document_link', [l:server, s:last_req_id]),
-            \ })
+                    \ 'method': 'textDocument/documentLink',
+                    \ 'params': {
+                    \   'textDocument': lsp#get_text_document_identifier(),
+                    \ },
+                    \ 'on_notification': function('s:handle_document_link', [l:server, s:last_req_id]),
+                    \ })
     endfor
 
     echo 'Retrieving document link ...'
@@ -460,13 +460,13 @@ function! lsp#ui#vim#document_highlight() abort
 
     let l:server = l:servers[0]
     call lsp#send_request(l:server, {
-        \ 'method': 'textDocument/documentHighlight',
-        \ 'params': {
-        \   'textDocument': lsp#get_text_document_identifier(),
-        \   'position': lsp#get_position(),
-        \ },
-        \ 'on_notification': function('s:handle_document_highlight', [l:server, s:last_req_id]),
-        \ })
+                \ 'method': 'textDocument/documentHighlight',
+                \ 'params': {
+                \   'textDocument': lsp#get_text_document_identifier(),
+                \   'position': lsp#get_position(),
+                \ },
+                \ 'on_notification': function('s:handle_document_highlight', [l:server, s:last_req_id]),
+                \ })
 
     echo 'Retrieving document highlights ...'
 endfunction
@@ -495,16 +495,16 @@ function! lsp#ui#vim#code_action() abort
 
     for l:server in l:servers
         call lsp#send_request(l:server, {
-            \ 'method': 'textDocument/codeAction',
-            \ 'params': {
-            \   'textDocument': lsp#get_text_document_identifier(),
-            \   'range': s:diagnostics['range'],
-            \   'context': {
-            \       'diagnostics' : [s:diagnostics],
-            \   },
-            \ },
-            \ 'on_notification': function('s:handle_code_action', [l:server, s:last_req_id, 'codeAction']),
-            \ })
+                    \ 'method': 'textDocument/codeAction',
+                    \ 'params': {
+                    \   'textDocument': lsp#get_text_document_identifier(),
+                    \   'range': s:diagnostics['range'],
+                    \   'context': {
+                    \       'diagnostics' : [s:diagnostics],
+                    \   },
+                    \ },
+                    \ 'on_notification': function('s:handle_code_action', [l:server, s:last_req_id, 'codeAction']),
+                    \ })
     endfor
 
     echo 'Retrieving code actions ...'
@@ -831,7 +831,7 @@ function! s:merge_same_range(start_index, text_edits) abort
     let l:merged = deepcopy(a:text_edits[a:start_index])
 
     while l:i < len(a:text_edits) &&
-        \ s:is_same_range(l:merged['range'], a:text_edits[l:i]['range'])
+                \ s:is_same_range(l:merged['range'], a:text_edits[l:i]['range'])
 
         let l:merged['newText'] .= a:text_edits[l:i]['newText']
         let l:i += 1
@@ -842,15 +842,15 @@ endfunction
 
 function! s:is_same_range(range1, range2) abort
     return a:range1['start']['line'] == a:range2['start']['line'] &&
-        \ a:range1['end']['line'] == a:range2['end']['line'] &&
-        \ a:range1['start']['character'] == a:range2['start']['character'] &&
-        \ a:range1['end']['character'] == a:range2['end']['character']
+                \ a:range1['end']['line'] == a:range2['end']['line'] &&
+                \ a:range1['start']['character'] == a:range2['start']['character'] &&
+                \ a:range1['end']['character'] == a:range2['end']['character']
 endfunction
 
 " https://microsoft.github.io/language-server-protocol/specification#textedit
 function! s:is_insert(range) abort
     return a:range['start']['line'] == a:range['end']['line'] &&
-        \ a:range['start']['character'] == a:range['end']['character']
+                \ a:range['start']['character'] == a:range['end']['character']
 endfunction
 
 " Compares two text edits, based on the starting position of the range.
@@ -871,7 +871,7 @@ function! s:sort_text_edit_desc(text_edit1, text_edit2) abort
     endif
 
     return !s:is_insert(a:text_edit1['range']) ? -1 :
-        \ s:is_insert(a:text_edit2['range']) ? 0 : 1
+                \ s:is_insert(a:text_edit2['range']) ? 0 : 1
 endfunction
 
 function! s:build_cmd(uri, text_edit) abort
@@ -979,11 +979,14 @@ function! s:parse_range(range) abort
     let l:range['start']['line'] += 1
     let l:range['end']['line'] += 1
 
-    let l:linelen = len(getline(l:range['end']['line']))
+    let l:linelen = col([l:range['end']['line'], '$']) - 1
     if l:range['end']['character'] > l:linelen
         let l:range['end']['line'] += 1
         let l:range['end']['character'] = 0
     endif
+
+    let l:range['start']['character'] = virtcol([l:range['start']['line'], l:range['start']['character']])
+    let l:range['end']['character'] = virtcol([l:range['end']['line'], l:range['end']['character']])
 
     return l:range
 endfunction
