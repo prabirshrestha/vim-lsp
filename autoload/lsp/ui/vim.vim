@@ -298,7 +298,7 @@ function! s:handle_symbol(server, last_req_id, type, data) abort
     endif
 
     if lsp#client#is_error(a:data['response'])
-        call lsp#utils#error('Failed to retrieve '. a:type . ' for ' . a:server)
+        call lsp#utils#error('Failed to retrieve '. a:type . ' for ' . a:server . ': ' . lsp#client#error_message(a:data['response']))
         return
     endif
 
@@ -322,7 +322,7 @@ function! s:handle_location(ctx, server, type, data) abort "ctx = {counter, list
     let a:ctx['counter'] = a:ctx['counter'] - 1
 
     if lsp#client#is_error(a:data['response'])
-        call lsp#utils#error('Failed to retrieve '. a:type . ' for ' . a:server)
+        call lsp#utils#error('Failed to retrieve '. a:type . ' for ' . a:server . ': ' . lsp#client#error_message(a:data['response']))
     else
         let a:ctx['list'] = a:ctx['list'] + lsp#ui#vim#utils#locations_to_loc_list(a:data)
     endif
@@ -353,8 +353,8 @@ function! s:handle_workspace_edit(server, last_req_id, type, data) abort
         return
     endif
 
-    if lsp#client#is_error(a:data)
-        call lsp#utils#error('Failed to retrieve '. a:type . ' for ' . a:server)
+    if lsp#client#is_error(a:data['response'])
+        call lsp#utils#error('Failed to retrieve '. a:type . ' for ' . a:server . ': ' . lsp#client#error_message(a:data['response']))
         return
     endif
 
@@ -369,7 +369,7 @@ function! s:handle_text_edit(server, last_req_id, type, data) abort
     endif
 
     if lsp#client#is_error(a:data['response'])
-        call lsp#utils#error('Failed to '. a:type . ' for ' . a:server)
+        call lsp#utils#error('Failed to '. a:type . ' for ' . a:server . ': ' . lsp#client#error_message(a:data['response']))
         return
     endif
 
@@ -490,7 +490,7 @@ function! s:apply_text_edits(uri, text_edits) abort
             let l:was_view = winsaveview()
 
             set paste
-            set selection=inclusive
+            set selection=exclusive
             set virtualedit=onemore
 
             execute l:cmd
@@ -588,7 +588,7 @@ function! s:generate_sub_cmd_insert(text_edit) abort
     let l:new_text = s:parse(a:text_edit['newText'])
 
     let l:sub_cmd = s:preprocess_cmd(a:text_edit['range'])
-    let l:sub_cmd .= s:generate_move_cmd(l:start_line, l:start_character)
+    let l:sub_cmd .= s:generate_move_start_cmd(l:start_line, l:start_character)
 
     if len(l:new_text) == 0
         let l:sub_cmd .= 'x'
@@ -613,9 +613,9 @@ function! s:generate_sub_cmd_replace(text_edit) abort
     let l:new_text = substitute(a:text_edit['newText'], '\n$', '', '')
 
     let l:sub_cmd = s:preprocess_cmd(a:text_edit['range'])
-    let l:sub_cmd .= s:generate_move_cmd(l:start_line, l:start_character) " move to the first position
+    let l:sub_cmd .= s:generate_move_start_cmd(l:start_line, l:start_character) " move to the first position
     let l:sub_cmd .= 'v'
-    let l:sub_cmd .= s:generate_move_cmd(l:end_line, l:end_character) " move to the last position
+    let l:sub_cmd .= s:generate_move_end_cmd(l:end_line, l:end_character) " move to the last position
 
     if len(l:new_text) == 0
         let l:sub_cmd .= 'x'
@@ -627,10 +627,20 @@ function! s:generate_sub_cmd_replace(text_edit) abort
     return l:sub_cmd
 endfunction
 
-function! s:generate_move_cmd(line_pos, character_pos) abort
+function! s:generate_move_start_cmd(line_pos, character_pos) abort
     let l:result = printf('%dG0', a:line_pos) " move the line and set to the cursor at the beginning
     if a:character_pos > 0
         let l:result .= printf('%dl', a:character_pos) " move right until the character
+    endif
+    return l:result
+endfunction
+
+function! s:generate_move_end_cmd(line_pos, character_pos) abort
+    let l:result = printf('%dG0', a:line_pos) " move the line and set to the cursor at the beginning
+    if a:character_pos > 0
+        let l:result .= printf('%dl', a:character_pos) " move right until the character
+    else
+        let l:result = printf('%dG$', a:line_pos - 1) " move most right
     endif
     return l:result
 endfunction
