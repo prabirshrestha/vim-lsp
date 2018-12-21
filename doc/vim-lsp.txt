@@ -307,7 +307,12 @@ Format the entire document.
 
 LspDocumentFormatSync				     *LspDocumentFormatSync*
 
-Same as LspDocumentFormat but synchronized.
+Same as |LspDocumentFormat| but synchronous. Useful when running |autocmd| commands such as formatting before save.
+
+    Example:
+        autocmd BufWritePre <buffer> LspDocumentFormatSync
+
+Note that this may slow down vim.
 
 LspDocumentRangeFormat				    *LspDocumentRangeFormat*
 
