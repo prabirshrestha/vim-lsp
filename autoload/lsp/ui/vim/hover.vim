@@ -17,7 +17,7 @@ function! lsp#ui#vim#hover#balloon() abort
             \   'textDocument': lsp#get_text_document_identifier(),
             \   'position': { 'line': v:beval_lnum - 1, 'character': v:beval_col - 1 }
             \ },
-            \ 'on_notification': function('s:handle_hover', [l:server, 'balloon']),
+            \ 'on_notification': function('s:handle_balloon', [l:server]),
             \ })
     endfor
 
@@ -25,6 +25,20 @@ function! lsp#ui#vim#hover#balloon() abort
     return ''
 endfunction
 
+function! s:handle_balloon(server, data) abort
+    if lsp#client#is_error(a:data['response'])
+        call lsp#utils#error('Failed to retrieve hover information for ' . a:server)
+        return
+    endif
+
+    if !has_key(a:data['response'], 'result')
+        return
+    endif
+
+    let l:contents = a:data['response']['result']['contents']
+
+    call balloon_show(l:contents.value)
+endfunction
 
 function! lsp#ui#vim#hover#get_hover_under_cursor() abort
     let l:servers = filter(lsp#get_whitelisted_servers(), 'lsp#capabilities#has_hover_provider(v:val)')
