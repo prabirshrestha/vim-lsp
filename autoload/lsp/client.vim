@@ -84,6 +84,11 @@ function! s:on_stdout(id, data, event) abort
             let l:on_notification_data = { 'response': l:response }
             if has_key(l:response, 'id')
                 " it is a request->response
+                if !(type(l:response['id']) == type(0) || type(l:response['id']) == type(''))
+                    " response['id'] can be number | string | null based on the spec
+                    call lsp#log('invalid response id. ignoring message', l:response)
+                    continue
+                endif
                 if has_key(l:ctx['requests'], l:response['id'])
                     let l:on_notification_data['request'] = l:ctx['requests'][l:response['id']]
                 endif
@@ -104,7 +109,11 @@ function! s:on_stdout(id, data, event) abort
                     endtry
                     unlet l:ctx['on_notifications'][l:response['id']]
                 endif
-                unlet l:ctx['requests'][l:response['id']]
+                if has_key(l:ctx['requests'], l:response['id'])
+                    unlet l:ctx['requests'][l:response['id']]
+                else
+                    call lsp#log('cannot find the request corresponding to response: ', l:response)
+                endif
             else
                 " it is a notification
                 if has_key(l:ctx['opts'], 'on_notification')
@@ -217,7 +226,11 @@ function! s:lsp_send(id, opts, type) abort " opts = { method, params?, on_notifi
     call async#job#send(a:id, l:payload)
 
     if (a:type == s:send_type_request)
-        return l:request['id']
+        let l:id = l:request['id']
+        if get(a:opts, 'sync', 0) !=# 0
+            call async#job#wait([l:id])
+        endif
+        return l:id
     else
         return 0
     endif
@@ -227,9 +240,14 @@ function! s:lsp_get_last_request_id(id) abort
     return s:clients[a:id]['request_sequence']
 endfunction
 
-function! s:lsp_is_error(notification) abort
-    return has_key(a:notification, 'error')
+function! s:lsp_is_error(obj_or_response) abort
+    return has_key(a:obj_or_response, 'error')
 endfunction
+
+function! s:lsp_is_error(obj_or_response) abort
+    return has_key(a:obj_or_response, 'error')
+endfunction
+
 
 function! s:is_server_instantiated_notification(notification) abort
     return !has_key(a:notification, 'request')
@@ -257,8 +275,20 @@ function! lsp#client#get_last_request_id(client_id) abort
     return s:lsp_get_last_request_id(a:client_id)
 endfunction
 
-function! lsp#client#is_error(notification) abort
-    return s:lsp_is_error(a:notification)
+function! lsp#client#is_error(obj_or_response) abort
+    return s:lsp_is_error(a:obj_or_response)
+endfunction
+
+function! lsp#client#error_message(obj_or_response) abort
+    try
+        return a:obj_or_response['error']['data']['message']
+    catch
+    endtry
+    try
+        return a:obj_or_response['error']['message']
+    catch
+    endtry
+    return string(a:obj_or_response)
 endfunction
 
 function! lsp#client#is_server_instantiated_notification(notification) abort

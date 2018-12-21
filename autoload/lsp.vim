@@ -35,6 +35,9 @@ function! lsp#enable() abort
         let s:already_setup = 1
     endif
     let s:enabled = 1
+    if g:lsp_signs_enabled
+        call lsp#ui#vim#signs#enable()
+    endif
     call s:register_events()
 endfunction
 
@@ -42,6 +45,7 @@ function! lsp#disable() abort
     if !s:enabled
         return
     endif
+    call lsp#ui#vim#signs#disable()
     call s:unregister_events()
     let s:enabled = 0
 endfunction
@@ -57,6 +61,38 @@ endfunction
 function! lsp#get_server_capabilities(server_name) abort
     let l:server = s:servers[a:server_name]
     return has_key(l:server, 'init_result') ? l:server['init_result']['result']['capabilities'] : {}
+endfunction
+
+function! s:server_status(server_name) abort
+    if !has_key(s:servers, a:server_name)
+        return "unknown server"
+    endif
+    let l:server = s:servers[a:server_name]
+    if has_key(l:server, 'exited')
+        return "exited"
+    endif
+    if has_key(l:server, 'init_callbacks')
+        return "starting"
+    endif
+    if has_key(l:server, 'failed')
+        return "failed"
+    endif
+    if has_key(l:server, 'init_result')
+        return "running"
+    endif
+    return "not running"
+endfunction
+
+" Returns the current status of all servers (if called with no arguments) or
+" the given server (if given an argument). Can be one of "unknown server",
+" "exited", "starting", "failed", "running", "not running"
+function! lsp#get_server_status(...) abort
+    if a:0 == 0
+        let l:strs = map(keys(s:servers), {k, v -> v . ": " . s:server_status(v)})
+        return join(l:strs, "\n")
+    else
+        return s:server_status(a:1)
+    endif
 endfunction
 
 " @params {server_info} = {
@@ -87,6 +123,12 @@ function! lsp#unregister_notifications(name) abort
     " TODO
 endfunction
 
+function! lsp#stop_server(server_name) abort
+    if has_key(s:servers, a:server_name) && s:servers[a:server_name]['lsp_id'] > 0
+        call lsp#client#stop(s:servers[a:server_name]['lsp_id'])
+    endif
+endfunction
+
 function! s:register_events() abort
     augroup lsp
         autocmd!
@@ -94,6 +136,7 @@ function! s:register_events() abort
         autocmd BufWritePost * call s:on_text_document_did_save()
         autocmd BufWinLeave * call s:on_text_document_did_close()
         autocmd InsertLeave * call s:on_text_document_did_change()
+        autocmd CursorMoved * call s:on_cursor_moved()
     augroup END
     call s:on_text_document_did_open()
 endfunction
@@ -106,9 +149,10 @@ function! s:unregister_events() abort
 endfunction
 
 function! s:on_text_document_did_open() abort
-    call lsp#log('s:on_text_document_did_open()', bufnr('%'), &filetype, getcwd(), lsp#utils#get_buffer_uri(bufnr('%')))
+    let l:buf = bufnr('%')
+    call lsp#log('s:on_text_document_did_open()', l:buf, &filetype, getcwd(), lsp#utils#get_buffer_uri(l:buf))
     for l:server_name in lsp#get_whitelisted_servers()
-        call s:ensure_flush(bufnr('%'), l:server_name, function('s:Noop'))
+        call s:ensure_flush(l:buf, l:server_name, function('s:Noop'))
         if g:lsp_hover_balloon_eval
             setlocal ballooneval balloonexpr=lsp#ui#vim#balloon()
         endif
@@ -129,6 +173,10 @@ function! s:on_text_document_did_change() abort
     for l:server_name in lsp#get_whitelisted_servers()
         call s:ensure_flush(bufnr('%'), l:server_name, function('s:Noop'))
     endfor
+endfunction
+
+function! s:on_cursor_moved() abort
+    call lsp#ui#vim#diagnostics#echo#cursor_moved()
 endfunction
 
 function! s:call_did_save(buf, server_name, result, cb) abort
@@ -214,6 +262,7 @@ function! s:ensure_flush(buf, server_name, cb) abort
     call lsp#utils#step#start([
         \ {s->s:ensure_start(a:buf, a:server_name, s.callback)},
         \ {s->s:is_step_error(s) ? s:throw_step_error(s) : s:ensure_init(a:buf, a:server_name, s.callback)},
+        \ {s->s:is_step_error(s) ? s:throw_step_error(s) : s:ensure_conf(a:buf, a:server_name, s.callback)},
         \ {s->s:is_step_error(s) ? s:throw_step_error(s) : s:ensure_open(a:buf, a:server_name, s.callback)},
         \ {s->s:is_step_error(s) ? s:throw_step_error(s) : s:ensure_changed(a:buf, a:server_name, s.callback)},
         \ {s->a:cb(s.result[0])}
@@ -301,17 +350,51 @@ function! s:ensure_init(buf, server_name, cb) abort
         return
     endif
 
+    if has_key(l:server_info, 'capabilities')
+        let l:capabilities = l:server_info['capabilities']
+    else
+        let l:capabilities = {
+        \   'workspace': {
+        \       'applyEdit ': v:true
+        \   }
+        \ }
+    endif
+
+    if has_key(l:server_info, 'initialization_options')
+        let l:initialization_options = l:server_info['initialization_options']
+    else
+        let l:initialization_options = {}
+    endif
+
     let l:server['init_callbacks'] = [a:cb]
 
     call s:send_request(a:server_name, {
         \ 'method': 'initialize',
         \ 'params': {
-        \   'capabilities': {},
+        \   'capabilities': l:capabilities,
         \   'rootUri': l:root_uri,
         \   'rootPath': lsp#utils#uri_to_path(l:root_uri),
         \   'trace': 'off',
+        \   'initializationOptions': l:initialization_options,
         \ },
         \ })
+endfunction
+
+function! s:ensure_conf(buf, server_name, cb) abort
+    let l:server = s:servers[a:server_name]
+    let l:server_info = l:server['server_info']
+    if has_key(l:server_info, 'workspace_config')
+        let l:workspace_config = l:server_info['workspace_config']
+        call s:send_notification(a:server_name, {
+            \ 'method': 'workspace/didChangeConfiguration',
+            \ 'params': {
+            \   'settings': l:workspace_config,
+            \ }
+            \ })
+    endif
+    let l:msg = s:new_rpc_success('configuration sent', { 'server_name': a:server_name })
+    call lsp#log(l:msg)
+    call a:cb(l:msg)
 endfunction
 
 function! s:ensure_changed(buf, server_name, cb) abort
@@ -414,6 +497,7 @@ function! s:on_exit(server_name, id, data, event) abort
         let l:server = s:servers[a:server_name]
         let l:server['lsp_id'] = 0
         let l:server['buffers'] = {}
+        let l:server['exited'] = 1
         if has_key(l:server, 'init_result')
             unlet l:server['init_result']
         endif
@@ -429,7 +513,7 @@ function! s:on_notification(server_name, id, data, event) abort
     if lsp#client#is_server_instantiated_notification(a:data)
         if has_key(l:response, 'method')
             if l:response['method'] ==# 'textDocument/publishDiagnostics'
-                call lsp#ui#vim#handle_text_document_publish_diagnostics(a:server_name, a:data)
+                call lsp#ui#vim#diagnostics#handle_text_document_publish_diagnostics(a:server_name, a:data)
             endif
         endif
     else
@@ -454,6 +538,9 @@ function! s:handle_initialize(server_name, data) abort
 
     if !lsp#client#is_error(l:response)
         let l:server['init_result'] = l:response
+    else
+      let l:server['failed'] = l:response['error']
+      call lsp#utils#error('Failed to initialize ' . a:server_name . ' with error ' . l:response['error']['code'] . ': ' . l:response['error']['message'])
     endif
 
     for l:Init_callback in l:init_callbacks
@@ -510,8 +597,17 @@ function! lsp#get_whitelisted_servers(...) abort
     return l:active_servers
 endfunction
 
+function! s:requires_eol_at_eof(buf) abort
+    let l:file_ends_with_eol = getbufvar(a:buf, '&eol')
+    let l:vim_will_save_with_eol = !getbufvar(a:buf, '&binary') &&
+                \ getbufvar(a:buf, '&fixeol')
+    return l:file_ends_with_eol || l:vim_will_save_with_eol
+endfunction
+
 function! s:get_text_document_text(buf) abort
-    return join(getbufline(a:buf, 1, '$'), "\n")
+    let l:buf_fileformat = getbufvar(a:buf, '&fileformat')
+    let l:eol = {'unix': "\n", 'dos': "\r\n", 'mac': "\r"}[l:buf_fileformat]
+    return join(getbufline(a:buf, 1, '$'), l:eol).(s:requires_eol_at_eof(a:buf) ? l:eol : '')
 endfunction
 
 function! s:get_text_document(buf, buffer_info) abort
