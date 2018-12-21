@@ -516,13 +516,17 @@ function! s:jump_to_location(loc) abort
 endfunction
 
 function! s:show_locations() abort
-    if !get(g:, 'lsp_fzf_enable') || !get(g:, 'loaded_fzf')
-        botright copen
-    else
+    if get(g:, 'lsp_fzf_enable') && get(g:, 'loaded_fzf')
         let l:qfl = getqflist()
         call map(l:qfl, {idx, item -> string(idx + 1) . '. ' . fnamemodify(expand(bufname(item['bufnr'])), ":~:.") . ':' . string(item['lnum']) . ':' . string(item['col']) . ':' . item['text']})
-        call fzf#run(fzf#wrap({'source': l:qfl, 'sink': function('s:jump_to_location'), 'options': '--reverse +m --prompt="Jump> "'}))
+        call fzf#run(fzf#wrap({
+                    \ 'source': l:qfl,
+                    \ 'sink': function('s:jump_to_location'),
+                    \ 'options': '--reverse +m --prompt="Jump> "'
+                    \ }))
+        return
     endif
+    botright copen
 endfunction
 
 function! s:handle_symbol(server, last_req_id, type, data) abort
@@ -697,13 +701,17 @@ function! s:show_actions(actions) abort
         let l:idx += 1
     endfor
 
-    if !get(g:, 'lsp_fzf_enable') || !get(g:, 'loaded_fzf')
-        let l:idx = inputlist(l:actlist)
-        if l:idx >= 1 && l:idx <= len(l:actlist)
-            call s:fix_it(a:actions[l:idx - 1])
-        endif
-    else
-        call fzf#run(fzf#wrap({'source': l:actlist, 'sink': function('s:fzf_fix_it', [a:actions]), 'options': '--reverse +m --prompt="FixIt> "'}))
+    if get(g:, 'lsp_fzf_enable') && get(g:, 'loaded_fzf')
+        call fzf#run(fzf#wrap({
+                    \ 'source': l:actlist,
+                    \ 'sink': function('s:fzf_fix_it', [a:actions]),
+                    \ 'options': '--reverse +m --prompt="FixIt> "'
+                    \ }))
+        return
+    endif
+    let l:idx = inputlist(l:actlist)
+    if l:idx >= 1 && l:idx <= len(l:actlist)
+        call s:fix_it(a:actions[l:idx - 1])
     endif
 endfunction
 
