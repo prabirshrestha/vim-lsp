@@ -181,11 +181,21 @@ The vim |dict| containing information about the server.
 
  * cmd:
     required
-    Function that takes |vim-lsp-server_info| as parameter and returns the
+    Function or array which represents command line to start the language
+    server.
+
+    When function, it takes |vim-lsp-server_info| as parameter and returns the
     language server executable to run along with the appropriate arguments
     when the appropriate filetype is loaded. This function will only be
     called when the server has not started.
     Return empty array to ignore starting the server.
+
+    When array, the first element is the language server executable and
+    the rest are the appropriate arguments. It is useful when the command line
+    can be determined statically and |vim-lsp-server_info| is not necessary.
+
+    Example:
+	'cmd': ['pyls']
 
     Function can be complex based on custom requirements.
     For example:

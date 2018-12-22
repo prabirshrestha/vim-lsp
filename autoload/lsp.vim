@@ -285,7 +285,12 @@ function! s:ensure_start(buf, server_name, cb) abort
         return
     endif
 
-    let l:cmd = l:server_info['cmd'](l:server_info)
+    let l:cmd_type = type(l:server_info['cmd'])
+    if l:cmd_type == v:t_list
+        let l:cmd = l:server_info['cmd']
+    else
+        let l:cmd = l:server_info['cmd'](l:server_info)
+    endif
 
     if empty(l:cmd)
         let l:msg = s:new_rpc_error('ignore server start since cmd is empty', { 'server_name': a:server_name })
