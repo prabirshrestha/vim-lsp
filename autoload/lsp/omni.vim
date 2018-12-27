@@ -80,7 +80,7 @@ function! s:handle_omnicompletion(server_name, startcol, complete_counter, data)
         return
     endif
 
-    let l:result = s:get_completion_result(a:data)
+    let l:result = s:get_completion_result(a:server_name, a:data)
     let l:matches = l:result['matches']
 
     if g:lsp_async_completion
@@ -133,7 +133,7 @@ function! s:send_completion_request(info) abort
                 \ })
 endfunction
 
-function! s:get_completion_result(data) abort
+function! s:get_completion_result(server_name, data) abort
     let l:result = a:data['response']['result']
 
     if type(l:result) == type([])
@@ -144,12 +144,12 @@ function! s:get_completion_result(data) abort
         let l:incomplete = l:result['isIncomplete']
     endif
 
-    let l:matches = map(l:items, {_, item -> lsp#omni#get_vim_completion_item(item) })
+    let l:matches = map(l:items, {_, item -> lsp#omni#get_vim_completion_item(a:server_name, item) })
 
     return {'matches': l:matches, 'incomplete': l:incomplete}
 endfunction
 
-function! lsp#omni#get_vim_completion_item(item) abort
+function! lsp#omni#default_get_vim_completion_item(item) abort
     if has_key(a:item, 'insertText') && !empty(a:item['insertText'])
         if has_key(a:item, 'insertTextFormat') && a:item['insertTextFormat'] != 1
             let l:word = a:item['label']
@@ -175,6 +175,15 @@ function! lsp#omni#get_vim_completion_item(item) abort
     endif
 
     return l:completion
+endfunction
+
+function! lsp#omni#get_vim_completion_item(server_name, item) abort
+    let l:server_info = lsp#get_server_info(a:server_name)
+    if has_key(l:server_info, 'completion_item')
+        return l:server_info['completion_item'](a:item)
+    else
+        return lsp#omni#default_get_vim_completion_item(a:item)
+    endif
 endfunction
 
 " }}}
