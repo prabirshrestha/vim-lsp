@@ -19,7 +19,10 @@ let g:lsp_next_sign_id = get(g:, 'lsp_next_sign_id', 6999)
 let g:lsp_preview_keep_focus = get(g:, 'lsp_preview_keep_focus', 1)
 
 if g:lsp_auto_enable
-    au VimEnter * call lsp#enable()
+    augroup lsp_auto_enable
+        autocmd!
+        autocmd VimEnter * call lsp#enable()
+    augroup END
 endif
 
 command! LspCodeAction call lsp#ui#vim#code_action()

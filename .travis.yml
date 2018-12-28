@@ -1,0 +1,31 @@
+sudo: false
+language: generic
+git:
+    depth: 3
+
+matrix:
+    include:
+        - os: osx
+        - os: linux
+          dist: trusty
+          python: "3.6"
+
+addons:
+    apt:
+        packages:
+            - python3
+            - python3-pip
+
+before_install:
+    - if [[ $TRAVIS_OS_NAME == 'osx' ]]; then export PATH="$HOME/Library/Python/3.6/bin:$PATH"; fi
+    - pip3 install --user setuptools --upgrade
+    - pip3 install --user vim-vint typing
+
+before_script:
+    - uname -a
+    - which -a vim
+    - which -a python
+    - vim --version
+
+script:
+    - vint plugin ftplugin
