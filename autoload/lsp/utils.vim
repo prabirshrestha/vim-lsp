@@ -2,8 +2,6 @@ function! lsp#utils#is_remote_uri(uri) abort
     return a:uri =~# '^\w\+::' || a:uri =~# '^\w\+://'
 endfunction
 
-" Decode uri function is taken from vital framework: https://github.com/vim-jp/vital.vim
-" For it's license (NYSL), see http://www.kmonos.net/nysl/index.en.html
 function! s:decode_uri(uri) abort
     return substitute(a:uri, '%\(\x\x\)', '\=printf("%c", str2nr(submatch(1), 16))', 'g')
 endfunction
