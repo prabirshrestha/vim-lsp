@@ -162,10 +162,10 @@ function! lsp#omni#get_vim_completion_item(item) abort
         let l:abbr = a:item['label']
     endif
     let l:menu = lsp#omni#get_kind_text(a:item)
-    let l:completion = { 'word': l:word, 'abbr': l:abbr, 'menu': l:menu, 'info': "", 'icase': 1, 'dup': 1 }
+    let l:completion = { 'word': l:word, 'abbr': l:abbr, 'menu': l:menu, 'info': '', 'icase': 1, 'dup': 1 }
 
     if has_key(a:item, 'detail') 
-      let l:completion['info'] .= a:item['detail'] . " "
+      let l:completion['info'] .= a:item['detail'] . ' '
     endif 
 
     if has_key(a:item, 'documentation')

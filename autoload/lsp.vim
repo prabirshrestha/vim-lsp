@@ -65,22 +65,22 @@ endfunction
 
 function! s:server_status(server_name) abort
     if !has_key(s:servers, a:server_name)
-        return "unknown server"
+        return 'unknown server'
     endif
     let l:server = s:servers[a:server_name]
     if has_key(l:server, 'exited')
-        return "exited"
+        return 'exited'
     endif
     if has_key(l:server, 'init_callbacks')
-        return "starting"
+        return 'starting'
     endif
     if has_key(l:server, 'failed')
-        return "failed"
+        return 'failed'
     endif
     if has_key(l:server, 'init_result')
-        return "running"
+        return 'running'
     endif
-    return "not running"
+    return 'not running'
 endfunction
 
 " Returns the current status of all servers (if called with no arguments) or
