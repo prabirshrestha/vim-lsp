@@ -9,6 +9,8 @@ matrix:
         - os: linux
           dist: trusty
           python: "3.6"
+        - os: windows
+          language: shell
 
 addons:
     apt:
@@ -18,8 +20,17 @@ addons:
 
 before_install:
     - if [[ $TRAVIS_OS_NAME == 'osx' ]]; then export PATH="$HOME/Library/Python/3.6/bin:$PATH"; fi
-    - pip3 install --user setuptools --upgrade
-    - pip3 install --user vim-vint typing
+    - if [[ "$TRAVIS_OS_NAME" != "windows" ]]; then
+        pip3 install --user setuptools --upgrade;
+        pip3 install --user vim-vint typing;
+      elif  [[ "$TRAVIS_OS_NAME" == "windows" ]]; then
+        powershell -Command "Set-ExecutionPolicy RemoteSigned -scope CurrentUser";
+        powershell -Command "iex (new-object net.webclient).downloadstring('https://get.scoop.sh')";
+        export PATH="$HOME/scoop/shims:$PATH;"; 
+        export PATH="$APPDATA/Python/Python37/Scripts:$PATH;";
+        powershell -Command "scoop install python";
+        python3 -m pip install --user vim-vint typing;
+      fi
 
 before_script:
     - uname -a
