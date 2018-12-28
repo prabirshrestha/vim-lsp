@@ -1,7 +1,9 @@
-let s:debounce = 0
 let s:enabled = 0
 let s:already_setup = 0
 let s:servers = {} " { lsp_id, server_info, init_callbacks, init_result, buffers: { path: { changed_tick } }
+
+let s:debounce_text_changed = 0
+let s:debounce_text_changed_bufnr = 0
 
 let s:notification_callbacks = [] " { name, callback }
 
@@ -167,16 +169,20 @@ function! s:on_text_document_did_save() abort
 endfunction
 
 function! s:on_text_document_did_change() abort
-    call lsp#log('s:on_text_document_did_change()', bufnr('%'))
-    let l:buf = bufnr('%')
+    let l:bufnr = s:debounce_text_changed_bufnr ? s:debounce_text_changed_bufnr : bufnr('%')
+
+    call lsp#log('s:on_text_document_did_change()', l:bufnr)
     for l:server_name in lsp#get_whitelisted_servers()
-        call s:ensure_flush(bufnr('%'), l:server_name, function('s:Noop'))
+        call s:ensure_flush(l:bufnr, l:server_name, function('s:Noop'))
     endfor
+
+    let s:debounce_text_changed_bufnr = 0
 endfunction
 
 function! s:on_text_document_did_change_with_debounce() abort
-    if  s:debounce | call timer_stop(s:debounce) | endif
-    let s:debounce = timer_start(500, {t -> s:on_text_document_did_change()})
+    let s:debounce_text_changed_bufnr = bufnr('%')
+    if  s:debounce_text_changed | call timer_stop(s:debounce_text_changed) | endif
+    let s:debounce_text_changed = timer_start(500, {t -> s:on_text_document_did_change()})
 endfunction
 
 function! s:on_cursor_moved() abort
