@@ -1,4 +1,4 @@
-function! lsp#ui#vim#diagnostics#echo#cursor_moved()
+function! lsp#ui#vim#diagnostics#echo#cursor_moved() abort
     if !g:lsp_diagnostics_echo_cursor
         return
     endif

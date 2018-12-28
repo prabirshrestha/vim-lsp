@@ -28,4 +28,4 @@ before_script:
     - vim --version
 
 script:
-    - vint plugin ftplugin
+    - vint autoload ftplugin plugin

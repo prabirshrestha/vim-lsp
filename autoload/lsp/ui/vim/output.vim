@@ -44,6 +44,6 @@ function! s:append(data) abort
     elseif type(a:data) == type({}) && has_key(a:data, 'kind')
         silent put =a:data.value
 
-        return a:data.kind == 'plaintext' ? 'text' : a:data.kind
+        return a:data.kind ==? 'plaintext' ? 'text' : a:data.kind
     endif
 endfunction
