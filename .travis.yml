@@ -20,6 +20,7 @@ addons:
 
 before_install:
     - if [[ $TRAVIS_OS_NAME == 'osx' ]]; then export PATH="$HOME/Library/Python/3.6/bin:$PATH"; fi
+    - if [[ $TRAVIS_OS_NAME == 'linux' ]]; then sudo apt-get update && sudo apt-get install python3-dev; fi
     - if [[ "$TRAVIS_OS_NAME" != "windows" ]]; then
         pip3 install --user setuptools --upgrade;
         pip3 install --user vim-vint typing;
