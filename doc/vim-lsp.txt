@@ -10,6 +10,7 @@ CONTENTS                                                  *vim-lsp-contents*
       Configure                   |vim-lsp-configure-source|
       Wiki                        |vim-lsp-configure-wiki|
     Options			|vim-lsp-options|
+      g:lsp_diagnostics_enabled   |g:lsp_diagnostics_enabled|
       g:lsp_auto_enable           |g:lsp_auto_enable|
       g:lsp_preview_keep_focus    |g:lsp_preview_keep_focus|
     Functions			|vim-lsp-functions|
@@ -92,6 +93,17 @@ to https://github.com/prabirshrestha/vim-lsp/wiki/Servers
 
 ===============================================================================
 Options                                                   *vim-lsp-options*
+
+g:lsp_diagnostics_enabled                       *g:lsp_diagnostics_enabled*
+    Type: |Number|
+    Default: `1`
+
+    Enable support for document diagnostics like warnings and error messages.
+    enabling vim-lsp during startup.
+
+    Example:
+	let g:lsp_diagnostics_enabled = 1
+	let g:lsp_diagnostics_enabled = 0
 
 g:lsp_auto_enable                                       *g:lsp_auto_enable*
     Type: |Number|
