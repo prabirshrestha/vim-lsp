@@ -12,6 +12,7 @@ augroup _lsp_silent_
     autocmd User lsp_unregister_server silent
     autocmd User lsp_server_init silent
     autocmd User lsp_server_exit silent
+    autocmd User lsp_location_update silent
 augroup END
 
 function! lsp#log_verbose(...) abort

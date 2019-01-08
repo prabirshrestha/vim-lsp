@@ -18,6 +18,7 @@ let g:lsp_diagnostics_echo_cursor = get(g:, 'lsp_diagnostics_echo_cursor', 0)
 let g:lsp_diagnostics_echo_delay = get(g:, 'lsp_diagnostics_echo_delay', 500)
 let g:lsp_next_sign_id = get(g:, 'lsp_next_sign_id', 6999)
 let g:lsp_preview_keep_focus = get(g:, 'lsp_preview_keep_focus', 1)
+let g:lsp_quickfix_auto_open = get(g:, 'lsp_quickfix_auto_open', 1)
 
 if g:lsp_auto_enable
     augroup lsp_auto_enable

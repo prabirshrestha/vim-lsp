@@ -351,7 +351,10 @@ function! s:handle_location(ctx, server, type, data) abort "ctx = {counter, list
             else
                 call setqflist(a:ctx['list'])
                 echo 'Retrieved ' . a:type
-                botright copen
+                if g:lsp_quickfix_auto_open == 1
+                    botright copen
+                endif
+                doautocmd User lsp_location_update
             endif
         endif
     endif
