@@ -72,7 +72,7 @@ Refer to docs on configuring omnifunc or [asyncomplete.vim](https://github.com/p
 Document diagnostics (e.g. warnings, errors) are enabled by default, but if you
 preferred to turn them off and use other plugins instead (like
 [Neomake](https://github.com/neomake/neomake) or
-[ALE](https://github.com/neomake/neomake), set `g:lsp_diagnostics_enabled` to
+[ALE](https://github.com/w0rp/ale), set `g:lsp_diagnostics_enabled` to
 `0`:
 
 ```viml
