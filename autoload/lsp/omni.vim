@@ -139,9 +139,12 @@ function! s:get_completion_result(data) abort
     if type(l:result) == type([])
         let l:items = l:result
         let l:incomplete = 0
-    else
+    elseif type(l:result) == type({})
         let l:items = l:result['items']
         let l:incomplete = l:result['isIncomplete']
+    else
+        let l:items = []
+        let l:incomplete = 0
     endif
 
     let l:matches = type(l:items) == type([]) ? map(l:items, {_, item -> lsp#omni#get_vim_completion_item(item) }) : []
