@@ -136,6 +136,7 @@ function! s:register_events() abort
         autocmd BufWritePost * call s:on_text_document_did_save()
         autocmd BufWinLeave * call s:on_text_document_did_close()
         autocmd InsertLeave * call s:on_text_document_did_change()
+        autocmd TextChanged * call s:on_text_document_did_change()
         autocmd CursorMoved * call s:on_cursor_moved()
     augroup END
     call s:on_text_document_did_open()
