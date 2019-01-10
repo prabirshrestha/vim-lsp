@@ -184,7 +184,7 @@ endfunction
 function! s:on_text_document_did_save() abort
     let l:buf = bufnr('%')
     call lsp#log('s:on_text_document_did_save()', l:buf)
-    call s:add_event_queue([l:buf, {result->s:call_did_save(l:buf, l:server_name, result, function('s:Noop'))}])
+    call s:add_event_queue([l:buf, {server_name, result->s:call_did_save(l:buf, server_name, result, function('s:Noop'))}])
 endfunction
 
 function! s:on_text_document_did_change() abort
@@ -283,7 +283,7 @@ function! s:ensure_flush(buf, server_name, cb) abort
         \ {s->s:is_step_error(s) ? s:throw_step_error(s) : s:ensure_conf(a:buf, a:server_name, s.callback)},
         \ {s->s:is_step_error(s) ? s:throw_step_error(s) : s:ensure_open(a:buf, a:server_name, s.callback)},
         \ {s->s:is_step_error(s) ? s:throw_step_error(s) : s:ensure_changed(a:buf, a:server_name, s.callback)},
-        \ {s->a:cb(s.result[0])}
+        \ {s->a:cb(a:server_name, s.result[0])}
         \ ])
 endfunction
 
