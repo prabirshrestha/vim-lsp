@@ -160,7 +160,8 @@ function! s:add_event_queue(queue) abort
     call add(s:event_queue, a:queue)
     call lsp#log('s:send_event_queue() will be triggered')
     call timer_stop(s:event_timer)
-    let s:event_timer = timer_start(4000, function('s:send_event_queue'))
+    let lazy = &updatetime > 1000 ? &updatetime : 1000
+    let s:event_timer = timer_start(lazy, function('s:send_event_queue'))
 endfunction
 
 function! s:send_event_queue(timer) abort
