@@ -228,7 +228,9 @@ function! s:lsp_send(id, opts, type) abort " opts = { method, params?, on_notifi
     if (a:type == s:send_type_request)
         let l:id = l:request['id']
         if get(a:opts, 'sync', 0) !=# 0
-            call async#job#wait([l:id])
+            while has_key(l:ctx['requests'], l:request['id'])
+                sleep 1m
+            endwhile
         endif
         return l:id
     else
