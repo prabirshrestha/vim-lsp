@@ -244,7 +244,7 @@ function! s:lsp_is_error(obj_or_response) abort
     let vt = type(a:obj_or_response)
     if vt == type('')
         return len(a:obj_or_response) > 0
-	elseif vt == type({})
+    elseif vt == type({})
         return has_key(a:obj_or_response, 'error')
     endif
     return 0
