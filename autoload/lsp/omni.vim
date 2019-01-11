@@ -57,7 +57,8 @@ function! lsp#omni#complete(findstart, base) abort
         call s:send_completion_request(l:info)
 
         if g:lsp_async_completion
-            return []
+            redraw
+            return v:none
         else
             while s:completion['status'] is# s:completion_status_pending && !complete_check()
                 sleep 10m
