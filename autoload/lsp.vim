@@ -399,6 +399,22 @@ function! s:ensure_conf(buf, server_name, cb) abort
     call a:cb(l:msg)
 endfunction
 
+let s:file_content = {}
+
+function! s:text_changes(buf) abort
+  if has_key(s:file_content, a:buf)
+    let l:old_content = get(s:file_content, a:buf, [])
+    let l:new_content = getline(1, '$')
+    let l:changes = lsp#utils#diff#compute(l:old_content, l:new_content)
+    let s:file_content[a:buf] = l:new_content
+  else
+    let l:new_content = getline(1, '$')
+    let l:changes = {'text': l:new_content}
+    let s:file_content[a:buf] = l:new_content
+  endif
+  return [l:changes]
+endfunction
+
 function! s:ensure_changed(buf, server_name, cb) abort
     let l:server = s:servers[a:server_name]
     let l:path = lsp#utils#get_buffer_uri(a:buf)
@@ -424,9 +440,7 @@ function! s:ensure_changed(buf, server_name, cb) abort
         \ 'method': 'textDocument/didChange',
         \ 'params': {
         \   'textDocument': s:get_text_document_identifier(a:buf, l:buffer_info),
-        \   'contentChanges': [
-        \       { 'text': s:get_text_document_text(a:buf) },
-        \   ],
+        \   'contentChanges': s:text_changes(a:buf),
         \ }
         \ })
 
