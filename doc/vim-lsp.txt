@@ -21,6 +21,7 @@ CONTENTS                                                  *vim-lsp-contents*
     Commands			|vim-lsp-commands|
       LspCodeAction               |LspCodeAction|
       LspDocumentDiagnostics      |LspDocumentDiagnostics|
+      LspDeclaration              |LspDeclaration|
       LspDefinition               |LspDefinition|
       LspDocumentFormat           |LspDocumentFormat|
       LspDocumentFormatSync       |LspDocumentFormatSync|
@@ -318,6 +319,11 @@ fixed (quick fix).
 LspDocumentDiagnostics                              *LspDocumentDiagnostics*
 
 Gets the current document diagnostics.
+
+LspDeclaration						    *LspDeclaration*
+
+Go to declaration. Useful for languages such as C/C++ where there is a clear
+distinction between declaration and definition.
 
 LspDefinition						     *LspDefinition*
 

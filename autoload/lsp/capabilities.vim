@@ -3,6 +3,10 @@ function! s:has_bool_provider(server_name, provider) abort
     return !empty(l:capabilities) && has_key(l:capabilities, a:provider) && l:capabilities[a:provider] == v:true
 endfunction
 
+function! lsp#capabilities#has_declaration_provider(server_name) abort
+    return s:has_bool_provider(a:server_name, 'declarationProvider')
+endfunction
+
 function! lsp#capabilities#has_definition_provider(server_name) abort
     return s:has_bool_provider(a:server_name, 'definitionProvider')
 endfunction
