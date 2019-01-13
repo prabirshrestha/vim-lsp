@@ -83,14 +83,16 @@ before_install:
             export PATH="$DOWNLOADS_DIR/Neovim/bin:$PATH";
         fi;
       fi
+    - git clone --depth 1 --branch v1.5.4 --single-branch https://github.com/thinca/vim-themis /tmp/vim-themis
+    - export PATH="/tmp/vim-themis/bin:$PATH";
+    - if [[ "$VIM_TYPE" == "neovim" ]]; then export THEMIS_VIM=nvim; fi;
 
 before_script:
     - uname -a
     - which -a python
     - if [[ "$VIM_TYPE" == "vim" ]]; then vim --version; fi;
     - if [[ "$VIM_TYPE" == "neovim" ]]; then nvim --version; fi;
-    - git clone --depth 1 --branch v1.5.4 --single-branch https://github.com/thinca/vim-themis /tmp/vim-themis
-    - if [[ "$VIM_TYPE" == "neovim" ]]; then export THEMIS_VIM=nvim; fi;
+    - themis --version
 
 script:
     - if [[ "$VIM_TYPE" == "vim" ]]; then vint autoload ftplugin plugin; fi;
