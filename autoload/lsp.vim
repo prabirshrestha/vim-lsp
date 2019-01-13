@@ -611,13 +611,6 @@ function! lsp#get_whitelisted_servers(...) abort
     return l:active_servers
 endfunction
 
-function! s:requires_eol_at_eof(buf) abort
-    let l:file_ends_with_eol = getbufvar(a:buf, '&eol')
-    let l:vim_will_save_with_eol = !getbufvar(a:buf, '&binary') &&
-                \ getbufvar(a:buf, '&fixeol')
-    return l:file_ends_with_eol || l:vim_will_save_with_eol
-endfunction
-
 function! s:get_text_document_text(buf) abort
     return join(getbufline(a:buf, 1, '$'), "\n")
 endfunction
