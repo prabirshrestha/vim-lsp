@@ -157,18 +157,18 @@ function! s:on_text_document_did_open() abort
 endfunction
 
 function! s:on_text_document_did_save() abort
-    call lsp#log('s:on_text_document_did_save()', bufnr('%'))
     let l:buf = bufnr('%')
+    call lsp#log('s:on_text_document_did_save()', l:buf)
     for l:server_name in lsp#get_whitelisted_servers()
-        call s:ensure_flush(bufnr('%'), l:server_name, {result->s:call_did_save(l:buf, l:server_name, result, function('s:Noop'))})
+        call s:ensure_flush(:buf, l:server_name, {result->s:call_did_save(l:buf, l:server_name, result, function('s:Noop'))})
     endfor
 endfunction
 
 function! s:on_text_document_did_change() abort
-    call lsp#log('s:on_text_document_did_change()', bufnr('%'))
     let l:buf = bufnr('%')
+    call lsp#log('s:on_text_document_did_change()', l:buf)
     for l:server_name in lsp#get_whitelisted_servers()
-        call s:ensure_flush(bufnr('%'), l:server_name, function('s:Noop'))
+        call s:ensure_flush(l:buf, l:server_name, function('s:Noop'))
     endfor
 endfunction
 
@@ -214,7 +214,9 @@ function! s:call_did_save(buf, server_name, result, cb) abort
 endfunction
 
 function! s:on_text_document_did_close() abort
-    call lsp#log('s:on_text_document_did_close()', bufnr('%'))
+    let l:buf = bufnr('%')
+    call lsp#log('s:on_text_document_did_close()', l:buf)
+    call remove(s:file_content, l:buf)
 endfunction
 
 function! s:ensure_flush_all(buf, server_names) abort
