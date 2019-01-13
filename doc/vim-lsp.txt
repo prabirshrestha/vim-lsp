@@ -402,6 +402,7 @@ To map keys to the feature of vim-lsp, use <plug> mappings:
 Available plug mappings are following:
 
   (lsp-code-action)
+  (lsp-declaration)
   (lsp-definition)
   (lsp-document-symbol)
   (lsp-document-diagnostics)
