@@ -404,11 +404,11 @@ let s:file_content = {}
 function! s:text_changes(buf) abort
   if has_key(s:file_content, a:buf)
     let l:old_content = get(s:file_content, a:buf, [])
-    let l:new_content = getline(1, '$')
+    let l:new_content = getbufline(a:buf, 1, '$')
     let l:changes = lsp#utils#diff#compute(l:old_content, l:new_content)
     let s:file_content[a:buf] = l:new_content
   else
-    let l:new_content = getline(1, '$')
+    let l:new_content = getbufline(a:buf, 1, '$')
     let l:changes = {'text': l:new_content}
     let s:file_content[a:buf] = l:new_content
   endif
@@ -433,8 +433,6 @@ function! s:ensure_changed(buf, server_name, cb) abort
 
     let l:buffer_info['changed_tick'] = l:changed_tick
     let l:buffer_info['version'] = l:buffer_info['version'] + 1
-
-    " todo: support range in contentChanges
 
     call s:send_notification(a:server_name, {
         \ 'method': 'textDocument/didChange',
@@ -621,9 +619,7 @@ function! s:requires_eol_at_eof(buf) abort
 endfunction
 
 function! s:get_text_document_text(buf) abort
-    let l:buf_fileformat = getbufvar(a:buf, '&fileformat')
-    let l:eol = {'unix': "\n", 'dos': "\r\n", 'mac': "\r"}[l:buf_fileformat]
-    return join(getbufline(a:buf, 1, '$'), l:eol).(s:requires_eol_at_eof(a:buf) ? l:eol : '')
+    return join(getbufline(a:buf, 1, '$'), "\n")
 endfunction
 
 function! s:get_text_document(buf, buffer_info) abort

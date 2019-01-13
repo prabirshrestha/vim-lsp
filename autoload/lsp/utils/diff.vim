@@ -1,3 +1,5 @@
+" This is copied from https://github.com/natebosch/vim-lsc/blob/master/autoload/lsc/diff.vim
+"
 " Computes a simplistic diff between [old] and [new].
 "
 " Returns a dict with keys `range`, `rangeLength`, and `text` matching the LSP
