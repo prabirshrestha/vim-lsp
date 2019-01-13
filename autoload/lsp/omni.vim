@@ -20,12 +20,12 @@ let s:kind_text_mappings = {
             \ '17': 'file',
             \ '18': 'reference',
             \ '19': 'folder',
-            \ '21': 'enum member',
-            \ '22': 'constant',
-            \ '23': 'struct',
-            \ '24': 'event',
-            \ '25': 'operator',
-            \ '26': 'type parameter',
+            \ '20': 'enum member',
+            \ '21': 'constant',
+            \ '22': 'struct',
+            \ '23': 'event',
+            \ '24': 'operator',
+            \ '25': 'type parameter',
             \ }
 
 let s:completion_status_success = 'success'
