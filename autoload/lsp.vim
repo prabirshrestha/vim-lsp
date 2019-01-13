@@ -409,7 +409,7 @@ function! s:text_changes(buf) abort
     let s:file_content[a:buf] = l:new_content
   else
     let l:new_content = getbufline(a:buf, 1, '$')
-    let l:changes = {'text': l:new_content}
+    let l:changes = {'text': join(l:new_content, "\n")}
     let s:file_content[a:buf] = l:new_content
   endif
   return [l:changes]
