@@ -92,9 +92,8 @@ before_script:
     - which -a python
     - if [[ "$VIM_TYPE" == "vim" ]]; then vim --version; fi;
     - if [[ "$VIM_TYPE" == "neovim" ]]; then nvim --version; fi;
-    - themis --version
 
 script:
     - if [[ "$VIM_TYPE" == "vim" ]]; then vint autoload ftplugin plugin; fi;
     - if [[ "$VIM_TYPE" == "neovim" ]]; then vint --enable-neovim autoload ftplugin plugin; fi;
-    - /tmp/vim-themis/bin/themis --reporter dot
+    - themis --reporter dot
