@@ -216,7 +216,9 @@ endfunction
 function! s:on_text_document_did_close() abort
     let l:buf = bufnr('%')
     call lsp#log('s:on_text_document_did_close()', l:buf)
-    call remove(s:file_content, l:buf)
+    if has_key(s:file_content, l:buf)
+        call remove(s:file_content, l:buf)
+    endif
 endfunction
 
 function! s:ensure_flush_all(buf, server_names) abort
