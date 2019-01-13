@@ -1,0 +1,11 @@
+Describe lsp#utils
+
+    Describe lsp#utils#empty_complete
+        It should return empty complete
+            let items = lsp#utils#empty_complete()
+            Assert type(items) == type([])
+            Assert len(items) == 0
+        End
+    End
+
+End
