@@ -96,7 +96,7 @@ before_script:
 script:
     - if [[ "$VIM_TYPE" == "vim" ]]; then vint autoload ftplugin plugin; fi;
     - if [[ "$VIM_TYPE" == "neovim" ]]; then vint --enable-neovim autoload ftplugin plugin; fi;
-    - if [[ "$TRAVIS_OS_NAME" == "windows" && "$THEMIS_VIM" == "neovim" ]]; then
+    - if [[ "$TRAVIS_OS_NAME" == "windows" && "$VIM_TYPE" == "neovim" ]]; then
         powershell -Command "themis --reporter spec";
       else
         themis --reporter spec;
