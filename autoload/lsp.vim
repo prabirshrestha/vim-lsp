@@ -426,7 +426,6 @@ function! s:ensure_conf(buf, server_name, cb) abort
 endfunction
 
 function! s:text_changes(server_name, buf) abort
-	echomsg a:server_name
   let l:sync_kind = lsp#capabilities#get_text_document_change_sync_kind(a:server_name)
 
   " When syncKind is None, return null for contentChanges.
