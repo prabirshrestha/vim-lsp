@@ -65,3 +65,23 @@ function! lsp#capabilities#get_text_document_save_registration_options(server_na
     endif
     return [0, { 'includeText': 0 }]
 endfunction
+
+" supports_did_change (boolean)
+function! lsp#capabilities#get_text_document_change_sync_kind(server_name) abort
+    let l:capabilities = lsp#get_server_capabilities(a:server_name)
+    if !empty(l:capabilities) && has_key(l:capabilities, 'textDocumentSync')
+        if type(l:capabilities['textDocumentSync']) == type({})
+            if  has_key(l:capabilities['textDocumentSync'], 'change') && type(l:capabilities['textDocumentSync']) == type(1)
+                let l:val = l:capabilities['textDocumentSync']['change']
+                return l:val >= 0 && l:val <= 2 ? l:val : 1
+            else
+                return 1
+            endif
+		elseif type(l:capabilities['textDocumentSync']) == type(1)
+		    return l:capabilities['textDocumentSync']
+        else
+            return 1
+        endif
+    endif
+    return 1
+endfunction

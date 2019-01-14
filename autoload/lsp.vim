@@ -405,17 +405,27 @@ endfunction
 
 let s:file_content = {}
 
-function! s:text_changes(buf) abort
-  if has_key(s:file_content, a:buf)
+function! s:text_changes(server_name, buf) abort
+  let l:sync_kind = lsp#capabilities#get_text_document_change_sync_kind(a:server_name)
+
+  " When syncKind is None, return null for contentChanges.
+  if l:sync_kind == 0
+    return v:null
+  endif
+
+  " When syncKind is Incremental and previous content is saved.
+  if l:sync_kind == 2 && has_key(s:file_content, a:buf)
+    " compute diff
     let l:old_content = get(s:file_content, a:buf, [])
     let l:new_content = getbufline(a:buf, 1, '$')
     let l:changes = lsp#utils#diff#compute(l:old_content, l:new_content)
     let s:file_content[a:buf] = l:new_content
-  else
-    let l:new_content = getbufline(a:buf, 1, '$')
-    let l:changes = {'text': join(l:new_content, "\n")}
-    let s:file_content[a:buf] = l:new_content
+    return [l:changes]
   endif
+
+  let l:new_content = getbufline(a:buf, 1, '$')
+  let l:changes = {'text': join(l:new_content, "\n")}
+  let s:file_content[a:buf] = l:new_content
   return [l:changes]
 endfunction
 
@@ -442,7 +452,7 @@ function! s:ensure_changed(buf, server_name, cb) abort
         \ 'method': 'textDocument/didChange',
         \ 'params': {
         \   'textDocument': s:get_text_document_identifier(a:buf, l:buffer_info),
-        \   'contentChanges': s:text_changes(a:buf),
+        \   'contentChanges': s:text_changes(a:server_name, a:buf),
         \ }
         \ })
 
