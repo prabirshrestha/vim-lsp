@@ -39,7 +39,7 @@ if executable('typescript-language-server')
 endif
 ```
 
-vim-lsp support incremental changes of Language Server Protocol.
+vim-lsp supports incremental changes of Language Server Protocol.
 
 ## auto-complete
 
