@@ -39,6 +39,8 @@ if executable('typescript-language-server')
 endif
 ```
 
+vim-lsp support incremental changes of Language Server Protocol.
+
 ## auto-complete
 
 Refer to docs on configuring omnifunc or [asyncomplete.vim](https://github.com/prabirshrestha/asyncomplete.vim).
