@@ -4,6 +4,17 @@ let s:servers = {} " { lsp_id, server_info, init_callbacks, init_result, buffers
 
 let s:notification_callbacks = [] " { name, callback }
 
+" This hold previous content for each language servers to make
+" DidChangeTextDocumentParams. The key is buffer numbers:
+"    {
+"      1: {
+"        "golsp": [ "first-line", "next-line", ... ],
+"        "bingo": [ "first-line", "next-line", ... ]
+"      },
+"      2: {
+"        "pyls": [ "first-line", "next-line", ... ]
+"      }
+"    }
 let s:file_content = {}
 
 " do nothing, place it here only to avoid the message
@@ -221,14 +232,14 @@ function! s:on_text_document_did_close() abort
     call lsp#log('s:on_text_document_did_close()', l:buf)
 endfunction
 
-function! lsp#get_last_file_content(server_name, buf) abort
+function! s:get_last_file_content(server_name, buf) abort
     if has_key(s:file_content, a:buf) && has_key(s:file_content[a:buf], a:server_name)
         return s:file_content[a:buf][a:server_name]
     endif
     return []
 endfunction
 
-function! lsp#update_file_content(server_name, buf, new) abort
+function! s:update_file_content(server_name, buf, new) abort
     if !has_key(s:file_content, a:buf)
         let s:file_content[a:buf] = {}
     endif
@@ -237,9 +248,7 @@ endfunction
 
 function! s:on_buf_wipeout(buf) abort
     if has_key(s:file_content, a:buf)
-        for l:server_name in lsp#get_whitelisted_servers()
-            call remove(s:file_content[a:buf], l:server_name)
-        endfor
+        call remove(s:file_content, a:buf)
     endif
 endfunction
 
@@ -436,16 +445,16 @@ function! s:text_changes(server_name, buf) abort
   " When syncKind is Incremental and previous content is saved.
   if l:sync_kind == 2 && has_key(s:file_content, a:buf)
     " compute diff
-    let l:old_content = lsp#get_last_file_content(a:server_name, a:buf)
+    let l:old_content = s:get_last_file_content(a:server_name, a:buf)
     let l:new_content = getbufline(a:buf, 1, '$')
     let l:changes = lsp#utils#diff#compute(l:old_content, l:new_content)
-    call lsp#update_file_content(a:server_name, a:buf, l:new_content)
+    call s:update_file_content(a:server_name, a:buf, l:new_content)
     return [l:changes]
   endif
 
   let l:new_content = getbufline(a:buf, 1, '$')
   let l:changes = {'text': join(l:new_content, "\n")}
-  call lsp#update_file_content(a:server_name, a:buf, l:new_content)
+  call s:update_file_content(a:server_name, a:buf, l:new_content)
   return [l:changes]
 endfunction
 
