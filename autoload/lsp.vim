@@ -135,6 +135,7 @@ function! s:register_events() abort
         autocmd BufReadPost * call s:on_text_document_did_open()
         autocmd BufWritePost * call s:on_text_document_did_save()
         autocmd BufWinLeave * call s:on_text_document_did_close()
+        autocmd BufWipeout * call s:on_buf_wipeout(bufnr('<afile>'))
         autocmd InsertLeave * call s:on_text_document_did_change()
         autocmd CursorMoved * call s:on_cursor_moved()
     augroup END
@@ -216,8 +217,11 @@ endfunction
 function! s:on_text_document_did_close() abort
     let l:buf = bufnr('%')
     call lsp#log('s:on_text_document_did_close()', l:buf)
-    if has_key(s:file_content, l:buf)
-        call remove(s:file_content, l:buf)
+endfunction
+
+function! s:on_buf_wipeout(buf) abort
+    if has_key(s:file_content, a:buf)
+        call remove(s:file_content, a:buf)
     endif
 endfunction
 
