@@ -166,7 +166,7 @@ function! s:on_text_document_did_open() abort
     let l:buf = bufnr('%')
     call lsp#log('s:on_text_document_did_open()', l:buf, &filetype, getcwd(), lsp#utils#get_buffer_uri(l:buf))
     for l:server_name in lsp#get_whitelisted_servers()
-        call s:ensure_flush(l:buf, l:server_name, {result->s:update_file_content(l:buf, l:server_name, s:get_text_document_text(l:buf))})
+        call s:ensure_flush(l:buf, l:server_name, function('s:Noop'))
     endfor
 endfunction
 
@@ -501,6 +501,8 @@ function! s:ensure_open(buf, server_name, cb) abort
         call a:cb(l:msg)
         return
     endif
+
+    call s:update_file_content(a:buf, a:server_name, s:get_text_document_text(a:buf))
 
     let l:buffers = l:server['buffers']
 
