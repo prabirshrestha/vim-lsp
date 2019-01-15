@@ -4,6 +4,19 @@ let s:servers = {} " { lsp_id, server_info, init_callbacks, init_result, buffers
 
 let s:notification_callbacks = [] " { name, callback }
 
+" This hold previous content for each language servers to make
+" DidChangeTextDocumentParams. The key is buffer numbers:
+"    {
+"      1: {
+"        "golsp": [ "first-line", "next-line", ... ],
+"        "bingo": [ "first-line", "next-line", ... ]
+"      },
+"      2: {
+"        "pyls": [ "first-line", "next-line", ... ]
+"      }
+"    }
+let s:file_content = {}
+
 " do nothing, place it here only to avoid the message
 augroup _lsp_silent_
     autocmd!
@@ -135,6 +148,7 @@ function! s:register_events() abort
         autocmd BufReadPost * call s:on_text_document_did_open()
         autocmd BufWritePost * call s:on_text_document_did_save()
         autocmd BufWinLeave * call s:on_text_document_did_close()
+        autocmd BufWipeout * call s:on_buf_wipeout(bufnr('<afile>'))
         autocmd InsertLeave * call s:on_text_document_did_change()
         autocmd TextChanged * call s:on_text_document_did_change()
         autocmd CursorMoved * call s:on_cursor_moved()
@@ -152,19 +166,19 @@ endfunction
 function! s:on_text_document_did_open() abort
     let l:buf = bufnr('%')
     call lsp#log('s:on_text_document_did_open()', l:buf, &filetype, getcwd(), lsp#utils#get_buffer_uri(l:buf))
-    call lsp#utils#_event_queue#add([l:buf, function('s:Noop')])
+    call lsp#add_event_queue([l:buf, function('s:Noop')])
 endfunction
 
 function! s:on_text_document_did_save() abort
     let l:buf = bufnr('%')
     call lsp#log('s:on_text_document_did_save()', l:buf)
-    call lsp#utils#_event_queue#add([l:buf, {server_name, result->s:call_did_save(l:buf, server_name, result, function('s:Noop'))}])
+    call lsp#add_event_queue([l:buf, {server_name, result->s:call_did_save(l:buf, server_name, result, function('s:Noop'))}])
 endfunction
 
 function! s:on_text_document_did_change() abort
     let l:buf = bufnr('%')
     call lsp#log('s:on_text_document_did_change()', l:buf)
-    call lsp#utils#_event_queue#add([l:buf, function('s:Noop')])
+    call lsp#add_event_queue([l:buf, function('s:Noop')])
 endfunction
 
 function! s:on_cursor_moved() abort
@@ -209,7 +223,28 @@ function! s:call_did_save(buf, server_name, result, cb) abort
 endfunction
 
 function! s:on_text_document_did_close() abort
-    call lsp#log('s:on_text_document_did_close()', bufnr('%'))
+    let l:buf = bufnr('%')
+    call lsp#log('s:on_text_document_did_close()', l:buf)
+endfunction
+
+function! s:get_last_file_content(server_name, buf) abort
+    if has_key(s:file_content, a:buf) && has_key(s:file_content[a:buf], a:server_name)
+        return s:file_content[a:buf][a:server_name]
+    endif
+    return []
+endfunction
+
+function! s:update_file_content(server_name, buf, new) abort
+    if !has_key(s:file_content, a:buf)
+        let s:file_content[a:buf] = {}
+    endif
+    let s:file_content[a:buf][a:server_name] = a:new
+endfunction
+
+function! s:on_buf_wipeout(buf) abort
+    if has_key(s:file_content, a:buf)
+        call remove(s:file_content, a:buf)
+    endif
 endfunction
 
 function! s:ensure_flush_all(buf, server_names) abort
@@ -394,6 +429,30 @@ function! s:ensure_conf(buf, server_name, cb) abort
     call a:cb(l:msg)
 endfunction
 
+function! s:text_changes(server_name, buf) abort
+  let l:sync_kind = lsp#capabilities#get_text_document_change_sync_kind(a:server_name)
+
+  " When syncKind is None, return null for contentChanges.
+  if l:sync_kind == 0
+    return v:null
+  endif
+
+  " When syncKind is Incremental and previous content is saved.
+  if l:sync_kind == 2 && has_key(s:file_content, a:buf)
+    " compute diff
+    let l:old_content = s:get_last_file_content(a:server_name, a:buf)
+    let l:new_content = getbufline(a:buf, 1, '$')
+    let l:changes = lsp#utils#diff#compute(l:old_content, l:new_content)
+    call s:update_file_content(a:server_name, a:buf, l:new_content)
+    return [l:changes]
+  endif
+
+  let l:new_content = getbufline(a:buf, 1, '$')
+  let l:changes = {'text': join(l:new_content, "\n")}
+  call s:update_file_content(a:server_name, a:buf, l:new_content)
+  return [l:changes]
+endfunction
+
 function! s:ensure_changed(buf, server_name, cb) abort
     let l:server = s:servers[a:server_name]
     let l:path = lsp#utils#get_buffer_uri(a:buf)
@@ -413,15 +472,11 @@ function! s:ensure_changed(buf, server_name, cb) abort
     let l:buffer_info['changed_tick'] = l:changed_tick
     let l:buffer_info['version'] = l:buffer_info['version'] + 1
 
-    " todo: support range in contentChanges
-
     call s:send_notification(a:server_name, {
         \ 'method': 'textDocument/didChange',
         \ 'params': {
         \   'textDocument': s:get_text_document_identifier(a:buf, l:buffer_info),
-        \   'contentChanges': [
-        \       { 'text': s:get_text_document_text(a:buf) },
-        \   ],
+        \   'contentChanges': s:text_changes(a:server_name, a:buf),
         \ }
         \ })
 
@@ -594,17 +649,8 @@ function! lsp#get_whitelisted_servers(...) abort
     return l:active_servers
 endfunction
 
-function! s:requires_eol_at_eof(buf) abort
-    let l:file_ends_with_eol = getbufvar(a:buf, '&eol')
-    let l:vim_will_save_with_eol = !getbufvar(a:buf, '&binary') &&
-                \ getbufvar(a:buf, '&fixeol')
-    return l:file_ends_with_eol || l:vim_will_save_with_eol
-endfunction
-
 function! s:get_text_document_text(buf) abort
-    let l:buf_fileformat = getbufvar(a:buf, '&fileformat')
-    let l:eol = {'unix': "\n", 'dos': "\r\n", 'mac': "\r"}[l:buf_fileformat]
-    return join(getbufline(a:buf, 1, '$'), l:eol).(s:requires_eol_at_eof(a:buf) ? l:eol : '')
+    return join(getbufline(a:buf, 1, '$'), "\n")
 endfunction
 
 function! s:get_text_document(buf, buffer_info) abort
@@ -645,4 +691,30 @@ endfunction
 " omnicompletion
 function! lsp#complete(...) abort
     return call('lsp#omni#complete', a:000)
+endfunction
+
+let s:event_queue = []
+let s:event_timer = -1
+
+function! lsp#add_event_queue(queue) abort
+    for l:queue in s:event_queue
+        if l:queue[0] == a:queue[0] && l:queue[1] == a:queue[1]
+            return
+        endif
+    endfor
+    call add(s:event_queue, a:queue)
+    call lsp#log('s:send_event_queue() will be triggered')
+    call timer_stop(s:event_timer)
+    let lazy = &updatetime > 1000 ? &updatetime : 1000
+    let s:event_timer = timer_start(lazy, function('s:send_event_queue'))
+endfunction
+
+function! s:send_event_queue(timer) abort
+    call lsp#log('s:send_event_queue()')
+    for l:queue in s:event_queue
+        for l:server_name in lsp#get_whitelisted_servers()
+            call s:ensure_flush(l:queue[0], l:server_name, l:queue[1])
+        endfor
+    endfor
+    let s:event_queue = []
 endfunction
