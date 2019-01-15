@@ -206,6 +206,8 @@ function! s:call_did_save(buf, server_name, result, cb) abort
         return
     endif
 
+    call s:update_file_content(a:server_name, a:buf, getbufline(a:buf, 1, '$'))
+
     let l:buffers = l:server['buffers']
     let l:buffer_info = l:buffers[l:path]
 
@@ -214,7 +216,7 @@ function! s:call_did_save(buf, server_name, result, cb) abort
         \ }
 
     if l:did_save_options['includeText']
-        let l:params['text'] = s:get_text_document_text(a:buf)
+        let l:params['text'] = s:get_text_document_text(a:server_name, a:buf)
     endif
 
     call s:send_notification(a:server_name, {
@@ -512,10 +514,13 @@ function! s:ensure_open(buf, server_name, cb) abort
 
     let l:buffer_info = { 'changed_tick': getbufvar(a:buf, 'changedtick'), 'version': 1, 'uri': l:path }
     let l:buffers[l:path] = l:buffer_info
+
+    call s:update_file_content(a:server_name, a:buf, getbufline(a:buf, 1, '$'))
+
     call s:send_notification(a:server_name, {
         \ 'method': 'textDocument/didOpen',
         \ 'params': {
-        \   'textDocument': s:get_text_document(a:buf, l:buffer_info)
+        \   'textDocument': s:get_text_document(a:server_name, a:buf, l:buffer_info)
         \ },
         \ })
 
@@ -654,16 +659,17 @@ function! lsp#get_whitelisted_servers(...) abort
     return l:active_servers
 endfunction
 
-function! s:get_text_document_text(buf) abort
-    return join(getbufline(a:buf, 1, '$'), "\n")
+function! s:get_text_document_text(server_name, buf) abort
+    return join(s:get_last_file_content(a:server_name, a:buf), "\n")
 endfunction
 
-function! s:get_text_document(buf, buffer_info) abort
+function! s:get_text_document(server_name, buf, buffer_info) abort
+    let l:text = join(s:get_last_file_content(a:server_name, a:buf), "\n")
     return {
         \ 'uri': lsp#utils#get_buffer_uri(a:buf),
         \ 'languageId': &filetype,
         \ 'version': a:buffer_info['version'],
-        \ 'text': s:get_text_document_text(a:buf),
+        \ 'text': l:text,
         \ }
 endfunction
 
