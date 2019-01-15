@@ -568,6 +568,29 @@ function! s:on_exit(server_name, id, data, event) abort
     endif
 endfunction
 
+let s:message_types = {1: 'Error', 2: 'Warning', 3: 'Info', 4: 'Log'}
+
+function! s:handle_notification(server_name, data) abort
+    let l:response = a:data['response']
+    let l:method = l:response['method']
+    let l:params = l:response['params']
+
+    if l:method ==# 'textDocument/publishDiagnostics'
+        if g:lsp_diagnostics_enabled
+            call lsp#ui#vim#diagnostics#handle_text_document_publish_diagnostics(a:server_name, a:data)
+        endif
+    elseif l:method ==# 'language/status'
+        echo l:params['message']
+    elseif l:method ==# 'window/logMessage'
+        call lsp#log(l:params['message'])
+    elseif l:method ==# 'window/showMessage'
+        let mt = l:params['type']
+        if index(s:message_types, mt) != -1
+            call confirm(s:message_types[mt] . ': ' . l:params['message'])
+        endif
+    endif
+endfunction
+
 function! s:on_notification(server_name, id, data, event) abort
     call lsp#log_verbose('<---', a:id, a:server_name, a:data)
     let l:response = a:data['response']
@@ -575,9 +598,7 @@ function! s:on_notification(server_name, id, data, event) abort
 
     if lsp#client#is_server_instantiated_notification(a:data)
         if has_key(l:response, 'method')
-            if g:lsp_diagnostics_enabled && l:response['method'] ==# 'textDocument/publishDiagnostics'
-                call lsp#ui#vim#diagnostics#handle_text_document_publish_diagnostics(a:server_name, a:data)
-            endif
+            call s:handle_notification(a:server_name, a:data)
         endif
     else
         let l:request = a:data['request']
