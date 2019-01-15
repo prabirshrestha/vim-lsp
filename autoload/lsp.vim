@@ -514,7 +514,7 @@ function! s:ensure_open(buf, server_name, cb) abort
         return
     endif
 
-    call s:update_file_content(a:buf, a:server_name, s:get_text_document_text(a:buf))
+    call s:update_file_content(a:server_name, a:buf, getbufline(a:buf, 1, '$'))
 
     let l:buffer_info = { 'changed_tick': getbufvar(a:buf, 'changedtick'), 'version': 1, 'uri': l:path }
     let l:buffers[l:path] = l:buffer_info
