@@ -711,19 +711,15 @@ let s:didchange_timer = -1
 function! s:add_didchange_queue(buf) abort
     if index(s:didchange_queue, a:buf) != -1
         return
-	endif
+    endif
     call add(s:didchange_queue, a:buf)
     call lsp#log('s:send_didchange_queue() will be triggered')
-    if exists('*timer_start')
-        call timer_stop(s:didchange_timer)
-        let lazy = &updatetime > 1000 ? &updatetime : 1000
-        let s:didchange_timer = timer_start(lazy, function('s:send_didchange_queue'))
-    else
-        call s:send_didchange_queue(0)
-    endif
+    call timer_stop(s:didchange_timer)
+    let lazy = &updatetime > 1000 ? &updatetime : 1000
+    let s:didchange_timer = timer_start(lazy, function('s:send_didchange_queue'))
 endfunction
 
-function! s:send_didchange_queue(timer) abort
+function! s:send_didchange_queue(...) abort
     call lsp#log('s:send_event_queue()')
     for l:buf in s:didchange_queue
         for l:server_name in lsp#get_whitelisted_servers()
