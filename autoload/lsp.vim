@@ -166,7 +166,7 @@ function! s:on_text_document_did_open() abort
     let l:buf = bufnr('%')
     call lsp#log('s:on_text_document_did_open()', l:buf, &filetype, getcwd(), lsp#utils#get_buffer_uri(l:buf))
     for l:server_name in lsp#get_whitelisted_servers()
-        call s:ensure_flush(l:buf, l:server_name, function('s:Noop'))
+        call s:ensure_flush(l:buf, l:server_name, {result->s:update_file_content(l:buf, l:server_name, s:get_text_document_text(l:buf))})
     endfor
 endfunction
 
@@ -232,17 +232,18 @@ function! s:on_text_document_did_close() abort
     call lsp#log('s:on_text_document_did_close()', l:buf)
 endfunction
 
-function! s:get_last_file_content(server_name, buf) abort
+function! s:get_last_file_content(buf, server_name) abort
     if has_key(s:file_content, a:buf) && has_key(s:file_content[a:buf], a:server_name)
         return s:file_content[a:buf][a:server_name]
     endif
     return []
 endfunction
 
-function! s:update_file_content(server_name, buf, new) abort
+function! s:update_file_content(buf, server_name, new) abort
     if !has_key(s:file_content, a:buf)
         let s:file_content[a:buf] = {}
     endif
+    call lsp#log('s:update_file_content()', a:buf)
     let s:file_content[a:buf][a:server_name] = a:new
 endfunction
 
@@ -434,7 +435,7 @@ function! s:ensure_conf(buf, server_name, cb) abort
     call a:cb(l:msg)
 endfunction
 
-function! s:text_changes(server_name, buf) abort
+function! s:text_changes(buf, server_name) abort
   let l:sync_kind = lsp#capabilities#get_text_document_change_sync_kind(a:server_name)
 
   " When syncKind is None, return null for contentChanges.
@@ -445,16 +446,16 @@ function! s:text_changes(server_name, buf) abort
   " When syncKind is Incremental and previous content is saved.
   if l:sync_kind == 2 && has_key(s:file_content, a:buf)
     " compute diff
-    let l:old_content = s:get_last_file_content(a:server_name, a:buf)
+    let l:old_content = s:get_last_file_content(a:buf, a:server_name)
     let l:new_content = getbufline(a:buf, 1, '$')
     let l:changes = lsp#utils#diff#compute(l:old_content, l:new_content)
-    call s:update_file_content(a:server_name, a:buf, l:new_content)
+    call s:update_file_content(a:buf, a:server_name, l:new_content)
     return [l:changes]
   endif
 
   let l:new_content = getbufline(a:buf, 1, '$')
   let l:changes = {'text': join(l:new_content, "\n")}
-  call s:update_file_content(a:server_name, a:buf, l:new_content)
+  call s:update_file_content(a:buf, a:server_name, l:new_content)
   return [l:changes]
 endfunction
 
@@ -481,7 +482,7 @@ function! s:ensure_changed(buf, server_name, cb) abort
         \ 'method': 'textDocument/didChange',
         \ 'params': {
         \   'textDocument': s:get_text_document_identifier(a:buf, l:buffer_info),
-        \   'contentChanges': s:text_changes(a:server_name, a:buf),
+        \   'contentChanges': s:text_changes(a:buf, a:server_name),
         \ }
         \ })
 
