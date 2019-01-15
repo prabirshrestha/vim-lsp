@@ -391,6 +391,13 @@ function! s:ensure_init(buf, server_name, cb) abort
         let l:capabilities = l:server_info['capabilities']
     else
         let l:capabilities = {
+        \   'textDocument': {
+        \       'completion': {
+        \           'completionItem': {
+        \               'snippetSupport': v:true,
+        \           },
+        \       },
+        \   },
         \   'workspace': {
         \       'applyEdit ': v:true
         \   }

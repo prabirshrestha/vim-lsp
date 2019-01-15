@@ -160,12 +160,21 @@ function! lsp#omni#get_vim_completion_item(item) abort
         else
             let l:word = a:item['insertText']
         endif
+        if has_key(a:item, 'insertTextFormat') && a:item['insertTextFormat'] == 2
+            let l:snippet = substitute(a:item['insertText'], '$0', '${0:}', '')
+            let l:snippet = a:item['insertText']
+        endif
         let l:abbr = a:item['label']
     else
         let l:word = a:item['label']
         let l:abbr = a:item['label']
     endif
-    let l:menu = lsp#omni#get_kind_text(a:item)
+    if exists('l:snippet')
+        let l:menu = 'Snip'
+        call SimpleSnippets#addFlashSnippet(l:word, l:snippet)
+    else
+        let l:menu = lsp#omni#get_kind_text(a:item)
+    endif
     let l:completion = { 'word': l:word, 'abbr': l:abbr, 'menu': l:menu, 'info': '', 'icase': 1, 'dup': 1 }
 
     if has_key(a:item, 'detail') && !empty(a:item['detail'])
