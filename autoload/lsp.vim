@@ -725,6 +725,9 @@ endfunction
 function! s:send_didchange_queue(...) abort
     call lsp#log('s:send_event_queue()')
     for l:buf in s:didchange_queue
+        if !bufexists(l:buf)
+            continue
+        endif
         for l:server_name in lsp#get_whitelisted_servers()
             call s:ensure_flush(l:buf, l:server_name, function('s:Noop'))
         endfor
