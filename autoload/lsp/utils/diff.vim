@@ -11,7 +11,7 @@ function! lsp#utils#diff#compute(old, new) abort
   let [l:end_line, l:end_char] =
       \ s:LastDifference(a:old[l:start_line :], a:new[l:start_line :], l:start_char)
 
-  if l:end_line == -1
+  if l:start_line == -1 || l:end_line == -1
     return {}
   endif
   let l:text = s:ExtractText(a:new, l:start_line, l:start_char, l:end_line, l:end_char)
