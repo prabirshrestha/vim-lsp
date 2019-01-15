@@ -151,6 +151,9 @@ function! s:register_events() abort
         autocmd BufWipeout * call s:on_buf_wipeout(bufnr('<afile>'))
         autocmd InsertLeave * call s:on_text_document_did_change()
         autocmd TextChanged * call s:on_text_document_did_change()
+        if exists('##TextChangedP')
+            autocmd TextChangedP * call s:on_text_document_did_change()
+        endif
         autocmd CursorMoved * call s:on_cursor_moved()
     augroup END
     call s:on_text_document_did_open()
