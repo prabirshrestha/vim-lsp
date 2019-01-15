@@ -11,6 +11,9 @@ function! lsp#utils#diff#compute(old, new) abort
   let [l:end_line, l:end_char] =
       \ s:LastDifference(a:old[l:start_line :], a:new[l:start_line :], l:start_char)
 
+  if l:end_line == -1
+    return {}
+  endif
   let l:text = s:ExtractText(a:new, l:start_line, l:start_char, l:end_line, l:end_char)
   let l:length = s:Length(a:old, l:start_line, l:start_char, l:end_line, l:end_char)
 
@@ -84,7 +87,7 @@ function! s:ExtractText(lines, start_line, start_char, end_line, end_char) abort
   endif
   let l:result = a:lines[a:start_line][a:start_char :]."\n"
   let l:adj_end_line = len(a:lines) + a:end_line
-  for l:line in a:lines[a:start_line + 1:a:end_line - 1]
+  for l:line in a:lines[a:start_line + 1 : a:end_line - 1]
     let l:result .= l:line."\n"
   endfor
   if a:end_line != 0

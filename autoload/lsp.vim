@@ -436,27 +436,30 @@ function! s:ensure_conf(buf, server_name, cb) abort
 endfunction
 
 function! s:text_changes(buf, server_name) abort
-  let l:sync_kind = lsp#capabilities#get_text_document_change_sync_kind(a:server_name)
+    let l:sync_kind = lsp#capabilities#get_text_document_change_sync_kind(a:server_name)
 
-  " When syncKind is None, return null for contentChanges.
-  if l:sync_kind == 0
-    return v:null
-  endif
+    " When syncKind is None, return null for contentChanges.
+    if l:sync_kind == 0
+        return v:null
+    endif
 
-  " When syncKind is Incremental and previous content is saved.
-  if l:sync_kind == 2 && has_key(s:file_content, a:buf)
-    " compute diff
-    let l:old_content = s:get_last_file_content(a:buf, a:server_name)
+    " When syncKind is Incremental and previous content is saved.
+    if l:sync_kind == 2 && has_key(s:file_content, a:buf)
+        " compute diff
+        let l:old_content = s:get_last_file_content(a:buf, a:server_name)
+        let l:new_content = getbufline(a:buf, 1, '$')
+        let l:changes = lsp#utils#diff#compute(l:old_content, l:new_content)
+        if empty(l:changes)
+            return []
+        endif
+        call s:update_file_content(a:buf, a:server_name, l:new_content)
+        return [l:changes]
+    endif
+
     let l:new_content = getbufline(a:buf, 1, '$')
-    let l:changes = lsp#utils#diff#compute(l:old_content, l:new_content)
+    let l:changes = {'text': join(l:new_content, "\n")}
     call s:update_file_content(a:buf, a:server_name, l:new_content)
     return [l:changes]
-  endif
-
-  let l:new_content = getbufline(a:buf, 1, '$')
-  let l:changes = {'text': join(l:new_content, "\n")}
-  call s:update_file_content(a:buf, a:server_name, l:new_content)
-  return [l:changes]
 endfunction
 
 function! s:ensure_changed(buf, server_name, cb) abort
