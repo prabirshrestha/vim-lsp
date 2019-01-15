@@ -34,7 +34,7 @@ CONTENTS                                                  *vim-lsp-contents*
       LspReferences               |LspReferences|
       LspRename                   |LspRename|
       LspTypeDefinition           |LspTypeDefinition|
-      LspWorkspaceSymbols         |LspWorkspaceSymbols|
+      LspWorkspaceSymbol          |LspWorkspaceSymbol|
     Mappings			|vim-lsp-mappings|
     Autocomplete		|vim-lsp-autocomplete|
       omnifunc                    |vim-lsp-omnifunc|
@@ -384,7 +384,7 @@ LspTypeDefinition				  	 *LspTypeDefinition*
 
 Go to the type definition.
 
-LspWorkspaceSymbols				       *LspWorkspaceSymbols*
+LspWorkspaceSymbol					*LspWorkspaceSymbol*
 
 Search and show workspace symbols.
 
