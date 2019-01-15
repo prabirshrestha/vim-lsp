@@ -166,19 +166,23 @@ endfunction
 function! s:on_text_document_did_open() abort
     let l:buf = bufnr('%')
     call lsp#log('s:on_text_document_did_open()', l:buf, &filetype, getcwd(), lsp#utils#get_buffer_uri(l:buf))
-    call lsp#add_event_queue([l:buf, function('s:Noop')])
+    for l:server_name in lsp#get_whitelisted_servers()
+        call s:ensure_flush(l:buf, l:server_name, function('s:Noop'))
+    endfor
 endfunction
 
 function! s:on_text_document_did_save() abort
     let l:buf = bufnr('%')
     call lsp#log('s:on_text_document_did_save()', l:buf)
-    call lsp#add_event_queue([l:buf, {server_name, result->s:call_did_save(l:buf, server_name, result, function('s:Noop'))}])
+    for l:server_name in lsp#get_whitelisted_servers()
+        call s:ensure_flush(l:buf, l:server_name, {result->s:call_did_save(l:buf, l:server_name, result, function('s:Noop'))})
+    endfor
 endfunction
 
 function! s:on_text_document_did_change() abort
     let l:buf = bufnr('%')
     call lsp#log('s:on_text_document_did_change()', l:buf)
-    call lsp#add_event_queue([l:buf, function('s:Noop')])
+    call s:add_didchange_queue(l:buf)
 endfunction
 
 function! s:on_cursor_moved() abort
@@ -211,9 +215,8 @@ function! s:call_did_save(buf, server_name, result, cb) abort
         \ }
 
     if l:did_save_options['includeText']
-        let l:params['text'] = s:get_text_document_text(a:server_name, a:buf)
+        let l:params['text'] = s:get_text_document_text(a:buf, a:server_name)
     endif
-
     call s:send_notification(a:server_name, {
         \ 'method': 'textDocument/didSave',
         \ 'params': l:params,
@@ -295,7 +298,7 @@ function! s:ensure_flush(buf, server_name, cb) abort
         \ {s->s:is_step_error(s) ? s:throw_step_error(s) : s:ensure_conf(a:buf, a:server_name, s.callback)},
         \ {s->s:is_step_error(s) ? s:throw_step_error(s) : s:ensure_open(a:buf, a:server_name, s.callback)},
         \ {s->s:is_step_error(s) ? s:throw_step_error(s) : s:ensure_changed(a:buf, a:server_name, s.callback)},
-        \ {s->a:cb(a:server_name, s.result[0])}
+        \ {s->a:cb(s.result[0])}
         \ ])
 endfunction
 
@@ -502,7 +505,7 @@ function! s:ensure_open(buf, server_name, cb) abort
         return
     endif
 
-    call s:update_file_content(a:buf, a:server_name, s:get_text_document_text(a:buf))
+    call s:update_file_content(a:buf, a:server_name, s:get_text_document_text(a:buf, a:server_name))
 
     let l:buffers = l:server['buffers']
 
@@ -516,12 +519,10 @@ function! s:ensure_open(buf, server_name, cb) abort
     let l:buffer_info = { 'changed_tick': getbufvar(a:buf, 'changedtick'), 'version': 1, 'uri': l:path }
     let l:buffers[l:path] = l:buffer_info
 
-    call s:update_file_content(a:server_name, a:buf, getbufline(a:buf, 1, '$'))
-
     call s:send_notification(a:server_name, {
         \ 'method': 'textDocument/didOpen',
         \ 'params': {
-        \   'textDocument': s:get_text_document(a:server_name, a:buf, l:buffer_info)
+        \   'textDocument': s:get_text_document(a:buf, a:server_name, l:buffer_info)
         \ },
         \ })
 
@@ -660,17 +661,16 @@ function! lsp#get_whitelisted_servers(...) abort
     return l:active_servers
 endfunction
 
-function! s:get_text_document_text(server_name, buf) abort
+function! s:get_text_document_text(buf, server_name) abort
     return join(s:get_last_file_content(a:server_name, a:buf), "\n")
 endfunction
 
-function! s:get_text_document(server_name, buf, buffer_info) abort
-    let l:text = join(s:get_last_file_content(a:server_name, a:buf), "\n")
+function! s:get_text_document(buf, server_name, buffer_info) abort
     return {
         \ 'uri': lsp#utils#get_buffer_uri(a:buf),
         \ 'languageId': &filetype,
         \ 'version': a:buffer_info['version'],
-        \ 'text': l:text,
+        \ 'text': s:get_text_document_text(a:buf, a:server_name),
         \ }
 endfunction
 
@@ -705,28 +705,30 @@ function! lsp#complete(...) abort
     return call('lsp#omni#complete', a:000)
 endfunction
 
-let s:event_queue = []
-let s:event_timer = -1
+let s:didchange_queue = []
+let s:didchange_timer = -1
 
-function! lsp#add_event_queue(queue) abort
-    for l:queue in s:event_queue
-        if l:queue[0] == a:queue[0] && l:queue[1] == a:queue[1]
-            return
-        endif
-    endfor
-    call add(s:event_queue, a:queue)
-    call lsp#log('s:send_event_queue() will be triggered')
-    call timer_stop(s:event_timer)
-    let lazy = &updatetime > 1000 ? &updatetime : 1000
-    let s:event_timer = timer_start(lazy, function('s:send_event_queue'))
+function! s:add_didchange_queue(buf) abort
+    if index(s:didchange_queue, a:buf) != -1
+        return
+	endif
+    call add(s:didchange_queue, a:buf)
+    call lsp#log('s:send_didchange_queue() will be triggered')
+    if exists('*timer_start')
+        call timer_stop(s:didchange_timer)
+        let lazy = &updatetime > 1000 ? &updatetime : 1000
+        let s:didchange_timer = timer_start(lazy, function('s:send_didchange_queue'))
+    else
+        call s:send_didchange_queue(0)
+    endif
 endfunction
 
-function! s:send_event_queue(timer) abort
+function! s:send_didchange_queue(timer) abort
     call lsp#log('s:send_event_queue()')
-    for l:queue in s:event_queue
+    for l:buf in s:didchange_queue
         for l:server_name in lsp#get_whitelisted_servers()
-            call s:ensure_flush(l:queue[0], l:server_name, l:queue[1])
+            call s:ensure_flush(l:buf, l:server_name, function('s:Noop'))
         endfor
     endfor
-    let s:event_queue = []
+    let s:didchange_queue = []
 endfunction
