@@ -129,10 +129,8 @@ function! lsp#ui#vim#references() abort
     echo 'Retrieving references ...'
 endfunction
 
-function! s:rename(server, old_name) abort
-    let l:new_name = input('new name: ', a:old_name)
-
-    if empty(l:new_name)
+function! s:rename(server, new_name) abort
+    if empty(a:new_name)
         echo '... Renaming aborted ...'
         return
     endif
@@ -143,7 +141,7 @@ function! s:rename(server, old_name) abort
         \ 'params': {
         \   'textDocument': lsp#get_text_document_identifier(),
         \   'position': lsp#get_position(),
-        \   'newName': l:new_name,
+        \   'newName': a:new_name,
         \ },
         \ 'on_notification': function('s:handle_workspace_edit', [a:server, s:last_req_id, 'rename']),
         \ })
@@ -181,7 +179,7 @@ function! lsp#ui#vim#rename() abort
         return
     endif
 
-    call s:rename(l:server, expand('<cword>'))
+    call s:rename(l:server, input('new name: ', expand('<cword>')))
 endfunction
 
 function! s:document_format(sync) abort
@@ -427,7 +425,7 @@ function! s:handle_rename_prepare(server, last_req_id, type, data) abort
         let l:name .= l:lines[l:range['end']['line']][: l:range['end']['character']-1]
     endif
 
-    call s:rename(a:server, l:name)
+    call timer_start(1, {x->s:rename(a:server, input('new name: ', l:name))})
 endfunction
 
 function! s:handle_workspace_edit(server, last_req_id, type, data) abort
