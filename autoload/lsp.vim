@@ -452,7 +452,7 @@ function! s:text_changes(buf, server_name) abort
         let l:old_content = s:get_last_file_content(a:buf, a:server_name)
         let l:new_content = getbufline(a:buf, 1, '$')
         let l:changes = lsp#utils#diff#compute(l:old_content, l:new_content)
-        if empty(l:changes)
+        if empty(l:changes.text)
             return []
         endif
         call s:update_file_content(a:buf, a:server_name, l:new_content)
