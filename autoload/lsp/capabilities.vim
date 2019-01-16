@@ -1,6 +1,12 @@
-function! s:has_bool_provider(server_name, provider) abort
-    let l:capabilities = lsp#get_server_capabilities(a:server_name)
-    return !empty(l:capabilities) && has_key(l:capabilities, a:provider) && l:capabilities[a:provider] == v:true
+function! s:has_bool_provider(server_name, ...) abort
+    let l:value = lsp#get_server_capabilities(a:server_name)
+    for l:provider in a:000
+        if empty(l:value) || !has_key(l:value, l:provider) || type(l:value) != type({})
+            return 0
+        endif
+        let l:value = l:value[l:provider]
+    endfor
+    return type(l:value) == type(v:true) && l:value == v:true
 endfunction
 
 function! lsp#capabilities#has_declaration_provider(server_name) abort
@@ -20,7 +26,7 @@ function! lsp#capabilities#has_hover_provider(server_name) abort
 endfunction
 
 function! lsp#capabilities#has_rename_provider(server_name) abort
-    return s:has_bool_provider(a:server_name, 'renameProvider')
+    return s:has_bool_provider(a:server_name, 'renameProvider') || s:has_bool_provider(a:server_name, 'renameProvider', 'prepareProvider')
 endfunction
 
 function! lsp#capabilities#has_document_formatting_provider(server_name) abort
@@ -81,8 +87,8 @@ function! lsp#capabilities#get_text_document_change_sync_kind(server_name) abort
             else
                 return 1
             endif
-		elseif type(l:capabilities['textDocumentSync']) == type(1)
-		    return l:capabilities['textDocumentSync']
+        elseif type(l:capabilities['textDocumentSync']) == type(1)
+            return l:capabilities['textDocumentSync']
         else
             return 1
         endif
