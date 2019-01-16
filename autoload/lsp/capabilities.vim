@@ -1,7 +1,7 @@
 function! s:has_bool_provider(server_name, ...) abort
     let l:value = lsp#get_server_capabilities(a:server_name)
     for l:provider in a:000
-        if empty(l:value) || !has_key(l:value, l:provider) || type(l:value) != type({})
+        if empty(l:value) || type(l:value) != type({}) || !has_key(l:value, l:provider)
             return 0
         endif
         let l:value = l:value[l:provider]
@@ -26,7 +26,11 @@ function! lsp#capabilities#has_hover_provider(server_name) abort
 endfunction
 
 function! lsp#capabilities#has_rename_provider(server_name) abort
-    return s:has_bool_provider(a:server_name, 'renameProvider') || s:has_bool_provider(a:server_name, 'renameProvider', 'prepareProvider')
+    return s:has_bool_provider(a:server_name, 'renameProvider')
+endfunction
+
+function! lsp#capabilities#has_rename_prepare_provider(server_name) abort
+    return s:has_bool_provider(a:server_name, 'renameProvider', 'prepareProvider')
 endfunction
 
 function! lsp#capabilities#has_document_formatting_provider(server_name) abort
