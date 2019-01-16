@@ -87,8 +87,8 @@ function! lsp#capabilities#get_text_document_change_sync_kind(server_name) abort
             else
                 return 1
             endif
-		elseif type(l:capabilities['textDocumentSync']) == type(1)
-		    return l:capabilities['textDocumentSync']
+        elseif type(l:capabilities['textDocumentSync']) == type(1)
+            return l:capabilities['textDocumentSync']
         else
             return 1
         endif
