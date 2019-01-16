@@ -568,6 +568,12 @@ function! s:on_exit(server_name, id, data, event) abort
     endif
 endfunction
 
+
+" This hold function to handle notifications.
+"    {
+"      'language/status': funcref
+"    }
+let s:registered_notification_callbacks = {}
 let s:message_types = {1: 'Error', 2: 'Warning', 3: 'Info', 4: 'Log'}
 
 function! s:handle_notification(server_name, data) abort
@@ -579,8 +585,6 @@ function! s:handle_notification(server_name, data) abort
         if g:lsp_diagnostics_enabled
             call lsp#ui#vim#diagnostics#handle_text_document_publish_diagnostics(a:server_name, a:data)
         endif
-    elseif l:method ==# 'language/status'
-        echo l:params['message']
     elseif l:method ==# 'window/logMessage'
         call lsp#log(l:params['message'])
     elseif l:method ==# 'window/showMessage'
@@ -588,7 +592,13 @@ function! s:handle_notification(server_name, data) abort
         if index(s:message_types, mt) != -1
             call confirm(s:message_types[mt] . ': ' . l:params['message'])
         endif
+	elseif has_key(s:registered_notification_callbacks, l:method)
+        call s:registered_notification_callbacks[l:method](l:params)
     endif
+endfunction
+
+function! lsp#register_notification(typ, fn)
+    let s:registered_notification_callbacks[a:typ] = a:fn
 endfunction
 
 function! s:on_notification(server_name, id, data, event) abort
