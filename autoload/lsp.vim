@@ -712,6 +712,10 @@ let s:didchange_queue = []
 let s:didchange_timer = -1
 
 function! s:add_didchange_queue(buf) abort
+    if g:lsp_use_event_queue == 0
+        call s:send_didchange_queue()
+        return
+    endif
     if index(s:didchange_queue, a:buf) != -1
         return
     endif
