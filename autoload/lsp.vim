@@ -713,8 +713,9 @@ let s:didchange_timer = -1
 
 function! s:add_didchange_queue(buf) abort
     if g:lsp_use_event_queue == 0
-        call add(s:didchange_queue, a:buf)
-        call s:send_didchange_queue()
+        for l:server_name in lsp#get_whitelisted_servers()
+            call s:ensure_flush(a:buf, l:server_name, function('s:Noop'))
+        endfor
         return
     endif
     if index(s:didchange_queue, a:buf) != -1
