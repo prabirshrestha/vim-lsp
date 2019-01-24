@@ -36,71 +36,71 @@ function! lsp#ui#vim#signs#enable() abort
 endfunction
 
 function! lsp#ui#vim#signs#next_error() abort
-	if empty(s:err_loc)
-		return
-	endif
+    if empty(s:err_loc)
+        return
+    endif
 
-	let l:view = winsaveview()
-	let l:next_line = 0
-	for l:line in s:err_loc
-		if l:line > l:view.lnum
-			let l:next_line = l:line
-			break
-		endif
-	endfor
+    let l:view = winsaveview()
+    let l:next_line = 0
+    for l:line in s:err_loc
+        if l:line > l:view.lnum
+            let l:next_line = l:line
+            break
+        endif
+    endfor
 
-	if l:next_line == 0
-		return
-	endif
+    if l:next_line == 0
+        return
+    endif
 
-	let l:view.lnum = l:next_line
-	let l:view.topline = 1
-	let l:height = winheight(0)
-	let totalnum = line('$')
-	if totalnum > l:height
-		let l:half = l:height / 2
-		if l:totalnum - l:half < l:view.lnum
-			let l:view.topline = l:totalnum - l:height + 1
-		else
-			let l:view.topline = l:view.lnum - l:half
-		endif
-	endif
-	call winrestview(l:view)
+    let l:view.lnum = l:next_line
+    let l:view.topline = 1
+    let l:height = winheight(0)
+    let totalnum = line('$')
+    if totalnum > l:height
+        let l:half = l:height / 2
+        if l:totalnum - l:half < l:view.lnum
+            let l:view.topline = l:totalnum - l:height + 1
+        else
+            let l:view.topline = l:view.lnum - l:half
+        endif
+    endif
+    call winrestview(l:view)
 endfunction
 
 function! lsp#ui#vim#signs#previous_error() abort
-	if empty(s:err_loc)
-		return
-	endif
+    if empty(s:err_loc)
+        return
+    endif
 
-	let l:view = winsaveview()
-	let l:next_line = 0
-	let l:index = len(s:err_loc) - 1
-	while l:index >= 0
-		if s:err_loc[l:index] < l:view.lnum
-			let l:next_line = s:err_loc[l:index]
-			break
-		endif
-		let l:index = l:index - 1
-	endwhile
+    let l:view = winsaveview()
+    let l:next_line = 0
+    let l:index = len(s:err_loc) - 1
+    while l:index >= 0
+        if s:err_loc[l:index] < l:view.lnum
+            let l:next_line = s:err_loc[l:index]
+            break
+        endif
+        let l:index = l:index - 1
+    endwhile
 
-	if l:next_line == 0
-		return
-	endif
+    if l:next_line == 0
+        return
+    endif
 
-	let l:view.lnum = l:next_line
-	let l:view.topline = 1
-	let l:height = winheight(0)
-	let totalnum = line('$')
-	if totalnum > l:height
-		let l:half = l:height / 2
-		if l:totalnum - l:half < l:view.lnum
-			let l:view.topline = l:totalnum - l:height + 1
-		else
-			let l:view.topline = l:view.lnum - l:half
-		endif
-	endif
-	call winrestview(l:view)
+    let l:view.lnum = l:next_line
+    let l:view.topline = 1
+    let l:height = winheight(0)
+    let totalnum = line('$')
+    if totalnum > l:height
+        let l:half = l:height / 2
+        if l:totalnum - l:half < l:view.lnum
+            let l:view.topline = l:totalnum - l:height + 1
+        else
+            let l:view.topline = l:view.lnum - l:half
+        endif
+    endif
+    call winrestview(l:view)
 endfunction
 
 " Set default sign text to handle case when user provides empty dict
@@ -151,7 +151,7 @@ function! lsp#ui#vim#signs#set(server_name, data) abort
     endif
 
     if lsp#client#is_error(a:data['response'])
-		let s:err_loc = []
+        let s:err_loc = []
         return
     endif
 
@@ -177,16 +177,19 @@ function! s:clear_signs(server_name, path) abort
         return
     endif
 
-    for l:id in s:signs[a:server_name][a:path]
+    let l:ids = s:signs[a:server_name][a:path]
+    for l:id in l:ids
         execute ':sign unplace ' . l:id . ' file=' . a:path
     endfor
-    redraw
+    if !empty(l:ids)
+        redraw!
+    endif
 
     let s:signs[a:server_name][a:path] = []
 endfunction
 
 function! s:place_signs(server_name, path, diagnostics) abort
-	let s:err_loc = []
+    let s:err_loc = []
 
     if !empty(a:diagnostics) && bufnr(a:path) >= 0
         for l:item in a:diagnostics
@@ -200,10 +203,10 @@ function! s:place_signs(server_name, path, diagnostics) abort
                 call lsp#log('add signs')
                 let g:lsp_next_sign_id += 1
 
-				if l:name ==? 'LspError'
-					call add(s:err_loc, l:line)
-				endif
-				let s:err_loc = sort(s:err_loc)
+                if l:name ==? 'LspError'
+                    call add(s:err_loc, l:line)
+                endif
+                let s:err_loc = sort(s:err_loc)
             endif
         endfor
     endif
