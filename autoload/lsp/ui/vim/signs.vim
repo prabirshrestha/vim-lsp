@@ -180,6 +180,7 @@ function! s:clear_signs(server_name, path) abort
     for l:id in s:signs[a:server_name][a:path]
         execute ':sign unplace ' . l:id . ' file=' . a:path
     endfor
+    redraw
 
     let s:signs[a:server_name][a:path] = []
 endfunction
