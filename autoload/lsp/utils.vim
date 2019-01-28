@@ -5,7 +5,7 @@ endfunction
 function! s:decode_uri(uri) abort
     let l:ret = a:uri
     let l:pos = stridx(l:ret, '?')
-    if l:pos != 0
+    if l:pos != -1
         let [l:lhs, l:rhs] = [l:ret[: l:pos], l:ret[l:pos :]]
         let l:ret = l:lhs . substitute(l:rhs, '+', ' ', 'g')
     endif
