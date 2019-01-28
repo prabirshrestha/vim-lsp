@@ -1,4 +1,4 @@
-if exists('g:lsp_loaded')
+if exists('g:lsp_loaded') || !exists('*json_encode') || !has('timers') || !has('lambda')
     finish
 endif
 let g:lsp_loaded = 1
