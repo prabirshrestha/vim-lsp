@@ -5,7 +5,12 @@ endfunction
 " Decode uri function is taken from vital framework: https://github.com/vim-jp/vital.vim
 " For it's license (NYSL), see http://www.kmonos.net/nysl/index.en.html
 function! s:decode_uri(uri) abort
-    let l:ret = substitute(a:uri, '+', ' ', 'g')
+    let l:ret = a:uri
+    let l:pos = stridx(l:ret, '?')
+    if l:pos != 0
+        let [l:lhs, l:rhs] = [l:ret[: l:pos], l:ret[l:pos:]]
+        let l:ret = l:lhs . substitute(l:rhs, '+', ' ', 'g')
+    endif
     return substitute(l:ret, '%\(\x\x\)', '\=printf("%c", str2nr(submatch(1), 16))', 'g')
 endfunction
 
