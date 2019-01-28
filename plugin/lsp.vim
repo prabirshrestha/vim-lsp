@@ -61,4 +61,4 @@ nnoremap <expr> <plug>(lsp-workspace-symbol) [lsp#ui#vim#workspace_symbol(),''][
 nnoremap <expr> <plug>(lsp-document-format) [lsp#ui#vim#document_format(),''][1]
 vnoremap <expr> <plug>(lsp-document-format) [lsp#ui#vim#document_range_format(),''][1]
 nnoremap <expr> <plug>(lsp-implementation) [lsp#ui#vim#implementation(),''][1]
-nnoremap <expr> <plug>(lsp-status) [execute("echo lsp#get_server_status()",1),''][1]
+nnoremap <expr> <plug>(lsp-status) [execute('echo lsp#get_server_status()',1),''][1]
