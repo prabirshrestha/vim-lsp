@@ -19,6 +19,8 @@ let g:lsp_diagnostics_echo_delay = get(g:, 'lsp_diagnostics_echo_delay', 500)
 let g:lsp_next_sign_id = get(g:, 'lsp_next_sign_id', 6999)
 let g:lsp_preview_keep_focus = get(g:, 'lsp_preview_keep_focus', 1)
 let g:lsp_quickfix_auto_open = get(g:, 'lsp_quickfix_auto_open', 1)
+let g:lsp_use_event_queue = get(g:, 'lsp_use_event_queue', 0)
+let g:lsp_insert_text_enabled= get(g:, 'lsp_insert_text_enabled', 1)
 
 if g:lsp_auto_enable
     augroup lsp_auto_enable
@@ -28,6 +30,7 @@ if g:lsp_auto_enable
 endif
 
 command! LspCodeAction call lsp#ui#vim#code_action()
+command! LspDeclaration call lsp#ui#vim#declaration()
 command! LspDefinition call lsp#ui#vim#definition()
 command! LspDocumentSymbol call lsp#ui#vim#document_symbol()
 command! LspDocumentDiagnostics call lsp#ui#vim#diagnostics#document_diagnostics()
@@ -36,6 +39,7 @@ command! LspNextError call lsp#ui#vim#signs#next_error()
 command! LspPreviousError call lsp#ui#vim#signs#previous_error()
 command! LspReferences call lsp#ui#vim#references()
 command! LspRename call lsp#ui#vim#rename()
+command! LspTypeDefinition call lsp#ui#vim#type_definition()
 command! LspWorkspaceSymbol call lsp#ui#vim#workspace_symbol()
 command! LspDocumentFormat call lsp#ui#vim#document_format()
 command! LspDocumentFormatSync call lsp#ui#vim#document_format_sync()
@@ -45,6 +49,7 @@ command! LspTypeDefinition call lsp#ui#vim#type_definition()
 command! -nargs=0 LspStatus echo lsp#get_server_status()
 
 nnoremap <expr> <plug>(lsp-code-action) [lsp#ui#vim#code_action(),''][1]
+nnoremap <expr> <plug>(lsp-declaration) [lsp#ui#vim#declaration(), ''][1]
 nnoremap <expr> <plug>(lsp-definition) [lsp#ui#vim#definition(), ''][1]
 nnoremap <expr> <plug>(lsp-document-symbol) [lsp#ui#vim#document_symbol(),''][1]
 nnoremap <expr> <plug>(lsp-document-diagnostics) [lsp#ui#vim#diagnostics#document_diagnostics(),''][1]
@@ -53,9 +58,9 @@ nnoremap <expr> <plug>(lsp-next-error) [lsp#ui#vim#signs#next_error(),''][1]
 nnoremap <expr> <plug>(lsp-previous-error) [lsp#ui#vim#signs#previous_error(),''][1]
 nnoremap <expr> <plug>(lsp-references) [lsp#ui#vim#references(),''][1]
 nnoremap <expr> <plug>(lsp-rename) [lsp#ui#vim#rename(),''][1]
+nnoremap <expr> <plug>(lsp-type-definition) [lsp#ui#vim#type_definition(),''][1]
 nnoremap <expr> <plug>(lsp-workspace-symbol) [lsp#ui#vim#workspace_symbol(),''][1]
 nnoremap <expr> <plug>(lsp-document-format) [lsp#ui#vim#document_format(),''][1]
 vnoremap <expr> <plug>(lsp-document-format) [lsp#ui#vim#document_range_format(),''][1]
 nnoremap <expr> <plug>(lsp-implementation) [lsp#ui#vim#implementation(),''][1]
-nnoremap <expr> <plug>(lsp-type-definition) [lsp#ui#vim#type_definition(),''][1]
-nnoremap <expr> <plug>(lsp-status) [execute("echo lsp#get_server_status()",1),''][1]
+nnoremap <expr> <plug>(lsp-status) [execute('echo lsp#get_server_status()',1),''][1]

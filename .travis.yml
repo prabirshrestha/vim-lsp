@@ -8,28 +8,29 @@ env:
         - DOWNLOADS_DIR=$HOME/downloads
 
 matrix:
-    include:
+    allow_failures:
         - os: osx
           env: VIM_TYPE=neovim VIM_VERSION=nightly
-        - os: osx
-          env: VIM_TYPE=neovim VIM_VERSION=0.3.1
-        - os: osx
-          env: VIM_TYPE=vim VIM_VERSION=default
         - os: linux
           dist: trusty
           python: "3.6"
           env: VIM_TYPE=neovim VIM_VERSION=nightly
-        - os: linux
-          dist: trusty
-          python: "3.6"
-          env: VIM_TYPE=neovim VIM_VERSION=0.3.1
-        - os: linux
-          dist: trusty
-          python: "3.6"
-          env: VIM_TYPE=vim VIM_VERSION=default
         - os: windows
           language: shell
           env: VIM_TYPE=neovim VIM_VERSION=nightly
+    include:
+        - os: osx
+          env: VIM_TYPE=neovim VIM_VERSION=0.3.1
+        - os: osx
+          env: VIM_TYPE=vim VIM_VERSION=default
+        - os: linux
+          dist: trusty
+          python: "3.6"
+          env: VIM_TYPE=neovim VIM_VERSION=0.3.1
+        - os: linux
+          dist: trusty
+          python: "3.6"
+          env: VIM_TYPE=vim VIM_VERSION=default
         - os: windows
           language: shell
           env: VIM_TYPE=neovim VIM_VERSION=0.3.1
@@ -83,6 +84,9 @@ before_install:
             export PATH="$DOWNLOADS_DIR/Neovim/bin:$PATH";
         fi;
       fi
+    - git clone --depth 1 --branch v1.5.4 --single-branch https://github.com/thinca/vim-themis /tmp/vim-themis
+    - export PATH="/tmp/vim-themis/bin:$PATH";
+    - if [[ "$VIM_TYPE" == "neovim" ]]; then export THEMIS_VIM=nvim; fi;
 
 before_script:
     - uname -a
@@ -93,3 +97,8 @@ before_script:
 script:
     - if [[ "$VIM_TYPE" == "vim" ]]; then vint autoload ftplugin plugin; fi;
     - if [[ "$VIM_TYPE" == "neovim" ]]; then vint --enable-neovim autoload ftplugin plugin; fi;
+    - if [[ "$TRAVIS_OS_NAME" == "windows" && "$VIM_TYPE" == "neovim" ]]; then
+        powershell -Command "themis --reporter spec";
+      else
+        themis --reporter spec;
+      fi;

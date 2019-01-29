@@ -13,6 +13,7 @@ CONTENTS                                                  *vim-lsp-contents*
       g:lsp_diagnostics_enabled   |g:lsp_diagnostics_enabled|
       g:lsp_auto_enable           |g:lsp_auto_enable|
       g:lsp_preview_keep_focus    |g:lsp_preview_keep_focus|
+      g:lsp_insert_text_enabled   |g:lsp_insert_text_enabled|
     Functions			|vim-lsp-functions|
       enable                      |vim-lsp-enable|
       disable                     |vim-lsp-disable|
@@ -21,6 +22,7 @@ CONTENTS                                                  *vim-lsp-contents*
     Commands			|vim-lsp-commands|
       LspCodeAction               |LspCodeAction|
       LspDocumentDiagnostics      |LspDocumentDiagnostics|
+      LspDeclaration              |LspDeclaration|
       LspDefinition               |LspDefinition|
       LspDocumentFormat           |LspDocumentFormat|
       LspDocumentFormatSync       |LspDocumentFormatSync|
@@ -33,7 +35,7 @@ CONTENTS                                                  *vim-lsp-contents*
       LspReferences               |LspReferences|
       LspRename                   |LspRename|
       LspTypeDefinition           |LspTypeDefinition|
-      LspWorkspaceSymbols         |LspWorkspaceSymbols|
+      LspWorkspaceSymbol          |LspWorkspaceSymbol|
     Mappings			|vim-lsp-mappings|
     Autocomplete		|vim-lsp-autocomplete|
       omnifunc                    |vim-lsp-omnifunc|
@@ -133,6 +135,18 @@ g:lsp_preview_keep_focus                         *g:lsp_preview_keep_focus*
 	let g:lsp_preview_keep_focus = 0
 
     * |preview-window| can be closed using the default vim mapping - `<c-w><c-z>`.
+
+g:lsp_insert_text_enabled                       *g:lsp_insert_text_enabled*
+    Type: |Number|
+    Default: `1`
+
+    Enable support for completion insertText property. Set to `0` to disable
+    using insertText.
+
+    Example:
+	let g:lsp_insert_text_enabled = 1
+	let g:lsp_insert_text_enabled = 0
+
 
 ===============================================================================
 FUNCTIONS	                                        *vim-lsp-functions*
@@ -319,6 +333,11 @@ LspDocumentDiagnostics                              *LspDocumentDiagnostics*
 
 Gets the current document diagnostics.
 
+LspDeclaration						    *LspDeclaration*
+
+Go to declaration. Useful for languages such as C/C++ where there is a clear
+distinction between declaration and definition.
+
 LspDefinition						     *LspDefinition*
 
 Go to definition.
@@ -378,7 +397,7 @@ LspTypeDefinition				  	 *LspTypeDefinition*
 
 Go to the type definition.
 
-LspWorkspaceSymbols				       *LspWorkspaceSymbols*
+LspWorkspaceSymbol					*LspWorkspaceSymbol*
 
 Search and show workspace symbols.
 
@@ -396,6 +415,7 @@ To map keys to the feature of vim-lsp, use <plug> mappings:
 Available plug mappings are following:
 
   (lsp-code-action)
+  (lsp-declaration)
   (lsp-definition)
   (lsp-document-symbol)
   (lsp-document-diagnostics)
