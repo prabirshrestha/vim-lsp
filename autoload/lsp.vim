@@ -169,7 +169,7 @@ endfunction
 function! s:on_text_document_did_open() abort
     let l:buf = bufnr('%')
     call lsp#log('s:on_text_document_did_open()', l:buf, &filetype, getcwd(), lsp#utils#get_buffer_uri(l:buf))
-    for l:server_name in lsp#get_whitelisted_servers()
+    for l:server_name in lsp#get_whitelisted_servers(l:buf)
         call s:ensure_flush(l:buf, l:server_name, function('s:Noop'))
     endfor
 endfunction
@@ -177,7 +177,7 @@ endfunction
 function! s:on_text_document_did_save() abort
     let l:buf = bufnr('%')
     call lsp#log('s:on_text_document_did_save()', l:buf)
-    for l:server_name in lsp#get_whitelisted_servers()
+    for l:server_name in lsp#get_whitelisted_servers(l:buf)
         call s:ensure_flush(l:buf, l:server_name, {result->s:call_did_save(l:buf, l:server_name, result, function('s:Noop'))})
     endfor
 endfunction
@@ -618,7 +618,7 @@ function! s:handle_initialize(server_name, data) abort
 endfunction
 
 " call lsp#get_whitelisted_servers()
-" call lsp#get_whitelisted_servers(bufnr('%))
+" call lsp#get_whitelisted_servers(bufnr('%'))
 " call lsp#get_whitelisted_servers('typescript')
 function! lsp#get_whitelisted_servers(...) abort
     if a:0 == 0
@@ -713,7 +713,7 @@ let s:didchange_timer = -1
 
 function! s:add_didchange_queue(buf) abort
     if g:lsp_use_event_queue == 0
-        for l:server_name in lsp#get_whitelisted_servers()
+        for l:server_name in lsp#get_whitelisted_servers(a:buf)
             call s:ensure_flush(a:buf, l:server_name, function('s:Noop'))
         endfor
         return
@@ -734,7 +734,7 @@ function! s:send_didchange_queue(...) abort
         if !bufexists(l:buf)
             continue
         endif
-        for l:server_name in lsp#get_whitelisted_servers()
+        for l:server_name in lsp#get_whitelisted_servers(l:buf)
             call s:ensure_flush(l:buf, l:server_name, function('s:Noop'))
         endfor
     endfor
