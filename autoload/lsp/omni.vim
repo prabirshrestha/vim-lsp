@@ -154,7 +154,7 @@ function! s:get_completion_result(data) abort
 endfunction
 
 function! lsp#omni#get_vim_completion_item(item) abort
-    if has_key(a:item, 'insertText') && !empty(a:item['insertText'])
+    if g:lsp_insert_text_enabled && has_key(a:item, 'insertText') && !empty(a:item['insertText'])
         if has_key(a:item, 'insertTextFormat') && a:item['insertTextFormat'] != 1
             let l:word = a:item['label']
         else

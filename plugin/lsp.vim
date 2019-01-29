@@ -19,6 +19,7 @@ let g:lsp_diagnostics_echo_delay = get(g:, 'lsp_diagnostics_echo_delay', 500)
 let g:lsp_next_sign_id = get(g:, 'lsp_next_sign_id', 6999)
 let g:lsp_preview_keep_focus = get(g:, 'lsp_preview_keep_focus', 1)
 let g:lsp_use_event_queue = get(g:, 'lsp_use_event_queue', 0)
+let g:lsp_insert_text_enabled= get(g:, 'lsp_insert_text_enabled', 1)
 
 if g:lsp_auto_enable
     augroup lsp_auto_enable
@@ -61,4 +62,4 @@ nnoremap <expr> <plug>(lsp-workspace-symbol) [lsp#ui#vim#workspace_symbol(),''][
 nnoremap <expr> <plug>(lsp-document-format) [lsp#ui#vim#document_format(),''][1]
 vnoremap <expr> <plug>(lsp-document-format) [lsp#ui#vim#document_range_format(),''][1]
 nnoremap <expr> <plug>(lsp-implementation) [lsp#ui#vim#implementation(),''][1]
-nnoremap <expr> <plug>(lsp-status) [execute("echo lsp#get_server_status()",1),''][1]
+nnoremap <expr> <plug>(lsp-status) [execute('echo lsp#get_server_status()',1),''][1]
