@@ -18,7 +18,8 @@ Describe lsp#utils
             \  {'uri': 'file:///C:/path/to/the/file+name.txt', 'path': 'C:\path\to\the\file+name.txt'},
             \  {'uri': 'file:///C:/path/to/the/file%2Bname.txt', 'path': 'C:\path\to\the\file+name.txt'},
             \  {'uri': 'file:///C:/path/to/the/file%20name.txt', 'path': 'C:\path\to\the\file name.txt'},
-            \  {'uri': 'file:///C:/path+name?query=your+value', 'path': 'C:\path+name?query=your value'},
+            \  {'uri': 'file:///C:/path+name?query=your+value', 'path': 'C:\path+name'},
+            \  {'uri': 'file:///C:/path+name#hash', 'path': 'C:\path+name'},
             \]
             for test in tests
                 let path = lsp#utils#uri_to_path(test.uri)
@@ -35,7 +36,8 @@ Describe lsp#utils
             \  {'uri': 'file:///path/to/the/file+name.txt', 'path': '/path/to/the/file+name.txt'},
             \  {'uri': 'file:///path/to/the/file%2Bname.txt', 'path': '/path/to/the/file+name.txt'},
             \  {'uri': 'file:///path/to/the/file%20name.txt', 'path': '/path/to/the/file name.txt'},
-            \  {'uri': 'file:///path+name?query=your+value', 'path': '/path+name?query=your value'},
+            \  {'uri': 'file:///path+name?query=your+value', 'path': '/path+name'},
+            \  {'uri': 'file:///path+name#hash', 'path': '/path+name'},
             \]
             for test in tests
                 let path = lsp#utils#uri_to_path(test.uri)

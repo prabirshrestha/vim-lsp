@@ -3,12 +3,7 @@ function! lsp#utils#is_remote_uri(uri) abort
 endfunction
 
 function! s:decode_uri(uri) abort
-    let l:ret = a:uri
-    let l:pos = stridx(l:ret, '?')
-    if l:pos != -1
-        let [l:lhs, l:rhs] = [l:ret[: l:pos], l:ret[l:pos+1 :]]
-        let l:ret = l:lhs . substitute(l:rhs, '+', ' ', 'g')
-    endif
+    let l:ret = substitute(a:ret, '[?#].*', '', '')
     return substitute(l:ret, '%\(\x\x\)', '\=printf("%c", str2nr(submatch(1), 16))', 'g')
 endfunction
 
