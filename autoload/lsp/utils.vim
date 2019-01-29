@@ -2,10 +2,8 @@ function! lsp#utils#is_remote_uri(uri) abort
     return a:uri =~# '^\w\+::' || a:uri =~# '^\w\+://'
 endfunction
 
-" Decode uri function is taken from vital framework: https://github.com/vim-jp/vital.vim
-" For it's license (NYSL), see http://www.kmonos.net/nysl/index.en.html
 function! s:decode_uri(uri) abort
-    let l:ret = substitute(a:uri, '+', ' ', 'g')
+    let l:ret = substitute(a:uri, '[?#].*', '', '')
     return substitute(l:ret, '%\(\x\x\)', '\=printf("%c", str2nr(submatch(1), 16))', 'g')
 endfunction
 
@@ -45,7 +43,7 @@ if has('win32') || has('win64')
         else
             " You must not encode the volume information on the path if
             " present
-            let l:end_pos_volume = matchstrpos(a:path, '\C[A-Z]:')[2]
+            let l:end_pos_volume = matchstrpos(a:path, '\c[A-Z]:')[2]
 
             if l:end_pos_volume == -1
                 let l:end_pos_volume = 0
@@ -137,4 +135,23 @@ function! lsp#utils#error(msg) abort
     echohl ErrorMsg
     echom a:msg
     echohl NONE
+endfunction
+
+function! lsp#utils#echo_with_truncation(msg) abort
+    let l:msg = a:msg
+    let l:winwidth = winwidth(0)
+
+    if &showcmd
+        let l:winwidth -= 11
+    endif
+
+    if &laststatus != 2 && &ruler
+        let l:winwidth -= 18
+    endif
+
+    if l:winwidth > 5 && l:winwidth < strdisplaywidth(l:msg)
+        let l:msg = l:msg[:l:winwidth - 5] . '...'
+    endif
+
+    exec 'echo l:msg'
 endfunction

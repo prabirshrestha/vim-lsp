@@ -56,7 +56,7 @@ function! lsp#ui#vim#signs#next_error() abort
 	let l:view.lnum = l:next_line
 	let l:view.topline = 1
 	let l:height = winheight(0)
-	let totalnum = line("$")
+	let totalnum = line('$')
 	if totalnum > l:height
 		let l:half = l:height / 2
 		if l:totalnum - l:half < l:view.lnum
@@ -91,7 +91,7 @@ function! lsp#ui#vim#signs#previous_error() abort
 	let l:view.lnum = l:next_line
 	let l:view.topline = 1
 	let l:height = winheight(0)
-	let totalnum = line("$")
+	let totalnum = line('$')
 	if totalnum > l:height
 		let l:half = l:height / 2
 		if l:totalnum - l:half < l:view.lnum
@@ -178,7 +178,7 @@ function! s:clear_signs(server_name, path) abort
     endif
 
     for l:id in s:signs[a:server_name][a:path]
-        execute ":sign unplace " . l:id . " file=" . a:path
+        execute ':sign unplace ' . l:id . ' file=' . a:path
     endfor
 
     let s:signs[a:server_name][a:path] = []
@@ -186,19 +186,20 @@ endfunction
 
 function! s:place_signs(server_name, path, diagnostics) abort
 	let s:err_loc = []
-    if !empty(a:diagnostics)
+
+    if !empty(a:diagnostics) && bufnr(a:path) >= 0
         for l:item in a:diagnostics
             let l:line = l:item['range']['start']['line'] + 1
 
             let l:name = 'LspError'
             if has_key(l:item, 'severity') && !empty(l:item['severity'])
                 let l:name = get(s:severity_sign_names_mapping, l:item['severity'], 'LspError')
-                execute ":sign place " . g:lsp_next_sign_id . " name=" . l:name . " line=" . l:line . " file=" . a:path
+                execute ':sign place ' . g:lsp_next_sign_id . ' name=' . l:name . ' line=' . l:line . ' file=' . a:path
                 call add(s:signs[a:server_name][a:path], g:lsp_next_sign_id)
                 call lsp#log('add signs')
                 let g:lsp_next_sign_id += 1
 
-				if l:name == 'LspError'
+				if l:name ==? 'LspError'
 					call add(s:err_loc, l:line)
 				endif
 				let s:err_loc = sort(s:err_loc)

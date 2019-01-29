@@ -4,6 +4,19 @@ let s:servers = {} " { lsp_id, server_info, init_callbacks, init_result, buffers
 
 let s:notification_callbacks = [] " { name, callback }
 
+" This hold previous content for each language servers to make
+" DidChangeTextDocumentParams. The key is buffer numbers:
+"    {
+"      1: {
+"        "golsp": [ "first-line", "next-line", ... ],
+"        "bingo": [ "first-line", "next-line", ... ]
+"      },
+"      2: {
+"        "pyls": [ "first-line", "next-line", ... ]
+"      }
+"    }
+let s:file_content = {}
+
 " do nothing, place it here only to avoid the message
 augroup _lsp_silent_
     autocmd!
@@ -35,7 +48,7 @@ function! lsp#enable() abort
         let s:already_setup = 1
     endif
     let s:enabled = 1
-    if g:lsp_signs_enabled
+    if g:lsp_diagnostics_enabled && g:lsp_signs_enabled
         call lsp#ui#vim#signs#enable()
     endif
     call s:register_events()
@@ -65,22 +78,22 @@ endfunction
 
 function! s:server_status(server_name) abort
     if !has_key(s:servers, a:server_name)
-        return "unknown server"
+        return 'unknown server'
     endif
     let l:server = s:servers[a:server_name]
     if has_key(l:server, 'exited')
-        return "exited"
+        return 'exited'
     endif
     if has_key(l:server, 'init_callbacks')
-        return "starting"
+        return 'starting'
     endif
     if has_key(l:server, 'failed')
-        return "failed"
+        return 'failed'
     endif
     if has_key(l:server, 'init_result')
-        return "running"
+        return 'running'
     endif
-    return "not running"
+    return 'not running'
 endfunction
 
 " Returns the current status of all servers (if called with no arguments) or
@@ -135,7 +148,12 @@ function! s:register_events() abort
         autocmd BufReadPost * call s:on_text_document_did_open()
         autocmd BufWritePost * call s:on_text_document_did_save()
         autocmd BufWinLeave * call s:on_text_document_did_close()
+        autocmd BufWipeout * call s:on_buf_wipeout(bufnr('<afile>'))
         autocmd InsertLeave * call s:on_text_document_did_change()
+        autocmd TextChanged * call s:on_text_document_did_change()
+        if exists('##TextChangedP')
+            autocmd TextChangedP * call s:on_text_document_did_change()
+        endif
         autocmd CursorMoved * call s:on_cursor_moved()
     augroup END
     call s:on_text_document_did_open()
@@ -157,19 +175,17 @@ function! s:on_text_document_did_open() abort
 endfunction
 
 function! s:on_text_document_did_save() abort
-    call lsp#log('s:on_text_document_did_save()', bufnr('%'))
     let l:buf = bufnr('%')
+    call lsp#log('s:on_text_document_did_save()', l:buf)
     for l:server_name in lsp#get_whitelisted_servers()
-        call s:ensure_flush(bufnr('%'), l:server_name, {result->s:call_did_save(l:buf, l:server_name, result, function('s:Noop'))})
+        call s:ensure_flush(l:buf, l:server_name, {result->s:call_did_save(l:buf, l:server_name, result, function('s:Noop'))})
     endfor
 endfunction
 
 function! s:on_text_document_did_change() abort
-    call lsp#log('s:on_text_document_did_change()', bufnr('%'))
     let l:buf = bufnr('%')
-    for l:server_name in lsp#get_whitelisted_servers()
-        call s:ensure_flush(bufnr('%'), l:server_name, function('s:Noop'))
-    endfor
+    call lsp#log('s:on_text_document_did_change()', l:buf)
+    call s:add_didchange_queue(l:buf)
 endfunction
 
 function! s:on_cursor_moved() abort
@@ -192,6 +208,8 @@ function! s:call_did_save(buf, server_name, result, cb) abort
         return
     endif
 
+    call s:update_file_content(a:server_name, a:buf, getbufline(a:buf, 1, '$'))
+
     let l:buffers = l:server['buffers']
     let l:buffer_info = l:buffers[l:path]
 
@@ -200,9 +218,8 @@ function! s:call_did_save(buf, server_name, result, cb) abort
         \ }
 
     if l:did_save_options['includeText']
-        let l:params['text'] = s:get_text_document_text(a:buf)
+        let l:params['text'] = s:get_text_document_text(a:buf, a:server_name)
     endif
-
     call s:send_notification(a:server_name, {
         \ 'method': 'textDocument/didSave',
         \ 'params': l:params,
@@ -214,7 +231,29 @@ function! s:call_did_save(buf, server_name, result, cb) abort
 endfunction
 
 function! s:on_text_document_did_close() abort
-    call lsp#log('s:on_text_document_did_close()', bufnr('%'))
+    let l:buf = bufnr('%')
+    call lsp#log('s:on_text_document_did_close()', l:buf)
+endfunction
+
+function! s:get_last_file_content(buf, server_name) abort
+    if has_key(s:file_content, a:buf) && has_key(s:file_content[a:buf], a:server_name)
+        return s:file_content[a:buf][a:server_name]
+    endif
+    return []
+endfunction
+
+function! s:update_file_content(buf, server_name, new) abort
+    if !has_key(s:file_content, a:buf)
+        let s:file_content[a:buf] = {}
+    endif
+    call lsp#log('s:update_file_content()', a:buf)
+    let s:file_content[a:buf][a:server_name] = a:new
+endfunction
+
+function! s:on_buf_wipeout(buf) abort
+    if has_key(s:file_content, a:buf)
+        call remove(s:file_content, a:buf)
+    endif
 endfunction
 
 function! s:ensure_flush_all(buf, server_names) abort
@@ -285,7 +324,12 @@ function! s:ensure_start(buf, server_name, cb) abort
         return
     endif
 
-    let l:cmd = l:server_info['cmd'](l:server_info)
+    let l:cmd_type = type(l:server_info['cmd'])
+    if l:cmd_type == v:t_list
+        let l:cmd = l:server_info['cmd']
+    else
+        let l:cmd = l:server_info['cmd'](l:server_info)
+    endif
 
     if empty(l:cmd)
         let l:msg = s:new_rpc_error('ignore server start since cmd is empty', { 'server_name': a:server_name })
@@ -350,7 +394,11 @@ function! s:ensure_init(buf, server_name, cb) abort
     if has_key(l:server_info, 'capabilities')
         let l:capabilities = l:server_info['capabilities']
     else
-        let l:capabilities = {}
+        let l:capabilities = {
+        \   'workspace': {
+        \       'applyEdit ': v:true
+        \   }
+        \ }
     endif
 
     if has_key(l:server_info, 'initialization_options')
@@ -390,6 +438,33 @@ function! s:ensure_conf(buf, server_name, cb) abort
     call a:cb(l:msg)
 endfunction
 
+function! s:text_changes(buf, server_name) abort
+    let l:sync_kind = lsp#capabilities#get_text_document_change_sync_kind(a:server_name)
+
+    " When syncKind is None, return null for contentChanges.
+    if l:sync_kind == 0
+        return v:null
+    endif
+
+    " When syncKind is Incremental and previous content is saved.
+    if l:sync_kind == 2 && has_key(s:file_content, a:buf)
+        " compute diff
+        let l:old_content = s:get_last_file_content(a:buf, a:server_name)
+        let l:new_content = getbufline(a:buf, 1, '$')
+        let l:changes = lsp#utils#diff#compute(l:old_content, l:new_content)
+        if empty(l:changes.text) && l:changes.rangeLength ==# 0
+            return []
+        endif
+        call s:update_file_content(a:buf, a:server_name, l:new_content)
+        return [l:changes]
+    endif
+
+    let l:new_content = getbufline(a:buf, 1, '$')
+    let l:changes = {'text': join(l:new_content, "\n")}
+    call s:update_file_content(a:buf, a:server_name, l:new_content)
+    return [l:changes]
+endfunction
+
 function! s:ensure_changed(buf, server_name, cb) abort
     let l:server = s:servers[a:server_name]
     let l:path = lsp#utils#get_buffer_uri(a:buf)
@@ -409,15 +484,11 @@ function! s:ensure_changed(buf, server_name, cb) abort
     let l:buffer_info['changed_tick'] = l:changed_tick
     let l:buffer_info['version'] = l:buffer_info['version'] + 1
 
-    " todo: support range in contentChanges
-
     call s:send_notification(a:server_name, {
         \ 'method': 'textDocument/didChange',
         \ 'params': {
         \   'textDocument': s:get_text_document_identifier(a:buf, l:buffer_info),
-        \   'contentChanges': [
-        \       { 'text': s:get_text_document_text(a:buf) },
-        \   ],
+        \   'contentChanges': s:text_changes(a:buf, a:server_name),
         \ }
         \ })
 
@@ -446,12 +517,15 @@ function! s:ensure_open(buf, server_name, cb) abort
         return
     endif
 
+    call s:update_file_content(a:server_name, a:buf, getbufline(a:buf, 1, '$'))
+
     let l:buffer_info = { 'changed_tick': getbufvar(a:buf, 'changedtick'), 'version': 1, 'uri': l:path }
     let l:buffers[l:path] = l:buffer_info
+
     call s:send_notification(a:server_name, {
         \ 'method': 'textDocument/didOpen',
         \ 'params': {
-        \   'textDocument': s:get_text_document(a:buf, l:buffer_info)
+        \   'textDocument': s:get_text_document(a:buf, a:server_name, l:buffer_info)
         \ },
         \ })
 
@@ -505,7 +579,7 @@ function! s:on_notification(server_name, id, data, event) abort
 
     if lsp#client#is_server_instantiated_notification(a:data)
         if has_key(l:response, 'method')
-            if l:response['method'] ==# 'textDocument/publishDiagnostics'
+            if g:lsp_diagnostics_enabled && l:response['method'] ==# 'textDocument/publishDiagnostics'
                 call lsp#ui#vim#diagnostics#handle_text_document_publish_diagnostics(a:server_name, a:data)
             endif
         endif
@@ -590,25 +664,16 @@ function! lsp#get_whitelisted_servers(...) abort
     return l:active_servers
 endfunction
 
-function! s:requires_eol_at_eof(buf) abort
-    let l:file_ends_with_eol = getbufvar(a:buf, '&eol')
-    let l:vim_will_save_with_eol = !getbufvar(a:buf, '&binary') &&
-                \ getbufvar(a:buf, '&fixeol')
-    return l:file_ends_with_eol || l:vim_will_save_with_eol
+function! s:get_text_document_text(buf, server_name) abort
+    return join(s:get_last_file_content(a:server_name, a:buf), "\n")
 endfunction
 
-function! s:get_text_document_text(buf) abort
-    let l:buf_fileformat = getbufvar(a:buf, '&fileformat')
-    let l:eol = {'unix': "\n", 'dos': "\r\n", 'mac': "\r"}[l:buf_fileformat]
-    return join(getbufline(a:buf, 1, '$'), l:eol).(s:requires_eol_at_eof(a:buf) ? l:eol : '')
-endfunction
-
-function! s:get_text_document(buf, buffer_info) abort
+function! s:get_text_document(buf, server_name, buffer_info) abort
     return {
         \ 'uri': lsp#utils#get_buffer_uri(a:buf),
         \ 'languageId': &filetype,
         \ 'version': a:buffer_info['version'],
-        \ 'text': s:get_text_document_text(a:buf),
+        \ 'text': s:get_text_document_text(a:buf, a:server_name),
         \ }
 endfunction
 
@@ -641,4 +706,37 @@ endfunction
 " omnicompletion
 function! lsp#complete(...) abort
     return call('lsp#omni#complete', a:000)
+endfunction
+
+let s:didchange_queue = []
+let s:didchange_timer = -1
+
+function! s:add_didchange_queue(buf) abort
+    if g:lsp_use_event_queue == 0
+        for l:server_name in lsp#get_whitelisted_servers()
+            call s:ensure_flush(a:buf, l:server_name, function('s:Noop'))
+        endfor
+        return
+    endif
+    if index(s:didchange_queue, a:buf) != -1
+        return
+    endif
+    call add(s:didchange_queue, a:buf)
+    call lsp#log('s:send_didchange_queue() will be triggered')
+    call timer_stop(s:didchange_timer)
+    let lazy = &updatetime > 1000 ? &updatetime : 1000
+    let s:didchange_timer = timer_start(lazy, function('s:send_didchange_queue'))
+endfunction
+
+function! s:send_didchange_queue(...) abort
+    call lsp#log('s:send_event_queue()')
+    for l:buf in s:didchange_queue
+        if !bufexists(l:buf)
+            continue
+        endif
+        for l:server_name in lsp#get_whitelisted_servers()
+            call s:ensure_flush(l:buf, l:server_name, function('s:Noop'))
+        endfor
+    endfor
+    let s:didchange_queue = []
 endfunction

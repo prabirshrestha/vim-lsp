@@ -1,3 +1,7 @@
+function! s:not_supported(what) abort
+    return lsp#utils#error(a:what.' not supported for '.&filetype)
+endfunction
+
 function! lsp#ui#vim#hover#get_hover_under_cursor() abort
     let l:servers = filter(lsp#get_whitelisted_servers(), 'lsp#capabilities#has_hover_provider(v:val)')
 

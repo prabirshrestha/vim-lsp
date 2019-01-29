@@ -20,12 +20,12 @@ let s:kind_text_mappings = {
             \ '17': 'file',
             \ '18': 'reference',
             \ '19': 'folder',
-            \ '21': 'enum member',
-            \ '22': 'constant',
-            \ '23': 'struct',
-            \ '24': 'event',
-            \ '25': 'operator',
-            \ '26': 'type parameter',
+            \ '20': 'enum member',
+            \ '21': 'constant',
+            \ '22': 'struct',
+            \ '23': 'event',
+            \ '24': 'operator',
+            \ '25': 'type parameter',
             \ }
 
 let s:completion_status_success = 'success'
@@ -57,7 +57,8 @@ function! lsp#omni#complete(findstart, base) abort
         call s:send_completion_request(l:info)
 
         if g:lsp_async_completion
-            return []
+            redraw
+            return v:none
         else
             while s:completion['status'] is# s:completion_status_pending && !complete_check()
                 sleep 10m
@@ -139,18 +140,21 @@ function! s:get_completion_result(data) abort
     if type(l:result) == type([])
         let l:items = l:result
         let l:incomplete = 0
-    else
+    elseif type(l:result) == type({})
         let l:items = l:result['items']
         let l:incomplete = l:result['isIncomplete']
+    else
+        let l:items = []
+        let l:incomplete = 0
     endif
 
-    let l:matches = map(l:items, {_, item -> lsp#omni#get_vim_completion_item(item) })
+    let l:matches = type(l:items) == type([]) ? map(l:items, {_, item -> lsp#omni#get_vim_completion_item(item) }) : []
 
     return {'matches': l:matches, 'incomplete': l:incomplete}
 endfunction
 
 function! lsp#omni#get_vim_completion_item(item) abort
-    if has_key(a:item, 'insertText') && !empty(a:item['insertText'])
+    if g:lsp_insert_text_enabled && has_key(a:item, 'insertText') && !empty(a:item['insertText'])
         if has_key(a:item, 'insertTextFormat') && a:item['insertTextFormat'] != 1
             let l:word = a:item['label']
         else
@@ -162,11 +166,16 @@ function! lsp#omni#get_vim_completion_item(item) abort
         let l:abbr = a:item['label']
     endif
     let l:menu = lsp#omni#get_kind_text(a:item)
-    let l:completion = { 'word': l:word, 'abbr': l:abbr, 'menu': l:menu, 'info': "", 'icase': 1, 'dup': 1 }
+    let l:completion = { 'word': l:word, 'abbr': l:abbr, 'menu': l:menu, 'info': '', 'icase': 1, 'dup': 1 }
 
-    if has_key(a:item, 'detail') 
-      let l:completion['info'] .= a:item['detail'] . " "
-    endif 
+    if has_key(a:item, 'detail') && !empty(a:item['detail'])
+        if empty(l:menu)
+            let l:completion['menu'] = a:item['detail']
+        else
+            let l:completion['menu'] = '[' . l:menu . '] ' . a:item['detail']
+        endif
+        let l:completion['info'] .= a:item['detail'] . ' '
+    endif
 
     if has_key(a:item, 'documentation')
         if type(a:item['documentation']) == type('')

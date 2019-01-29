@@ -10,19 +10,24 @@ CONTENTS                                                  *vim-lsp-contents*
       Configure                   |vim-lsp-configure-source|
       Wiki                        |vim-lsp-configure-wiki|
     Options			|vim-lsp-options|
+      g:lsp_diagnostics_enabled   |g:lsp_diagnostics_enabled|
       g:lsp_auto_enable           |g:lsp_auto_enable|
       g:lsp_preview_keep_focus    |g:lsp_preview_keep_focus|
       g:lsp_preview_position      |g:lsp_preview_position|
       g:lsp_preview_auto_resize   |g:lsp_preview_auto_resize|
+      g:lsp_insert_text_enabled   |g:lsp_insert_text_enabled|
     Functions			|vim-lsp-functions|
       enable                      |vim-lsp-enable|
       disable                     |vim-lsp-disable|
       register_server             |vim-lsp-register_server|
       stop_server                 |vim-lsp-stop_server|
     Commands			|vim-lsp-commands|
+      LspCodeAction               |LspCodeAction|
       LspDocumentDiagnostics      |LspDocumentDiagnostics|
+      LspDeclaration              |LspDeclaration|
       LspDefinition               |LspDefinition|
       LspDocumentFormat           |LspDocumentFormat|
+      LspDocumentFormatSync       |LspDocumentFormatSync|
       LspDocumentRangeFormat      |LspDocumentRangeFormat|
       LspDocumentSymbol           |LspDocumentSymbol|
       LspHover                    |LspHover|
@@ -32,8 +37,9 @@ CONTENTS                                                  *vim-lsp-contents*
       LspReferences               |LspReferences|
       LspRename                   |LspRename|
       LspTypeDefinition           |LspTypeDefinition|
-      LspWorkspaceSymbols         |LspWorkspaceSymbols|
-    Autocomplete               |vim-lsp-autocomplete|
+      LspWorkspaceSymbol          |LspWorkspaceSymbol|
+    Mappings			|vim-lsp-mappings|
+    Autocomplete		|vim-lsp-autocomplete|
       omnifunc                    |vim-lsp-omnifunc|
       asyncomplete.vim            |vim-lsp-asyncomplete|
     License			|vim-lsp-license|
@@ -92,6 +98,17 @@ to https://github.com/prabirshrestha/vim-lsp/wiki/Servers
 ===============================================================================
 Options                                                   *vim-lsp-options*
 
+g:lsp_diagnostics_enabled                       *g:lsp_diagnostics_enabled*
+    Type: |Number|
+    Default: `1`
+
+    Enable support for document diagnostics like warnings and error messages.
+    enabling vim-lsp during startup.
+
+    Example:
+	let g:lsp_diagnostics_enabled = 1
+	let g:lsp_diagnostics_enabled = 0
+
 g:lsp_auto_enable                                       *g:lsp_auto_enable*
     Type: |Number|
     Default: `1`
@@ -134,6 +151,17 @@ g:lsp_preview_auto_resize                       *g:lsp_preview_auto_resize*
 
     Indicates if the |preview-window| should be automatically resized to fit
     its content when it is opened by vim-lsp.
+
+g:lsp_insert_text_enabled                       *g:lsp_insert_text_enabled*
+    Type: |Number|
+    Default: `1`
+
+    Enable support for completion insertText property. Set to `0` to disable
+    using insertText.
+
+    Example:
+	let g:lsp_insert_text_enabled = 1
+	let g:lsp_insert_text_enabled = 0
 
 ===============================================================================
 FUNCTIONS	                                        *vim-lsp-functions*
@@ -194,11 +222,21 @@ The vim |dict| containing information about the server.
 
  * cmd:
     required
-    Function that takes |vim-lsp-server_info| as parameter and returns the
+    Function or array which represents command line to start the language
+    server.
+
+    When function, it takes |vim-lsp-server_info| as parameter and returns the
     language server executable to run along with the appropriate arguments
     when the appropriate filetype is loaded. This function will only be
     called when the server has not started.
     Return empty array to ignore starting the server.
+
+    When array, the first element is the language server executable and
+    the rest are the appropriate arguments. It is useful when the command line
+    can be determined statically and |vim-lsp-server_info| is not necessary.
+
+    Example:
+	'cmd': ['pyls']
 
     Function can be complex based on custom requirements.
     For example:
@@ -301,9 +339,19 @@ Get the status of a server.
 ===============================================================================
 Commands	                                          *vim-lsp-commands*
 
+LspCodeAction                                                *LspCodeAction*
+
+Gets a list of possible commands that can be applied to a file so it can be
+fixed (quick fix).
+
 LspDocumentDiagnostics                              *LspDocumentDiagnostics*
 
 Gets the current document diagnostics.
+
+LspDeclaration						    *LspDeclaration*
+
+Go to declaration. Useful for languages such as C/C++ where there is a clear
+distinction between declaration and definition.
 
 LspDefinition						     *LspDefinition*
 
@@ -312,6 +360,16 @@ Go to definition.
 LspDocumentFormat					 *LspDocumentFormat*
 
 Format the entire document.
+
+LspDocumentFormatSync				     *LspDocumentFormatSync*
+
+Same as |LspDocumentFormat| but synchronous. Useful when running |autocmd|
+commands such as formatting before save.
+
+    Example:
+        autocmd BufWritePre <buffer> LspDocumentFormatSync
+
+Note that this may slow down vim.
 
 LspDocumentRangeFormat				    *LspDocumentRangeFormat*
 
@@ -358,13 +416,41 @@ LspTypeDefinition				  	 *LspTypeDefinition*
 
 Go to the type definition.
 
-LspWorkspaceSymbols				       *LspWorkspaceSymbols*
+LspWorkspaceSymbol					*LspWorkspaceSymbol*
 
 Search and show workspace symbols.
 
 LspStatus                                                        *LspStatus*
 
 Prints the status of all registered servers.
+
+===============================================================================
+Mappings	                                          *vim-lsp-mappings*
+
+To map keys to the feature of vim-lsp, use <plug> mappings:
+>
+  autocmd FileType python,go nmap gd <plug>(lsp-definition)
+<
+Available plug mappings are following:
+
+  (lsp-code-action)
+  (lsp-declaration)
+  (lsp-definition)
+  (lsp-document-symbol)
+  (lsp-document-diagnostics)
+  (lsp-hover)
+  (lsp-next-error)
+  (lsp-previous-error)
+  (lsp-references)
+  (lsp-rename)
+  (lsp-workspace-symbol)
+  (lsp-document-format)
+  (lsp-document-format)
+  (lsp-implementation)
+  (lsp-type-definition)
+  (lsp-status)
+
+See also |vim-lsp-commands|
 
 ===============================================================================
 Autocomplete                                          *vim-lsp-autocomplete*

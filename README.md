@@ -39,6 +39,8 @@ if executable('typescript-language-server')
 endif
 ```
 
+vim-lsp supports incremental changes of Language Server Protocol.
+
 ## auto-complete
 
 Refer to docs on configuring omnifunc or [asyncomplete.vim](https://github.com/prabirshrestha/asyncomplete.vim).
@@ -51,21 +53,36 @@ Refer to docs on configuring omnifunc or [asyncomplete.vim](https://github.com/p
 
 | Command | Description|
 |--|--|
-|`:LspDocumentDiagnostics`| Get current document diagnostics information |
+|`:LspCodeAction`| Gets a list of possible commands that can be applied to a file so it can be fixed (quick fix) |
+|`:LspDeclaration`| Go to declaration |
 |`:LspDefinition`| Go to definition |
+|`:LspDocumentDiagnostics`| Get current document diagnostics information |
 |`:LspDocumentFormat`| Format entire document |
 |`:LspDocumentRangeFormat`| Format document selection |
 |`:LspDocumentSymbol`| Show document symbols |
 |`:LspHover`| Show hover information |
+|`:LspImplementation` | Show implementation of interface |
 |`:LspNextError`| jump to next error |
 |`:LspPreviousError`| jump to previous error |
-|`:LspImplementation` | Show implementation of interface |
 |`:LspReferences`| Find references |
 |`:LspRename`| Rename symbol |
+|`:LspStatus` | Show the status of the language server |
 |`:LspTypeDefinition`| Go to type definition |
 |`:LspWorkspaceSymbol`| Search/Show workspace symbol |
 
 ### Diagnostics
+
+Document diagnostics (e.g. warnings, errors) are enabled by default, but if you
+preferred to turn them off and use other plugins instead (like
+[Neomake](https://github.com/neomake/neomake) or
+[ALE](https://github.com/w0rp/ale), set `g:lsp_diagnostics_enabled` to
+`0`:
+
+```viml
+let g:lsp_diagnostics_enabled = 0         " disable diagnostics support
+```
+
+#### Signs
 
 ```viml
 let g:lsp_signs_enabled = 1         " enable signs
