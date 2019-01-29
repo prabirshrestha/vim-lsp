@@ -8,28 +8,29 @@ env:
         - DOWNLOADS_DIR=$HOME/downloads
 
 matrix:
-    include:
+    allow_failures:
         - os: osx
           env: VIM_TYPE=neovim VIM_VERSION=nightly
-        - os: osx
-          env: VIM_TYPE=neovim VIM_VERSION=0.3.1
-        - os: osx
-          env: VIM_TYPE=vim VIM_VERSION=default
         - os: linux
           dist: trusty
           python: "3.6"
           env: VIM_TYPE=neovim VIM_VERSION=nightly
-        - os: linux
-          dist: trusty
-          python: "3.6"
-          env: VIM_TYPE=neovim VIM_VERSION=0.3.1
-        - os: linux
-          dist: trusty
-          python: "3.6"
-          env: VIM_TYPE=vim VIM_VERSION=default
         - os: windows
           language: shell
           env: VIM_TYPE=neovim VIM_VERSION=nightly
+    include:
+        - os: osx
+          env: VIM_TYPE=neovim VIM_VERSION=0.3.1
+        - os: osx
+          env: VIM_TYPE=vim VIM_VERSION=default
+        - os: linux
+          dist: trusty
+          python: "3.6"
+          env: VIM_TYPE=neovim VIM_VERSION=0.3.1
+        - os: linux
+          dist: trusty
+          python: "3.6"
+          env: VIM_TYPE=vim VIM_VERSION=default
         - os: windows
           language: shell
           env: VIM_TYPE=neovim VIM_VERSION=0.3.1
