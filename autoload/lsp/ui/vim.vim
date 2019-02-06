@@ -369,7 +369,11 @@ function! s:handle_location(ctx, server, type, data) abort "ctx = {counter, list
                 normal! m'
                 let l:loc = a:ctx['list'][0]
                 let l:buffer = bufnr(l:loc['filename'])
-                let l:cmd = l:buffer !=# -1 ? 'b ' . l:buffer : 'edit ' . l:loc['filename']
+                if &modified
+                    let l:cmd = l:buffer !=# -1 ? 'sb ' . l:buffer : 'split ' . l:loc['filename']
+                else
+                    let l:cmd = l:buffer !=# -1 ? 'b ' . l:buffer : 'edit ' . l:loc['filename']
+                endif
                 execute l:cmd . ' | call cursor('.l:loc['lnum'].','.l:loc['col'].')'
                 echo 'Retrieved ' . a:type
                 redraw
