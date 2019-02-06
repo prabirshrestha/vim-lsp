@@ -409,7 +409,7 @@ function! s:ensure_init(buf, server_name, cb) abort
 
     let l:server['init_callbacks'] = [a:cb]
 
-    call s:send_request(a:server_name, {
+    call s:send_request(a:buf, a:server_name, {
         \ 'method': 'initialize',
         \ 'params': {
         \   'capabilities': l:capabilities,
@@ -534,14 +534,14 @@ function! s:ensure_open(buf, server_name, cb) abort
     call a:cb(l:msg)
 endfunction
 
-function! s:send_request(server_name, data) abort
+function! s:send_request(buf, server_name, data) abort
     let l:lsp_id = s:servers[a:server_name]['lsp_id']
     let l:data = copy(a:data)
     if has_key(l:data, 'on_notification')
         let l:data['on_notification'] = '---funcref---'
     endif
     call lsp#log_verbose('--->', l:lsp_id, a:server_name, l:data)
-    call lsp#client#send_request(l:lsp_id, a:data)
+    call lsp#client#send_request(l:lsp_id, a:data, a:buf)
 endfunction
 
 function! s:send_notification(server_name, data) abort
@@ -693,13 +693,14 @@ function! s:get_text_document_identifier(buf, buffer_info) abort
         \ }
 endfunction
 
-function! lsp#send_request(server_name, request) abort
+function! lsp#send_request(server_name, request, ...) abort
+    let l:buf = a:0 > 0 ? a:1 : bufnr('%')
     let l:Cb = has_key(a:request, 'on_notification') ? a:request['on_notification'] : function('s:Noop')
     let l:request = copy(a:request)
     let l:request['on_notification'] = {id, data, event->l:Cb(data)}
     call lsp#utils#step#start([
-        \ {s->s:ensure_flush(bufnr('%'), a:server_name, s.callback)},
-        \ {s->s:is_step_error(s) ? l:Cb(s.result[0]) : s:send_request(a:server_name, l:request) },
+        \ {s->s:ensure_flush(l:buf, a:server_name, s.callback)},
+        \ {s->s:is_step_error(s) ? l:Cb(s.result[0]) : s:send_request(l:buf, a:server_name, l:request) },
         \ ])
 endfunction
 
