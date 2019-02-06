@@ -443,7 +443,7 @@ function! s:text_changes(buf, server_name) abort
 
     " When syncKind is None, return null for contentChanges.
     if l:sync_kind == 0
-        return v:null
+        return exists('v:null') ? v:null : []
     endif
 
     " When syncKind is Incremental and previous content is saved.
