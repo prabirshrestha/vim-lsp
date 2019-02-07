@@ -117,5 +117,5 @@ endfunction
 function! s:count_utf16_code_units(str) abort
   let l:rs = split(a:str, '\zs')
   let l:len = len(l:rs)
-  return l:len + len(filter(l:rs, 'char2nr(v:val)>0x10000'))
+  return l:len + count(l:rs, 'char2nr(v:val)>0x10000')
 endfunction
