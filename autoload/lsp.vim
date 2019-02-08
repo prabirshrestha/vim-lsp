@@ -208,7 +208,7 @@ function! s:call_did_save(buf, server_name, result, cb) abort
         return
     endif
 
-    call s:update_file_content(a:server_name, a:buf, getbufline(a:buf, 1, '$'))
+    call s:update_file_content(a:buf, a:server_name, getbufline(a:buf, 1, '$'))
 
     let l:buffers = l:server['buffers']
     let l:buffer_info = l:buffers[l:path]
@@ -517,7 +517,7 @@ function! s:ensure_open(buf, server_name, cb) abort
         return
     endif
 
-    call s:update_file_content(a:server_name, a:buf, getbufline(a:buf, 1, '$'))
+    call s:update_file_content(a:buf, a:server_name, getbufline(a:buf, 1, '$'))
 
     let l:buffer_info = { 'changed_tick': getbufvar(a:buf, 'changedtick'), 'version': 1, 'uri': l:path }
     let l:buffers[l:path] = l:buffer_info
