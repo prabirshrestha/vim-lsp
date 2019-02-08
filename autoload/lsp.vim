@@ -665,7 +665,7 @@ function! lsp#get_whitelisted_servers(...) abort
 endfunction
 
 function! s:get_text_document_text(buf, server_name) abort
-    return join(s:get_last_file_content(a:server_name, a:buf), "\n")
+    return join(s:get_last_file_content(a:buf, a:server_name), "\n")
 endfunction
 
 function! s:get_text_document(buf, server_name, buffer_info) abort
