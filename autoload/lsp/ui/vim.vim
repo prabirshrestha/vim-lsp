@@ -189,10 +189,18 @@ function! s:document_format(sync) abort
 endfunction
 
 function! lsp#ui#vim#document_format_sync() abort
+    let l:mode = mode()
+    if l:mode =~# '[vV]' || l:mode ==# "\<C-V>"
+        return s:document_format_range(1)
+    endif
     return s:document_format(1)
 endfunction
 
 function! lsp#ui#vim#document_format() abort
+    let l:mode = mode()
+    if l:mode =~# '[vV]' || l:mode ==# "\<C-V>"
+        return s:document_format_range(0)
+    endif
     return s:document_format(0)
 endfunction
 
