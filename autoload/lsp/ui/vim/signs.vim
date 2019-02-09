@@ -1,5 +1,6 @@
 " TODO: handle !has('signs')
 " TODO: handle signs clearing when server exits
+let s:supports_signs = has('signs') && has('patch-8.1.0772')
 let s:enabled = 0
 let s:signs_defined = 0
 let s:signs = {} " { server_name: { path: {} } }
@@ -28,7 +29,7 @@ if !hlexists('LspHintText')
 endif
 
 function! lsp#ui#vim#signs#enable() abort
-    if !s:enabled
+    if !s:enabled && s:supports_signs
         call s:define_signs()
         let s:enabled = 1
         call lsp#log('vim-lsp signs enabled')
@@ -127,7 +128,7 @@ function! s:define_signs() abort
 endfunction
 
 function! lsp#ui#vim#signs#disable() abort
-    if s:enabled
+    if s:enabled && s:supports_signs
         call s:undefine_signs()
         let s:enabled = 0
         call lsp#log('vim-lsp signs disabled')

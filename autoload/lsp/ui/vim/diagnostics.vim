@@ -1,20 +1,20 @@
-" let s:is_win = has('win32') || has('win64')
-" let s:diagnostics = {} " { uri: { 'server_name': response } }
+let s:is_win = has('win32') || has('win64')
+let s:diagnostics = {} " { uri: { 'server_name': response } }
 
 function! lsp#ui#vim#diagnostics#handle_text_document_publish_diagnostics(server_name, data) abort
-    " if lsp#client#is_error(a:data['response'])
-    "     return
-    " endif
-    " let l:uri = a:data['response']['params']['uri']
-    " if s:is_win
-    "     let l:uri = substitute(l:uri, '^file:///[a-zA-Z]\zs%3[aA]', ':', '')
-    " endif
-    " if !has_key(s:diagnostics, l:uri)
-    "     let s:diagnostics[l:uri] = {}
-    " endif
-    " let s:diagnostics[l:uri][a:server_name] = a:data
+    if lsp#client#is_error(a:data['response'])
+        return
+    endif
+    let l:uri = a:data['response']['params']['uri']
+    if s:is_win
+        let l:uri = substitute(l:uri, '^file:///[a-zA-Z]\zs%3[aA]', ':', '')
+    endif
+    if !has_key(s:diagnostics, l:uri)
+        let s:diagnostics[l:uri] = {}
+    endif
+    let s:diagnostics[l:uri][a:server_name] = a:data
 
-    " call lsp#ui#vim#signs#set(a:server_name, a:data)
+    call lsp#ui#vim#signs#set(a:server_name, a:data)
 endfunction
 
 function! lsp#ui#vim#diagnostics#document_diagnostics() abort
