@@ -63,7 +63,8 @@ function! lsp#omni#complete(findstart, base) abort
             while s:completion['status'] is# s:completion_status_pending && !complete_check()
                 sleep 10m
             endwhile
-            let s:completion['matches'] = filter(s:completion['matches'], {_, match -> stridx(match['word'], a:base) == 0})
+            let l:base = tolower(a:base)
+            let s:completion['matches'] = filter(s:completion['matches'], {_, match -> stridx(tolower(match['word']), l:base) == 0})
             let s:completion['status'] = ''
             return s:completion['matches']
         endif
