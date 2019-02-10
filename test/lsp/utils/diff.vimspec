@@ -92,11 +92,28 @@ Describe lsp#utils#diff
             \]
             let want = {
             \  'range': {
-            \    'end': { 'line': 0, 'character': 2 },
-            \    'start': { 'line': 0, 'character': 1 }
+            \    'start': { 'line': 0, 'character': 1 },
+            \    'end': { 'line': 0, 'character': 2 }
             \  },
             \  'text': '𐐀',
             \  "rangeLength": 1
+            \}
+            let got = lsp#utils#diff#compute(lines1, lines2)
+            Assert Equals(got, want)
+
+            let lines1 = [
+            \  'f𐐀o',
+            \]
+            let lines2 = [
+            \  'foo',
+            \]
+            let want = {
+            \  'range': {
+            \    'start': { 'line': 0, 'character': 1 },
+            \    'end': { 'line': 0, 'character': 3 }
+            \  },
+            \  'text': 'o',
+            \  "rangeLength": 2
             \}
             let got = lsp#utils#diff#compute(lines1, lines2)
             Assert Equals(got, want)
