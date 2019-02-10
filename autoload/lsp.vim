@@ -394,11 +394,26 @@ function! s:ensure_init(buf, server_name, cb) abort
     if has_key(l:server_info, 'capabilities')
         let l:capabilities = l:server_info['capabilities']
     else
-        let l:capabilities = {
-        \   'workspace': {
-        \       'applyEdit ': v:true
-        \   }
-        \ }
+        if g:lsp_ultisnips_integration
+            let l:capabilities = {
+            \   'textDocument': {
+            \       'completion': {
+            \           'completionItem': {
+            \               'snippetSupport': v:true,
+            \           },
+            \       },
+            \   },
+            \   'workspace': {
+            \       'applyEdit ': v:true
+            \   }
+            \ }
+        else
+            let l:capabilities = {
+            \   'workspace': {
+            \       'applyEdit ': v:true
+            \   }
+            \ }
+        endif
     endif
 
     if has_key(l:server_info, 'initialization_options')

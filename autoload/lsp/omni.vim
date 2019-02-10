@@ -199,7 +199,29 @@ function! lsp#omni#get_vim_completion_item(item, ...) abort
         endif
     endif
 
+    if g:lsp_ultisnips_integration && has_key(a:item, 'insertTextFormat') && a:item['insertTextFormat'] == 2
+        let l:completion['user_data'] = a:item['insertText']
+    endif
+
     return l:completion
 endfunction
+
+function! s:handle_snippet(item)
+    if !has_key(a:item, 'user_data')
+        return
+    endif
+
+    let l:snippet = substitute(a:item['user_data'], '\%x00', '\\n', 'g')
+    let s:trigger = a:item['word']
+
+    call feedkeys("\<C-r>=UltiSnips#Anon(\"" . l:snippet . "\", \"" . s:trigger . "\", '', 'i')\<CR>")
+endfunction
+
+if g:lsp_ultisnips_integration
+    augroup lsp_ultisnips
+        autocmd!
+        autocmd CompleteDone * call s:handle_snippet(v:completed_item)
+    augroup end
+endif
 
 " }}}
