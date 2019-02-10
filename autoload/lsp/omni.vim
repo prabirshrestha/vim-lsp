@@ -142,7 +142,7 @@ function! s:get_completion_result(data) abort
 endfunction
 
 
-function! lsp#omni#remove_typed_part(word) abort
+function! s:remove_typed_part(word) abort
     let l:current_line = strpart(getline('.'), 0, col('.') - 1)
 
     let l:overlap_length = 0
@@ -176,7 +176,7 @@ function! lsp#omni#get_vim_completion_item(item) abort
         let l:abbr = a:item['label']
     endif
 
-    let l:word = lsp#omni#remove_typed_part(l:word)
+    let l:word = s:remove_typed_part(l:word)
     let l:menu = lsp#omni#get_kind_text(a:item)
     let l:completion = { 'word': l:word, 'abbr': l:abbr, 'menu': l:menu, 'info': '', 'icase': 1, 'dup': 1 }
 
