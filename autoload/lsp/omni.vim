@@ -136,7 +136,7 @@ function! s:get_completion_result(data) abort
         let l:incomplete = 0
     endif
 
-    let l:matches = type(l:items) == type([]) ? map(l:items, {_, item -> lsp#omni#get_vim_completion_item(item) }) : []
+    let l:matches = type(l:items) == type([]) ? map(l:items, {_, item -> lsp#omni#get_vim_completion_item(item, 1) }) : []
 
     return {'matches': l:matches, 'incomplete': l:incomplete}
 endfunction
@@ -163,7 +163,9 @@ function! s:remove_typed_part(word) abort
     return strpart(a:word, l:overlap_length)
 endfunction
 
-function! lsp#omni#get_vim_completion_item(item) abort
+function! lsp#omni#get_vim_completion_item(item, ...) abort
+    let a:do_remove_typed_part = get(a:, 1, 0)
+
     if g:lsp_insert_text_enabled && has_key(a:item, 'insertText') && !empty(a:item['insertText'])
         if has_key(a:item, 'insertTextFormat') && a:item['insertTextFormat'] != 1
             let l:word = a:item['label']
@@ -176,7 +178,9 @@ function! lsp#omni#get_vim_completion_item(item) abort
         let l:abbr = a:item['label']
     endif
 
-    let l:word = s:remove_typed_part(l:word)
+    if a:do_remove_typed_part
+        let l:word = s:remove_typed_part(l:word)
+    endif
     let l:menu = lsp#omni#get_kind_text(a:item)
     let l:completion = { 'word': l:word, 'abbr': l:abbr, 'menu': l:menu, 'info': '', 'icase': 1, 'dup': 1 }
 
