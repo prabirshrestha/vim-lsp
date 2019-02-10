@@ -417,6 +417,11 @@ function! s:handle_text_edit(server, last_req_id, type, data) abort
 endfunction
 
 function! s:handle_code_action(server, last_req_id, type, data) abort
+    if lsp#client#is_error(a:data['response'])
+        call lsp#utils#error('Failed to '. a:type . ' for ' . a:server . ': ' . lsp#client#error_message(a:data['response']))
+        return
+    endif
+
     let l:codeActions = a:data['response']['result']
     let l:index = 0
     let l:choices = []

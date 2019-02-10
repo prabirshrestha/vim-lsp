@@ -105,7 +105,7 @@ function! s:on_stdout(id, data, event) abort
                     try
                         call l:ctx['on_notifications'][l:response['id']](a:id, l:on_notification_data, 'on_notification')
                     catch
-                        call lsp#log('s:on_stdout client request on_notification() error', v:exception)
+                        call lsp#log('s:on_stdout client request on_notification() error', v:exception, v:throwpoint)
                     endtry
                     unlet l:ctx['on_notifications'][l:response['id']]
                 endif

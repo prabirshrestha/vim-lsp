@@ -30,12 +30,15 @@ endfunction
 " list of Strings.
 function! s:FirstDifference(old, new) abort
   let l:line_count = min([len(a:old), len(a:new)])
+  if l:line_count ==# 0
+    return [0, 0]
+  endif
   let l:i = 0
   while l:i < l:line_count
     if a:old[l:i] !=# a:new[l:i] | break | endif
     let l:i += 1
   endwhile
-  if i >= l:line_count
+  if l:i >= l:line_count
     return [l:line_count - 1, strlen(a:old[l:line_count - 1])]
   endif
   let l:old_line = a:old[l:i]
