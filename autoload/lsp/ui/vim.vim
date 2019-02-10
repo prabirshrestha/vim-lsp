@@ -418,7 +418,7 @@ endfunction
 
 function! s:handle_code_action(server, last_req_id, type, data) abort
     if lsp#client#is_error(a:data['response'])
-        call lsp#utils#error('Failed to retrieve '. a:type . ' for ' . a:server . ': ' . lsp#client#error_message(a:data['response']))
+        call lsp#utils#error('Failed to '. a:type . ' for ' . a:server . ': ' . lsp#client#error_message(a:data['response']))
         return
     endif
 
