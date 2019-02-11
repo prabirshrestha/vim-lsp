@@ -180,6 +180,7 @@ function! lsp#omni#get_vim_completion_item(item, ...) abort
 
     if g:lsp_ultisnips_integration && has_key(a:item, 'insertTextFormat') && a:item['insertTextFormat'] == 2
         let l:snippet = substitute(a:item['insertText'], '\%x00', '\\n', 'g')
+        let l:word = trim(a:item['label'])
         let l:trigger = l:word
     endif
 
@@ -218,7 +219,7 @@ function! s:handle_snippet(item)
 
     execute 'let l:user_data = ' . a:item['user_data']
 
-    let l:trigger = trim(l:user_data[0])
+    let l:trigger = l:user_data[0]
     let l:snippet = l:user_data[1]
 
     call feedkeys("\<C-r>=UltiSnips#Anon(\"" . l:snippet . "\", \"" . l:trigger . "\", '', 'i')\<CR>")
