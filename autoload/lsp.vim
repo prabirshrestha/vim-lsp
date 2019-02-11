@@ -208,7 +208,7 @@ function! s:call_did_save(buf, server_name, result, cb) abort
         return
     endif
 
-    call s:update_file_content(a:buf, a:server_name, getbufline(a:buf, 1, '$'))
+    call s:update_file_content(a:buf, a:server_name, s:get_buffer_lines(a:buf))
 
     let l:buffers = l:server['buffers']
     let l:buffer_info = l:buffers[l:path]
@@ -233,6 +233,14 @@ endfunction
 function! s:on_text_document_did_close() abort
     let l:buf = bufnr('%')
     call lsp#log('s:on_text_document_did_close()', l:buf)
+endfunction
+
+function! s:get_buffer_lines(buf) abort
+	let l:lines = getbufline(a:buf, 1, '$')
+	if len(l:lines) > 0 && l:lines[-1] !=# '' && &fixendofline
+		let l:lines += ['']
+	endif
+	return l:lines
 endfunction
 
 function! s:get_last_file_content(buf, server_name) abort
@@ -450,7 +458,7 @@ function! s:text_changes(buf, server_name) abort
     if l:sync_kind == 2 && has_key(s:file_content, a:buf)
         " compute diff
         let l:old_content = s:get_last_file_content(a:buf, a:server_name)
-        let l:new_content = getbufline(a:buf, 1, '$')
+        let l:new_content = s:get_buffer_lines(a:buf)
         let l:changes = lsp#utils#diff#compute(l:old_content, l:new_content)
         if empty(l:changes.text) && l:changes.rangeLength ==# 0
             return []
@@ -459,7 +467,7 @@ function! s:text_changes(buf, server_name) abort
         return [l:changes]
     endif
 
-    let l:new_content = getbufline(a:buf, 1, '$')
+    let l:new_content = s:get_buffer_lines(a:buf)
     let l:changes = {'text': join(l:new_content, "\n")}
     call s:update_file_content(a:buf, a:server_name, l:new_content)
     return [l:changes]
@@ -517,7 +525,7 @@ function! s:ensure_open(buf, server_name, cb) abort
         return
     endif
 
-    call s:update_file_content(a:buf, a:server_name, getbufline(a:buf, 1, '$'))
+    call s:update_file_content(a:buf, a:server_name, s:get_buffer_lines(a:buf))
 
     let l:buffer_info = { 'changed_tick': getbufvar(a:buf, 'changedtick'), 'version': 1, 'uri': l:path }
     let l:buffers[l:path] = l:buffer_info
