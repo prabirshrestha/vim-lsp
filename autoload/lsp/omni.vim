@@ -212,6 +212,10 @@ function! lsp#omni#get_vim_completion_item(item, ...) abort
     return l:completion
 endfunction
 
+function! s:expand_snippet(timer)
+    call feedkeys("\<C-r>=UltiSnips#Anon(\"" . s:snippet . "\", \"" . s:trigger . "\", '', 'i')\<CR>")
+endfunction
+
 function! s:handle_snippet(item)
     if !has_key(a:item, 'user_data')
         return
@@ -219,10 +223,10 @@ function! s:handle_snippet(item)
 
     execute 'let l:user_data = ' . a:item['user_data']
 
-    let l:trigger = l:user_data[0]
-    let l:snippet = l:user_data[1]
+    let s:trigger = l:user_data[0]
+    let s:snippet = l:user_data[1]
 
-    call feedkeys("\<C-r>=UltiSnips#Anon(\"" . l:snippet . "\", \"" . l:trigger . "\", '', 'i')\<CR>")
+    call timer_start(0, function('s:expand_snippet'))
 endfunction
 
 if g:lsp_ultisnips_integration
