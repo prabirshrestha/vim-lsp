@@ -14,6 +14,7 @@ CONTENTS                                                  *vim-lsp-contents*
       g:lsp_auto_enable           |g:lsp_auto_enable|
       g:lsp_preview_keep_focus    |g:lsp_preview_keep_focus|
       g:lsp_insert_text_enabled   |g:lsp_insert_text_enabled|
+      g:lsp_use_event_queue       |g:lsp_use_event_queue|
     Functions			|vim-lsp-functions|
       enable                      |vim-lsp-enable|
       disable                     |vim-lsp-disable|
@@ -147,6 +148,16 @@ g:lsp_insert_text_enabled                       *g:lsp_insert_text_enabled*
 	let g:lsp_insert_text_enabled = 1
 	let g:lsp_insert_text_enabled = 0
 
+g:lsp_use_event_queue                               *g:lsp_use_event_queue*
+    Type: |Number|
+    Default: `1` for neovim or vim with patch-8.1.0889
+
+    Enable event queue which improves performance by reducing the communication
+    between client and server.
+
+    Example:
+	let g:lsp_use_event_queue = 1
+	let g:lsp_use_event_queue = 0
 
 ===============================================================================
 FUNCTIONS	                                        *vim-lsp-functions*
