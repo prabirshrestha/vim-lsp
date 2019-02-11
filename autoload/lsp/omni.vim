@@ -164,7 +164,7 @@ function! s:remove_typed_part(word) abort
 endfunction
 
 function! lsp#omni#get_vim_completion_item(item, ...) abort
-    let a:do_remove_typed_part = get(a:, 1, 0)
+    let l:do_remove_typed_part = get(a:, 1, 0)
 
     if g:lsp_insert_text_enabled && has_key(a:item, 'insertText') && !empty(a:item['insertText'])
         if has_key(a:item, 'insertTextFormat') && a:item['insertTextFormat'] != 1
@@ -184,7 +184,7 @@ function! lsp#omni#get_vim_completion_item(item, ...) abort
         let l:trigger = l:word
     endif
 
-    if a:do_remove_typed_part
+    if l:do_remove_typed_part
         let l:word = s:remove_typed_part(l:word)
     endif
     let l:menu = lsp#omni#get_kind_text(a:item)
