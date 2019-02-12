@@ -22,6 +22,13 @@ let g:lsp_use_event_queue = get(g:, 'lsp_use_event_queue', 0)
 let g:lsp_insert_text_enabled= get(g:, 'lsp_insert_text_enabled', 1)
 let g:lsp_ultisnips_integration = get(g:, 'lsp_ultisnips_integration', 0)
 
+" Required for user_data
+if g:lsp_ultisnips_integration && !has('patch-8.0.1493')
+    echohl WarningMsg
+    echom "vim-lsp UltiSnips integration requires Vim 8.0 patch 1493 or later"
+    echohl None
+endif
+
 if g:lsp_auto_enable
     augroup lsp_auto_enable
         autocmd!
