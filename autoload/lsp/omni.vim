@@ -212,11 +212,11 @@ function! lsp#omni#get_vim_completion_item(item, ...) abort
     return l:completion
 endfunction
 
-function! s:expand_snippet(timer)
+function! s:expand_snippet(timer) abort
     call feedkeys("\<C-r>=UltiSnips#Anon(\"" . s:snippet . "\", \"" . s:trigger . "\", '', 'i')\<CR>")
 endfunction
 
-function! s:handle_snippet(item)
+function! s:handle_snippet(item) abort
     if !has_key(a:item, 'user_data')
         return
     endif
