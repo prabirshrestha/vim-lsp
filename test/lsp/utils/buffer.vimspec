@@ -1,0 +1,25 @@
+Describe lsp#utils#buffer
+
+    Before each
+        % delete _
+        0put ='foo'
+        1put ='bar'
+        3delete _
+    End
+
+    After all
+        % delete _
+    End
+
+    Describe lsp#utils#buffer#_get_lines
+        It adds a blank line when fixendofline is set
+            setl fixendofline
+            Assert Equals(lsp#utils#buffer#_get_lines(bufnr('$')), ['foo', 'bar', ''])
+        End
+
+        It does not add a blank line when nofixendofline is set
+            setl nofixendofline
+            Assert Equals(lsp#utils#buffer#_get_lines(bufnr('$')), ['foo', 'bar'])
+        End
+    End
+End
