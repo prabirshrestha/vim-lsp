@@ -8,4 +8,41 @@ Describe lsp#utils
         End
     End
 
+    Describe lsp#utils#uri_to_path
+        It should return path from uri (Windows)
+            if !has('win32')
+              Skip This tests is not for UNIX
+            endif
+            let tests = [
+            \  {'uri': 'file:///C:/path/to/the/file.txt', 'path': 'C:\path\to\the\file.txt'},
+            \  {'uri': 'file:///C:/path/to/the/file+name.txt', 'path': 'C:\path\to\the\file+name.txt'},
+            \  {'uri': 'file:///C:/path/to/the/file%2Bname.txt', 'path': 'C:\path\to\the\file+name.txt'},
+            \  {'uri': 'file:///C:/path/to/the/file%20name.txt', 'path': 'C:\path\to\the\file name.txt'},
+            \  {'uri': 'file:///C:/path+name?query=your+value', 'path': 'C:\path+name'},
+            \  {'uri': 'file:///C:/path+name#hash', 'path': 'C:\path+name'},
+            \]
+            for test in tests
+                let path = lsp#utils#uri_to_path(test.uri)
+                Assert Equals(path, test.path)
+            endfor
+        End
+
+        It should return path from uri (UNIX)
+            if has('win32')
+              Skip This tests is not for Windows
+            endif
+            let tests = [
+            \  {'uri': 'file:///path/to/the/file.txt', 'path': '/path/to/the/file.txt'},
+            \  {'uri': 'file:///path/to/the/file+name.txt', 'path': '/path/to/the/file+name.txt'},
+            \  {'uri': 'file:///path/to/the/file%2Bname.txt', 'path': '/path/to/the/file+name.txt'},
+            \  {'uri': 'file:///path/to/the/file%20name.txt', 'path': '/path/to/the/file name.txt'},
+            \  {'uri': 'file:///path+name?query=your+value', 'path': '/path+name'},
+            \  {'uri': 'file:///path+name#hash', 'path': '/path+name'},
+            \]
+            for test in tests
+                let path = lsp#utils#uri_to_path(test.uri)
+                Assert Equals(path, test.path)
+            endfor
+        End
+    End
 End

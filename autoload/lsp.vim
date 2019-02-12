@@ -169,7 +169,7 @@ endfunction
 function! s:on_text_document_did_open() abort
     let l:buf = bufnr('%')
     call lsp#log('s:on_text_document_did_open()', l:buf, &filetype, getcwd(), lsp#utils#get_buffer_uri(l:buf))
-    for l:server_name in lsp#get_whitelisted_servers()
+    for l:server_name in lsp#get_whitelisted_servers(l:buf)
         call s:ensure_flush(l:buf, l:server_name, function('s:Noop'))
     endfor
 endfunction
@@ -177,7 +177,7 @@ endfunction
 function! s:on_text_document_did_save() abort
     let l:buf = bufnr('%')
     call lsp#log('s:on_text_document_did_save()', l:buf)
-    for l:server_name in lsp#get_whitelisted_servers()
+    for l:server_name in lsp#get_whitelisted_servers(l:buf)
         call s:ensure_flush(l:buf, l:server_name, {result->s:call_did_save(l:buf, l:server_name, result, function('s:Noop'))})
     endfor
 endfunction
@@ -208,7 +208,7 @@ function! s:call_did_save(buf, server_name, result, cb) abort
         return
     endif
 
-    call s:update_file_content(a:server_name, a:buf, getbufline(a:buf, 1, '$'))
+    call s:update_file_content(a:buf, a:server_name, getbufline(a:buf, 1, '$'))
 
     let l:buffers = l:server['buffers']
     let l:buffer_info = l:buffers[l:path]
@@ -452,7 +452,7 @@ function! s:text_changes(buf, server_name) abort
         let l:old_content = s:get_last_file_content(a:buf, a:server_name)
         let l:new_content = getbufline(a:buf, 1, '$')
         let l:changes = lsp#utils#diff#compute(l:old_content, l:new_content)
-        if empty(l:changes.text)
+        if empty(l:changes.text) && l:changes.rangeLength ==# 0
             return []
         endif
         call s:update_file_content(a:buf, a:server_name, l:new_content)
@@ -517,7 +517,7 @@ function! s:ensure_open(buf, server_name, cb) abort
         return
     endif
 
-    call s:update_file_content(a:server_name, a:buf, getbufline(a:buf, 1, '$'))
+    call s:update_file_content(a:buf, a:server_name, getbufline(a:buf, 1, '$'))
 
     let l:buffer_info = { 'changed_tick': getbufvar(a:buf, 'changedtick'), 'version': 1, 'uri': l:path }
     let l:buffers[l:path] = l:buffer_info
@@ -618,7 +618,7 @@ function! s:handle_initialize(server_name, data) abort
 endfunction
 
 " call lsp#get_whitelisted_servers()
-" call lsp#get_whitelisted_servers(bufnr('%))
+" call lsp#get_whitelisted_servers(bufnr('%'))
 " call lsp#get_whitelisted_servers('typescript')
 function! lsp#get_whitelisted_servers(...) abort
     if a:0 == 0
@@ -665,7 +665,7 @@ function! lsp#get_whitelisted_servers(...) abort
 endfunction
 
 function! s:get_text_document_text(buf, server_name) abort
-    return join(s:get_last_file_content(a:server_name, a:buf), "\n")
+    return join(s:get_last_file_content(a:buf, a:server_name), "\n")
 endfunction
 
 function! s:get_text_document(buf, server_name, buffer_info) abort
@@ -712,6 +712,12 @@ let s:didchange_queue = []
 let s:didchange_timer = -1
 
 function! s:add_didchange_queue(buf) abort
+    if g:lsp_use_event_queue == 0
+        for l:server_name in lsp#get_whitelisted_servers(a:buf)
+            call s:ensure_flush(a:buf, l:server_name, function('s:Noop'))
+        endfor
+        return
+    endif
     if index(s:didchange_queue, a:buf) != -1
         return
     endif
@@ -728,7 +734,7 @@ function! s:send_didchange_queue(...) abort
         if !bufexists(l:buf)
             continue
         endif
-        for l:server_name in lsp#get_whitelisted_servers()
+        for l:server_name in lsp#get_whitelisted_servers(l:buf)
             call s:ensure_flush(l:buf, l:server_name, function('s:Noop'))
         endfor
     endfor

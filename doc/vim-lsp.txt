@@ -13,6 +13,8 @@ CONTENTS                                                  *vim-lsp-contents*
       g:lsp_diagnostics_enabled   |g:lsp_diagnostics_enabled|
       g:lsp_auto_enable           |g:lsp_auto_enable|
       g:lsp_preview_keep_focus    |g:lsp_preview_keep_focus|
+      g:lsp_insert_text_enabled   |g:lsp_insert_text_enabled|
+      g:lsp_use_event_queue       |g:lsp_use_event_queue|
     Functions			|vim-lsp-functions|
       enable                      |vim-lsp-enable|
       disable                     |vim-lsp-disable|
@@ -134,6 +136,28 @@ g:lsp_preview_keep_focus                         *g:lsp_preview_keep_focus*
 	let g:lsp_preview_keep_focus = 0
 
     * |preview-window| can be closed using the default vim mapping - `<c-w><c-z>`.
+
+g:lsp_insert_text_enabled                       *g:lsp_insert_text_enabled*
+    Type: |Number|
+    Default: `1`
+
+    Enable support for completion insertText property. Set to `0` to disable
+    using insertText.
+
+    Example:
+	let g:lsp_insert_text_enabled = 1
+	let g:lsp_insert_text_enabled = 0
+
+g:lsp_use_event_queue                               *g:lsp_use_event_queue*
+    Type: |Number|
+    Default: `1` for neovim or vim with patch-8.1.0889
+
+    Enable event queue which improves performance by reducing the communication
+    between client and server.
+
+    Example:
+	let g:lsp_use_event_queue = 1
+	let g:lsp_use_event_queue = 0
 
 ===============================================================================
 FUNCTIONS	                                        *vim-lsp-functions*

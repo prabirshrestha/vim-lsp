@@ -390,7 +390,11 @@ function! s:handle_location(ctx, server, type, data) abort "ctx = {counter, list
                 normal! m'
                 let l:loc = a:ctx['list'][0]
                 let l:buffer = bufnr(l:loc['filename'])
-                let l:cmd = l:buffer !=# -1 ? 'b ' . l:buffer : 'edit ' . l:loc['filename']
+                if &modified
+                    let l:cmd = l:buffer !=# -1 ? 'sb ' . l:buffer : 'split ' . l:loc['filename']
+                else
+                    let l:cmd = l:buffer !=# -1 ? 'b ' . l:buffer : 'edit ' . l:loc['filename']
+                endif
                 execute l:cmd . ' | call cursor('.l:loc['lnum'].','.l:loc['col'].')'
                 echo 'Retrieved ' . a:type
                 redraw
@@ -459,6 +463,11 @@ function! s:handle_text_edit(server, last_req_id, type, data) abort
 endfunction
 
 function! s:handle_code_action(server, last_req_id, type, data) abort
+    if lsp#client#is_error(a:data['response'])
+        call lsp#utils#error('Failed to '. a:type . ' for ' . a:server . ': ' . lsp#client#error_message(a:data['response']))
+        return
+    endif
+
     let l:codeActions = a:data['response']['result']
     let l:index = 0
     let l:choices = []

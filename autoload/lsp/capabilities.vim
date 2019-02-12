@@ -85,7 +85,7 @@ function! lsp#capabilities#get_text_document_change_sync_kind(server_name) abort
     let l:capabilities = lsp#get_server_capabilities(a:server_name)
     if !empty(l:capabilities) && has_key(l:capabilities, 'textDocumentSync')
         if type(l:capabilities['textDocumentSync']) == type({})
-            if  has_key(l:capabilities['textDocumentSync'], 'change') && type(l:capabilities['textDocumentSync']) == type(1)
+            if  has_key(l:capabilities['textDocumentSync'], 'change') && type(l:capabilities['textDocumentSync']['change']) == type(1)
                 let l:val = l:capabilities['textDocumentSync']['change']
                 return l:val >= 0 && l:val <= 2 ? l:val : 1
             else

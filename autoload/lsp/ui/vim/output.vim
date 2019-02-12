@@ -8,7 +8,7 @@ function! lsp#ui#vim#output#preview(data) abort
 
     let l:ft = s:append(a:data)
     " Delete first empty line
-    0delete
+    0delete _
 
     setlocal readonly nomodifiable
 
