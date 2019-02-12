@@ -129,7 +129,7 @@ function! lsp#ui#vim#references() abort
     echo 'Retrieving references ...'
 endfunction
 
-function! s:rename(server, new_name) abort
+function! s:rename(server, new_name, pos) abort
     if empty(a:new_name)
         echo '... Renaming aborted ...'
         return
@@ -140,7 +140,7 @@ function! s:rename(server, new_name) abort
         \ 'method': 'textDocument/rename',
         \ 'params': {
         \   'textDocument': lsp#get_text_document_identifier(),
-        \   'position': lsp#get_position(),
+        \   'position': a:pos,
         \   'newName': a:new_name,
         \ },
         \ 'on_notification': function('s:handle_workspace_edit', [a:server, s:last_req_id, 'rename']),
@@ -179,7 +179,7 @@ function! lsp#ui#vim#rename() abort
         return
     endif
 
-    call s:rename(l:server, input('new name: ', expand('<cword>')))
+    call s:rename(l:server, input('new name: ', expand('<cword>')), lsp#get_position())
 endfunction
 
 function! s:document_format(sync) abort
@@ -429,7 +429,7 @@ function! s:handle_rename_prepare(server, last_req_id, type, data) abort
         let l:name .= l:lines[l:range['end']['line']][: l:range['end']['character']-1]
     endif
 
-    call timer_start(1, {x->s:rename(a:server, input('new name: ', l:name))})
+    call timer_start(1, {x->s:rename(a:server, input('new name: ', l:name), l:range['start'])})
 endfunction
 
 function! s:handle_workspace_edit(server, last_req_id, type, data) abort
