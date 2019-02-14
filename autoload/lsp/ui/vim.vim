@@ -785,3 +785,44 @@ function! s:parse_range(range) abort
 
     return s:range
 endfunction
+
+function! lsp#ui#vim#execute_command_complete(arglead, cmdline, cursorpos) abort
+    let l:commands = []
+    for l:server in lsp#get_whitelisted_servers()
+        let l:commands += lsp#capabilities#get_execute_command_commands(l:server)
+    endfor
+    return l:commands
+endfunction
+
+function! lsp#ui#vim#execute_command(command, ...) abort
+    let l:commands = {}
+    for l:server in lsp#get_whitelisted_servers()
+        for l:command in lsp#capabilities#get_execute_command_commands(l:server)
+            let l:commands[l:command] = l:server
+        endfor
+    endfor
+    if empty(l:commands)
+        call s:not_supported('Retrieving implementation')
+        return
+    endif
+    if !has_key(l:commands, a:command)
+        echo 'Unkown command: ' . a:command
+        return
+    endif
+    let l:server = l:commands[a:command]
+
+    let l:params = {
+    \   'command': l:command,
+    \ }
+    if len(a:000) > 0
+        let l:params['arguments'] = map(copy(a:000), 'json_decode(v:val)')
+    endif
+    call lsp#send_request(l:server, {
+        \ 'method': 'workspace/executeCommand',
+        \ 'params': l:params,
+        \ 'on_notification': function('s:handle_execute_command', [l:server, 'execute_command']),
+        \ })
+endfunction
+
+function! s:handle_execute_command(server, data) abort
+endfunction
