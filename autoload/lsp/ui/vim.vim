@@ -210,10 +210,18 @@ function! s:document_format(sync) abort
 endfunction
 
 function! lsp#ui#vim#document_format_sync() abort
+    let l:mode = mode()
+    if l:mode =~# '[vV]' || l:mode ==# "\<C-V>"
+        return s:document_format_range(1)
+    endif
     return s:document_format(1)
 endfunction
 
 function! lsp#ui#vim#document_format() abort
+    let l:mode = mode()
+    if l:mode =~# '[vV]' || l:mode ==# "\<C-V>"
+        return s:document_format_range(0)
+    endif
     return s:document_format(0)
 endfunction
 
@@ -232,7 +240,7 @@ function! s:get_visual_selection_pos() abort
     return [line_start, column_start, line_end, len(lines[-1])]
 endfunction
 
-function! lsp#ui#vim#document_range_format() abort
+function! s:document_format_range(sync) abort
     let l:servers = filter(lsp#get_whitelisted_servers(), 'lsp#capabilities#has_document_range_formatting_provider(v:val)')
     let s:last_req_id = s:last_req_id + 1
 
@@ -258,10 +266,19 @@ function! lsp#ui#vim#document_range_format() abort
         \       'insertSpaces': getbufvar(bufnr('%'), '&expandtab') ? v:true : v:false,
         \   },
         \ },
+        \ 'sync': a:sync,
         \ 'on_notification': function('s:handle_text_edit', [l:server, s:last_req_id, 'range format']),
         \ })
 
     echo 'Formatting document range ...'
+endfunction
+
+function! lsp#ui#vim#document_range_format_sync() abort
+    return s:document_format_range(1)
+endfunction
+
+function! lsp#ui#vim#document_range_format() abort
+    return s:document_format_range(0)
 endfunction
 
 function! lsp#ui#vim#workspace_symbol() abort
