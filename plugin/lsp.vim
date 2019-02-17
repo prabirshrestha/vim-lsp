@@ -1,4 +1,4 @@
-if exists('g:lsp_loaded')
+if exists('g:lsp_loaded') || !exists('*json_encode') || !has('timers') || !has('lambda')
     finish
 endif
 let g:lsp_loaded = 1
@@ -18,7 +18,7 @@ let g:lsp_diagnostics_echo_cursor = get(g:, 'lsp_diagnostics_echo_cursor', 0)
 let g:lsp_diagnostics_echo_delay = get(g:, 'lsp_diagnostics_echo_delay', 500)
 let g:lsp_next_sign_id = get(g:, 'lsp_next_sign_id', 6999)
 let g:lsp_preview_keep_focus = get(g:, 'lsp_preview_keep_focus', 1)
-let g:lsp_use_event_queue = get(g:, 'lsp_use_event_queue', 0)
+let g:lsp_use_event_queue = get(g:, 'lsp_use_event_queue', has('nvim') || has('patch-8.1.0889'))
 let g:lsp_insert_text_enabled= get(g:, 'lsp_insert_text_enabled', 1)
 let g:lsp_ultisnips_integration = get(g:, 'lsp_ultisnips_integration', 0)
 
@@ -48,9 +48,10 @@ command! LspReferences call lsp#ui#vim#references()
 command! LspRename call lsp#ui#vim#rename()
 command! LspTypeDefinition call lsp#ui#vim#type_definition()
 command! LspWorkspaceSymbol call lsp#ui#vim#workspace_symbol()
-command! LspDocumentFormat call lsp#ui#vim#document_format()
-command! LspDocumentFormatSync call lsp#ui#vim#document_format_sync()
+command! -range LspDocumentFormat call lsp#ui#vim#document_format()
+command! -range LspDocumentFormatSync call lsp#ui#vim#document_format_sync()
 command! -range LspDocumentRangeFormat call lsp#ui#vim#document_range_format()
+command! -range LspDocumentRangeFormatSync call lsp#ui#vim#document_range_format_sync()
 command! LspImplementation call lsp#ui#vim#implementation()
 command! LspTypeDefinition call lsp#ui#vim#type_definition()
 command! -nargs=0 LspStatus echo lsp#get_server_status()

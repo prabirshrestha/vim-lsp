@@ -187,16 +187,18 @@ function! lsp#omni#get_vim_completion_item(item, ...) abort
     if l:do_remove_typed_part
         let l:word = s:remove_typed_part(l:word)
     endif
-    let l:menu = lsp#omni#get_kind_text(a:item)
-    let l:completion = { 'word': l:word, 'abbr': l:abbr, 'menu': l:menu, 'info': '', 'icase': 1, 'dup': 1 }
+    let l:kind = lsp#omni#get_kind_text(a:item)
+    let l:completion = {
+                \ 'word': l:word,
+                \ 'abbr': l:abbr,
+                \ 'menu': '',
+                \ 'info': '',
+                \ 'icase': 1,
+                \ 'dup': 1,
+                \ 'kind': l:kind }
 
     if has_key(a:item, 'detail') && !empty(a:item['detail'])
-        if empty(l:menu)
-            let l:completion['menu'] = a:item['detail']
-        else
-            let l:completion['menu'] = '[' . l:menu . '] ' . a:item['detail']
-        endif
-        let l:completion['info'] .= a:item['detail'] . ' '
+        let l:completion['menu'] = a:item['detail']
     endif
 
     if has_key(a:item, 'documentation')
