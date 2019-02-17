@@ -45,6 +45,14 @@ vim-lsp supports incremental changes of Language Server Protocol.
 
 Refer to docs on configuring omnifunc or [asyncomplete.vim](https://github.com/prabirshrestha/asyncomplete.vim).
 
+## Snippets (UltiSnips)
+
+If you have UltiSnips already installed, you can enable LSP snippet integration using:
+```vim
+let g:lsp_ultisnips_integration = 1
+```
+Make sure to read the notes in `:h g:lsp_ultisnips_integration` before enabling this feature.
+
 ## Supported commands
 
 **Note:**
