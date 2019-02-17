@@ -15,6 +15,7 @@ CONTENTS                                                  *vim-lsp-contents*
       g:lsp_preview_keep_focus    |g:lsp_preview_keep_focus|
       g:lsp_insert_text_enabled   |g:lsp_insert_text_enabled|
       g:lsp_use_event_queue       |g:lsp_use_event_queue|
+      g:lsp_ultisnips_integration |g:lsp_ultisnips_integration|
     Functions			|vim-lsp-functions|
       enable                      |vim-lsp-enable|
       disable                     |vim-lsp-disable|
@@ -158,6 +159,27 @@ g:lsp_use_event_queue                               *g:lsp_use_event_queue*
     Example:
 	let g:lsp_use_event_queue = 1
 	let g:lsp_use_event_queue = 0
+
+g:lsp_ultisnips_integration                   *g:lsp_ultisnips_integration*
+    Type: |Number|
+    Default: `0`
+
+    Enable UltiSnips integration with vim-lsp. If enabled, accepting a
+    completion item that is a snippet will expand it using UltiSnips.
+    This requires Vim 8.0 patch 1493 and UltiSnips already installed.
+
+    Note:
+	* UltiSnips does not implement all lsp snippet features. For example,
+	  choice placeholders (e.g. ${1|one,two,three}) will just be displayed
+	  verbatim.
+	* If you want snippets to expand when the snippet trigger is the only
+	  match, you need to add menuone to 'completeopt'.
+	* Because UltiSnips forgets the tabstop locations when switching
+	  buffers, nested snippets may not work if the |preview-window| is
+	  enabled. To fix this, you can either remove preview from
+	  'completeopt', or check if
+	  https://github.com/SirVer/ultisnips/pull/1055
+	  solves the issue for you.
 
 ===============================================================================
 FUNCTIONS	                                        *vim-lsp-functions*
