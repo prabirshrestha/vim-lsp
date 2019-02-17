@@ -25,7 +25,7 @@ let g:lsp_ultisnips_integration = get(g:, 'lsp_ultisnips_integration', 0)
 " Required for user_data
 if g:lsp_ultisnips_integration && !has('patch-8.0.1493')
     echohl WarningMsg
-    echom "vim-lsp UltiSnips integration requires Vim 8.0 patch 1493 or later"
+    echom 'vim-lsp UltiSnips integration requires Vim 8.0 patch 1493 or later'
     echohl None
 endif
 
