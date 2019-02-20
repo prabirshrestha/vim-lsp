@@ -28,7 +28,11 @@ if !hlexists('LspHintText')
 endif
 
 function! lsp#ui#vim#signs#enable() abort
-    if !s:enabled && s:supports_signs
+    if !s:supports_signs
+        call lsp#log('vim-lsp signs requires patch-8.1.0772')
+        return
+    endif
+    if !s:enabled
         call s:define_signs()
         let s:enabled = 1
         call lsp#log('vim-lsp signs enabled')
@@ -36,63 +40,71 @@ function! lsp#ui#vim#signs#enable() abort
 endfunction
 
 function! lsp#ui#vim#signs#next_error() abort
-    " let l:view = winsaveview()
-    " let l:next_line = 0
-    " for l:line in s:err_loc
-    "     if l:line > l:view.lnum
-    "         let l:next_line = l:line
-    "         break
-    "     endif
-    " endfor
+    let l:signs = s:get_signs(bufnr('%'))
+    if empty(l:signs)
+        retur
+    endif
+    let l:view = winsaveview()
+    let l:next_line = 0
+    for l:sign in l:signs
+        if l:sign['name'] ==# 'LspError' && l:sign['lnum'] > l:view['lnum']
+            let l:next_line = l:sign['lnum']
+            break
+        endif
+    endfor
 
-    " if l:next_line == 0
-    "     return
-    " endif
+    if l:next_line == 0
+        return
+    endif
 
-    " let l:view.lnum = l:next_line
-    " let l:view.topline = 1
-    " let l:height = winheight(0)
-    " let totalnum = line('$')
-    " if totalnum > l:height
-    "     let l:half = l:height / 2
-    "     if l:totalnum - l:half < l:view.lnum
-    "         let l:view.topline = l:totalnum - l:height + 1
-    "     else
-    "         let l:view.topline = l:view.lnum - l:half
-    "     endif
-    " endif
-    " call winrestview(l:view)
+    let l:view['lnum'] = l:next_line
+    let l:view['topline'] = 1
+    let l:height = winheight(0)
+    let totalnum = line('$')
+    if totalnum > l:height
+        let l:half = l:height / 2
+        if l:totalnum - l:half < l:view['lnum']
+            let l:view['topline'] = l:totalnum - l:height + 1
+        else
+            let l:view['topline'] = l:view['lnum'] - l:half
+        endif
+    endif
+    call winrestview(l:view)
 endfunction
 
 function! lsp#ui#vim#signs#previous_error() abort
-    " let l:view = winsaveview()
-    " let l:next_line = 0
-    " let l:index = len(s:err_loc) - 1
-    " while l:index >= 0
-    "     if s:err_loc[l:index] < l:view.lnum
-    "         let l:next_line = s:err_loc[l:index]
-    "         break
-    "     endif
-    "     let l:index = l:index - 1
-    " endwhile
+    let l:signs = s:get_signs(bufnr('%'))
+    if empty(l:signs)
+        return
+    endif
+    let l:view = winsaveview()
+    let l:next_line = 0
+    let l:index = len(l:signs) - 1
+    while l:index >= 0
+        if l:signs[l:index]['lnum'] < l:view['lnum']
+            let l:next_line = l:signs[l:index]['lnum']
+            break
+        endif
+        let l:index = l:index - 1
+    endwhile
 
-    " if l:next_line == 0
-    "     return
-    " endif
+    if l:next_line == 0
+        return
+    endif
 
-    " let l:view.lnum = l:next_line
-    " let l:view.topline = 1
-    " let l:height = winheight(0)
-    " let totalnum = line('$')
-    " if totalnum > l:height
-    "     let l:half = l:height / 2
-    "     if l:totalnum - l:half < l:view.lnum
-    "         let l:view.topline = l:totalnum - l:height + 1
-    "     else
-    "         let l:view.topline = l:view.lnum - l:half
-    "     endif
-    " endif
-    " call winrestview(l:view)
+    let l:view['lnum'] = l:next_line
+    let l:view['topline'] = 1
+    let l:height = winheight(0)
+    let totalnum = line('$')
+    if totalnum > l:height
+        let l:half = l:height / 2
+        if l:totalnum - l:half < l:view['lnum']
+            let l:view['topline'] = l:totalnum - l:height + 1
+        else
+            let l:view['topline'] = l:view['lnum'] - l:half
+        endif
+    endif
+    call winrestview(l:view)
 endfunction
 
 " Set default sign text to handle case when user provides empty dict
@@ -115,6 +127,11 @@ function! s:define_signs() abort
     call s:add_sign('LspWarning', 'W>', g:lsp_signs_warning)
     call s:add_sign('LspInformation', 'I>', g:lsp_signs_information)
     call s:add_sign('LspHint', 'H>', g:lsp_signs_hint)
+endfunction
+
+function! s:get_signs(bufnr) abort
+    let l:signs = sign_getplaced(a:bufnr, { 'group': '*' })
+    return !empty(l:signs) ? l:signs[0]['signs'] : []
 endfunction
 
 function! lsp#ui#vim#signs#disable() abort
