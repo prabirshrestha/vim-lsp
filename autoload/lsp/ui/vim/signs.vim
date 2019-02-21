@@ -40,14 +40,14 @@ function! lsp#ui#vim#signs#enable() abort
 endfunction
 
 function! lsp#ui#vim#signs#next_error() abort
-    let l:signs = s:get_signs(bufnr('%'))
+    let l:signs = filter(copy(s:get_signs(bufnr('%'))), {i,sign -> sign['name'] ==# 'LspError' })
     if empty(l:signs)
         return
     endif
     let l:view = winsaveview()
     let l:next_line = 0
     for l:sign in l:signs
-        if l:sign['name'] ==# 'LspError' && l:sign['lnum'] > l:view['lnum']
+        if l:sign['lnum'] > l:view['lnum']
             \ || (l:sign['lnum'] == l:view['lnum'] && l:sign['col'] > l:view['col'] + 1)
             let l:next_line = l:sign['lnum']
             let l:next_col = l:sign['col'] - 1
@@ -56,7 +56,9 @@ function! lsp#ui#vim#signs#next_error() abort
     endfor
 
     if l:next_line == 0
-        return
+        " Wrap to start
+        let l:next_line = l:signs[0]['lnum']
+        let l:next_col = l:signs[0]['col'] - 1
     endif
 
     let l:view['lnum'] = l:next_line
@@ -76,7 +78,7 @@ function! lsp#ui#vim#signs#next_error() abort
 endfunction
 
 function! lsp#ui#vim#signs#previous_error() abort
-    let l:signs = s:get_signs(bufnr('%'))
+    let l:signs = filter(copy(s:get_signs(bufnr('%'))), {i,sign -> sign['name'] ==# 'LspError' })
     if empty(l:signs)
         return
     endif
@@ -87,14 +89,16 @@ function! lsp#ui#vim#signs#previous_error() abort
         if l:signs[l:index]['lnum'] < l:view['lnum']
             \ || (l:signs[l:index]['lnum'] == l:view['lnum'] && l:signs[l:index]['col'] > l:view['col'] + 1)
             let l:next_line = l:signs[l:index]['lnum']
-            let l:next_col = l:err_pos[1] - 1
+            let l:next_col = l:signs[l:index]['col'] - 1
             break
         endif
         let l:index = l:index - 1
     endwhile
 
     if l:next_line == 0
-        return
+        " Wrap to end
+        let l:next_line = l:signs[-1]['lnum']
+        let l:next_col = l:signs[-1]['col'] - 1
     endif
 
     let l:view['lnum'] = l:next_line
