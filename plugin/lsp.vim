@@ -20,14 +20,6 @@ let g:lsp_next_sign_id = get(g:, 'lsp_next_sign_id', 6999)
 let g:lsp_preview_keep_focus = get(g:, 'lsp_preview_keep_focus', 1)
 let g:lsp_use_event_queue = get(g:, 'lsp_use_event_queue', has('nvim') || has('patch-8.1.0889'))
 let g:lsp_insert_text_enabled= get(g:, 'lsp_insert_text_enabled', 1)
-let g:lsp_ultisnips_integration = get(g:, 'lsp_ultisnips_integration', 0)
-
-" Required for user_data
-if g:lsp_ultisnips_integration && !has('patch-8.0.1493')
-    echohl WarningMsg
-    echom 'vim-lsp UltiSnips integration requires Vim 8.0 patch 1493 or later'
-    echohl None
-endif
 
 let g:Lsp_get_vim_completion_item = get(g:, 'Lsp_get_vim_completion_item', function('lsp#omni#default_get_vim_completion_item'))
 let g:Lsp_get_supported_capabilities = get(g:, 'Lsp_get_supported_capabilities', function('lsp#default_get_supported_capabilities'))
