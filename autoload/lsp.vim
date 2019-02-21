@@ -357,6 +357,14 @@ function! s:ensure_start(buf, server_name, cb) abort
     endif
 endfunction
 
+function! lsp#default_get_supported_capabilities() abort
+    return {
+    \   'workspace': {
+    \       'applyEdit ': v:true
+    \   }
+    \ }
+endfunction
+
 function! s:ensure_init(buf, server_name, cb) abort
     let l:server = s:servers[a:server_name]
 
@@ -394,26 +402,7 @@ function! s:ensure_init(buf, server_name, cb) abort
     if has_key(l:server_info, 'capabilities')
         let l:capabilities = l:server_info['capabilities']
     else
-        if g:lsp_ultisnips_integration
-            let l:capabilities = {
-            \   'textDocument': {
-            \       'completion': {
-            \           'completionItem': {
-            \               'snippetSupport': v:true,
-            \           },
-            \       },
-            \   },
-            \   'workspace': {
-            \       'applyEdit ': v:true
-            \   }
-            \ }
-        else
-            let l:capabilities = {
-            \   'workspace': {
-            \       'applyEdit ': v:true
-            \   }
-            \ }
-        endif
+        let l:capabilities = call(g:Lsp_get_supported_capabilities, [])
     endif
 
     if has_key(l:server_info, 'initialization_options')

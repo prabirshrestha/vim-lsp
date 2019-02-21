@@ -30,6 +30,7 @@ if g:lsp_ultisnips_integration && !has('patch-8.0.1493')
 endif
 
 let g:Lsp_get_vim_completion_item = get(g:, 'Lsp_get_vim_completion_item', function('lsp#omni#default_get_vim_completion_item'))
+let g:Lsp_get_supported_capabilities = get(g:, 'Lsp_get_supported_capabilities', function('lsp#default_get_supported_capabilities'))
 
 if g:lsp_auto_enable
     augroup lsp_auto_enable
