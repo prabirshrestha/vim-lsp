@@ -66,7 +66,7 @@ function! lsp#capabilities#get_execute_command_commands(server_name) abort
     if !empty(l:capabilities) && has_key(l:capabilities, 'executeCommandProvider')
         if type(l:capabilities['executeCommandProvider']) == type({})
             let l:provider = l:capabilities['executeCommandProvider']
-            if  has_key(l:provider, 'commands') && type(l:provider['commands']) == type([])
+            if has_key(l:provider, 'commands') && type(l:provider['commands']) == type([])
                 return l:provider['commands']
             endif
         endif
@@ -79,7 +79,7 @@ function! lsp#capabilities#get_text_document_save_registration_options(server_na
     let l:capabilities = lsp#get_server_capabilities(a:server_name)
     if !empty(l:capabilities) && has_key(l:capabilities, 'textDocumentSync')
         if type(l:capabilities['textDocumentSync']) == type({})
-            if  has_key(l:capabilities['textDocumentSync'], 'save')
+            if has_key(l:capabilities['textDocumentSync'], 'save')
                 return [1, {
                     \ 'includeText': has_key(l:capabilities['textDocumentSync']['save'], 'includeText') ? l:capabilities['textDocumentSync']['save']['includeText'] : 0,
                     \ }]
@@ -98,7 +98,7 @@ function! lsp#capabilities#get_text_document_change_sync_kind(server_name) abort
     let l:capabilities = lsp#get_server_capabilities(a:server_name)
     if !empty(l:capabilities) && has_key(l:capabilities, 'textDocumentSync')
         if type(l:capabilities['textDocumentSync']) == type({})
-            if  has_key(l:capabilities['textDocumentSync'], 'change') && type(l:capabilities['textDocumentSync']['change']) == type(1)
+            if has_key(l:capabilities['textDocumentSync'], 'change') && type(l:capabilities['textDocumentSync']['change']) == type(1)
                 let l:val = l:capabilities['textDocumentSync']['change']
                 return l:val >= 0 && l:val <= 2 ? l:val : 1
             else
@@ -111,4 +111,22 @@ function! lsp#capabilities#get_text_document_change_sync_kind(server_name) abort
         endif
     endif
     return 1
+endfunction
+
+function! lsp#capabilities#has_code_lens_provider(server_name) abort
+    let l:capabilities = lsp#get_server_capabilities(a:server_name)
+    return !empty(l:capabilities) && has_key(l:capabilities, 'codeLensProvider')
+endfunction
+
+function! lsp#capabilities#has_code_lens_resolve_provider(server_name) abort
+    let l:capabilities = lsp#get_server_capabilities(a:server_name)
+    if !empty(l:capabilities) && has_key(l:capabilities, 'codeLensProvider')
+        if type(l:capabilities['codeLensProvider']) == type({})
+            let l:provider = l:capabilities['codeLensProvider']
+            if has_key(l:provider, 'resolveProvider') && type(l:provider['resolveProvider']) == type(v:true)
+                return l:provider['resolveProvider'] == v:true
+            endif
+        endif
+    endif
+    return 0
 endfunction

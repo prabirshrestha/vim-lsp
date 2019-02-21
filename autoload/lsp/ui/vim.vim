@@ -1,4 +1,5 @@
 let s:last_req_id = 0
+let s:codelens = {} " { uri: { 'server_name': response } }
 
 function! s:not_supported(what) abort
     return lsp#utils#error(a:what.' not supported for '.&filetype)
@@ -825,4 +826,42 @@ function! lsp#ui#vim#execute_command(command, ...) abort
 endfunction
 
 function! s:handle_execute_command(server, data) abort
+endfunction
+
+function! s:handle_code_lens_resolve(server, last_req_id, type, data) abort
+    if a:last_req_id != s:last_req_id
+        return
+    endif
+
+    if lsp#client#is_error(a:data['response'])
+        call lsp#utils#error('Failed to retrieve '. a:type . ' for ' . a:server . ': ' . lsp#client#error_message(a:data['response']))
+        return
+    endif
+
+	for l:codelens in a:data['response']['result']
+        let s:codelens[l:codelens['data'][0]] = l:codelens['data']
+    endfor
+
+    echo 'CodeLens retrieved'
+endfunction
+
+function! lsp#ui#vim#code_lens() abort
+    let l:servers = filter(lsp#get_whitelisted_servers(), 'lsp#capabilities#has_code_lens_provider(v:val)')
+
+     if len(l:servers) == 0
+        call s:not_supported('Retrieving codelens')
+        return
+    endif
+
+     for l:server in l:servers
+        call lsp#send_request(l:server, {
+            \ 'method': 'textDocument/codeLens',
+            \ 'params': {
+            \   'textDocument': lsp#get_text_document_identifier(),
+            \ },
+            \ 'on_notification': function('s:handle_code_lens_resolve', [l:server, s:last_req_id, 'codelens']),
+            \ })
+    endfor
+
+     echo 'Retrieving codelens ...'
 endfunction
