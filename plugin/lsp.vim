@@ -29,6 +29,8 @@ if g:lsp_ultisnips_integration && !has('patch-8.0.1493')
     echohl None
 endif
 
+let g:Lsp_get_vim_completion_item = get(g:, 'Lsp_get_vim_completion_item', function('lsp#omni#default_get_vim_completion_item'))
+
 if g:lsp_auto_enable
     augroup lsp_auto_enable
         autocmd!

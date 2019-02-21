@@ -163,7 +163,7 @@ function! s:remove_typed_part(word) abort
     return strpart(a:word, l:overlap_length)
 endfunction
 
-function! lsp#omni#get_vim_completion_item(item, ...) abort
+function! lsp#omni#default_get_vim_completion_item(item, ...) abort
     let l:do_remove_typed_part = get(a:, 1, 0)
 
     if g:lsp_insert_text_enabled && has_key(a:item, 'insertText') && !empty(a:item['insertText'])
@@ -212,6 +212,10 @@ function! lsp#omni#get_vim_completion_item(item, ...) abort
     endif
 
     return l:completion
+endfunction
+
+function! lsp#omni#get_vim_completion_item(...) abort
+    return call(g:Lsp_get_vim_completion_item, a:000)
 endfunction
 
 function! s:expand_snippet(timer) abort
