@@ -838,7 +838,7 @@ function! s:handle_code_lens_resolve(server, last_req_id, type, data) abort
         return
     endif
 
-	for l:codelens in a:data['response']['result']
+    for l:codelens in a:data['response']['result']
         let s:codelens[l:codelens['data'][0]] = l:codelens['data']
     endfor
 
