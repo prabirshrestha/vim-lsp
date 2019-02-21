@@ -48,7 +48,9 @@ function! lsp#ui#vim#signs#next_error() abort
     let l:next_line = 0
     for l:sign in l:signs
         if l:sign['name'] ==# 'LspError' && l:sign['lnum'] > l:view['lnum']
+            \ || (l:sign['lnum'] == l:view['lnum'] && l:sign['col'] > l:view['col'] + 1)
             let l:next_line = l:sign['lnum']
+            let l:next_col = l:sign['col'] - 1
             break
         endif
     endfor
@@ -58,6 +60,7 @@ function! lsp#ui#vim#signs#next_error() abort
     endif
 
     let l:view['lnum'] = l:next_line
+    let l:view['col'] = l:next_col
     let l:view['topline'] = 1
     let l:height = winheight(0)
     let totalnum = line('$')
@@ -82,7 +85,9 @@ function! lsp#ui#vim#signs#previous_error() abort
     let l:index = len(l:signs) - 1
     while l:index >= 0
         if l:signs[l:index]['lnum'] < l:view['lnum']
+            \ || (l:signs[l:index]['lnum'] == l:view['lnum'] && l:signs[l:index]['col'] > l:view['col'] + 1)
             let l:next_line = l:signs[l:index]['lnum']
+            let l:next_col = l:err_pos[1] - 1
             break
         endif
         let l:index = l:index - 1
@@ -93,6 +98,7 @@ function! lsp#ui#vim#signs#previous_error() abort
     endif
 
     let l:view['lnum'] = l:next_line
+    let l:view['col'] = l:next_col
     let l:view['topline'] = 1
     let l:height = winheight(0)
     let totalnum = line('$')
@@ -190,14 +196,16 @@ function! s:place_signs(server_name, path, diagnostics) abort
     if !empty(a:diagnostics) && bufnr(a:path) >= 0
         for l:item in a:diagnostics
             let l:line = l:item['range']['start']['line'] + 1
+            let l:character = l:item['range']['start']['character'] + 1
 
             let l:name = 'LspError'
             if has_key(l:item, 'severity') && !empty(l:item['severity'])
                 let l:sign_name = get(s:severity_sign_names_mapping, l:item['severity'], 'LspError')
                 " pass 0 and let vim generate sign id
-                let l:sign_id = sign_place(0, l:sign_group, l:sign_name, a:path, { 'lnum': l:line })
+                let l:sign_id = sign_place(0, l:sign_group, l:sign_name, a:path, { 'lnum': l:line, 'col': l:character })
                 call lsp#log('add signs', l:sign_id)
             endif
         endfor
     endif
 endfunction
+" vim sw=4 ts=4 et
