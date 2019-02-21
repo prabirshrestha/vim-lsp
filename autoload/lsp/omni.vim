@@ -178,12 +178,6 @@ function! lsp#omni#default_get_vim_completion_item(item, ...) abort
         let l:abbr = a:item['label']
     endif
 
-    if g:lsp_ultisnips_integration && has_key(a:item, 'insertTextFormat') && a:item['insertTextFormat'] == 2
-        let l:snippet = substitute(a:item['insertText'], '\%x00', '\\n', 'g')
-        let l:word = trim(a:item['label'])
-        let l:trigger = l:word
-    endif
-
     if l:do_remove_typed_part
         let l:word = s:remove_typed_part(l:word)
     endif
@@ -205,10 +199,6 @@ function! lsp#omni#default_get_vim_completion_item(item, ...) abort
         if type(a:item['documentation']) == type('')
             let l:completion['info'] .= a:item['documentation']
         endif
-    endif
-
-    if exists('l:snippet')
-        let l:completion['user_data'] = string([l:trigger, l:snippet])
     endif
 
     return l:completion
