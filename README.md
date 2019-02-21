@@ -82,6 +82,12 @@ preferred to turn them off and use other plugins instead (like
 let g:lsp_diagnostics_enabled = 0         " disable diagnostics support
 ```
 
+To automatically populate quickfix with diagnostics:
+
+```viml
+let g:lsp_diagnostics_always_populate_quickfix = 1
+```
+
 #### Signs
 
 ```viml

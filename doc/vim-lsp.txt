@@ -159,6 +159,15 @@ g:lsp_use_event_queue                               *g:lsp_use_event_queue*
 	let g:lsp_use_event_queue = 1
 	let g:lsp_use_event_queue = 0
 
+g:lsp_diagnostics_always_populate_quickfix  *g:lsp_diagnostics_always_populate_quickfix*
+    Type: boolean
+    Default: 0
+
+    By default vim-lsp doesn't fill the |quickfix| with the errors found
+    by the servers, in order to reduce clashes with other plugins. Enable this
+    option to tell vim-lsp to always stick any detected errors into the
+    |quickfix|.
+
 ===============================================================================
 FUNCTIONS	                                        *vim-lsp-functions*
 

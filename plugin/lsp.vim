@@ -19,7 +19,8 @@ let g:lsp_diagnostics_echo_delay = get(g:, 'lsp_diagnostics_echo_delay', 500)
 let g:lsp_next_sign_id = get(g:, 'lsp_next_sign_id', 6999)
 let g:lsp_preview_keep_focus = get(g:, 'lsp_preview_keep_focus', 1)
 let g:lsp_use_event_queue = get(g:, 'lsp_use_event_queue', has('nvim') || has('patch-8.1.0889'))
-let g:lsp_insert_text_enabled= get(g:, 'lsp_insert_text_enabled', 1)
+let g:lsp_insert_text_enabled = get(g:, 'lsp_insert_text_enabled', 1)
+let g:lsp_diagnostics_always_populate_quickfix = get(g:, 'lsp_diagnostics_always_populate_quickfix', 0)
 
 if g:lsp_auto_enable
     augroup lsp_auto_enable

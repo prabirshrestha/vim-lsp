@@ -14,6 +14,16 @@ function! lsp#ui#vim#diagnostics#handle_text_document_publish_diagnostics(server
     endif
     let s:diagnostics[l:uri][a:server_name] = a:data
 
+    if g:lsp_diagnostics_always_populate_quickfix
+        let l:result = []
+        for [l:uri, l:diagnostics] in items(s:diagnostics)
+            for [l:server_name, l:data] in items(l:diagnostics)
+                let l:result += lsp#ui#vim#utils#diagnostics_to_loc_list(l:data)
+            endfor
+        endfor
+        call setqflist(l:result)
+    endif
+
     call lsp#ui#vim#signs#set(a:server_name, a:data)
 endfunction
 
