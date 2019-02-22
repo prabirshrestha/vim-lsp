@@ -46,6 +46,7 @@ function! lsp#ui#vim#signs#next_error() abort
     endif
     let l:view = winsaveview()
     let l:next_line = 0
+    let l:next_col = 0
     for l:sign in l:signs
         if l:sign['lnum'] > l:view['lnum']
             \ || (l:sign['lnum'] == l:view['lnum'] && l:sign['col'] > l:view['col'] + 1)
@@ -84,6 +85,7 @@ function! lsp#ui#vim#signs#previous_error() abort
     endif
     let l:view = winsaveview()
     let l:next_line = 0
+    let l:next_col = 0
     let l:index = len(l:signs) - 1
     while l:index >= 0
         if l:signs[l:index]['lnum'] < l:view['lnum']
