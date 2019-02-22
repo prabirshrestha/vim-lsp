@@ -42,7 +42,7 @@ endfunction
 function! lsp#ui#vim#signs#next_error() abort
     let l:signs = s:get_signs(bufnr('%'))
     if empty(l:signs)
-        retur
+        return
     endif
     let l:view = winsaveview()
     let l:next_line = 0
@@ -109,6 +109,7 @@ endfunction
 
 " Set default sign text to handle case when user provides empty dict
 function! s:add_sign(sign_name, sign_default_text, sign_options) abort
+    if !s:supports_signs | return | endif
     let l:options = {
         \ 'text': get(a:sign_options, 'text', a:sign_default_text),
         \ 'texthl': a:sign_name . 'Text',
@@ -122,6 +123,7 @@ function! s:add_sign(sign_name, sign_default_text, sign_options) abort
 endfunction
 
 function! s:define_signs() abort
+    if !s:supports_signs | return | endif
     " let vim handle errors/duplicate instead of us maintaining the state
     call s:add_sign('LspError', 'E>', g:lsp_signs_error)
     call s:add_sign('LspWarning', 'W>', g:lsp_signs_warning)
@@ -130,12 +132,13 @@ function! s:define_signs() abort
 endfunction
 
 function! s:get_signs(bufnr) abort
+    if !s:supports_signs | return [] | endif
     let l:signs = sign_getplaced(a:bufnr, { 'group': '*' })
     return !empty(l:signs) ? l:signs[0]['signs'] : []
 endfunction
 
 function! lsp#ui#vim#signs#disable() abort
-    if s:enabled && s:supports_signs
+    if s:enabled
         " TODO: clear all vim_lsp signs
         call s:undefine_signs()
         let s:enabled = 0
@@ -144,6 +147,7 @@ function! lsp#ui#vim#signs#disable() abort
 endfunction
 
 function! s:undefine_signs() abort
+    if !s:supports_signs | return | endif
     call sign_undefine('LspError')
     call sign_undefine('LspWarning')
     call sign_undefine('LspInformation')
@@ -151,10 +155,8 @@ function! s:undefine_signs() abort
 endfunction
 
 function! lsp#ui#vim#signs#set(server_name, data) abort
-    " will always replace existing set
-    if !s:enabled
-        return
-    endif
+    if !s:supports_signs | return | endif
+    if !s:enabled | return | endif
 
     if lsp#client#is_error(a:data['response'])
         return
@@ -165,11 +167,13 @@ function! lsp#ui#vim#signs#set(server_name, data) abort
 
     let l:path = lsp#utils#uri_to_path(l:uri)
 
+    " will always replace existing set
     call s:clear_signs(a:server_name, l:path)
     call s:place_signs(a:server_name, l:path, l:diagnostics)
 endfunction
 
 function! s:clear_signs(server_name, path) abort
+    if !s:supports_signs | return | endif
     let l:sign_group = s:get_sign_group(a:server_name)
     call sign_unplace(l:sign_group, { 'buffer': a:path })
 endfunction
@@ -179,6 +183,8 @@ function! s:get_sign_group(server_name) abort
 endfunction
 
 function! s:place_signs(server_name, path, diagnostics) abort
+    if !s:supports_signs | return | endif
+
     let l:sign_group = s:get_sign_group(a:server_name)
 
     if !empty(a:diagnostics) && bufnr(a:path) >= 0
