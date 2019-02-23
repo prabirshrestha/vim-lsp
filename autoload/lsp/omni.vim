@@ -224,7 +224,7 @@ augroup lsp_completion_item_text_edit
     autocmd CompleteDone * call <SID>apply_text_edit()
 augroup END
 
-function! s:apply_text_edit()
+function! s:apply_text_edit() abort
     " textEdit support function(callin from CompleteDone).
     "
     " expected user_data structure:
@@ -240,7 +240,7 @@ function! s:apply_text_edit()
     endif
 
     " completion faild or not select complete item
-    if empty(v:completed_item) || v:completed_item['word'] == ''
+    if empty(v:completed_item) || v:completed_item['word'] ==# ''
         return
     endif
 
@@ -271,7 +271,7 @@ function! s:apply_text_edit()
     call cursor(l:line, l:col + l:new_text_length)
 endfunction
 
-function! s:expand_range(text_edit, expand_length)
+function! s:expand_range(text_edit, expand_length) abort
     let expanded_text_edit = a:text_edit
     let l:expanded_text_edit['range']['end']['character'] += a:expand_length
 
