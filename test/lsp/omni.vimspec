@@ -15,7 +15,8 @@ Describe lsp#omni
             \ 'icase': 1,
             \ 'dup': 1,
             \ 'kind': 'function',
-            \ 'menu': 'my-detail'
+            \ 'menu': 'my-detail',
+            \ 'user_data': '{}'
             \}
             let got = lsp#omni#get_vim_completion_item(item)
 
