@@ -32,6 +32,8 @@ let s:completion_status_success = 'success'
 let s:completion_status_failed = 'failed'
 let s:completion_status_pending = 'pending'
 
+let s:completion_type = 'vim-lsp/textEdit'
+
 " }}}
 
 " completion state
@@ -182,6 +184,18 @@ function! lsp#omni#get_vim_completion_item(item, ...) abort
         let l:word = s:remove_typed_part(l:word)
     endif
     let l:kind = lsp#omni#get_kind_text(a:item)
+
+    " add user_data in completion item
+    if g:lsp_text_edit_enabled && has_key(a:item, 'textEdit')
+        let l:text_edit = a:item['textEdit']
+        let l:user_data = {
+                    \ 'type': s:completion_type,
+                    \ 'content': l:text_edit
+                    \ }
+    else
+        let l:user_data = {}
+    endif
+
     let l:completion = {
                 \ 'word': l:word,
                 \ 'abbr': l:abbr,
@@ -189,7 +203,8 @@ function! lsp#omni#get_vim_completion_item(item, ...) abort
                 \ 'info': '',
                 \ 'icase': 1,
                 \ 'dup': 1,
-                \ 'kind': l:kind }
+                \ 'kind': l:kind,
+                \ 'user_data': string(l:user_data)}
 
     if has_key(a:item, 'detail') && !empty(a:item['detail'])
         let l:completion['menu'] = a:item['detail']
@@ -202,6 +217,65 @@ function! lsp#omni#get_vim_completion_item(item, ...) abort
     endif
 
     return l:completion
+endfunction
+
+augroup lsp_completion_item_text_edit
+    autocmd!
+    autocmd CompleteDone * call <SID>apply_text_edit()
+augroup END
+
+function! s:apply_text_edit()
+    " textEdit support function(callin from CompleteDone).
+    "
+    " expected user_data structure:
+    "     v:completed_item['user_data']: {
+    "       'type": 'vim-lsp/textEdit',
+    "       'content': {
+    "         'range': { ...(snip) },
+    "         'newText': 'yyy'
+    "        },
+    "     }
+    if !g:lsp_text_edit_enabled
+        return
+    endif
+
+    " completion faild or not select complete item
+    if empty(v:completed_item) || v:completed_item['word'] == ''
+        return
+    endif
+
+    " check user_data
+    if !has_key(v:completed_item, 'user_data') || empty(v:completed_item['user_data'])
+        return
+    endif
+
+    " check type
+    let l:user_data = eval(v:completed_item['user_data'])
+    if l:user_data['type'] != s:completion_type
+        return
+    endif
+
+    " expand textEdit range, for omni complet inserted text.
+    let l:text_edit = l:user_data['content']
+    let l:expanded_text_edit = s:expand_range(l:text_edit, len(v:completed_item['word']))
+
+    " apply textEdit
+    call lsp#utils#text_edit#apply_text_edits(fnamemodify(expand('%'), ':p'), [l:expanded_text_edit])
+
+    " move to end of newText
+    " TODO: add user definition cursor position mechanism
+    let l:start = l:text_edit['range']['start']
+    let l:line = l:start['line'] + 1
+    let l:col = l:start['character']
+    let l:new_text_length = len(l:text_edit['newText']) + 1
+    call cursor(l:line, l:col + l:new_text_length)
+endfunction
+
+function! s:expand_range(text_edit, expand_length)
+    let expanded_text_edit = a:text_edit
+    let l:expanded_text_edit['range']['end']['character'] += a:expand_length
+
+    return l:expanded_text_edit
 endfunction
 
 " }}}
