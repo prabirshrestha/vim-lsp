@@ -46,12 +46,12 @@ function! lsp#ui#vim#signs#next_error() abort
     endif
     let l:view = winsaveview()
     let l:next_line = 0
-    let l:next_col = 0
+    " let l:next_col = 0
     for l:sign in l:signs
         if l:sign['lnum'] > l:view['lnum']
-            \ || (l:sign['lnum'] == l:view['lnum'] && l:sign['col'] > l:view['col'] + 1)
+            " \ || (l:sign['lnum'] == l:view['lnum'] && l:sign['col'] > l:view['col'] + 1)
             let l:next_line = l:sign['lnum']
-            let l:next_col = l:sign['col'] - 1
+            " let l:next_col = l:sign['col'] - 1
             break
         endif
     endfor
@@ -59,11 +59,11 @@ function! lsp#ui#vim#signs#next_error() abort
     if l:next_line == 0
         " Wrap to start
         let l:next_line = l:signs[0]['lnum']
-        let l:next_col = l:signs[0]['col'] - 1
+        " let l:next_col = l:signs[0]['col'] - 1
     endif
 
     let l:view['lnum'] = l:next_line
-    let l:view['col'] = l:next_col
+    " let l:view['col'] = l:next_col
     let l:view['topline'] = 1
     let l:height = winheight(0)
     let totalnum = line('$')
@@ -85,13 +85,13 @@ function! lsp#ui#vim#signs#previous_error() abort
     endif
     let l:view = winsaveview()
     let l:next_line = 0
-    let l:next_col = 0
+    " let l:next_col = 0
     let l:index = len(l:signs) - 1
     while l:index >= 0
         if l:signs[l:index]['lnum'] < l:view['lnum']
-            \ || (l:signs[l:index]['lnum'] == l:view['lnum'] && l:signs[l:index]['col'] > l:view['col'] + 1)
+            " \ || (l:signs[l:index]['lnum'] == l:view['lnum'] && l:signs[l:index]['col'] > l:view['col'] + 1)
             let l:next_line = l:signs[l:index]['lnum']
-            let l:next_col = l:signs[l:index]['col'] - 1
+            " let l:next_col = l:signs[l:index]['col'] - 1
             break
         endif
         let l:index = l:index - 1
@@ -100,11 +100,11 @@ function! lsp#ui#vim#signs#previous_error() abort
     if l:next_line == 0
         " Wrap to end
         let l:next_line = l:signs[-1]['lnum']
-        let l:next_col = l:signs[-1]['col'] - 1
+        " let l:next_col = l:signs[-1]['col'] - 1
     endif
 
     let l:view['lnum'] = l:next_line
-    let l:view['col'] = l:next_col
+    " let l:view['col'] = l:next_col
     let l:view['topline'] = 1
     let l:height = winheight(0)
     let totalnum = line('$')
