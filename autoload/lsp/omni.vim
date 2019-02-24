@@ -251,7 +251,7 @@ function! s:apply_text_edit() abort
 
     " check type
     let l:user_data = eval(v:completed_item['user_data'])
-    if l:user_data['type'] != s:completion_type
+    if l:user_data['type'] !=# s:completion_type
         return
     endif
 
