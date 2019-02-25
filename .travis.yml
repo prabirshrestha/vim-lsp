@@ -27,10 +27,6 @@ matrix:
           dist: trusty
           python: "3.6"
           env: VIM_TYPE=neovim VIM_VERSION=0.3.1
-        - os: linux
-          dist: trusty
-          python: "3.6"
-          env: VIM_TYPE=vim VIM_VERSION=default
         - os: windows
           language: shell
           env: VIM_TYPE=neovim VIM_VERSION=0.3.1
