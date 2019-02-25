@@ -15,7 +15,7 @@ function! lsp#utils#diff#compute(old, new) abort
   let l:length = s:Length(a:old, l:start_line, l:start_char, l:end_line, l:end_char)
 
   let l:adj_end_line = len(a:old) + l:end_line
-  let l:adj_end_char = l:end_line == 0 ? 0 : s:count_utf16_code_units(a:old[l:end_line]) + l:end_char + 1
+  let l:adj_end_char = l:end_line == 0 ? 0 : lsp#utils#count_utf16_code_units(a:old[l:end_line]) + l:end_char + 1
 
   let l:result = { 'range': {'start': {'line': l:start_line, 'character': l:start_char},
       \  'end': {'line': l:adj_end_line, 'character': l:adj_end_char}},
@@ -102,23 +102,17 @@ function! s:Length(lines, start_line, start_char, end_line, end_char)
   if l:adj_end_line >= len(a:lines)
     let l:adj_end_char = a:end_char - 1
   else
-    let l:adj_end_char = s:count_utf16_code_units(a:lines[l:adj_end_line]) + a:end_char
+    let l:adj_end_char = lsp#utils#count_utf16_code_units(a:lines[l:adj_end_line]) + a:end_char
   endif
   if a:start_line == l:adj_end_line
     return l:adj_end_char - a:start_char + 1
   endif
-  let l:result = s:count_utf16_code_units(a:lines[a:start_line]) - a:start_char + 1
+  let l:result = lsp#utils#count_utf16_code_units(a:lines[a:start_line]) - a:start_char + 1
   let l:line = a:start_line + 1
   while l:line < l:adj_end_line
-    let l:result += s:count_utf16_code_units(a:lines[l:line]) + 1
+    let l:result += lsp#utils#count_utf16_code_units(a:lines[l:line]) + 1
     let l:line += 1
   endwhile
   let l:result += l:adj_end_char + 1
   return l:result
-endfunction
-
-function! s:count_utf16_code_units(str) abort
-  let l:rs = split(a:str, '\zs')
-  let l:len = len(l:rs)
-  return l:len + count(l:rs, 'char2nr(v:val)>=0x10000')
 endfunction
