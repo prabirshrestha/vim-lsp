@@ -405,24 +405,23 @@ function! s:ensure_init(buf, server_name, cb) abort
         let l:capabilities = call(g:Lsp_get_supported_capabilities, [server_info])
     endif
 
+    let l:request = {
+    \   'method': 'initialize',
+    \   'params': {
+    \     'capabilities': l:capabilities,
+    \     'rootUri': l:root_uri,
+    \     'rootPath': lsp#utils#uri_to_path(l:root_uri),
+    \     'trace': 'off',
+    \   },
+    \ }
+
     if has_key(l:server_info, 'initialization_options')
-        let l:initialization_options = l:server_info['initialization_options']
-    else
-        let l:initialization_options = {}
+        let l:request['initialization_options'] = l:server_info['initialization_options']
     endif
 
     let l:server['init_callbacks'] = [a:cb]
 
-    call s:send_request(a:server_name, {
-        \ 'method': 'initialize',
-        \ 'params': {
-        \   'capabilities': l:capabilities,
-        \   'rootUri': l:root_uri,
-        \   'rootPath': lsp#utils#uri_to_path(l:root_uri),
-        \   'trace': 'off',
-        \   'initializationOptions': l:initialization_options,
-        \ },
-        \ })
+    call s:send_request(a:server_name, l:request)
 endfunction
 
 function! s:ensure_conf(buf, server_name, cb) abort
@@ -610,9 +609,11 @@ function! s:handle_initialize(server_name, data) abort
     if !lsp#client#is_error(l:response)
         let l:server['init_result'] = l:response
     else
-      let l:server['failed'] = l:response['error']
-      call lsp#utils#error('Failed to initialize ' . a:server_name . ' with error ' . l:response['error']['code'] . ': ' . l:response['error']['message'])
+        let l:server['failed'] = l:response['error']
+        call lsp#utils#error('Failed to initialize ' . a:server_name . ' with error ' . l:response['error']['code'] . ': ' . l:response['error']['message'])
     endif
+
+    call s:send_notification(a:server_name, { 'method': 'initialized', 'params': {} })
 
     for l:Init_callback in l:init_callbacks
         call l:Init_callback(a:data)
