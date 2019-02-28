@@ -45,6 +45,14 @@ vim-lsp supports incremental changes of Language Server Protocol.
 
 Refer to docs on configuring omnifunc or [asyncomplete.vim](https://github.com/prabirshrestha/asyncomplete.vim).
 
+## Snippets
+vim-lsp does not support snippets by default. If you want snippet integration, you will first have to install a third-party snippet plugin and a plugin that integrates it in vim-lsp.
+At the moment, you have two options:
+1. [UltiSnips](https://github.com/SirVer/ultisnips) together with [vim-lsp-ultisnips](https://github.com/thomasfaingnaert/vim-lsp-ultisnips)
+2. [neosnippet.vim](https://github.com/Shougo/neosnippet.vim) together with [vim-lsp-neosnippet](https://github.com/thomasfaingnaert/vim-lsp-neosnippet)
+
+For more information, refer to the readme and documentation of the respective plugins.
+
 ## Supported commands
 
 **Note:**
