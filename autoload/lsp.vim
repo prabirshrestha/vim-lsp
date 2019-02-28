@@ -357,7 +357,7 @@ function! s:ensure_start(buf, server_name, cb) abort
     endif
 endfunction
 
-function! lsp#default_get_supported_capabilities() abort
+function! lsp#default_get_supported_capabilities(server_info) abort
     return {
     \   'workspace': {
     \       'applyEdit ': v:true
@@ -402,7 +402,7 @@ function! s:ensure_init(buf, server_name, cb) abort
     if has_key(l:server_info, 'capabilities')
         let l:capabilities = l:server_info['capabilities']
     else
-        let l:capabilities = call(g:Lsp_get_supported_capabilities, [])
+        let l:capabilities = call(g:Lsp_get_supported_capabilities, [server_info])
     endif
 
     if has_key(l:server_info, 'initialization_options')
