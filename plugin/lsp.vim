@@ -34,8 +34,8 @@ command! LspDefinition call lsp#ui#vim#definition()
 command! LspDocumentSymbol call lsp#ui#vim#document_symbol()
 command! LspDocumentDiagnostics call lsp#ui#vim#diagnostics#document_diagnostics()
 command! -nargs=? -complete=customlist,lsp#utils#empty_complete LspHover call lsp#ui#vim#hover#get_hover_under_cursor()
-command! LspNextError call lsp#ui#vim#signs#next_error()
-command! LspPreviousError call lsp#ui#vim#signs#previous_error()
+command! LspNextError call lsp#ui#vim#diagnostics#next_error()
+command! LspPreviousError call lsp#ui#vim#diagnostics#previous_error()
 command! LspReferences call lsp#ui#vim#references()
 command! LspRename call lsp#ui#vim#rename()
 command! LspTypeDefinition call lsp#ui#vim#type_definition()
@@ -54,8 +54,8 @@ nnoremap <plug>(lsp-definition) :<c-u>call lsp#ui#vim#definition()<cr>
 nnoremap <plug>(lsp-document-symbol) :<c-u>call lsp#ui#vim#document_symbol()<cr>
 nnoremap <plug>(lsp-document-diagnostics) :<c-u>call lsp#ui#vim#diagnostics#document_diagnostics()<cr>
 nnoremap <plug>(lsp-hover) :<c-u>call lsp#ui#vim#hover#get_hover_under_cursor()<cr>
-nnoremap <plug>(lsp-next-error) :<c-u>call lsp#ui#vim#signs#next_error()<cr>
-nnoremap <plug>(lsp-previous-error) :<c-u>call lsp#ui#vim#signs#previous_error()<cr>
+nnoremap <plug>(lsp-next-error) :<c-u>call lsp#ui#vim#diagnostics#next_error()<cr>
+nnoremap <plug>(lsp-previous-error) :<c-u>call lsp#ui#vim#diagnostics#previous_error()<cr>
 nnoremap <plug>(lsp-references) :<c-u>call lsp#ui#vim#references()<cr>
 nnoremap <plug>(lsp-rename) :<c-u>call lsp#ui#vim#rename()<cr>
 nnoremap <plug>(lsp-type-definition) :<c-u>call lsp#ui#vim#type_definition()<cr>

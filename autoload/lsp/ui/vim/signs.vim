@@ -39,86 +39,6 @@ function! lsp#ui#vim#signs#enable() abort
     endif
 endfunction
 
-function! lsp#ui#vim#signs#next_error() abort
-    let l:signs = filter(copy(s:get_signs(bufnr('%'))), {i,sign -> sign['name'] ==# 'LspError' })
-    if empty(l:signs)
-        return
-    endif
-    let l:view = winsaveview()
-    let l:next_line = 0
-    " let l:next_col = 0
-    for l:sign in l:signs
-        if l:sign['lnum'] > l:view['lnum']
-            " \ || (l:sign['lnum'] == l:view['lnum'] && l:sign['col'] > l:view['col'] + 1)
-            let l:next_line = l:sign['lnum']
-            " let l:next_col = l:sign['col'] - 1
-            break
-        endif
-    endfor
-
-    if l:next_line == 0
-        " Wrap to start
-        let l:next_line = l:signs[0]['lnum']
-        " let l:next_col = l:signs[0]['col'] - 1
-    endif
-
-    let l:view['lnum'] = l:next_line
-    " let l:view['col'] = l:next_col
-    let l:view['topline'] = 1
-    let l:height = winheight(0)
-    let totalnum = line('$')
-    if totalnum > l:height
-        let l:half = l:height / 2
-        if l:totalnum - l:half < l:view['lnum']
-            let l:view['topline'] = l:totalnum - l:height + 1
-        else
-            let l:view['topline'] = l:view['lnum'] - l:half
-        endif
-    endif
-    call winrestview(l:view)
-endfunction
-
-function! lsp#ui#vim#signs#previous_error() abort
-    let l:signs = filter(copy(s:get_signs(bufnr('%'))), {i,sign -> sign['name'] ==# 'LspError' })
-    if empty(l:signs)
-        return
-    endif
-    let l:view = winsaveview()
-    let l:next_line = 0
-    " let l:next_col = 0
-    let l:index = len(l:signs) - 1
-    while l:index >= 0
-        if l:signs[l:index]['lnum'] < l:view['lnum']
-            " \ || (l:signs[l:index]['lnum'] == l:view['lnum'] && l:signs[l:index]['col'] > l:view['col'] + 1)
-            let l:next_line = l:signs[l:index]['lnum']
-            " let l:next_col = l:signs[l:index]['col'] - 1
-            break
-        endif
-        let l:index = l:index - 1
-    endwhile
-
-    if l:next_line == 0
-        " Wrap to end
-        let l:next_line = l:signs[-1]['lnum']
-        " let l:next_col = l:signs[-1]['col'] - 1
-    endif
-
-    let l:view['lnum'] = l:next_line
-    " let l:view['col'] = l:next_col
-    let l:view['topline'] = 1
-    let l:height = winheight(0)
-    let totalnum = line('$')
-    if totalnum > l:height
-        let l:half = l:height / 2
-        if l:totalnum - l:half < l:view['lnum']
-            let l:view['topline'] = l:totalnum - l:height + 1
-        else
-            let l:view['topline'] = l:view['lnum'] - l:half
-        endif
-    endif
-    call winrestview(l:view)
-endfunction
-
 " Set default sign text to handle case when user provides empty dict
 function! s:add_sign(sign_name, sign_default_text, sign_options) abort
     if !s:supports_signs | return | endif
@@ -141,12 +61,6 @@ function! s:define_signs() abort
     call s:add_sign('LspWarning', 'W>', g:lsp_signs_warning)
     call s:add_sign('LspInformation', 'I>', g:lsp_signs_information)
     call s:add_sign('LspHint', 'H>', g:lsp_signs_hint)
-endfunction
-
-function! s:get_signs(bufnr) abort
-    if !s:supports_signs | return [] | endif
-    let l:signs = sign_getplaced(a:bufnr, { 'group': '*' })
-    return !empty(l:signs) ? l:signs[0]['signs'] : []
 endfunction
 
 function! lsp#ui#vim#signs#disable() abort
@@ -204,11 +118,10 @@ function! s:place_signs(server_name, path, diagnostics) abort
             let l:line = l:item['range']['start']['line'] + 1
             let l:character = l:item['range']['start']['character'] + 1
 
-            let l:name = 'LspError'
             if has_key(l:item, 'severity') && !empty(l:item['severity'])
                 let l:sign_name = get(s:severity_sign_names_mapping, l:item['severity'], 'LspError')
                 " pass 0 and let vim generate sign id
-                let l:sign_id = sign_place(0, l:sign_group, l:sign_name, a:path, { 'lnum': l:line, 'col': l:character })
+                let l:sign_id = sign_place(0, l:sign_group, l:sign_name, a:path, { 'lnum': l:line })
                 call lsp#log('add signs', l:sign_id)
             endif
         endfor
