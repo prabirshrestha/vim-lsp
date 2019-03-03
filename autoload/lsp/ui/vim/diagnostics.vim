@@ -202,7 +202,7 @@ function! s:get_all_buffer_diagnostics() abort
     return l:all_diagnostics
 endfunction
 
-function! s:compare_diagnostics(d1, d2)
+function! s:compare_diagnostics(d1, d2) abort
     let l:range1 = a:d1['range']
     let l:line1 = l:range1['start']['line'] + 1
     let l:col1 = l:range1['start']['character'] + 1
