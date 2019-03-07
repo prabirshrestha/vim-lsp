@@ -175,7 +175,9 @@ endfunction
 function! s:clear_signs(server_name, path) abort
     if !s:supports_signs | return | endif
     let l:sign_group = s:get_sign_group(a:server_name)
-    call sign_unplace(l:sign_group, { 'buffer': a:path })
+    if bufloaded(a:path)
+        call sign_unplace(l:sign_group, { 'buffer': a:path })
+    endif
 endfunction
 
 function! s:get_sign_group(server_name) abort
