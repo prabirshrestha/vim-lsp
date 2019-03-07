@@ -191,7 +191,6 @@ function! s:place_signs(server_name, path, diagnostics) abort
         for l:item in a:diagnostics
             let l:line = l:item['range']['start']['line'] + 1
 
-            let l:name = 'LspError'
             if has_key(l:item, 'severity') && !empty(l:item['severity'])
                 let l:sign_name = get(s:severity_sign_names_mapping, l:item['severity'], 'LspError')
                 " pass 0 and let vim generate sign id
