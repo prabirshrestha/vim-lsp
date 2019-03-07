@@ -161,6 +161,20 @@ g:lsp_signs_enabled                                   *g:lsp_signs_enabled*
 	let g:lsp_signs_enabled = 1
 	let g:lsp_signs_enabled = 0
 
+g:lsp_virtual_text_enabled                            *g:lsp_virtual_text_enabled*
+    Type: |Number|
+    Default: `1` for neovim 0.3+
+
+    Enables virtual text to be shown next to diagnostic errors. Requires
+    NeoVim with version 0.3 or newer.
+
+    Example:
+>
+	let g:lsp_virtual_text_enabled = 1
+	let g:lsp_virtual_text_enabled = 0
+<
+
+
 g:lsp_use_event_queue                               *g:lsp_use_event_queue*
     Type: |Number|
     Default: `1` for neovim or vim with patch-8.1.0889

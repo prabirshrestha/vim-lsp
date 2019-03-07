@@ -104,6 +104,19 @@ highlight link LspErrorText GruvboxRedSign " requires gruvbox
 highlight clear LspWarningLine
 ```
 
+### Virtual text
+
+In NeoVim 0.3 or newer you can use virtual text feature (enabled by default).
+You can disable it by adding
+
+```viml
+let g:lsp_virtual_text_enabled = 0
+```
+
+To your configuration.
+
+Virtual text will use the same highlight groups as signs feature.
+
 ## Debugging
 
 In order to enable file logging set `g:lsp_log_file`.
