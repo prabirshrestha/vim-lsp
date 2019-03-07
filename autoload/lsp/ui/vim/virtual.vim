@@ -1,4 +1,4 @@
-let s:supports_vt = has('nvim') && exists('*nvim_buf_set_virtual_text')
+let s:supports_vt = exists('*nvim_buf_set_virtual_text')
 let s:enabled = 0
 let s:severity_sign_names_mapping = {
     \ 1: 'LspError',
@@ -77,7 +77,7 @@ function! s:place_virtual(server_name, path, diagnostics) abort
 
     if !empty(a:diagnostics) && bufnr(a:path) >= 0
         for l:item in a:diagnostics
-            let l:line = l:item['range']['start']['line'] + 1
+            let l:line = l:item['range']['start']['line']
 
             let l:name = get(s:severity_sign_names_mapping, l:item['severity'], 'LspError')
             call nvim_buf_set_virtual_text(l:bufnr, l:ns, l:line, [[l:item['message'], l:name]], {})
