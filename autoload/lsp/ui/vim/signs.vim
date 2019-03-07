@@ -173,7 +173,7 @@ function! lsp#ui#vim#signs#set(server_name, data) abort
 endfunction
 
 function! s:clear_signs(server_name, path) abort
-    if !s:supports_signs | return | endif
+    if !s:supports_signs || !bufloaded(a:path) | return | endif
     let l:sign_group = s:get_sign_group(a:server_name)
     call sign_unplace(l:sign_group, { 'buffer': a:path })
 endfunction
