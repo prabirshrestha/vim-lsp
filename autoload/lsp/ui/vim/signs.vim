@@ -120,10 +120,13 @@ function! s:place_signs(server_name, path, diagnostics) abort
 
             if has_key(l:item, 'severity') && !empty(l:item['severity'])
                 let l:sign_name = get(s:severity_sign_names_mapping, l:item['severity'], 'LspError')
-                " pass 0 and let vim generate sign id
-                let l:sign_id = sign_place(0, l:sign_group, l:sign_name, a:path, { 'lnum': l:line })
-                call lsp#log('add signs', l:sign_id)
+            else
+                " default to LspError if there is no severity
+                let l:sign_name = 'LspError'
             endif
+            " pass 0 and let vim generate sign id
+            let l:sign_id = sign_place(0, l:sign_group, l:sign_name, a:path, { 'lnum': l:line })
+            call lsp#log('add signs', l:sign_id)
         endfor
     endif
 endfunction
