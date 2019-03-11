@@ -407,8 +407,10 @@ function! s:handle_location(ctx, server, type, data) abort "ctx = {counter, list
                 normal! m'
                 let l:loc = a:ctx['list'][0]
                 let l:buffer = bufnr(l:loc['filename'])
-                if g:lsp_always_open_tabs
-                    let l:cmd = l:buffer ==# bufnr("%") ? 'b ' . l:buffer : 'tabedit ' . l:loc['filename']
+                if l:buffer ==# bufnr("%")
+                    let l:cmd = ''
+                elseif g:lsp_always_open_tabs
+                    let l:cmd = 'tabedit ' . l:loc['filename']
                 elseif &modified && !&hidden
                     let l:cmd = l:buffer !=# -1 ? 'sb ' . l:buffer : 'split ' . l:loc['filename']
                 else
