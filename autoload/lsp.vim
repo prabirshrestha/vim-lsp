@@ -169,6 +169,7 @@ endfunction
 
 function! s:on_text_document_did_open() abort
     let l:buf = bufnr('%')
+    if getbufvar(l:buf, '&buftype') ==# 'terminal' | return | endif
     call lsp#log('s:on_text_document_did_open()', l:buf, &filetype, getcwd(), lsp#utils#get_buffer_uri(l:buf))
     for l:server_name in lsp#get_whitelisted_servers(l:buf)
         call s:ensure_flush(l:buf, l:server_name, function('s:Noop'))
@@ -177,6 +178,7 @@ endfunction
 
 function! s:on_text_document_did_save() abort
     let l:buf = bufnr('%')
+    if getbufvar(l:buf, '&buftype') ==# 'terminal' | return | endif
     call lsp#log('s:on_text_document_did_save()', l:buf)
     for l:server_name in lsp#get_whitelisted_servers(l:buf)
         call s:ensure_flush(l:buf, l:server_name, {result->s:call_did_save(l:buf, l:server_name, result, function('s:Noop'))})
@@ -185,11 +187,14 @@ endfunction
 
 function! s:on_text_document_did_change() abort
     let l:buf = bufnr('%')
+    if getbufvar(l:buf, '&buftype') ==# 'terminal' | return | endif
     call lsp#log('s:on_text_document_did_change()', l:buf)
     call s:add_didchange_queue(l:buf)
 endfunction
 
 function! s:on_cursor_moved() abort
+    let l:buf = bufnr('%')
+    if getbufvar(l:buf, '&buftype') ==# 'terminal' | return | endif
     call lsp#ui#vim#diagnostics#echo#cursor_moved()
 endfunction
 
@@ -233,6 +238,7 @@ endfunction
 
 function! s:on_text_document_did_close() abort
     let l:buf = bufnr('%')
+    if getbufvar(l:buf, '&buftype') ==# 'terminal' | return | endif
     call lsp#log('s:on_text_document_did_close()', l:buf)
 endfunction
 
