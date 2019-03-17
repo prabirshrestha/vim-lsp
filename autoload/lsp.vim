@@ -397,7 +397,7 @@ function! s:ensure_init(buf, server_name, cb) abort
     else
         let l:capabilities = {
         \   'workspace': {
-        \       'applyEdit ': v:true
+        \       'applyEdit': v:true
         \   }
         \ }
     endif
