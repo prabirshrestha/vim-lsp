@@ -215,11 +215,11 @@ function! s:call_did_save(buf, server_name, result, cb) abort
     let l:buffer_info = l:buffers[l:path]
 
     let l:params = {
-        \ 'textDocument': s:get_text_document_identifier(a:buf, l:buffer_info),
+        \ 'textDocument': s:get_text_document_identifier(a:buf),
         \ }
 
     if l:did_save_options['includeText']
-        let l:params['text'] = s:get_text_document_text(a:buf, a:server_name)
+        let l:params['text'] = s:get_text_document_text(a:buf)
     endif
     call s:send_notification(a:server_name, {
         \ 'method': 'textDocument/didSave',
@@ -488,7 +488,7 @@ function! s:ensure_changed(buf, server_name, cb) abort
     call s:send_notification(a:server_name, {
         \ 'method': 'textDocument/didChange',
         \ 'params': {
-        \   'textDocument': s:get_text_document_identifier(a:buf, l:buffer_info),
+        \   'textDocument': s:get_versioned_text_document_identifier(a:buf, l:buffer_info),
         \   'contentChanges': s:text_changes(a:buf, a:server_name),
         \ }
         \ })
@@ -689,7 +689,11 @@ function! lsp#get_position(...) abort
     return { 'line': line('.') - 1, 'character': col('.') -1 }
 endfunction
 
-function! s:get_text_document_identifier(buf, buffer_info) abort
+function! s:get_text_document_identifier(buf) abort
+    return { 'uri': lsp#utils#get_buffer_uri(a:buf) }
+endfunction
+
+function! s:get_versioned_text_document_identifier(buf, buffer_info) abort
     return {
         \ 'uri': lsp#utils#get_buffer_uri(a:buf),
         \ 'version': a:buffer_info['version'],
