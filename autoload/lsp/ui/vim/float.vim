@@ -21,6 +21,10 @@ function! s:reset()
 	call nvim_buf_set_option(s:curbuf, 'modifiable', v:true)
 endfunction
 
+function! s:remove_spec_char(data) abort
+	return substitute(a:data, '\%x00', "", "g")
+endfunction
+
 function! lsp#ui#vim#float#float_open(data)
 	if s:curbuf ==# 0
 		let s:curbuf = nvim_create_buf(v:false, v:true)
@@ -40,17 +44,17 @@ function! s:convert_to_data_buf(data)
 
         return
     elseif type(a:data) == type('')
-		call add(s:data_buf, a:data)
+		call add(s:data_buf, s:remove_spec_char(a:data))
 
         return
     elseif type(a:data) == type({}) && has_key(a:data, 'language')
         call add(s:data_buf, '```'.a:data.language)
-        call add(s:data_buf, a:data.value)
+        call add(s:data_buf, s:remove_spec_char(a:data.value))
         call add(s:data_buf, '```')
 
         return
     elseif type(a:data) == type({}) && has_key(a:data, 'kind')
-        call add(s:data_buf, a:data.value)
+        call add(s:data_buf, s:remove_spec_char(a:data.value))
 
         return
     endif
