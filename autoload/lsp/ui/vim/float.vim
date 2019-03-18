@@ -22,7 +22,7 @@ function! s:reset()
 endfunction
 
 function! s:remove_spec_char(data) abort
-	return substitute(a:data, '\%x00', "", "g")
+	return substitute(a:data, '\%x00', " ", "g")
 endfunction
 
 function! lsp#ui#vim#float#float_open(data)
