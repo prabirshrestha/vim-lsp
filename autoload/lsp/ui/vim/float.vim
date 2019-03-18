@@ -78,8 +78,9 @@ function! s:open_float_win()
 		let l:fcol = l:ccol - l:fw
 	endif
 
-    let l:opts = {'relative': 'win', 'col': l:fcol, 'row': l:fline, 'anchor': 'NW'}
-    let s:float_win =  nvim_open_win(s:curbuf, v:true, l:fw, l:fh, l:opts)
+    let l:opts = {'relative': 'win', 'col': l:fcol, 'row': l:fline, 'height': l:fh, 'width': l:fw, 'anchor': 'NW'}
+    "let s:float_win =  nvim_open_win(s:curbuf, v:true, l:fw, l:fh, l:opts)
+    let s:float_win =  nvim_open_win(s:curbuf, v:true, l:opts)
 	map <silent> <esc> :call <SID>float_close()<cr>
 endfunction
 
