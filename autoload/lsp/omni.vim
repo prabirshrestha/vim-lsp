@@ -32,7 +32,7 @@ let s:completion_status_success = 'success'
 let s:completion_status_failed = 'failed'
 let s:completion_status_pending = 'pending'
 
-let s:completion_type = 'vim-lsp/textEdit'
+let s:user_data_key = 'vim-lsp/textEdit'
 
 " }}}
 
@@ -185,17 +185,6 @@ function! lsp#omni#get_vim_completion_item(item, ...) abort
     endif
     let l:kind = lsp#omni#get_kind_text(a:item)
 
-    " add user_data in completion item
-    if g:lsp_text_edit_enabled && has_key(a:item, 'textEdit')
-        let l:text_edit = a:item['textEdit']
-        let l:user_data = {
-                    \ 'type': s:completion_type,
-                    \ 'content': l:text_edit
-                    \ }
-    else
-        let l:user_data = {}
-    endif
-
     let l:completion = {
                 \ 'word': l:word,
                 \ 'abbr': l:abbr,
@@ -203,8 +192,17 @@ function! lsp#omni#get_vim_completion_item(item, ...) abort
                 \ 'info': '',
                 \ 'icase': 1,
                 \ 'dup': 1,
-                \ 'kind': l:kind,
-                \ 'user_data': string(l:user_data)}
+                \ 'kind': l:kind}
+
+    " add user_data in completion item, if supported user_data.
+    if g:lsp_text_edit_enabled && has_key(a:item, 'textEdit')
+        let l:text_edit = a:item['textEdit']
+        let l:user_data = {
+                \ s:user_data_key : l:text_edit
+                \ }
+
+        let l:completion['user_data'] = string(l:user_data)
+    endif
 
     if has_key(a:item, 'detail') && !empty(a:item['detail'])
         let l:completion['menu'] = a:item['detail']
@@ -229,8 +227,7 @@ function! s:apply_text_edit() abort
     "
     " expected user_data structure:
     "     v:completed_item['user_data']: {
-    "       'type": 'vim-lsp/textEdit',
-    "       'content': {
+    "       'vim-lsp/textEdit': {
     "         'range': { ...(snip) },
     "         'newText': 'yyy'
     "        },
@@ -245,18 +242,18 @@ function! s:apply_text_edit() abort
     endif
 
     " check user_data
-    if !has_key(v:completed_item, 'user_data') || empty(v:completed_item['user_data'])
+    if !has_key(v:completed_item, 'user_data')
         return
     endif
 
-    " check type
+    " check user_data['vim-lsp/textEdit']
     let l:user_data = eval(v:completed_item['user_data'])
-    if !has_key(l:user_data, 'type') || l:user_data['type'] !=# s:completion_type
+    if !has_key(l:user_data, s:user_data_key)
         return
     endif
 
     " expand textEdit range, for omni complet inserted text.
-    let l:text_edit = l:user_data['content']
+    let l:text_edit = l:user_data[s:user_data_key]
     let l:expanded_text_edit = s:expand_range(l:text_edit, len(v:completed_item['word']))
 
     " apply textEdit
