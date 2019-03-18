@@ -35,7 +35,11 @@ function! s:handle_hover(server, data) abort
     endif
 
     if !empty(a:data['response']['result']) && !empty(a:data['response']['result']['contents'])
-        call lsp#ui#vim#output#preview(a:data['response']['result']['contents'])
+		if g:lsp_hover_win == "preview"
+			call lsp#ui#vim#output#preview(a:data['response']['result']['contents'])
+		else
+			call lsp#ui#vim#float#float_open(a:data['response']['result']['contents'])
+		endif
         return
     else
         call lsp#utils#error('No hover information found')

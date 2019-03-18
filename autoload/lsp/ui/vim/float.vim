@@ -14,13 +14,46 @@ let s:is_load = 1
 
 let s:float_win = 0
 let s:curbuf = 0
+let s:data_buf = []
+
+function! s:reset()
+	let s:data_buf = []
+	call nvim_buf_set_option(s:curbuf, 'modifiable', v:true)
+endfunction
 
 function! lsp#ui#vim#float#float_open(data)
 	if s:curbuf ==# 0
 		let s:curbuf = nvim_create_buf(v:false, v:true)
 	endif
-    call nvim_buf_set_lines(s:curbuf, 0, -1, v:true, a:data)
+	call s:reset()
+	call s:convert_to_data_buf(a:data)
+    call nvim_buf_set_lines(s:curbuf, 0, -1, v:true, s:data_buf)
+	call nvim_buf_set_option(s:curbuf, 'modifiable', v:false)
 	call s:open_float_win()
+endfunction
+
+function! s:convert_to_data_buf(data)
+    if type(a:data) == type([])
+        for l:entry in a:data
+            call s:convert_to_data_buf(entry)
+        endfor
+
+        return
+    elseif type(a:data) == type('')
+		call add(s:data_buf, a:data)
+
+        return
+    elseif type(a:data) == type({}) && has_key(a:data, 'language')
+        call add(s:data_buf, '```'.a:data.language)
+        call add(s:data_buf, a:data.value)
+        call add(s:data_buf, '```')
+
+        return
+    elseif type(a:data) == type({}) && has_key(a:data, 'kind')
+        call add(s:data_buf, a:data.value)
+
+        return
+    endif
 endfunction
 
 function! s:open_float_win()
@@ -31,7 +64,7 @@ function! s:open_float_win()
 
 	let l:cline = winline() " cursor win line
 	let l:fline = 0 " float win start line
-	if l:cline <= l:fh
+	if l:cline + l:fh <= l:wh
 		let l:fline = l:cline
 	else
 		let l:fline = l:cline - l:fh - 1
@@ -39,10 +72,10 @@ function! s:open_float_win()
 
 	let l:ccol = wincol() " cursor win col
 	let l:fcol = 0 " float won start col
-	if l:ccol <= l:fw
-		let l:fcol = l:ccol
+	if l:ccol + l:fw <= l:ww
+		let l:fcol = l:ccol - 1
 	else
-		let l:fcol = l:ccol - l:fw - 1
+		let l:fcol = l:ccol - l:fw
 	endif
 
     let l:opts = {'relative': 'win', 'col': l:fcol, 'row': l:fline, 'anchor': 'NW'}
