@@ -474,7 +474,7 @@ function! s:handle_text_edit(server, last_req_id, type, data) abort
         return
     endif
 
-    call lsp#utils#buffer#apply_text_edits(a:data['request']['params']['textDocument']['uri'], a:data['response']['result'])
+    call lsp#utils#text_edit#apply_text_edits(a:data['request']['params']['textDocument']['uri'], a:data['response']['result'])
 
     echo 'Document formatted'
 endfunction
@@ -517,7 +517,7 @@ function! s:apply_workspace_edits(workspace_edits) abort
         let l:cur_buffer = bufnr('%')
         let l:view = winsaveview()
         for [l:uri, l:text_edits] in items(a:workspace_edits['changes'])
-            call lsp#utils#buffer#apply_text_edits(l:uri, l:text_edits)
+            call lsp#utils#text_edit#apply_text_edits(l:uri, l:text_edits)
         endfor
         if l:cur_buffer !=# bufnr('%')
             execute 'keepjumps keepalt b ' . l:cur_buffer
@@ -528,7 +528,7 @@ function! s:apply_workspace_edits(workspace_edits) abort
         let l:cur_buffer = bufnr('%')
         let l:view = winsaveview()
         for l:text_document_edit in a:workspace_edits['documentChanges']
-            call lsp#utils#buffer#apply_text_edits(l:text_document_edit['textDocument']['uri'], l:text_document_edit['edits'])
+            call lsp#utils#text_edit#apply_text_edits(l:text_document_edit['textDocument']['uri'], l:text_document_edit['edits'])
         endfor
         if l:cur_buffer !=# bufnr('%')
             execute 'keepjumps keepalt b ' . l:cur_buffer
