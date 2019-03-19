@@ -38,7 +38,7 @@ function! s:float_win_position() abort
 	let l:win_width = winwidth('.')
 	let l:max_text_width = l:win_width
 	if l:max_text_width > 12
-		let l:max_text_width = l:max_text_width - 6
+		let l:max_text_width = l:max_text_width - 3
 	endif
 
 	let l:max_width = 0
@@ -81,7 +81,8 @@ function! s:float_win_position() abort
 endfunction
 
 function! s:remove_spec_char(data) abort
-	return substitute(a:data, '\%x00', " ", "g")
+	"return substitute(a:data, '\%x00', " ", "g")
+	return split(a:data, '\%x00')
 endfunction
 
 function! lsp#ui#vim#float#float_open(data)
@@ -103,17 +104,17 @@ function! s:convert_to_data_buf(data)
 
         return
     elseif type(a:data) == type('')
-		call add(s:data_buf, s:remove_spec_char(a:data))
+		call extend(s:data_buf, s:remove_spec_char(a:data))
 
         return
     elseif type(a:data) == type({}) && has_key(a:data, 'language')
         call add(s:data_buf, '```'.a:data.language)
-        call add(s:data_buf, s:remove_spec_char(a:data.value))
+        call extend(s:data_buf, s:remove_spec_char(a:data.value))
         call add(s:data_buf, '```')
 
         return
     elseif type(a:data) == type({}) && has_key(a:data, 'kind')
-        call add(s:data_buf, s:remove_spec_char(a:data.value))
+        call extend(s:data_buf, s:remove_spec_char(a:data.value))
 
         return
     endif
