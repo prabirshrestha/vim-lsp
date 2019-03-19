@@ -32,6 +32,7 @@ let s:completion_status_success = 'success'
 let s:completion_status_failed = 'failed'
 let s:completion_status_pending = 'pending'
 
+let s:is_user_data_support = has('patch-8.0.1493')
 let s:user_data_key = 'vim-lsp/textEdit'
 
 " }}}
@@ -193,6 +194,13 @@ function! lsp#omni#get_vim_completion_item(item, ...) abort
                 \ 'icase': 1,
                 \ 'dup': 1,
                 \ 'kind': l:kind}
+
+    " check support user_data.
+    if !s:is_user_data_support && g:lsp_text_edit_enabled
+        echohl WarningMsg
+        echom 'textEdit support on omni complete requires Vim 8.0 patch 1493 or later(please check g:lsp_text_edit_enabled)'
+        echohl None
+    endif
 
     " add user_data in completion item, if supported user_data.
     if g:lsp_text_edit_enabled && has_key(a:item, 'textEdit')
