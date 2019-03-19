@@ -201,7 +201,7 @@ function! lsp#omni#get_vim_completion_item(item, ...) abort
                 \ s:user_data_key : l:text_edit
                 \ }
 
-        let l:completion['user_data'] = string(l:user_data)
+        let l:completion['user_data'] = json_encode(l:user_data)
     endif
 
     if has_key(a:item, 'detail') && !empty(a:item['detail'])
@@ -247,7 +247,7 @@ function! s:apply_text_edit() abort
     endif
 
     " check user_data['vim-lsp/textEdit']
-    let l:user_data = eval(v:completed_item['user_data'])
+    let l:user_data = json_decode(v:completed_item['user_data'])
     if !has_key(l:user_data, s:user_data_key)
         return
     endif
