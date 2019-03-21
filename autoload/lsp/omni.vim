@@ -196,10 +196,12 @@ function! lsp#omni#get_vim_completion_item(item, ...) abort
                 \ 'kind': l:kind}
 
     " check support user_data.
+    " if not support but g:lsp_text_edit_enabled enabled,
+    " then print information to user and add information to log file.
     if !s:is_user_data_support && g:lsp_text_edit_enabled
-        echohl WarningMsg
-        echom 'textEdit support on omni complete requires Vim 8.0 patch 1493 or later(please check g:lsp_text_edit_enabled)'
-        echohl None
+        let l:no_support_error_message = 'textEdit support on omni complete requires Vim 8.0 patch 1493 or later(please check g:lsp_text_edit_enabled)'
+        call lsp#utils#error(l:no_support_error_message)
+        call lsp#log(l:no_support_error_message)
     endif
 
     " add user_data in completion item, if supported user_data.
