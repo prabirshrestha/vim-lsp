@@ -21,7 +21,7 @@ let g:lsp_next_sign_id = get(g:, 'lsp_next_sign_id', 6999)
 let g:lsp_preview_keep_focus = get(g:, 'lsp_preview_keep_focus', 1)
 let g:lsp_use_event_queue = get(g:, 'lsp_use_event_queue', has('nvim') || has('patch-8.1.0889'))
 let g:lsp_insert_text_enabled= get(g:, 'lsp_insert_text_enabled', 1)
-let g:lsp_hover_win = get(g:, "hover_win", "float")
+let g:lsp_hover_ui = get(g:, 'lsp_hover_ui', ['float', 'preview'])
 
 if g:lsp_auto_enable
     augroup lsp_auto_enable

@@ -81,7 +81,6 @@ function! s:float_win_position() abort
 endfunction
 
 function! s:remove_spec_char(data) abort
-	"return substitute(a:data, '\%x00', " ", "g")
 	return split(a:data, '\%x00')
 endfunction
 

@@ -16,7 +16,7 @@ CONTENTS                                                  *vim-lsp-contents*
       g:lsp_insert_text_enabled   |g:lsp_insert_text_enabled|
       g:lsp_signs_enabled         |g:lsp_signs_enabled|
       g:lsp_use_event_queue       |g:lsp_use_event_queue|
-      g:lsp_hover_win 		  |g:lsp_hover_win|
+      g:lsp_hover_ui 		  |g:lsp_hover_ui|
     Functions			|vim-lsp-functions|
       enable                      |vim-lsp-enable|
       disable                     |vim-lsp-disable|
@@ -122,11 +122,11 @@ g:lsp_auto_enable                                       *g:lsp_auto_enable*
 	let g:lsp_auto_enable = 1
 	let g:lsp_auto_enable = 0
 
-g:lsp_hover_win                         *g:lsp_hover_win*
-    Type: String
-    Default: "float"
+g:lsp_hover_ui                         *g:lsp_hover_ui*
+    Type: List
+    Default: ["float", "preview"]
 
-    Indicates hover info show position.Opt: "preview" | "float"
+    Indicates hover info show ui
 
 g:lsp_preview_keep_focus                         *g:lsp_preview_keep_focus*
     Type: |Number|

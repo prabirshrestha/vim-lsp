@@ -35,12 +35,18 @@ function! s:handle_hover(server, data) abort
     endif
 
     if !empty(a:data['response']['result']) && !empty(a:data['response']['result']['contents'])
-		if g:lsp_hover_win == "preview" || !has("nvim-0.4.0")
-			call lsp#ui#vim#output#preview(a:data['response']['result']['contents'])
-		else
-			call lsp#ui#vim#float#float_open(a:data['response']['result']['contents'])
-		endif
-        return
+		for ui in g:lsp_hover_ui
+			if ui == "float"
+				if exists("*nvim_open_win")
+					call lsp#ui#vim#float#float_open(a:data['response']['result']['contents'])
+					return
+				endif
+			elseif ui == "preview"
+				call lsp#ui#vim#output#preview(a:data['response']['result']['contents'])
+				return
+			endif
+		endfor
+        call lsp#utils#error('Hover ui is not found')
     else
         call lsp#utils#error('No hover information found')
     endif
