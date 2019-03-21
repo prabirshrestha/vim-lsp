@@ -34,7 +34,7 @@ function! s:set_win_option()
 endfunction
 
 function! s:float_win_position() abort
-	let l:win_height = winheight('.')
+    let l:win_height = winheight('.')
 	let l:win_width = winwidth('.')
 	let l:max_text_width = l:win_width
 	if l:max_text_width > 12
