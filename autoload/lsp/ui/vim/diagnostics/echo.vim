@@ -23,6 +23,10 @@ function! s:echo_diagnostics_under_cursor(...) abort
     let l:diagnostic = lsp#ui#vim#diagnostics#get_diagnostics_under_cursor()
     if !empty(l:diagnostic) && has_key(l:diagnostic, 'message')
         call lsp#utils#echo_with_truncation('LSP: '. substitute(l:diagnostic['message'], '\n\+', ' ', 'g'))
+        let s:displaying_message = 1
+    elseif get(s:, 'displaying_message', 0)
+        call lsp#utils#echo_with_truncation('')
+        let s:displaying_message = 0
     endif
 endfunction
 
