@@ -256,9 +256,9 @@ function! s:apply_text_edit() abort
         return
     endif
 
-    " check user_data['vim-lsp/textEdit']
+    " check user_data type is Dictionary and user_data['vim-lsp/textEdit']
     let l:user_data = json_decode(v:completed_item['user_data'])
-    if !has_key(l:user_data, s:user_data_key)
+    if !(type(l:user_data) == type({}) && has_key(l:user_data, s:user_data_key))
         return
     endif
 
