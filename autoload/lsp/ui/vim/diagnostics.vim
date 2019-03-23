@@ -15,6 +15,7 @@ function! lsp#ui#vim#diagnostics#handle_text_document_publish_diagnostics(server
     let s:diagnostics[l:uri][a:server_name] = a:data
 
     call lsp#ui#vim#virtual#set(a:server_name, a:data)
+    call lsp#ui#vim#highlights#set(a:server_name, a:data)
     call lsp#ui#vim#signs#set(a:server_name, a:data)
 endfunction
 
