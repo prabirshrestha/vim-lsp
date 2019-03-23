@@ -32,6 +32,9 @@ let s:completion_status_success = 'success'
 let s:completion_status_failed = 'failed'
 let s:completion_status_pending = 'pending'
 
+let s:is_user_data_support = has('patch-8.0.1493')
+let s:user_data_key = 'vim-lsp/textEdit'
+
 " }}}
 
 " completion state
@@ -182,6 +185,7 @@ function! lsp#omni#get_vim_completion_item(item, ...) abort
         let l:word = s:remove_typed_part(l:word)
     endif
     let l:kind = lsp#omni#get_kind_text(a:item)
+
     let l:completion = {
                 \ 'word': l:word,
                 \ 'abbr': l:abbr,
@@ -189,7 +193,26 @@ function! lsp#omni#get_vim_completion_item(item, ...) abort
                 \ 'info': '',
                 \ 'icase': 1,
                 \ 'dup': 1,
-                \ 'kind': l:kind }
+                \ 'kind': l:kind}
+
+    " check support user_data.
+    " if not support but g:lsp_text_edit_enabled enabled,
+    " then print information to user and add information to log file.
+    if !s:is_user_data_support && g:lsp_text_edit_enabled
+        let l:no_support_error_message = 'textEdit support on omni complete requires Vim 8.0 patch 1493 or later(please check g:lsp_text_edit_enabled)'
+        call lsp#utils#error(l:no_support_error_message)
+        call lsp#log(l:no_support_error_message)
+    endif
+
+    " add user_data in completion item, if supported user_data.
+    if g:lsp_text_edit_enabled && has_key(a:item, 'textEdit')
+        let l:text_edit = a:item['textEdit']
+        let l:user_data = {
+                \ s:user_data_key : l:text_edit
+                \ }
+
+        let l:completion['user_data'] = json_encode(l:user_data)
+    endif
 
     if has_key(a:item, 'detail') && !empty(a:item['detail'])
         let l:completion['menu'] = a:item['detail']
@@ -202,6 +225,64 @@ function! lsp#omni#get_vim_completion_item(item, ...) abort
     endif
 
     return l:completion
+endfunction
+
+augroup lsp_completion_item_text_edit
+    autocmd!
+    autocmd CompleteDone * call <SID>apply_text_edit()
+augroup END
+
+function! s:apply_text_edit() abort
+    " textEdit support function(callin from CompleteDone).
+    "
+    " expected user_data structure:
+    "     v:completed_item['user_data']: {
+    "       'vim-lsp/textEdit': {
+    "         'range': { ...(snip) },
+    "         'newText': 'yyy'
+    "        },
+    "     }
+    if !g:lsp_text_edit_enabled
+        return
+    endif
+
+    " completion faild or not select complete item
+    if empty(v:completed_item) || v:completed_item['word'] ==# ''
+        return
+    endif
+
+    " check user_data
+    if !has_key(v:completed_item, 'user_data')
+        return
+    endif
+
+    " check user_data type is Dictionary and user_data['vim-lsp/textEdit']
+    let l:user_data = json_decode(v:completed_item['user_data'])
+    if !(type(l:user_data) == type({}) && has_key(l:user_data, s:user_data_key))
+        return
+    endif
+
+    " expand textEdit range, for omni complet inserted text.
+    let l:text_edit = l:user_data[s:user_data_key]
+    let l:expanded_text_edit = s:expand_range(l:text_edit, len(v:completed_item['word']))
+
+    " apply textEdit
+    call lsp#utils#text_edit#apply_text_edits(expand('%:p'), [l:expanded_text_edit])
+
+    " move to end of newText
+    " TODO: add user definition cursor position mechanism
+    let l:start = l:text_edit['range']['start']
+    let l:line = l:start['line'] + 1
+    let l:col = l:start['character']
+    let l:new_text_length = len(l:text_edit['newText']) + 1
+    call cursor(l:line, l:col + l:new_text_length)
+endfunction
+
+function! s:expand_range(text_edit, expand_length) abort
+    let expanded_text_edit = a:text_edit
+    let l:expanded_text_edit['range']['end']['character'] += a:expand_length
+
+    return l:expanded_text_edit
 endfunction
 
 " }}}

@@ -21,5 +21,47 @@ Describe lsp#omni
 
             Assert Equals(got, want)
         End
+
+        It should return result contained user_data['vim-lsp/textEdit'], if exist textEdit in item
+            if !has('patch-8.0.1493')
+                Skip This test requires 'patch-8.0.1493'
+            endif
+
+            let l:text_edit = {
+            \    'range': {
+            \      'start': {'line': 5, 'character': 0},
+            \      'end': {'line': 5, 'character': 5}
+            \    },
+            \    'newText': 'yyy'
+            \  }
+
+            let item = {
+            \ 'label': 'my-label',
+            \ 'documentation': 'my documentation.',
+            \ 'detail': 'my-detail',
+            \ 'kind': '3',
+            \ 'textEdit': l:text_edit
+            \}
+
+            let l:want_user_data = {
+            \  'vim-lsp/textEdit': l:text_edit
+            \}
+
+            let l:want_user_data_string = json_encode(l:want_user_data)
+
+            let want = {
+            \ 'word': 'my-label',
+            \ 'abbr': 'my-label',
+            \ 'info': 'my documentation.',
+            \ 'icase': 1,
+            \ 'dup': 1,
+            \ 'kind': 'function',
+            \ 'menu': 'my-detail',
+            \ 'user_data': l:want_user_data_string
+            \}
+            let got = lsp#omni#get_vim_completion_item(item)
+
+            Assert Equals(got, want)
+        End
     End
 End
