@@ -225,7 +225,7 @@ function! s:call_did_save(buf, server_name, result, cb) abort
         \ }
 
     if l:did_save_options['includeText']
-        let l:params['text'] = s:get_text_document_text(a:buf)
+        let l:params['text'] = s:get_text_document_text(a:buf, a:server_name)
     endif
     call s:send_notification(a:server_name, {
         \ 'method': 'textDocument/didSave',
