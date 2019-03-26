@@ -4,48 +4,49 @@
 ================================================================================
 CONTENTS                                                  *vim-lsp-contents*
 
-    Introduction		          |vim-lsp-introduction|
-    Install			          |vim-lsp-install|
-    Language Servers		          |vim-lsp-language-servers|
-      Configure                             |vim-lsp-configure-source|
-      Wiki                                  |vim-lsp-configure-wiki|
-    Options			          |vim-lsp-options|
-      g:lsp_diagnostics_enabled             |g:lsp_diagnostics_enabled|
-      g:lsp_auto_enable                     |g:lsp_auto_enable|
-      g:lsp_preview_keep_focus              |g:lsp_preview_keep_focus|
-      g:lsp_insert_text_enabled             |g:lsp_insert_text_enabled|
-      g:lsp_signs_enabled                   |g:lsp_signs_enabled|
-      g:lsp_use_event_queue                 |g:lsp_use_event_queue|
-      g:Lsp_get_vim_completion_item         |g:Lsp_get_vim_completion_item|
-      g:Lsp_get_supported_capabilities      |g:Lsp_get_supported_capabilities|
-    Functions			          |vim-lsp-functions|
-      enable                                |vim-lsp-enable|
-      disable                               |vim-lsp-disable|
-      register_server                       |vim-lsp-register_server|
-      stop_server                           |vim-lsp-stop_server|
-    Commands			          |vim-lsp-commands|
-      LspCodeAction                         |LspCodeAction|
-      LspDocumentDiagnostics                |LspDocumentDiagnostics|
-      LspDeclaration                        |LspDeclaration|
-      LspDefinition                         |LspDefinition|
-      LspDocumentFormat                     |LspDocumentFormat|
-      LspDocumentFormatSync                 |LspDocumentFormatSync|
-      LspDocumentRangeFormat                |LspDocumentRangeFormat|
-      LspDocumentSymbol                     |LspDocumentSymbol|
-      LspHover                              |LspHover|
-      LspNextError                          |LspNextError|
-      LspPreviousError                      |LspPreviousError|
-      LspImplementation                     |LspImplementation|
-      LspReferences                         |LspReferences|
-      LspRename                             |LspRename|
-      LspTypeDefinition                     |LspTypeDefinition|
-      LspWorkspaceSymbol                    |LspWorkspaceSymbol|
-    Mappings			          |vim-lsp-mappings|
-    Autocomplete		          |vim-lsp-autocomplete|
-      omnifunc                              |vim-lsp-omnifunc|
-      asyncomplete.vim                      |vim-lsp-asyncomplete|
-    Snippets			          |vim-lsp-snippets|
-    License			          |vim-lsp-license|
+    Introduction                         |vim-lsp-introduction|
+    Install                              |vim-lsp-install|
+    Language Servers                     |vim-lsp-language-servers|
+      Configure                            |vim-lsp-configure-source|
+      Wiki                                 |vim-lsp-configure-wiki|
+    Options                              |vim-lsp-options|
+      g:lsp_diagnostics_enabled            |g:lsp_diagnostics_enabled|
+      g:lsp_auto_enable                    |g:lsp_auto_enable|
+      g:lsp_preview_keep_focus             |g:lsp_preview_keep_focus|
+      g:lsp_insert_text_enabled            |g:lsp_insert_text_enabled|
+      g:lsp_text_edit_enabled              |g:lsp_text_edit_enabled|
+      g:lsp_signs_enabled                  |g:lsp_signs_enabled|
+      g:lsp_use_event_queue                |g:lsp_use_event_queue|
+      g:Lsp_get_vim_completion_item        |g:Lsp_get_vim_completion_item|
+      g:Lsp_get_supported_capabilities     |g:Lsp_get_supported_capabilities|
+    Functions                            |vim-lsp-functions|
+      enable                               |vim-lsp-enable|
+      disable                              |vim-lsp-disable|
+      register_server                      |vim-lsp-register_server|
+      stop_server                          |vim-lsp-stop_server|
+    Commands                             |vim-lsp-commands|
+      LspCodeAction                        |LspCodeAction|
+      LspDocumentDiagnostics               |LspDocumentDiagnostics|
+      LspDeclaration                       |LspDeclaration|
+      LspDefinition                        |LspDefinition|
+      LspDocumentFormat                    |LspDocumentFormat|
+      LspDocumentFormatSync                |LspDocumentFormatSync|
+      LspDocumentRangeFormat               |LspDocumentRangeFormat|
+      LspDocumentSymbol                    |LspDocumentSymbol|
+      LspHover                             |LspHover|
+      LspNextError                         |LspNextError|
+      LspPreviousError                     |LspPreviousError|
+      LspImplementation                    |LspImplementation|
+      LspReferences                        |LspReferences|
+      LspRename                            |LspRename|
+      LspTypeDefinition                    |LspTypeDefinition|
+      LspWorkspaceSymbol                   |LspWorkspaceSymbol|
+    Mappings                             |vim-lsp-mappings|
+    Autocomplete                         |vim-lsp-autocomplete|
+      omnifunc                             |vim-lsp-omnifunc|
+      asyncomplete.vim                     |vim-lsp-asyncomplete|
+    Snippets                             |vim-lsp-snippets|
+    License                              |vim-lsp-license|
 
 
 ================================================================================
@@ -153,6 +154,17 @@ g:lsp_insert_text_enabled                       *g:lsp_insert_text_enabled*
 	let g:lsp_insert_text_enabled = 1
 	let g:lsp_insert_text_enabled = 0
 
+g:lsp_text_edit_enabled                              *g:lsp_text_edit_enabled*
+    Type: |Number|
+    Default: `1`
+
+    Enable support for completion textEdit property. Set to `0` to disable
+    using textEdit.
+
+    Example:
+	let g:lsp_text_edit_enabled = 1
+	let g:lsp_text_edit_enabled = 0
+
 g:lsp_signs_enabled                                   *g:lsp_signs_enabled*
     Type: |Number|
     Default: `1` for vim/neovim with patch 8.1.0772
@@ -163,6 +175,20 @@ g:lsp_signs_enabled                                   *g:lsp_signs_enabled*
     Example:
 	let g:lsp_signs_enabled = 1
 	let g:lsp_signs_enabled = 0
+
+g:lsp_virtual_text_enabled                            *g:lsp_virtual_text_enabled*
+    Type: |Number|
+    Default: `1` for neovim 0.3+
+
+    Enables virtual text to be shown next to diagnostic errors. Requires
+    NeoVim with version 0.3 or newer.
+
+    Example:
+>
+	let g:lsp_virtual_text_enabled = 1
+	let g:lsp_virtual_text_enabled = 0
+<
+
 
 g:lsp_use_event_queue                               *g:lsp_use_event_queue*
     Type: |Number|
