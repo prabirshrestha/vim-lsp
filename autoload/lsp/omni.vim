@@ -204,14 +204,21 @@ function! lsp#omni#get_vim_completion_item(item, ...) abort
         call lsp#log(l:no_support_error_message)
     endif
 
-    " add user_data in completion item, if supported user_data.
+    " add user_data in completion item, when
+    "     1. provided user_data
+    "     2. provided textEdit
+    "     3. textEdit value is Dictionary
     if g:lsp_text_edit_enabled && has_key(a:item, 'textEdit')
         let l:text_edit = a:item['textEdit']
-        let l:user_data = {
-                \ s:user_data_key : l:text_edit
-                \ }
 
-        let l:completion['user_data'] = json_encode(l:user_data)
+        " type check
+        if type(l:text_edit) == type({})
+            let l:user_data = {
+                    \ s:user_data_key : l:text_edit
+                    \ }
+
+            let l:completion['user_data'] = json_encode(l:user_data)
+        endif
     endif
 
     if has_key(a:item, 'detail') && !empty(a:item['detail'])
