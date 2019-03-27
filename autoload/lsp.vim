@@ -51,6 +51,7 @@ function! lsp#enable() abort
     if g:lsp_diagnostics_enabled
         if g:lsp_signs_enabled | call lsp#ui#vim#signs#enable() | endif
         if g:lsp_virtual_text_enabled | call lsp#ui#vim#virtual#enable() | endif
+        if g:lsp_highlights_enabled | call lsp#ui#vim#highlights#enable() | endif
     endif
     call s:register_events()
 endfunction
@@ -169,6 +170,7 @@ endfunction
 
 function! s:on_text_document_did_open() abort
     let l:buf = bufnr('%')
+    if getbufvar(l:buf, '&buftype') ==# 'terminal' | return | endif
     call lsp#log('s:on_text_document_did_open()', l:buf, &filetype, getcwd(), lsp#utils#get_buffer_uri(l:buf))
     for l:server_name in lsp#get_whitelisted_servers(l:buf)
         call s:ensure_flush(l:buf, l:server_name, function('s:Noop'))
@@ -177,6 +179,7 @@ endfunction
 
 function! s:on_text_document_did_save() abort
     let l:buf = bufnr('%')
+    if getbufvar(l:buf, '&buftype') ==# 'terminal' | return | endif
     call lsp#log('s:on_text_document_did_save()', l:buf)
     for l:server_name in lsp#get_whitelisted_servers(l:buf)
         call s:ensure_flush(l:buf, l:server_name, {result->s:call_did_save(l:buf, l:server_name, result, function('s:Noop'))})
@@ -185,11 +188,14 @@ endfunction
 
 function! s:on_text_document_did_change() abort
     let l:buf = bufnr('%')
+    if getbufvar(l:buf, '&buftype') ==# 'terminal' | return | endif
     call lsp#log('s:on_text_document_did_change()', l:buf)
     call s:add_didchange_queue(l:buf)
 endfunction
 
 function! s:on_cursor_moved() abort
+    let l:buf = bufnr('%')
+    if getbufvar(l:buf, '&buftype') ==# 'terminal' | return | endif
     call lsp#ui#vim#diagnostics#echo#cursor_moved()
 endfunction
 
@@ -215,7 +221,7 @@ function! s:call_did_save(buf, server_name, result, cb) abort
     let l:buffer_info = l:buffers[l:path]
 
     let l:params = {
-        \ 'textDocument': s:get_text_document_identifier(a:buf, l:buffer_info),
+        \ 'textDocument': s:get_text_document_identifier(a:buf),
         \ }
 
     if l:did_save_options['includeText']
@@ -233,6 +239,7 @@ endfunction
 
 function! s:on_text_document_did_close() abort
     let l:buf = bufnr('%')
+    if getbufvar(l:buf, '&buftype') ==# 'terminal' | return | endif
     call lsp#log('s:on_text_document_did_close()', l:buf)
 endfunction
 
@@ -397,7 +404,7 @@ function! s:ensure_init(buf, server_name, cb) abort
     else
         let l:capabilities = {
         \   'workspace': {
-        \       'applyEdit ': v:true
+        \       'applyEdit': v:true
         \   }
         \ }
     endif
@@ -488,7 +495,7 @@ function! s:ensure_changed(buf, server_name, cb) abort
     call s:send_notification(a:server_name, {
         \ 'method': 'textDocument/didChange',
         \ 'params': {
-        \   'textDocument': s:get_text_document_identifier(a:buf, l:buffer_info),
+        \   'textDocument': s:get_versioned_text_document_identifier(a:buf, l:buffer_info),
         \   'contentChanges': s:text_changes(a:buf, a:server_name),
         \ }
         \ })
@@ -689,7 +696,11 @@ function! lsp#get_position(...) abort
     return { 'line': line('.') - 1, 'character': col('.') -1 }
 endfunction
 
-function! s:get_text_document_identifier(buf, buffer_info) abort
+function! s:get_text_document_identifier(buf) abort
+    return { 'uri': lsp#utils#get_buffer_uri(a:buf) }
+endfunction
+
+function! s:get_versioned_text_document_identifier(buf, buffer_info) abort
     return {
         \ 'uri': lsp#utils#get_buffer_uri(a:buf),
         \ 'version': a:buffer_info['version'],

@@ -14,6 +14,7 @@ CONTENTS                                                  *vim-lsp-contents*
       g:lsp_auto_enable           |g:lsp_auto_enable|
       g:lsp_preview_keep_focus    |g:lsp_preview_keep_focus|
       g:lsp_insert_text_enabled   |g:lsp_insert_text_enabled|
+      g:lsp_text_edit_enabled     |g:lsp_text_edit_enabled|
       g:lsp_signs_enabled         |g:lsp_signs_enabled|
       g:lsp_use_event_queue       |g:lsp_use_event_queue|
       g:lsp_hover_ui 		  |g:lsp_hover_ui|
@@ -156,6 +157,17 @@ g:lsp_insert_text_enabled                       *g:lsp_insert_text_enabled*
     Example:
 	let g:lsp_insert_text_enabled = 1
 	let g:lsp_insert_text_enabled = 0
+
+g:lsp_text_edit_enabled                              *g:lsp_text_edit_enabled*
+    Type: |Number|
+    Default: `1`
+
+    Enable support for completion textEdit property. Set to `0` to disable
+    using textEdit.
+
+    Example:
+	let g:lsp_text_edit_enabled = 1
+	let g:lsp_text_edit_enabled = 0
 
 g:lsp_signs_enabled                                   *g:lsp_signs_enabled*
     Type: |Number|
