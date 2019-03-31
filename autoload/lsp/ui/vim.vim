@@ -331,20 +331,52 @@ function! lsp#ui#vim#document_symbol() abort
     echo 'Retrieving document symbols ...'
 endfunction
 
+" Returns currently selected range. If nothing is selected, returns empty
+" dictionary.
+"
+" @returns
+"   Range - https://microsoft.github.io/language-server-protocol/specification#range
+function! s:get_visual_selection_range() abort
+    " TODO: unify this method with s:get_visual_selection_pos()
+    let [l:line_start, l:column_start] = getpos("'<")[1:2]
+    let [l:line_end, l:column_end] = getpos("'>")[1:2]
+    call lsp#log([l:line_start, l:column_start, l:line_end, l:column_end])
+    if l:line_start == 0
+        return {}
+    endif
+    " For line selection, column_end is a very large number, so trim it to
+    " number of characters in this line.
+    if l:column_end - 1 > len(getline(l:line_end))
+      let l:column_end = len(getline(l:line_end)) + 1
+    endif
+    return {
+          \ 'start': { 'line': l:line_start - 1, 'character': l:column_start - 1 },
+          \ 'end': { 'line': l:line_end - 1, 'character': l:column_end - 1 },
+          \}
+endfunction
+
 " https://microsoft.github.io/language-server-protocol/specification#textDocument_codeAction
 function! lsp#ui#vim#code_action() abort
     let l:servers = filter(lsp#get_whitelisted_servers(), 'lsp#capabilities#has_code_action_provider(v:val)')
     let s:last_req_id = s:last_req_id + 1
-    let s:diagnostics = lsp#ui#vim#diagnostics#get_diagnostics_under_cursor()
+    let l:diagnostic = lsp#ui#vim#diagnostics#get_diagnostics_under_cursor()
 
     if len(l:servers) == 0
         call s:not_supported('Code action')
         return
     endif
 
-    if len(s:diagnostics) == 0
-        echo 'No diagnostics found under the cursors'
-        return
+    let l:range = s:get_visual_selection_range()
+    if empty(l:range)
+        if empty(l:diagnostic)
+            echo 'No diagnostics found under the cursors'
+            return
+        else
+            let l:range = l:diagnostic['range']
+            let l:diagnostics = [l:diagnostic]
+        end
+    else
+        let l:diagnostics = []
     endif
 
     for l:server in l:servers
@@ -352,9 +384,9 @@ function! lsp#ui#vim#code_action() abort
             \ 'method': 'textDocument/codeAction',
             \ 'params': {
             \   'textDocument': lsp#get_text_document_identifier(),
-            \   'range': s:diagnostics['range'],
+            \   'range': l:range,
             \   'context': {
-            \       'diagnostics' : [s:diagnostics],
+            \       'diagnostics' : l:diagnostics,
             \   },
             \ },
             \ 'on_notification': function('s:handle_code_action', [l:server, s:last_req_id, 'codeAction']),
@@ -459,7 +491,7 @@ function! s:handle_workspace_edit(server, last_req_id, type, data) abort
         return
     endif
 
-    call s:apply_workspace_edits(a:data['response']['result'])
+    call lsp#ui#vim#apply_workspace_edits(a:data['response']['result'])
 
     echo 'Renamed'
 endfunction
@@ -486,6 +518,7 @@ function! s:handle_code_action(server, last_req_id, type, data) abort
     endif
 
     let l:codeActions = a:data['response']['result']
+
     let l:index = 0
     let l:choices = []
 
@@ -505,14 +538,46 @@ function! s:handle_code_action(server, last_req_id, type, data) abort
     let l:choice = inputlist(l:choices)
 
     if l:choice > 0 && l:choice <= l:index
-        call lsp#log('s:handle_code_action', l:codeActions[l:choice - 1]['arguments'][0])
-        call s:apply_workspace_edits(l:codeActions[l:choice - 1]['arguments'][0])
+        call s:execute_command_or_code_action(a:server, l:codeActions[l:choice - 1])
     endif
 endfunction
 
 " @params
+"   server - string
+"   comand_or_code_action - Command | CodeAction
+function! s:execute_command_or_code_action(server, command_or_code_action) abort
+    if has_key(a:command_or_code_action, 'command') && type(a:command_or_code_action['command']) == type("")
+        let l:command = a:command_or_code_action
+        call s:execute_command(a:server, l:command)
+    else
+        let l:code_action = a:command_or_code_action
+        if has_key(l:code_action, 'edit')
+            call lsp#ui#vim#apply_workspace_edits(a:command_or_code_action['edit'])
+        endif
+        if has_key(l:code_action, 'command')
+            call s:execute_command(a:server, l:code_action['command'])
+        endif
+    endif
+endfunction
+
+" Sends workspace/executeCommand with given command.
+" @params
+"   server - string
+"   command - https://microsoft.github.io/language-server-protocol/specification#command
+function! s:execute_command(server, command) abort
+    let l:params = {'command': a:command['command']}
+    if has_key(a:command, 'arguments')
+        let l:params['arguments'] = a:command['arguments']
+    endif
+    call lsp#send_request(a:server, {
+        \ 'method': 'workspace/executeCommand',
+        \ 'params': l:params,
+        \ })
+endfunction
+
+" @params
 "   workspace_edits - https://microsoft.github.io/language-server-protocol/specification#workspaceedit
-function! s:apply_workspace_edits(workspace_edits) abort
+function! lsp#ui#vim#apply_workspace_edits(workspace_edits) abort
     if has_key(a:workspace_edits, 'changes')
         let l:cur_buffer = bufnr('%')
         let l:view = winsaveview()
