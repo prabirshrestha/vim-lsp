@@ -546,7 +546,7 @@ endfunction
 "   server - string
 "   comand_or_code_action - Command | CodeAction
 function! s:execute_command_or_code_action(server, command_or_code_action) abort
-    if has_key(a:command_or_code_action, 'command') && type(a:command_or_code_action['command']) == type("")
+    if has_key(a:command_or_code_action, 'command') && type(a:command_or_code_action['command']) == type('')
         let l:command = a:command_or_code_action
         call s:execute_command(a:server, l:command)
     else

@@ -85,7 +85,7 @@ function! s:on_stdout(id, data, event) abort
             if has_key(l:response, 'method') && has_key(l:response, 'id')
                 " it is a request from a server
                 let l:request = l:response
-                if l:request['method'] == 'workspace/applyEdit'
+                if l:request['method'] ==# 'workspace/applyEdit'
                     call lsp#ui#vim#apply_workspace_edits(l:request['params']['edit'])
                     call s:lsp_send(a:id, { 'id': l:request['id'], 'result': { 'applied': v:true}}, s:send_type_response)
                 endif
