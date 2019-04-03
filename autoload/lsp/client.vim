@@ -85,9 +85,8 @@ function! s:on_stdout(id, data, event) abort
             if has_key(l:response, 'method') && has_key(l:response, 'id')
                 " it is a request from a server
                 let l:request = l:response
-                if l:request['method'] ==# 'workspace/applyEdit'
-                    call lsp#ui#vim#apply_workspace_edits(l:request['params']['edit'])
-                    call s:lsp_send(a:id, { 'id': l:request['id'], 'result': { 'applied': v:true}}, s:send_type_response)
+                if has_key(l:ctx['opts'], 'on_request')
+                    call l:ctx['opts']['on_request'](a:id, l:request)
                 endif
             elseif has_key(l:response, 'id')
                 " it is a request->response
@@ -224,17 +223,20 @@ function! s:lsp_send(id, opts, type) abort " opts = { id?, method?, result?, par
         endif
     endif
 
-    if has_key(a:opts, 'params')
-        let l:request['params'] = a:opts['params']
-    endif
     if has_key(a:opts, 'id')
         let l:request['id'] = a:opts['id']
     endif
     if has_key(a:opts, 'method')
         let l:request['method'] = a:opts['method']
     endif
+    if has_key(a:opts, 'params')
+        let l:request['params'] = a:opts['params']
+    endif
     if has_key(a:opts, 'result')
         let l:request['result'] = a:opts['result']
+    endif
+    if has_key(a:opts, 'error')
+        let l:request['error'] = a:opts['error']
     endif
 
     let l:json = json_encode(l:request)
@@ -290,6 +292,10 @@ endfunction
 
 function! lsp#client#send_notification(client_id, opts) abort
     return s:lsp_send(a:client_id, a:opts, s:send_type_notification)
+endfunction
+
+function! lsp#client#send_response(client_id, opts) abort
+    return s:lsp_send(a:client_id, a:opts, s:send_type_response)
 endfunction
 
 function! lsp#client#get_last_request_id(client_id) abort
