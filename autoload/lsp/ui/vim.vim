@@ -491,7 +491,7 @@ function! s:handle_workspace_edit(server, last_req_id, type, data) abort
         return
     endif
 
-    call lsp#ui#vim#apply_workspace_edits(a:data['response']['result'])
+    call lsp#utils#workspace_edit#apply_workspace_edit(a:data['response']['result'])
 
     echo 'Renamed'
 endfunction
@@ -552,7 +552,7 @@ function! s:execute_command_or_code_action(server, command_or_code_action) abort
     else
         let l:code_action = a:command_or_code_action
         if has_key(l:code_action, 'edit')
-            call lsp#ui#vim#apply_workspace_edits(a:command_or_code_action['edit'])
+            call lsp#utils#workspace_edit#apply_workspace_edit(a:command_or_code_action['edit'])
         endif
         if has_key(l:code_action, 'command')
             call s:execute_command(a:server, l:code_action['command'])
@@ -575,30 +575,4 @@ function! s:execute_command(server, command) abort
         \ })
 endfunction
 
-" @params
-"   workspace_edits - https://microsoft.github.io/language-server-protocol/specification#workspaceedit
-function! lsp#ui#vim#apply_workspace_edits(workspace_edits) abort
-    if has_key(a:workspace_edits, 'changes')
-        let l:cur_buffer = bufnr('%')
-        let l:view = winsaveview()
-        for [l:uri, l:text_edits] in items(a:workspace_edits['changes'])
-            call lsp#utils#text_edit#apply_text_edits(l:uri, l:text_edits)
-        endfor
-        if l:cur_buffer !=# bufnr('%')
-            execute 'keepjumps keepalt b ' . l:cur_buffer
-        endif
-        call winrestview(l:view)
-    endif
-    if has_key(a:workspace_edits, 'documentChanges')
-        let l:cur_buffer = bufnr('%')
-        let l:view = winsaveview()
-        for l:text_document_edit in a:workspace_edits['documentChanges']
-            call lsp#utils#text_edit#apply_text_edits(l:text_document_edit['textDocument']['uri'], l:text_document_edit['edits'])
-        endfor
-        if l:cur_buffer !=# bufnr('%')
-            execute 'keepjumps keepalt b ' . l:cur_buffer
-        endif
-        call winrestview(l:view)
-    endif
-endfunction
 

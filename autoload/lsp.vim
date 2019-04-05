@@ -615,7 +615,7 @@ endfunction
 function! s:on_request(server_name, id, request) abort
     call lsp#log_verbose('<---', a:id, a:request)
     if a:request['method'] ==# 'workspace/applyEdit'
-        call lsp#ui#vim#apply_workspace_edits(a:request['params']['edit'])
+        call lsp#utils#workspace_edit#apply_workspace_edit(a:request['params']['edit'])
         call s:send_response(a:server_name, { 'id': a:request['id'], 'result': { 'applied': v:true } })
     else
         " Error returned according to json-rpc specification.
