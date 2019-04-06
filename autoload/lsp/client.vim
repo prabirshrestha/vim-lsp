@@ -82,7 +82,13 @@ function! s:on_stdout(id, data, event) abort
         if exists('l:response')
             " call appropriate callbacks
             let l:on_notification_data = { 'response': l:response }
-            if has_key(l:response, 'id')
+            if has_key(l:response, 'method') && has_key(l:response, 'id')
+                " it is a request from a server
+                let l:request = l:response
+                if has_key(l:ctx['opts'], 'on_request')
+                    call l:ctx['opts']['on_request'](a:id, l:request)
+                endif
+            elseif has_key(l:response, 'id')
                 " it is a request->response
                 if !(type(l:response['id']) == type(0) || type(l:response['id']) == type(''))
                     " response['id'] can be number | string | null based on the spec
@@ -199,13 +205,14 @@ endfunction
 
 let s:send_type_request = 1
 let s:send_type_notification = 2
-function! s:lsp_send(id, opts, type) abort " opts = { method, params?, on_notification }
+let s:send_type_response = 3
+function! s:lsp_send(id, opts, type) abort " opts = { id?, method?, result?, params?, on_notification }
     let l:ctx = get(s:clients, a:id, {})
     if empty(l:ctx)
         return -1
     endif
 
-    let l:request = { 'jsonrpc': '2.0', 'method': a:opts['method'] }
+    let l:request = { 'jsonrpc': '2.0' }
 
     if (a:type == s:send_type_request)
         let l:ctx['request_sequence'] = l:ctx['request_sequence'] + 1
@@ -216,8 +223,20 @@ function! s:lsp_send(id, opts, type) abort " opts = { method, params?, on_notifi
         endif
     endif
 
+    if has_key(a:opts, 'id')
+        let l:request['id'] = a:opts['id']
+    endif
+    if has_key(a:opts, 'method')
+        let l:request['method'] = a:opts['method']
+    endif
     if has_key(a:opts, 'params')
         let l:request['params'] = a:opts['params']
+    endif
+    if has_key(a:opts, 'result')
+        let l:request['result'] = a:opts['result']
+    endif
+    if has_key(a:opts, 'error')
+        let l:request['error'] = a:opts['error']
     endif
 
     let l:json = json_encode(l:request)
@@ -273,6 +292,10 @@ endfunction
 
 function! lsp#client#send_notification(client_id, opts) abort
     return s:lsp_send(a:client_id, a:opts, s:send_type_notification)
+endfunction
+
+function! lsp#client#send_response(client_id, opts) abort
+    return s:lsp_send(a:client_id, a:opts, s:send_type_response)
 endfunction
 
 function! lsp#client#get_last_request_id(client_id) abort

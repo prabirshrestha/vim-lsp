@@ -351,6 +351,7 @@ function! s:ensure_start(buf, server_name, cb) abort
         \ 'on_stderr': function('s:on_stderr', [a:server_name]),
         \ 'on_exit': function('s:on_exit', [a:server_name]),
         \ 'on_notification': function('s:on_notification', [a:server_name]),
+        \ 'on_request': function('s:on_request', [a:server_name]),
         \ })
 
     if l:lsp_id > 0
@@ -562,6 +563,13 @@ function! s:send_notification(server_name, data) abort
     call lsp#client#send_notification(l:lsp_id, a:data)
 endfunction
 
+function! s:send_response(server_name, data) abort
+    let l:lsp_id = s:servers[a:server_name]['lsp_id']
+    let l:data = copy(a:data)
+    call lsp#log_verbose('--->', l:lsp_id, a:server_name, l:data)
+    call lsp#client#send_response(l:lsp_id, a:data)
+endfunction
+
 function! s:on_stderr(server_name, id, data, event) abort
     call lsp#log_verbose('<---(stderr)', a:id, a:server_name, a:data)
 endfunction
@@ -602,6 +610,17 @@ function! s:on_notification(server_name, id, data, event) abort
     for l:callback_info in s:notification_callbacks
         call l:callback_info.callback(a:server_name, a:data)
     endfor
+endfunction
+
+function! s:on_request(server_name, id, request) abort
+    call lsp#log_verbose('<---', a:id, a:request)
+    if a:request['method'] ==# 'workspace/applyEdit'
+        call lsp#utils#workspace_edit#apply_workspace_edit(a:request['params']['edit'])
+        call s:send_response(a:server_name, { 'id': a:request['id'], 'result': { 'applied': v:true } })
+    else
+        " Error returned according to json-rpc specification.
+        call s:send_response(a:server_name, { 'id': a:request['id'], 'error': { 'code': -32601, 'message': 'Method not found' } })
+    endif
 endfunction
 
 function! s:handle_initialize(server_name, data) abort
