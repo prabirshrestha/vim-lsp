@@ -215,9 +215,9 @@ function! lsp#ui#vim#references#jump(offset) abort
     endif
 
     " Wrap index
-    while l:index < 0 || l:index >= len(w:lsp_reference_positions)
+    if l:index < 0 || l:index >= len(w:lsp_reference_positions)
         let l:index = (l:index % l:n + l:n) % l:n
-    endwhile
+    endif
 
     " Jump
     let l:target = w:lsp_reference_positions[l:index][0:1]
