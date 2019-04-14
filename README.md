@@ -63,7 +63,9 @@ Refer to docs on configuring omnifunc or [asyncomplete.vim](https://github.com/p
 |`:LspHover`| Show hover information |
 |`:LspImplementation` | Show implementation of interface |
 |`:LspNextError`| jump to next error |
+|`:LspNextReference`| jump to next reference to the symbol under cursor |
 |`:LspPreviousError`| jump to previous error |
+|`:LspPreviousReference`| jump to previous reference to the symbol under cursor |
 |`:LspReferences`| Find references |
 |`:LspRename`| Rename symbol |
 |`:LspStatus` | Show the status of the language server |
@@ -116,6 +118,22 @@ let g:lsp_virtual_text_enabled = 0
 To your configuration.
 
 Virtual text will use the same highlight groups as signs feature.
+
+### Highlight references
+
+References to the symbol under the cursor are highlighted by default. To
+disable, set in your configuration:
+
+```viml
+let g:lsp_highlight_references_enabled = 0
+```
+
+To change the style of the highlighting, you can set or link the `lspReference`
+highlight group, e.g.:
+
+```viml
+highlight lspReference ctermfg=red guifg=red ctermbg=green guibg=green
+```
 
 ## Debugging
 
