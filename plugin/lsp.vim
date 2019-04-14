@@ -24,8 +24,8 @@ let g:lsp_use_event_queue = get(g:, 'lsp_use_event_queue', has('nvim') || has('p
 let g:lsp_insert_text_enabled= get(g:, 'lsp_insert_text_enabled', 1)
 let g:lsp_text_edit_enabled = get(g:, 'lsp_text_edit_enabled', has('patch-8.0.1493'))
 
-let g:Lsp_get_vim_completion_item = get(g:, 'Lsp_get_vim_completion_item', function('lsp#omni#default_get_vim_completion_item'))
-let g:Lsp_get_supported_capabilities = get(g:, 'Lsp_get_supported_capabilities', function('lsp#default_get_supported_capabilities'))
+let g:lsp_get_vim_completion_item = get(g:, 'lsp_get_vim_completion_item', [function('lsp#omni#default_get_vim_completion_item')])
+let g:lsp_get_supported_capabilities = get(g:, 'lsp_get_supported_capabilities', [function('lsp#default_get_supported_capabilities')])
 
 if g:lsp_auto_enable
     augroup lsp_auto_enable

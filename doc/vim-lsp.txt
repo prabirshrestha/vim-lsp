@@ -17,8 +17,8 @@ CONTENTS                                                  *vim-lsp-contents*
       g:lsp_text_edit_enabled              |g:lsp_text_edit_enabled|
       g:lsp_signs_enabled                  |g:lsp_signs_enabled|
       g:lsp_use_event_queue                |g:lsp_use_event_queue|
-      g:Lsp_get_vim_completion_item        |g:Lsp_get_vim_completion_item|
-      g:Lsp_get_supported_capabilities     |g:Lsp_get_supported_capabilities|
+      g:lsp_get_vim_completion_item        |g:lsp_get_vim_completion_item|
+      g:lsp_get_supported_capabilities     |g:lsp_get_supported_capabilities|
     Functions                            |vim-lsp-functions|
       enable                               |vim-lsp-enable|
       disable                              |vim-lsp-disable|
@@ -201,25 +201,27 @@ g:lsp_use_event_queue                               *g:lsp_use_event_queue*
 	let g:lsp_use_event_queue = 1
 	let g:lsp_use_event_queue = 0
 
-g:Lsp_get_vim_completion_item               *g:Lsp_get_vim_completion_item*
-    Type: |Funcref|
-    Default: `function('lsp#omni#default_get_vim_completion_item')`
+g:lsp_get_vim_completion_item               *g:lsp_get_vim_completion_item*
+    Type: |List|
+    Default: `[function('lsp#omni#default_get_vim_completion_item')]`
 
-    A reference to the function that vim-lsp should use to produce the items
-    in the completion menu. Changing this variable allows customizing how
-    items are displayed in the completion menu, or adding custom `user_data`
-    to items (see |complete-items|).
+    A |List| containing one element of type |Funcref|. This element is a
+    reference to the function that vim-lsp should use to produce the items in
+    the completion menu. Changing this variable allows customizing how items
+    are displayed in the completion menu, or adding custom `user_data` to
+    items (see |complete-items|).
 
     Note: You can reuse functionality provided by vim-lsp by calling
     `lsp#omni#default_get_vim_completion_item` from within your function.
 
-g:Lsp_get_supported_capabilities         *g:Lsp_get_supported_capabilities*
-    Type: |Funcref|
-    Default: `function('lsp#default_get_supported_capabilities')`
+g:lsp_get_supported_capabilities         *g:lsp_get_supported_capabilities*
+    Type: |List|
+    Default: `[function('lsp#default_get_supported_capabilities')]`
 
-    A reference to the function that vim-lsp should use to obtain the
-    supported LSP capabilities. Changing this variable allows customizing
-    which capabilities vim-lsp sends to a language server.
+    A |List| containing one element of type |Funcref|. This element is a
+    reference to the function that vim-lsp should use to obtain the supported
+    LSP capabilities. Changing this variable allows customizing which
+    capabilities vim-lsp sends to a language server.
 
     Note: You can obtain the default supported capabilities of vim-lsp by
     calling `lsp#omni#default_get_supported_capabilities` from within your

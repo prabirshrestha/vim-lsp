@@ -411,7 +411,7 @@ function! s:ensure_init(buf, server_name, cb) abort
     if has_key(l:server_info, 'capabilities')
         let l:capabilities = l:server_info['capabilities']
     else
-        let l:capabilities = call(g:Lsp_get_supported_capabilities, [server_info])
+        let l:capabilities = call(g:lsp_get_supported_capabilities[0], [server_info])
     endif
 
     let l:request = {

@@ -235,7 +235,7 @@ function! lsp#omni#default_get_vim_completion_item(item, ...) abort
 endfunction
 
 function! lsp#omni#get_vim_completion_item(...) abort
-    return call(g:Lsp_get_vim_completion_item, a:000)
+    return call(g:lsp_get_vim_completion_item[0], a:000)
 endfunction
 
 augroup lsp_completion_item_text_edit
