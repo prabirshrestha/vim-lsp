@@ -283,7 +283,6 @@ function! s:apply_text_edit() abort
     call lsp#utils#text_edit#apply_text_edits(expand('%:p'), [l:expanded_text_edit])
 
     " move to end of newText
-    " TODO: add user definition cursor position mechanism
     let l:start = l:text_edit['range']['start']
     let l:line = l:start['line'] + 1
     let l:col = l:start['character']
