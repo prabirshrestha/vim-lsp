@@ -3,6 +3,7 @@ their own copyright notices and license terms:
 
 * vim-lsc - https://github.com/natebosch/vim-lsc
     * autoload/lsc/diff.vim
+    * autoload/lsc/cursor.vim
     ====================================================================
 
     Copyright 2017 vim-lsc authors
