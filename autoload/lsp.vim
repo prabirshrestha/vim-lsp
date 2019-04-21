@@ -157,6 +157,8 @@ function! s:register_events() abort
             autocmd TextChangedP * call s:on_text_document_did_change()
         endif
         autocmd CursorMoved * call s:on_cursor_moved()
+        autocmd BufWinEnter,BufWinLeave,InsertEnter * call lsp#ui#vim#references#clean_references()
+        autocmd CursorMoved * call lsp#ui#vim#references#highlight(v:false)
     augroup END
     call s:on_text_document_did_open()
 endfunction

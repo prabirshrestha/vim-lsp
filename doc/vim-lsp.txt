@@ -4,46 +4,49 @@
 ================================================================================
 CONTENTS                                                  *vim-lsp-contents*
 
-    Introduction		|vim-lsp-introduction|
-    Install			|vim-lsp-install|
-    Language Servers		|vim-lsp-language-servers|
-      Configure                   |vim-lsp-configure-source|
-      Wiki                        |vim-lsp-configure-wiki|
-    Options			|vim-lsp-options|
-      g:lsp_diagnostics_enabled   |g:lsp_diagnostics_enabled|
-      g:lsp_auto_enable           |g:lsp_auto_enable|
-      g:lsp_preview_keep_focus    |g:lsp_preview_keep_focus|
-      g:lsp_insert_text_enabled   |g:lsp_insert_text_enabled|
-      g:lsp_text_edit_enabled     |g:lsp_text_edit_enabled|
-      g:lsp_signs_enabled         |g:lsp_signs_enabled|
-      g:lsp_use_event_queue       |g:lsp_use_event_queue|
-    Functions			|vim-lsp-functions|
-      enable                      |vim-lsp-enable|
-      disable                     |vim-lsp-disable|
-      register_server             |vim-lsp-register_server|
-      stop_server                 |vim-lsp-stop_server|
-    Commands			|vim-lsp-commands|
-      LspCodeAction               |LspCodeAction|
-      LspDocumentDiagnostics      |LspDocumentDiagnostics|
-      LspDeclaration              |LspDeclaration|
-      LspDefinition               |LspDefinition|
-      LspDocumentFormat           |LspDocumentFormat|
-      LspDocumentFormatSync       |LspDocumentFormatSync|
-      LspDocumentRangeFormat      |LspDocumentRangeFormat|
-      LspDocumentSymbol           |LspDocumentSymbol|
-      LspHover                    |LspHover|
-      LspNextError                |LspNextError|
-      LspPreviousError            |LspPreviousError|
-      LspImplementation           |LspImplementation|
-      LspReferences               |LspReferences|
-      LspRename                   |LspRename|
-      LspTypeDefinition           |LspTypeDefinition|
-      LspWorkspaceSymbol          |LspWorkspaceSymbol|
-    Mappings			|vim-lsp-mappings|
-    Autocomplete		|vim-lsp-autocomplete|
-      omnifunc                    |vim-lsp-omnifunc|
-      asyncomplete.vim            |vim-lsp-asyncomplete|
-    License			|vim-lsp-license|
+    Introduction                          |vim-lsp-introduction|
+    Install                               |vim-lsp-install|
+    Language Servers                      |vim-lsp-language-servers|
+      Configure                             |vim-lsp-configure-source|
+      Wiki                                  |vim-lsp-configure-wiki|
+    Options                               |vim-lsp-options|
+      g:lsp_diagnostics_enabled             |g:lsp_diagnostics_enabled|
+      g:lsp_auto_enable                     |g:lsp_auto_enable|
+      g:lsp_preview_keep_focus              |g:lsp_preview_keep_focus|
+      g:lsp_insert_text_enabled             |g:lsp_insert_text_enabled|
+      g:lsp_text_edit_enabled               |g:lsp_text_edit_enabled|
+      g:lsp_signs_enabled                   |g:lsp_signs_enabled|
+      g:lsp_use_event_queue                 |g:lsp_use_event_queue|
+      g:lsp_highlight_references_enabled    |g:lsp_highlight_references_enabled|
+    Functions                             |vim-lsp-functions|
+      enable                                |vim-lsp-enable|
+      disable                               |vim-lsp-disable|
+      register_server                       |vim-lsp-register_server|
+      stop_server                           |vim-lsp-stop_server|
+    Commands                              |vim-lsp-commands|
+      LspCodeAction                         |LspCodeAction|
+      LspDocumentDiagnostics                |LspDocumentDiagnostics|
+      LspDeclaration                        |LspDeclaration|
+      LspDefinition                         |LspDefinition|
+      LspDocumentFormat                     |LspDocumentFormat|
+      LspDocumentFormatSync                 |LspDocumentFormatSync|
+      LspDocumentRangeFormat                |LspDocumentRangeFormat|
+      LspDocumentSymbol                     |LspDocumentSymbol|
+      LspHover                              |LspHover|
+      LspNextError                          |LspNextError|
+      LspNextReference                      |LspNextReference|
+      LspPreviousError                      |LspPreviousError|
+      LspPreviousReference                  |LspPreviousReference|
+      LspImplementation                     |LspImplementation|
+      LspReferences                         |LspReferences|
+      LspRename                             |LspRename|
+      LspTypeDefinition                     |LspTypeDefinition|
+      LspWorkspaceSymbol                    |LspWorkspaceSymbol|
+    Mappings                              |vim-lsp-mappings|
+    Autocomplete                          |vim-lsp-autocomplete|
+      omnifunc                              |vim-lsp-omnifunc|
+      asyncomplete.vim                      |vim-lsp-asyncomplete|
+    License                               |vim-lsp-license|
 
 
 ================================================================================
@@ -197,6 +200,26 @@ g:lsp_use_event_queue                               *g:lsp_use_event_queue*
     Example:
 	let g:lsp_use_event_queue = 1
 	let g:lsp_use_event_queue = 0
+
+g:lsp_highlight_references_enabled         *g:lsp_highlight_references_enabled*
+    Type: |Number|
+    Default: `1`
+
+    Enable highlighting of the references to the symbol under the cursor.
+
+    Example:
+>
+    let g:lsp_highlight_references_enabled = 1
+    let g:lsp_highlight_references_enabled = 0
+<
+
+    To change the style of the highlighting, you can set or link the `lspReference`
+    highlight group.
+
+    Example:
+>
+    highlight lspReference ctermfg=red guifg=red ctermbg=green guibg=green
+<
 
 ===============================================================================
 FUNCTIONS	                                        *vim-lsp-functions*
@@ -427,9 +450,17 @@ LspNextError						     *LspNextError*
 
 Jump to Next err diagnostics
 
+LspNextReference                                          *LspNextReference*
+
+Jump to the next reference of the symbol under cursor.
+
 LspPreviousError					 *LspPreviousError*
 
 Jump to Previous err diagnostics
+
+LspPreviousReference                                  *LspPreviousReference*
+
+Jump to the previous reference of the symbol under cursor.
 
 LspImplementation                                        *LspImplementation*
 
@@ -471,7 +502,9 @@ Available plug mappings are following:
   (lsp-document-diagnostics)
   (lsp-hover)
   (lsp-next-error)
+  (lsp-next-reference)
   (lsp-previous-error)
+  (lsp-previous-reference)
   (lsp-references)
   (lsp-rename)
   (lsp-workspace-symbol)

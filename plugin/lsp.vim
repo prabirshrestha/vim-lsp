@@ -23,6 +23,7 @@ let g:lsp_preview_keep_focus = get(g:, 'lsp_preview_keep_focus', 1)
 let g:lsp_use_event_queue = get(g:, 'lsp_use_event_queue', has('nvim') || has('patch-8.1.0889'))
 let g:lsp_insert_text_enabled= get(g:, 'lsp_insert_text_enabled', 1)
 let g:lsp_text_edit_enabled = get(g:, 'lsp_text_edit_enabled', has('patch-8.0.1493'))
+let g:lsp_highlight_references_enabled = get(g:, 'lsp_highlight_references_enabled', 1)
 
 if g:lsp_auto_enable
     augroup lsp_auto_enable
@@ -50,6 +51,8 @@ command! -range LspDocumentRangeFormatSync call lsp#ui#vim#document_range_format
 command! LspImplementation call lsp#ui#vim#implementation()
 command! LspTypeDefinition call lsp#ui#vim#type_definition()
 command! -nargs=0 LspStatus echo lsp#get_server_status()
+command! LspNextReference call lsp#ui#vim#references#jump(+1)
+command! LspPreviousReference call lsp#ui#vim#references#jump(-1)
 
 nnoremap <plug>(lsp-code-action) :<c-u>call lsp#ui#vim#code_action()<cr>
 nnoremap <plug>(lsp-declaration) :<c-u>call lsp#ui#vim#declaration()<cr>
@@ -67,3 +70,5 @@ nnoremap <plug>(lsp-document-format) :<c-u>call lsp#ui#vim#document_format()<cr>
 vnoremap <plug>(lsp-document-format) :call lsp#ui#vim#document_range_format()<cr>
 nnoremap <plug>(lsp-implementation) :<c-u>call lsp#ui#vim#implementation()<cr>
 nnoremap <plug>(lsp-status) :<c-u>echo lsp#get_server_status()<cr>
+nnoremap <plug>(lsp-next-reference) :<c-u>call lsp#ui#vim#references#jump(+1)<cr>
+nnoremap <plug>(lsp-previous-reference) :<c-u>call lsp#ui#vim#references#jump(-1)<cr>
