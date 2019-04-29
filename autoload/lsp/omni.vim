@@ -210,8 +210,8 @@ function! lsp#omni#get_vim_completion_item(item, ...) abort
     "     2. provided textEdit or additionalTextEdits
     "     3. textEdit value is Dictionary or additionalTextEdits is non-empty list
     if g:lsp_text_edit_enabled
-        let l:text_edit = get(a:item, 'textEdit', v:none)
-        let l:additional_text_edits = get(a:item, 'additionalTextEdits', v:none)
+        let l:text_edit = get(a:item, 'textEdit', v:null)
+        let l:additional_text_edits = get(a:item, 'additionalTextEdits', v:null)
         let l:user_data = {}
 
         " type check
