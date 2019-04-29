@@ -292,35 +292,54 @@ function! s:apply_text_edits() abort
     let l:all_text_edits = []
 
     " expand textEdit range, for omni complet inserted text.
-    let l:text_edit = get(l:user_data, s:user_data_key, v:none)
-    if l:text_edit != v:none
-        call add(l:all_text_edits, s:expand_range(l:text_edit, len(v:completed_item['word'])))
+    let l:text_edit = get(l:user_data, s:user_data_key, {})
+    if !empty(l:text_edit)
+        let l:expanded_text_edit = s:expand_range(l:text_edit, len(v:completed_item['word']))
+        call add(l:all_text_edits, l:expanded_text_edit)
     endif
 
     if has_key(l:user_data, s:user_data_additional_edits_key)
         let l:all_text_edits += l:user_data[s:user_data_additional_edits_key]
     endif
 
-    " apply textEdit
+    " save cursor position in a mark, vim will move it appropriately when
+    " applying edits
+    let l:saved_mark = getpos("'a")
+    " move to end of newText but in two steps (as column may not exist yet)
+    let [l:pos, l:col_offset] = s:get_cursor_pos_and_edit_length(l:text_edit)
+    call setpos("'a", l:pos)
+
+    " apply textEdits
     if !empty(l:all_text_edits)
-        call lsp#utils#text_edit#apply_text_edits(expand('%:p'), l:all_text_edits)
+        call lsp#utils#text_edit#apply_text_edits(lsp#utils#get_buffer_uri(), l:all_text_edits)
     endif
 
-    " move to end of newText
-    if l:text_edit != v:none
-        let l:start = l:text_edit['range']['start']
-        let l:line = l:start['line'] + 1
-        let l:col = l:start['character']
-        let l:new_text_length = len(l:text_edit['newText']) + 1
-        call cursor(l:line, l:col + l:new_text_length)
-    endif
+    let l:pos = getpos("'a")
+    let l:pos[2] += l:col_offset
+    call setpos("'a", l:saved_mark)
+    call setpos('.', l:pos)
 endfunction
 
 function! s:expand_range(text_edit, expand_length) abort
-    let expanded_text_edit = a:text_edit
+    let l:expanded_text_edit = a:text_edit
     let l:expanded_text_edit['range']['end']['character'] += a:expand_length
 
     return l:expanded_text_edit
+endfunction
+
+function! s:get_cursor_pos_and_edit_length(text_edit) abort
+    if !empty(a:text_edit)
+        let l:start = a:text_edit['range']['start']
+        let l:line = l:start['line'] + 1
+        let l:col = l:start['character'] + 1
+        let l:length = len(a:text_edit['newText'])
+        let l:pos = [0, l:line, l:col, 0]
+    else
+        let l:length = 0
+        let l:pos = getpos('.')
+    endif
+
+    return [l:pos, l:length]
 endfunction
 
 " }}}
