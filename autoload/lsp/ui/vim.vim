@@ -80,7 +80,6 @@ endfunction
 function! lsp#ui#vim#definition() abort
     let l:servers = filter(lsp#get_whitelisted_servers(), 'lsp#capabilities#has_definition_provider(v:val)')
     let s:last_req_id = s:last_req_id + 1
-    call setqflist([])
 
     if len(l:servers) == 0
         call s:not_supported('Retrieving definition')
@@ -98,8 +97,6 @@ function! lsp#ui#vim#definition() abort
             \ 'on_notification': function('s:handle_location', [l:ctx, l:server, 'definition']),
             \ })
     endfor
-
-    echo 'Retrieving definition ...'
 endfunction
 
 function! lsp#ui#vim#references() abort
@@ -431,29 +428,24 @@ function! s:handle_location(ctx, server, type, data) abort "ctx = {counter, list
         let a:ctx['list'] = a:ctx['list'] + lsp#ui#vim#utils#locations_to_loc_list(a:data)
     endif
 
-    if a:ctx['counter'] == 0
-        if empty(a:ctx['list'])
-            call lsp#utils#error('No ' . a:type .' found')
-        else
-            if len(a:ctx['list']) == 1 && a:ctx['jump_if_one']
-                normal! m'
-                let l:loc = a:ctx['list'][0]
-                let l:buffer = bufnr(l:loc['filename'])
-                if &modified && !&hidden
-                    let l:cmd = l:buffer !=# -1 ? 'sb ' . l:buffer : 'split ' . l:loc['filename']
-                else
-                    let l:cmd = l:buffer !=# -1 ? 'b ' . l:buffer : 'edit ' . l:loc['filename']
-                endif
-                execute l:cmd . ' | call cursor('.l:loc['lnum'].','.l:loc['col'].')'
-                echo 'Retrieved ' . a:type
-                redraw
-            else
-                call setqflist(a:ctx['list'])
-                echo 'Retrieved ' . a:type
-                botright copen
-            endif
-        endif
+    if a:ctx['counter'] != 0
+        return
     endif
+
+    if empty(a:ctx['list'])
+        call lsp#utils#error('No ' . a:type .' found')
+        return
+    endif
+
+    call setloclist(0, a:ctx['list'], 'r')
+    let l:loc = a:ctx['list'][0]
+    let l:buffer = bufnr(l:loc['filename'])
+    if l:buffer !=# -1
+        execute printf('buffer %d', l:buffer)
+    else
+        execute printf('edit %d', l:loc['filename'])
+    endif
+    call cursor(l:loc['lnum'], l:loc['col'])
 endfunction
 
 function! s:handle_rename_prepare(server, last_req_id, type, data) abort
@@ -574,5 +566,3 @@ function! s:execute_command(server, command) abort
         \ 'params': l:params,
         \ })
 endfunction
-
-
