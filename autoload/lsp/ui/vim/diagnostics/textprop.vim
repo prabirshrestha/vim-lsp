@@ -65,6 +65,7 @@ function! s:get_prop_type(server_name, severity) abort
     if empty(prop_type_get(l:name))
         call prop_type_add(l:name, {
             \ 'highlight': s:severity_sign_names_mapping[l:severity] . 'Highlight',
+            \ 'combine': v:true,
             \ })
     endif
     return l:name
