@@ -52,6 +52,7 @@ function! lsp#enable() abort
         if g:lsp_signs_enabled | call lsp#ui#vim#signs#enable() | endif
         if g:lsp_virtual_text_enabled | call lsp#ui#vim#virtual#enable() | endif
         if g:lsp_highlights_enabled | call lsp#ui#vim#highlights#enable() | endif
+        if g:lsp_textprop_enabled | call lsp#ui#vim#diagnostics#textprop#enable() | endif
     endif
     call s:register_events()
 endfunction
