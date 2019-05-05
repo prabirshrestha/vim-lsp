@@ -775,3 +775,9 @@ function! s:send_didchange_queue(...) abort
     endfor
     let s:didchange_queue = []
 endfunction
+
+" Return dict with diagnostic counts for current buffer
+" { 'error': 1, 'warning': 0, 'information': 0, 'hint': 0 }
+function! lsp#get_buffer_diagnostics_counts() abort
+    return lsp#ui#vim#diagnostics#get_buffer_diagnostics_counts()
+endfunction

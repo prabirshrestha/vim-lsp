@@ -439,6 +439,13 @@ This method is mainly used to generate 'root_uri' when registering server.
 	* If there is not directory with the specific files or diretories
 	  found, the method will return an empty string.
 
+lsp#get_buffer_diagnostics_counts    *vim-lsp-get_buffer_diagnostics_counts*
+
+Get dict with diagnostic counts for current buffer. Useful e.g. for display
+in status line.
+
+    Returns dictionary with keys "error", "warning", "information", "hint".
+
 ===============================================================================
 Commands	                                          *vim-lsp-commands*
 
