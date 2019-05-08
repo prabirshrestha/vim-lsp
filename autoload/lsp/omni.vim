@@ -193,6 +193,7 @@ function! lsp#omni#get_vim_completion_item(item, ...) abort
                 \ 'info': '',
                 \ 'icase': 1,
                 \ 'dup': 1,
+                \ 'empty': 1,
                 \ 'kind': l:kind}
 
     " check support user_data.
@@ -254,7 +255,7 @@ function! s:apply_text_edit() abort
     endif
 
     " completion faild or not select complete item
-    if empty(v:completed_item) || v:completed_item['word'] ==# ''
+    if empty(v:completed_item)
         return
     endif
 
