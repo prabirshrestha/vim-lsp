@@ -139,14 +139,19 @@ endfunction
 
 function! lsp#utils#echo_with_truncation(msg) abort
     let l:msg = a:msg
-    let l:winwidth = winwidth(0)
+
+    if &laststatus == 0 || (&laststatus == 1 && tabpagewinnr(tabpagenr(), '$') == 1)
+        let l:winwidth = winwidth(0)
+
+        if &ruler
+            let l:winwidth -= 18
+        endif
+    else
+        let l:winwidth = &columns
+    endif
 
     if &showcmd
         let l:winwidth -= 11
-    endif
-
-    if &laststatus != 2 && &ruler
-        let l:winwidth -= 18
     endif
 
     if l:winwidth > 5 && l:winwidth < strdisplaywidth(l:msg)
