@@ -243,4 +243,18 @@ function! lsp#ui#vim#diagnostics#get_buffer_diagnostics_counts() abort
     endfor
     return l:counts
 endfunction
+
+function! lsp#ui#vim#diagnostics#get_buffer_first_error_line() abort
+    let l:uri = lsp#utils#get_buffer_uri()
+    let [l:has_diagnostics, l:diagnostics] = s:get_diagnostics(l:uri)
+    let l:first_error_line = v:null
+    for [l:server_name, l:data] in items(l:diagnostics)
+        for l:diag in l:data['response']['params']['diagnostics']
+            if l:diag['severity'] ==# 1 && (l:first_error_line ==# v:null || l:first_error_line ># l:diag['range']['start']['line'])
+                let l:first_error_line = l:diag['range']['start']['line']
+            endif
+        endfor
+    endfor
+    return l:first_error_line ==# v:null ? v:null : l:first_error_line + 1
+endfunction
 " vim sw=4 ts=4 et
