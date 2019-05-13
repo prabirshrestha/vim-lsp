@@ -16,6 +16,7 @@ CONTENTS                                                  *vim-lsp-contents*
       g:lsp_insert_text_enabled             |g:lsp_insert_text_enabled|
       g:lsp_text_edit_enabled               |g:lsp_text_edit_enabled|
       g:lsp_signs_enabled                   |g:lsp_signs_enabled|
+      g:lsp_diagnostics_echo_cursor         |g:lsp_diagnostics_echo_cursor|
       g:lsp_use_event_queue                 |g:lsp_use_event_queue|
       g:lsp_highlight_references_enabled    |g:lsp_highlight_references_enabled|
     Functions                             |vim-lsp-functions|
@@ -164,6 +165,17 @@ g:lsp_text_edit_enabled                              *g:lsp_text_edit_enabled*
     Example:
 	let g:lsp_text_edit_enabled = 1
 	let g:lsp_text_edit_enabled = 0
+
+g:lsp_diagnostics_echo_cursor                         *g:lsp_diagnostics_echo_cursor*
+    Type: |Number|
+    Default: `0`
+
+    Enables echo of diagnostic error for the current line to status. Requires
+    |lsp_diagnostics_enabled| set to 1.
+
+    Example:
+	let g:lsp_diagnostics_echo_cursor = 1
+	let g:lsp_diagnostics_echo_cursor = 0
 
 g:lsp_signs_enabled                                   *g:lsp_signs_enabled*
     Type: |Number|
