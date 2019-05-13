@@ -223,7 +223,7 @@ function! lsp#omni#get_vim_completion_item(item, ...) abort
     endif
 
     if has_key(a:item, 'detail') && !empty(a:item['detail'])
-        let l:completion['menu'] = a:item['detail']
+        let l:completion['menu'] = substitute(a:item['detail'], '[ \t\n\r]\+', ' ', 'g')
     endif
 
     if has_key(a:item, 'documentation')
