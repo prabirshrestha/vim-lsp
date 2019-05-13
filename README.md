@@ -106,7 +106,20 @@ highlight link LspErrorText GruvboxRedSign " requires gruvbox
 highlight clear LspWarningLine
 ```
 
-### Virtual text
+#### Highlights
+
+Highlighting diagnostics requires either NeoVim 0.3+ or Vim with patch 8.1.0579.
+They are enabled by default when supported, but can be turned off respectively by
+
+```viml
+let g:lsp_highlights_enabled = 0
+let g:lsp_textprop_enabled = 0
+```
+
+Can be customized by setting or linking `LspErrorHighlight`, `LspWarningHighlight`,
+`LspInformationHighlight` and `LspHintHighlight` highlight groups.
+
+#### Virtual text
 
 In NeoVim 0.3 or newer you can use virtual text feature (enabled by default).
 You can disable it by adding

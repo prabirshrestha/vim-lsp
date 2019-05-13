@@ -15,8 +15,11 @@ CONTENTS                                                  *vim-lsp-contents*
       g:lsp_preview_keep_focus              |g:lsp_preview_keep_focus|
       g:lsp_insert_text_enabled             |g:lsp_insert_text_enabled|
       g:lsp_text_edit_enabled               |g:lsp_text_edit_enabled|
-      g:lsp_signs_enabled                   |g:lsp_signs_enabled|
       g:lsp_diagnostics_echo_cursor         |g:lsp_diagnostics_echo_cursor|
+      g:lsp_signs_enabled                   |g:lsp_signs_enabled|
+      g:lsp_virtual_text_enabled            |g:lsp_virtual_text_enabled|
+      g:lsp_highlights_enabled              |g:lsp_highlights_enabled|
+      g:lsp_textprop_enabled                |g:lsp_textprop_enabled|
       g:lsp_use_event_queue                 |g:lsp_use_event_queue|
       g:lsp_highlight_references_enabled    |g:lsp_highlight_references_enabled|
     Functions                             |vim-lsp-functions|
@@ -203,6 +206,49 @@ g:lsp_virtual_text_enabled                            *g:lsp_virtual_text_enable
 	let g:lsp_virtual_text_enabled = 0
 <
 
+g:lsp_highlights_enabled                         *g:lsp_highlights_enabled*
+    Type: |Number|
+    Default: `1` for neovim 0.3+
+
+    Enables highlighting of diagnostics. Requires NeoVim with version 0.3 or
+    newer.
+
+    Example:
+>
+	let g:lsp_highlights_enabled = 1
+	let g:lsp_highlights_enabled = 0
+<
+
+    To change the style of the highlighting, you can set or link
+    `LspErrorHighlight`, `LspWarningHighlight`, `LspInformationHighlight` and
+    `LspHintHighlight` highlight groups.
+
+    Example:
+>
+	highlight link LspErrorHighlight Error
+<
+
+g:lsp_textprop_enabled                             *g:lsp_textprop_enabled*
+    Type: |Number|
+    Default: `1` for vim with +textprop
+
+    Enables highlighting of diagnostics. Requires vim with +textprop
+    (patch 8.1.0579).
+
+    Example:
+>
+	let g:lsp_textprop_enabled = 1
+	let g:lsp_textprop_enabled = 0
+<
+
+    To change the style of the highlighting, you can set or link
+    `LspErrorHighlight`, `LspWarningHighlight`, `LspInformationHighlight` and
+    `LspHintHighlight` highlight groups.
+
+    Example:
+>
+	highlight LspErrorHighlight term=underline cterm=underline gui=underline
+<
 
 g:lsp_use_event_queue                               *g:lsp_use_event_queue*
     Type: |Number|
