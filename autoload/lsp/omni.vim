@@ -34,6 +34,7 @@ let s:completion_status_pending = 'pending'
 
 let s:is_user_data_support = has('patch-8.0.1493')
 let s:user_data_key = 'vim-lsp/textEdit'
+let s:user_data_additional_edits_key = 'vim-lsp/additionalTextEdits'
 
 " }}}
 
@@ -207,17 +208,23 @@ function! lsp#omni#get_vim_completion_item(item, ...) abort
 
     " add user_data in completion item, when
     "     1. provided user_data
-    "     2. provided textEdit
-    "     3. textEdit value is Dictionary
-    if g:lsp_text_edit_enabled && has_key(a:item, 'textEdit')
-        let l:text_edit = a:item['textEdit']
+    "     2. provided textEdit or additionalTextEdits
+    "     3. textEdit value is Dictionary or additionalTextEdits is non-empty list
+    if g:lsp_text_edit_enabled
+        let l:text_edit = get(a:item, 'textEdit', v:null)
+        let l:additional_text_edits = get(a:item, 'additionalTextEdits', v:null)
+        let l:user_data = {}
 
         " type check
         if type(l:text_edit) == type({})
-            let l:user_data = {
-                    \ s:user_data_key : l:text_edit
-                    \ }
+            let l:user_data[s:user_data_key] = l:text_edit
+        endif
 
+        if type(l:additional_text_edits) == type([]) && !empty(l:additional_text_edits)
+            let l:user_data[s:user_data_additional_edits_key] = l:additional_text_edits
+        endif
+
+        if !empty(l:user_data)
             let l:completion['user_data'] = json_encode(l:user_data)
         endif
     endif
@@ -237,10 +244,10 @@ endfunction
 
 augroup lsp_completion_item_text_edit
     autocmd!
-    autocmd CompleteDone * call <SID>apply_text_edit()
+    autocmd CompleteDone * call <SID>apply_text_edits()
 augroup END
 
-function! s:apply_text_edit() abort
+function! s:apply_text_edits() abort
     " textEdit support function(callin from CompleteDone).
     "
     " expected user_data structure:
@@ -248,7 +255,14 @@ function! s:apply_text_edit() abort
     "       'vim-lsp/textEdit': {
     "         'range': { ...(snip) },
     "         'newText': 'yyy'
-    "        },
+    "       },
+    "       'vim-lsp/additionalTextEdits': [
+    "         {
+    "           'range': { ...(snip) },
+    "           'newText': 'yyy'
+    "         },
+    "         ...
+    "       ],
     "     }
     if !g:lsp_text_edit_enabled
         return
@@ -272,30 +286,61 @@ function! s:apply_text_edit() abort
         return
     endtry
 
-    if !(type(l:user_data) == type({}) && has_key(l:user_data, s:user_data_key))
+    if type(l:user_data) != type({})
         return
     endif
 
+    let l:all_text_edits = []
+
     " expand textEdit range, for omni complet inserted text.
-    let l:text_edit = l:user_data[s:user_data_key]
-    let l:expanded_text_edit = s:expand_range(l:text_edit, len(v:completed_item['word']))
+    let l:text_edit = get(l:user_data, s:user_data_key, {})
+    if !empty(l:text_edit)
+        let l:expanded_text_edit = s:expand_range(l:text_edit, len(v:completed_item['word']))
+        call add(l:all_text_edits, l:expanded_text_edit)
+    endif
 
-    " apply textEdit
-    call lsp#utils#text_edit#apply_text_edits(expand('%:p'), [l:expanded_text_edit])
+    if has_key(l:user_data, s:user_data_additional_edits_key)
+        let l:all_text_edits += l:user_data[s:user_data_additional_edits_key]
+    endif
 
-    " move to end of newText
-    let l:start = l:text_edit['range']['start']
-    let l:line = l:start['line'] + 1
-    let l:col = l:start['character']
-    let l:new_text_length = len(l:text_edit['newText']) + 1
-    call cursor(l:line, l:col + l:new_text_length)
+    " save cursor position in a mark, vim will move it appropriately when
+    " applying edits
+    let l:saved_mark = getpos("'a")
+    " move to end of newText but in two steps (as column may not exist yet)
+    let [l:pos, l:col_offset] = s:get_cursor_pos_and_edit_length(l:text_edit)
+    call setpos("'a", l:pos)
+
+    " apply textEdits
+    if !empty(l:all_text_edits)
+        call lsp#utils#text_edit#apply_text_edits(lsp#utils#get_buffer_uri(), l:all_text_edits)
+    endif
+
+    let l:pos = getpos("'a")
+    let l:pos[2] += l:col_offset
+    call setpos("'a", l:saved_mark)
+    call setpos('.', l:pos)
 endfunction
 
 function! s:expand_range(text_edit, expand_length) abort
-    let expanded_text_edit = a:text_edit
+    let l:expanded_text_edit = a:text_edit
     let l:expanded_text_edit['range']['end']['character'] += a:expand_length
 
     return l:expanded_text_edit
+endfunction
+
+function! s:get_cursor_pos_and_edit_length(text_edit) abort
+    if !empty(a:text_edit)
+        let l:start = a:text_edit['range']['start']
+        let l:line = l:start['line'] + 1
+        let l:col = l:start['character'] + 1
+        let l:length = len(a:text_edit['newText'])
+        let l:pos = [0, l:line, l:col, 0]
+    else
+        let l:length = 0
+        let l:pos = getpos('.')
+    endif
+
+    return [l:pos, l:length]
 endfunction
 
 " }}}
