@@ -1,0 +1,99 @@
+Describe lsp#utils#text_edit
+
+    Before each
+        let s:endofline_backup = &endofline
+        set endofline
+        % delete _
+        0put ='foo'
+        1put ='bar'
+        3delete _
+    End
+
+    After all
+        % delete _
+        let &endofline = s:endofline_backup
+    End
+
+    Describe lsp#utils#text_edit#apply_text_edits
+        It insert newText
+            call lsp#utils#text_edit#apply_text_edits(
+                    \ expand('%'),
+                    \ [{
+                    \   'range': {
+                    \       'start': {
+                    \           'line': 1,
+                    \           'character': 1
+                    \       },
+                    \       'end': {
+                    \           'line': 1,
+                    \           'character': 1
+                    \       }
+                    \   },
+                    \   'newText': 'baz'
+                    \ }])
+
+            Assert Equals(lsp#utils#buffer#_get_lines(bufnr('$')), ['foo', 'bbazar', ''])
+        End
+
+        It insert empty newText
+            call lsp#utils#text_edit#apply_text_edits(
+                    \ expand('%'),
+                    \ [{
+                    \   'range': {
+                    \       'start': {
+                    \           'line': 1,
+                    \           'character': 1
+                    \       },
+                    \       'end': {
+                    \           'line': 1,
+                    \           'character': 1
+                    \       }
+                    \   },
+                    \   'newText': ''
+                    \ }])
+
+            Assert Equals(lsp#utils#buffer#_get_lines(bufnr('$')), ['foo', 'bar', ''])
+        End
+
+        It replace range string to newText
+            call lsp#utils#text_edit#apply_text_edits(
+                    \ expand('%'),
+                    \ [{
+                    \   'range': {
+                    \       'start': {
+                    \           'line': 1,
+                    \           'character': 0
+                    \       },
+                    \       'end': {
+                    \           'line': 1,
+                    \           'character': 1
+                    \       }
+                    \   },
+                    \   'newText': 'replaced'
+                    \ }])
+
+            Assert Equals(lsp#utils#buffer#_get_lines(bufnr('$')), ['foo', 'replacedar', ''])
+        End
+
+        It delete range string
+            call lsp#utils#text_edit#apply_text_edits(
+                    \ expand('%'),
+                    \ [{
+                    \   'range': {
+                    \       'start': {
+                    \           'line': 1,
+                    \           'character': 0
+                    \       },
+                    \       'end': {
+                    \           'line': 1,
+                    \           'character': 1
+                    \       }
+                    \   },
+                    \   'newText': ''
+                    \ }])
+
+            Assert Equals(lsp#utils#buffer#_get_lines(bufnr('$')), ['foo', 'ar', ''])
+        End
+    End
+End
+
