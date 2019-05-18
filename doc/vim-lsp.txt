@@ -4,49 +4,58 @@
 ================================================================================
 CONTENTS                                                  *vim-lsp-contents*
 
-    Introduction                         |vim-lsp-introduction|
-    Install                              |vim-lsp-install|
-    Language Servers                     |vim-lsp-language-servers|
-      Configure                            |vim-lsp-configure-source|
-      Wiki                                 |vim-lsp-configure-wiki|
-    Options                              |vim-lsp-options|
-      g:lsp_diagnostics_enabled            |g:lsp_diagnostics_enabled|
-      g:lsp_auto_enable                    |g:lsp_auto_enable|
-      g:lsp_preview_keep_focus             |g:lsp_preview_keep_focus|
-      g:lsp_insert_text_enabled            |g:lsp_insert_text_enabled|
-      g:lsp_text_edit_enabled              |g:lsp_text_edit_enabled|
-      g:lsp_signs_enabled                  |g:lsp_signs_enabled|
-      g:lsp_use_event_queue                |g:lsp_use_event_queue|
-      g:lsp_get_vim_completion_item        |g:lsp_get_vim_completion_item|
-      g:lsp_get_supported_capabilities     |g:lsp_get_supported_capabilities|
-    Functions                            |vim-lsp-functions|
-      enable                               |vim-lsp-enable|
-      disable                              |vim-lsp-disable|
-      register_server                      |vim-lsp-register_server|
-      stop_server                          |vim-lsp-stop_server|
-    Commands                             |vim-lsp-commands|
-      LspCodeAction                        |LspCodeAction|
-      LspDocumentDiagnostics               |LspDocumentDiagnostics|
-      LspDeclaration                       |LspDeclaration|
-      LspDefinition                        |LspDefinition|
-      LspDocumentFormat                    |LspDocumentFormat|
-      LspDocumentFormatSync                |LspDocumentFormatSync|
-      LspDocumentRangeFormat               |LspDocumentRangeFormat|
-      LspDocumentSymbol                    |LspDocumentSymbol|
-      LspHover                             |LspHover|
-      LspNextError                         |LspNextError|
-      LspPreviousError                     |LspPreviousError|
-      LspImplementation                    |LspImplementation|
-      LspReferences                        |LspReferences|
-      LspRename                            |LspRename|
-      LspTypeDefinition                    |LspTypeDefinition|
-      LspWorkspaceSymbol                   |LspWorkspaceSymbol|
-    Mappings                             |vim-lsp-mappings|
-    Autocomplete                         |vim-lsp-autocomplete|
-      omnifunc                             |vim-lsp-omnifunc|
-      asyncomplete.vim                     |vim-lsp-asyncomplete|
-    Snippets                             |vim-lsp-snippets|
-    License                              |vim-lsp-license|
+    Introduction                          |vim-lsp-introduction|
+    Install                               |vim-lsp-install|
+    Language Servers                      |vim-lsp-language-servers|
+      Configure                             |vim-lsp-configure-source|
+      Wiki                                  |vim-lsp-configure-wiki|
+    Options                               |vim-lsp-options|
+      g:lsp_diagnostics_enabled             |g:lsp_diagnostics_enabled|
+      g:lsp_auto_enable                     |g:lsp_auto_enable|
+      g:lsp_preview_keep_focus              |g:lsp_preview_keep_focus|
+      g:lsp_insert_text_enabled             |g:lsp_insert_text_enabled|
+      g:lsp_text_edit_enabled               |g:lsp_text_edit_enabled|
+      g:lsp_diagnostics_echo_cursor         |g:lsp_diagnostics_echo_cursor|
+      g:lsp_signs_enabled                   |g:lsp_signs_enabled|
+      g:lsp_virtual_text_enabled            |g:lsp_virtual_text_enabled|
+      g:lsp_highlights_enabled              |g:lsp_highlights_enabled|
+      g:lsp_textprop_enabled                |g:lsp_textprop_enabled|
+      g:lsp_use_event_queue                 |g:lsp_use_event_queue|
+      g:lsp_highlight_references_enabled    |g:lsp_highlight_references_enabled|
+      g:lsp_get_vim_completion_item         |g:lsp_get_vim_completion_item|
+      g:lsp_get_supported_capabilities      |g:lsp_get_supported_capabilities|
+    Functions                             |vim-lsp-functions|
+      enable                                |vim-lsp-enable|
+      disable                               |vim-lsp-disable|
+      register_server                       |vim-lsp-register_server|
+      stop_server                           |vim-lsp-stop_server|
+      utils#find_nearest_parent_file_directory
+                              |vim-lsp-utils-find_nearest_parent_file_directory|
+    Commands                              |vim-lsp-commands|
+      LspCodeAction                         |LspCodeAction|
+      LspDocumentDiagnostics                |LspDocumentDiagnostics|
+      LspDeclaration                        |LspDeclaration|
+      LspDefinition                         |LspDefinition|
+      LspDocumentFormat                     |LspDocumentFormat|
+      LspDocumentFormatSync                 |LspDocumentFormatSync|
+      LspDocumentRangeFormat                |LspDocumentRangeFormat|
+      LspDocumentSymbol                     |LspDocumentSymbol|
+      LspHover                              |LspHover|
+      LspNextError                          |LspNextError|
+      LspNextReference                      |LspNextReference|
+      LspPreviousError                      |LspPreviousError|
+      LspPreviousReference                  |LspPreviousReference|
+      LspImplementation                     |LspImplementation|
+      LspReferences                         |LspReferences|
+      LspRename                             |LspRename|
+      LspTypeDefinition                     |LspTypeDefinition|
+      LspWorkspaceSymbol                    |LspWorkspaceSymbol|
+    Mappings                              |vim-lsp-mappings|
+    Autocomplete                          |vim-lsp-autocomplete|
+      omnifunc                              |vim-lsp-omnifunc|
+      asyncomplete.vim                      |vim-lsp-asyncomplete|
+    Snippets                              |vim-lsp-snippets|
+    License                               |vim-lsp-license|
 
 
 ================================================================================
@@ -165,6 +174,17 @@ g:lsp_text_edit_enabled                              *g:lsp_text_edit_enabled*
 	let g:lsp_text_edit_enabled = 1
 	let g:lsp_text_edit_enabled = 0
 
+g:lsp_diagnostics_echo_cursor                         *g:lsp_diagnostics_echo_cursor*
+    Type: |Number|
+    Default: `0`
+
+    Enables echo of diagnostic error for the current line to status. Requires
+    |lsp_diagnostics_enabled| set to 1.
+
+    Example:
+	let g:lsp_diagnostics_echo_cursor = 1
+	let g:lsp_diagnostics_echo_cursor = 0
+
 g:lsp_signs_enabled                                   *g:lsp_signs_enabled*
     Type: |Number|
     Default: `1` for vim/neovim with patch 8.1.0772
@@ -189,6 +209,49 @@ g:lsp_virtual_text_enabled                            *g:lsp_virtual_text_enable
 	let g:lsp_virtual_text_enabled = 0
 <
 
+g:lsp_highlights_enabled                         *g:lsp_highlights_enabled*
+    Type: |Number|
+    Default: `1` for neovim 0.3+
+
+    Enables highlighting of diagnostics. Requires NeoVim with version 0.3 or
+    newer.
+
+    Example:
+>
+	let g:lsp_highlights_enabled = 1
+	let g:lsp_highlights_enabled = 0
+<
+
+    To change the style of the highlighting, you can set or link
+    `LspErrorHighlight`, `LspWarningHighlight`, `LspInformationHighlight` and
+    `LspHintHighlight` highlight groups.
+
+    Example:
+>
+	highlight link LspErrorHighlight Error
+<
+
+g:lsp_textprop_enabled                             *g:lsp_textprop_enabled*
+    Type: |Number|
+    Default: `1` for vim with +textprop
+
+    Enables highlighting of diagnostics. Requires vim with +textprop
+    (patch 8.1.0579).
+
+    Example:
+>
+	let g:lsp_textprop_enabled = 1
+	let g:lsp_textprop_enabled = 0
+<
+
+    To change the style of the highlighting, you can set or link
+    `LspErrorHighlight`, `LspWarningHighlight`, `LspInformationHighlight` and
+    `LspHintHighlight` highlight groups.
+
+    Example:
+>
+	highlight LspErrorHighlight term=underline cterm=underline gui=underline
+<
 
 g:lsp_use_event_queue                               *g:lsp_use_event_queue*
     Type: |Number|
@@ -200,6 +263,26 @@ g:lsp_use_event_queue                               *g:lsp_use_event_queue*
     Example:
 	let g:lsp_use_event_queue = 1
 	let g:lsp_use_event_queue = 0
+
+g:lsp_highlight_references_enabled         *g:lsp_highlight_references_enabled*
+    Type: |Number|
+    Default: `1`
+
+    Enable highlighting of the references to the symbol under the cursor.
+
+    Example:
+>
+    let g:lsp_highlight_references_enabled = 1
+    let g:lsp_highlight_references_enabled = 0
+<
+
+    To change the style of the highlighting, you can set or link the `lspReference`
+    highlight group.
+
+    Example:
+>
+    highlight lspReference ctermfg=red guifg=red ctermbg=green guibg=green
+<
 
 g:lsp_get_vim_completion_item               *g:lsp_get_vim_completion_item*
     Type: |List|
@@ -400,6 +483,37 @@ Get the status of a server.
     Returns one of "unknown server", " "exited", "starting", "failed",
     "running", "not running".
 
+			 *vim-lsp-utils-find_nearest_parent_file_directory*
+utils#find_nearest_parent_file_directory
+
+Find the nearest parent directory which contains the specific files or
+diretories. The method has two parameters. The first is the path where
+searching starts. The second is the files or directories names which
+you want to find. The return value is the directory path which is found
+the most times.
+This method is mainly used to generate 'root_uri' when registering server.
+
+    Example:
+	if executable('ccls')
+	    au User lsp_setup call lsp#register_server({
+		\ 'name': 'ccls',
+		\ 'cmd': {server_info->['ccls']},
+		\ 'root_uri':{server_info->lsp#utils#path_to_uri(
+		\	lsp#utils#find_nearest_parent_file_directory(
+		\		lsp#utils#get_buffer_path(),
+		\		['.ccls', 'compile_commands.json', '.git/']
+		\	))},
+		\ 'initialization_options': {},
+		\ 'whitelist': ['c', 'cpp', 'objc', 'objcpp', 'cc'],
+		\ })
+	endif
+    Note:
+	* The second parameter can be a |String| or a string |List|.
+	* For the second parameter, the string ends with '/' or '\' will
+	  be regarded as a directory name, otherwise as a file name.
+	* If there is not directory with the specific files or diretories
+	  found, the method will return an empty string.
+
 ===============================================================================
 Commands	                                          *vim-lsp-commands*
 
@@ -456,9 +570,17 @@ LspNextError						     *LspNextError*
 
 Jump to Next err diagnostics
 
+LspNextReference                                          *LspNextReference*
+
+Jump to the next reference of the symbol under cursor.
+
 LspPreviousError					 *LspPreviousError*
 
 Jump to Previous err diagnostics
+
+LspPreviousReference                                  *LspPreviousReference*
+
+Jump to the previous reference of the symbol under cursor.
 
 LspImplementation                                        *LspImplementation*
 
@@ -500,7 +622,9 @@ Available plug mappings are following:
   (lsp-document-diagnostics)
   (lsp-hover)
   (lsp-next-error)
+  (lsp-next-reference)
   (lsp-previous-error)
+  (lsp-previous-reference)
   (lsp-references)
   (lsp-rename)
   (lsp-workspace-symbol)

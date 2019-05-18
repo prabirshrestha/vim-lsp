@@ -14,6 +14,7 @@ Describe lsp#omni
             \ 'info': 'my documentation.',
             \ 'icase': 1,
             \ 'dup': 1,
+            \ 'empty': 1,
             \ 'kind': 'function',
             \ 'menu': 'my-detail'
             \}
@@ -55,6 +56,7 @@ Describe lsp#omni
             \ 'info': 'my documentation.',
             \ 'icase': 1,
             \ 'dup': 1,
+            \ 'empty': 1,
             \ 'kind': 'function',
             \ 'menu': 'my-detail',
             \ 'user_data': l:want_user_data_string
@@ -83,8 +85,32 @@ Describe lsp#omni
             \ 'info': 'my documentation.',
             \ 'icase': 1,
             \ 'dup': 1,
+            \ 'empty': 1,
             \ 'kind': 'function',
             \ 'menu': 'my-detail',
+            \}
+            let got = lsp#omni#get_vim_completion_item(item)
+
+            Assert Equals(got, want)
+        End
+
+        It should return item with newlines in 'menu' replaced
+            let item = {
+            \ 'label': 'my-label',
+            \ 'documentation': 'my documentation.',
+            \ 'detail': "my-detail\nmore-detail",
+            \ 'kind': '3'
+            \}
+
+            let want = {
+            \ 'word': 'my-label',
+            \ 'abbr': 'my-label',
+            \ 'info': 'my documentation.',
+            \ 'icase': 1,
+            \ 'dup': 1,
+            \ 'empty': 1,
+            \ 'kind': 'function',
+            \ 'menu': 'my-detail more-detail'
             \}
             let got = lsp#omni#get_vim_completion_item(item)
 

@@ -11,6 +11,7 @@ let g:lsp_debug_servers = get(g:, 'lsp_debug_servers', [])
 let g:lsp_signs_enabled = get(g:, 'lsp_signs_enabled', has('patch-8.1.0772') && exists('*sign_define'))
 let g:lsp_virtual_text_enabled = get(g:, 'lsp_virtual_text_enabled', exists('*nvim_buf_set_virtual_text'))
 let g:lsp_highlights_enabled = get(g:, 'lsp_highlights_enabled', exists('*nvim_buf_add_highlight'))
+let g:lsp_textprop_enabled = get(g:, 'lsp_textprop_enabled', exists('*prop_add') && !g:lsp_highlights_enabled)
 let g:lsp_signs_error = get(g:, 'lsp_signs_error', {})
 let g:lsp_signs_warning = get(g:, 'lsp_signs_warning', {})
 let g:lsp_signs_information = get(g:, 'lsp_signs_information', {})
@@ -23,6 +24,7 @@ let g:lsp_preview_keep_focus = get(g:, 'lsp_preview_keep_focus', 1)
 let g:lsp_use_event_queue = get(g:, 'lsp_use_event_queue', has('nvim') || has('patch-8.1.0889'))
 let g:lsp_insert_text_enabled= get(g:, 'lsp_insert_text_enabled', 1)
 let g:lsp_text_edit_enabled = get(g:, 'lsp_text_edit_enabled', has('patch-8.0.1493'))
+let g:lsp_highlight_references_enabled = get(g:, 'lsp_highlight_references_enabled', 1)
 
 let g:lsp_get_vim_completion_item = get(g:, 'lsp_get_vim_completion_item', [function('lsp#omni#default_get_vim_completion_item')])
 let g:lsp_get_supported_capabilities = get(g:, 'lsp_get_supported_capabilities', [function('lsp#default_get_supported_capabilities')])
@@ -53,6 +55,8 @@ command! -range LspDocumentRangeFormatSync call lsp#ui#vim#document_range_format
 command! LspImplementation call lsp#ui#vim#implementation()
 command! LspTypeDefinition call lsp#ui#vim#type_definition()
 command! -nargs=0 LspStatus echo lsp#get_server_status()
+command! LspNextReference call lsp#ui#vim#references#jump(+1)
+command! LspPreviousReference call lsp#ui#vim#references#jump(-1)
 
 nnoremap <plug>(lsp-code-action) :<c-u>call lsp#ui#vim#code_action()<cr>
 nnoremap <plug>(lsp-declaration) :<c-u>call lsp#ui#vim#declaration()<cr>
@@ -70,3 +74,5 @@ nnoremap <plug>(lsp-document-format) :<c-u>call lsp#ui#vim#document_format()<cr>
 vnoremap <plug>(lsp-document-format) :call lsp#ui#vim#document_range_format()<cr>
 nnoremap <plug>(lsp-implementation) :<c-u>call lsp#ui#vim#implementation()<cr>
 nnoremap <plug>(lsp-status) :<c-u>echo lsp#get_server_status()<cr>
+nnoremap <plug>(lsp-next-reference) :<c-u>call lsp#ui#vim#references#jump(+1)<cr>
+nnoremap <plug>(lsp-previous-reference) :<c-u>call lsp#ui#vim#references#jump(-1)<cr>

@@ -52,6 +52,7 @@ function! lsp#enable() abort
         if g:lsp_signs_enabled | call lsp#ui#vim#signs#enable() | endif
         if g:lsp_virtual_text_enabled | call lsp#ui#vim#virtual#enable() | endif
         if g:lsp_highlights_enabled | call lsp#ui#vim#highlights#enable() | endif
+        if g:lsp_textprop_enabled | call lsp#ui#vim#diagnostics#textprop#enable() | endif
     endif
     call s:register_events()
 endfunction
@@ -157,6 +158,8 @@ function! s:register_events() abort
             autocmd TextChangedP * call s:on_text_document_did_change()
         endif
         autocmd CursorMoved * call s:on_cursor_moved()
+        autocmd BufWinEnter,BufWinLeave,InsertEnter * call lsp#ui#vim#references#clean_references()
+        autocmd CursorMoved * call lsp#ui#vim#references#highlight(v:false)
     augroup END
     call s:on_text_document_did_open()
 endfunction
