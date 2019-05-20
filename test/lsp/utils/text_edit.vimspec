@@ -1,21 +1,32 @@
+function! s:set_text(lines)
+    % delete _
+    put =a:lines
+    execute 'normal ggdd'
+endfunction
+
+function! s:get_text()
+    return lsp#utils#buffer#_get_lines(bufnr('$'))
+endfunction
+
 Describe lsp#utils#text_edit
 
-    Before each
+    Before all
         let s:endofline_backup = &endofline
         set endofline
-        % delete _
-        0put ='foo'
-        1put ='bar'
-        3delete _
     End
 
     After all
-        % delete _
         let &endofline = s:endofline_backup
+    End
+
+    Before each
+        enew!
     End
 
     Describe lsp#utils#text_edit#apply_text_edits
         It insert newText
+            call s:set_text(['foo', 'bar'])
+
             call lsp#utils#text_edit#apply_text_edits(
                     \ expand('%'),
                     \ [{
@@ -32,10 +43,13 @@ Describe lsp#utils#text_edit
                     \   'newText': 'baz'
                     \ }])
 
-            Assert Equals(lsp#utils#buffer#_get_lines(bufnr('$')), ['foo', 'bbazar', ''])
+            let l:buffer_text = s:get_text()
+            Assert Equals(l:buffer_text, ['foo', 'bbazar', ''])
         End
 
         It insert empty newText
+            call s:set_text(['foo', 'bar'])
+
             call lsp#utils#text_edit#apply_text_edits(
                     \ expand('%'),
                     \ [{
@@ -52,10 +66,13 @@ Describe lsp#utils#text_edit
                     \   'newText': ''
                     \ }])
 
-            Assert Equals(lsp#utils#buffer#_get_lines(bufnr('$')), ['foo', 'bar', ''])
+            let l:buffer_text = s:get_text()
+            Assert Equals(l:buffer_text, ['foo', 'bar', ''])
         End
 
         It replace range string to newText
+            call s:set_text(['foo', 'bar'])
+
             call lsp#utils#text_edit#apply_text_edits(
                     \ expand('%'),
                     \ [{
@@ -72,10 +89,13 @@ Describe lsp#utils#text_edit
                     \   'newText': 'replaced'
                     \ }])
 
-            Assert Equals(lsp#utils#buffer#_get_lines(bufnr('$')), ['foo', 'replacedar', ''])
+            let l:buffer_text = s:get_text()
+            Assert Equals(l:buffer_text, ['foo', 'replacedar', ''])
         End
 
         It delete range string
+            call s:set_text(['foo', 'bar'])
+
             call lsp#utils#text_edit#apply_text_edits(
                     \ expand('%'),
                     \ [{
@@ -92,7 +112,8 @@ Describe lsp#utils#text_edit
                     \   'newText': ''
                     \ }])
 
-            Assert Equals(lsp#utils#buffer#_get_lines(bufnr('$')), ['foo', 'ar', ''])
+            let l:buffer_text = s:get_text()
+            Assert Equals(l:buffer_text, ['foo', 'ar', ''])
         End
     End
 End
