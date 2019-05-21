@@ -157,14 +157,10 @@ function! s:generate_sub_cmd_insert(text_edit) abort
     let l:sub_cmd = s:preprocess_cmd(a:text_edit['range'])
     let l:sub_cmd .= s:generate_move_start_cmd(l:start_line, l:start_character)
 
-    if len(l:new_text) == 0
-        let l:sub_cmd .= 'x'
+    if l:start_character >= len(getline(l:start_line))
+        let l:sub_cmd .= 'a'
     else
-        if l:start_character >= len(getline(l:start_line))
-            let l:sub_cmd .= 'a'
-        else
-            let l:sub_cmd .= 'i'
-        endif
+        let l:sub_cmd .= 'i'
     endif
 
     let l:sub_cmd .= printf('%s', l:new_text)
