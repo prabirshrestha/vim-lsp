@@ -221,5 +221,5 @@ function! lsp#ui#vim#references#jump(offset) abort
 
     " Jump
     let l:target = w:lsp_reference_positions[l:index][0:1]
-    silent exec 'normal! ' . l:target[0] . 'G' . l:target[1] . '|'
+    silent exec 'normal! ' . l:target[0] . 'G0' . (l:target[1] == 1 ? '' : l:target[1]-1 . 'l')
 endfunction
