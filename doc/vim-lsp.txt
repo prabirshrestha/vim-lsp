@@ -50,6 +50,8 @@ CONTENTS                                                  *vim-lsp-contents*
       LspRename                             |LspRename|
       LspTypeDefinition                     |LspTypeDefinition|
       LspWorkspaceSymbol                    |LspWorkspaceSymbol|
+    Autocommands                          |vim-lsp-autocommands|
+      lsp_complete_done                     |lsp_complete_done|
     Mappings                              |vim-lsp-mappings|
     Autocomplete                          |vim-lsp-autocomplete|
       omnifunc                              |vim-lsp-omnifunc|
@@ -605,6 +607,21 @@ Search and show workspace symbols.
 LspStatus                                                        *LspStatus*
 
 Prints the status of all registered servers.
+
+===============================================================================
+Autocommands                                          *vim-lsp-autocommands*
+
+lsp_complete_done                                        *lsp_complete_done*
+
+This autocommand is run after Insert mode completion is done, similar to
+|CompleteDone|. However, the difference is that |lsp_complete_done| is run
+only after vim-lsp has finished executing its internal |CompleteDone|
+autocommands (e.g. applying text edits). It is thus ideal to use for snippet
+expansion, or custom post processing of completed items. Just like
+|CompleteDone|, the Vim variable |v:completed_item| contains information about
+the completed item. It is guaranteed that vim-lsp does not change the content
+of this variable during its |CompleteDone| autocommands.
+
 
 ===============================================================================
 Mappings	                                          *vim-lsp-mappings*
