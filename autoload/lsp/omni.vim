@@ -269,16 +269,19 @@ function! s:apply_text_edits() abort
     "       ],
     "     }
     if !g:lsp_text_edit_enabled
+        doautocmd User lsp_complete_done
         return
     endif
 
     " completion faild or not select complete item
     if empty(v:completed_item)
+        doautocmd User lsp_complete_done
         return
     endif
 
     " check user_data
     if !has_key(v:completed_item, 'user_data')
+        doautocmd User lsp_complete_done
         return
     endif
 
@@ -287,10 +290,12 @@ function! s:apply_text_edits() abort
         let l:user_data = json_decode(v:completed_item['user_data'])
     catch
         " do nothing if user_data is not json type string.
+        doautocmd User lsp_complete_done
         return
     endtry
 
     if type(l:user_data) != type({})
+        doautocmd User lsp_complete_done
         return
     endif
 
@@ -323,6 +328,8 @@ function! s:apply_text_edits() abort
     let l:pos[2] += l:col_offset
     call setpos("'a", l:saved_mark)
     call setpos('.', l:pos)
+
+    doautocmd User lsp_complete_done
 endfunction
 
 function! s:expand_range(text_edit, expand_length) abort
