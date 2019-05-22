@@ -446,6 +446,7 @@ function! s:handle_location(ctx, server, type, data) abort "ctx = {counter, list
         execute printf('edit %d', l:loc['filename'])
     endif
     call cursor(l:loc['lnum'], l:loc['col'])
+    redraw
 endfunction
 
 function! s:handle_rename_prepare(server, last_req_id, type, data) abort
