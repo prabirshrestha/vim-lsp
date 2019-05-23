@@ -154,10 +154,6 @@ function! s:filter_completion_item(item) abort
 
     let l:match_pattern = '^' . l:last_typed_word
 
-    call lsp#log('label', l:label)
-    call lsp#log('match_pattern', l:match_pattern)
-    call lsp#log('matches?', l:label =~? l:match_pattern)
-
     return l:label =~? l:match_pattern
 endfunction
 
