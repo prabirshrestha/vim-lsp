@@ -60,7 +60,7 @@ function! lsp#utils#text_edit#apply_text_edits(uri, text_edits) abort
             set selection=exclusive
             set virtualedit=onemore
 
-            execute l:cmd
+            silent execute l:cmd
         finally
             let &paste = l:was_paste
             let &selection = l:was_selection
@@ -157,17 +157,11 @@ function! s:generate_sub_cmd_insert(text_edit) abort
     let l:sub_cmd = s:preprocess_cmd(a:text_edit['range'])
     let l:sub_cmd .= s:generate_move_start_cmd(l:start_line, l:start_character)
 
-    if len(l:new_text) == 0
-        let l:sub_cmd .= 'x'
+    if l:start_character >= len(getline(l:start_line))
+        let l:sub_cmd .= "\"=l:merged_text_edit['merged']['newText']\<CR>p"
     else
-        if l:start_character >= len(getline(l:start_line))
-            let l:sub_cmd .= 'a'
-        else
-            let l:sub_cmd .= 'i'
-        endif
+        let l:sub_cmd .= "\"=l:merged_text_edit['merged']['newText']\<CR>P"
     endif
-
-    let l:sub_cmd .= printf('%s', l:new_text)
 
     return l:sub_cmd
 endfunction
@@ -187,8 +181,7 @@ function! s:generate_sub_cmd_replace(text_edit) abort
     if len(l:new_text) == 0
         let l:sub_cmd .= 'x'
     else
-        let l:sub_cmd .= 'c'
-        let l:sub_cmd .= printf('%s', l:new_text) " change text
+        let l:sub_cmd .= "\"=l:merged_text_edit['merged']['newText']\<CR>p"
     endif
 
     return l:sub_cmd

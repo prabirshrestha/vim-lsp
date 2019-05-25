@@ -1,0 +1,205 @@
+function! s:set_text(lines)
+    % delete _
+    put =a:lines
+    execute 'normal ggdd'
+endfunction
+
+function! s:get_text()
+    return lsp#utils#buffer#_get_lines(bufnr('$'))
+endfunction
+
+Describe lsp#utils#text_edit
+
+    Before all
+        let s:endofline_backup = &endofline
+        set endofline
+    End
+
+    After all
+        let &endofline = s:endofline_backup
+    End
+
+    Before each
+        enew!
+    End
+
+    Describe lsp#utils#text_edit#apply_text_edits
+        It insert newText
+            call s:set_text(['foo', 'bar'])
+
+            call lsp#utils#text_edit#apply_text_edits(
+                    \ expand('%'),
+                    \ [{
+                    \   'range': {
+                    \       'start': {
+                    \           'line': 1,
+                    \           'character': 1
+                    \       },
+                    \       'end': {
+                    \           'line': 1,
+                    \           'character': 1
+                    \       }
+                    \   },
+                    \   'newText': 'baz'
+                    \ }])
+
+            let l:buffer_text = s:get_text()
+            Assert Equals(l:buffer_text, ['foo', 'bbazar', ''])
+        End
+
+        It insert empty newText
+            call s:set_text(['foo', 'bar'])
+
+            call lsp#utils#text_edit#apply_text_edits(
+                    \ expand('%'),
+                    \ [{
+                    \   'range': {
+                    \       'start': {
+                    \           'line': 1,
+                    \           'character': 1
+                    \       },
+                    \       'end': {
+                    \           'line': 1,
+                    \           'character': 1
+                    \       }
+                    \   },
+                    \   'newText': ''
+                    \ }])
+
+            let l:buffer_text = s:get_text()
+            Assert Equals(l:buffer_text, ['foo', 'bar', ''])
+        End
+
+        It replace range string to newText
+            call s:set_text(['foo', 'bar'])
+
+            call lsp#utils#text_edit#apply_text_edits(
+                    \ expand('%'),
+                    \ [{
+                    \   'range': {
+                    \       'start': {
+                    \           'line': 1,
+                    \           'character': 0
+                    \       },
+                    \       'end': {
+                    \           'line': 1,
+                    \           'character': 1
+                    \       }
+                    \   },
+                    \   'newText': 'replaced'
+                    \ }])
+
+            let l:buffer_text = s:get_text()
+            Assert Equals(l:buffer_text, ['foo', 'replacedar', ''])
+        End
+
+        It delete range string
+            call s:set_text(['foo', 'bar'])
+
+            call lsp#utils#text_edit#apply_text_edits(
+                    \ expand('%'),
+                    \ [{
+                    \   'range': {
+                    \       'start': {
+                    \           'line': 1,
+                    \           'character': 0
+                    \       },
+                    \       'end': {
+                    \           'line': 1,
+                    \           'character': 1
+                    \       }
+                    \   },
+                    \   'newText': ''
+                    \ }])
+
+            let l:buffer_text = s:get_text()
+            Assert Equals(l:buffer_text, ['foo', 'ar', ''])
+        End
+
+        It preserves v:completed_item
+            " Add some text to buffer
+            call s:set_text(['foo', 'bar'])
+
+            " Go to end of file and invoke completion
+            execute "normal Gof\<C-p>\<Esc>"
+
+            " Make sure that v:completed_item is set
+            Assert Equals(v:completed_item["word"], "foo")
+            let l:old_completed_item = v:completed_item
+
+            " Perform some text edits
+
+            " Insert
+            call lsp#utils#text_edit#apply_text_edits(
+                    \ expand('%'),
+                    \ [{
+                    \   'range': {
+                    \       'start': {
+                    \           'line': 1,
+                    \           'character': 1
+                    \       },
+                    \       'end': {
+                    \           'line': 1,
+                    \           'character': 1
+                    \       }
+                    \   },
+                    \   'newText': 'baz'
+                    \ }])
+
+            " Insert empty
+            call lsp#utils#text_edit#apply_text_edits(
+                    \ expand('%'),
+                    \ [{
+                    \   'range': {
+                    \       'start': {
+                    \           'line': 1,
+                    \           'character': 1
+                    \       },
+                    \       'end': {
+                    \           'line': 1,
+                    \           'character': 1
+                    \       }
+                    \   },
+                    \   'newText': ''
+                    \ }])
+
+            " Replace
+            call lsp#utils#text_edit#apply_text_edits(
+                    \ expand('%'),
+                    \ [{
+                    \   'range': {
+                    \       'start': {
+                    \           'line': 1,
+                    \           'character': 0
+                    \       },
+                    \       'end': {
+                    \           'line': 1,
+                    \           'character': 1
+                    \       }
+                    \   },
+                    \   'newText': 'replaced'
+                    \ }])
+
+            " Delete
+            call lsp#utils#text_edit#apply_text_edits(
+                    \ expand('%'),
+                    \ [{
+                    \   'range': {
+                    \       'start': {
+                    \           'line': 1,
+                    \           'character': 0
+                    \       },
+                    \       'end': {
+                    \           'line': 1,
+                    \           'character': 1
+                    \       }
+                    \   },
+                    \   'newText': ''
+                    \ }])
+
+            " Make sure v:completed_item is not changed
+            Assert Equals(v:completed_item, l:old_completed_item)
+        End
+    End
+End
+
