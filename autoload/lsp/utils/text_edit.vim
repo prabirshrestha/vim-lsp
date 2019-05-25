@@ -60,7 +60,7 @@ function! lsp#utils#text_edit#apply_text_edits(uri, text_edits) abort
             set selection=exclusive
             set virtualedit=onemore
 
-            execute l:cmd
+            silent execute l:cmd
         finally
             let &paste = l:was_paste
             let &selection = l:was_selection
