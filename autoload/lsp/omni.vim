@@ -71,7 +71,7 @@ function! lsp#omni#complete(findstart, base) abort
     endif
 endfunction
 
-function! s:prefix_match(word, prefix, ignorecase)
+function! s:prefix_match(word, prefix, ignorecase) abort
     if a:ignorecase
         let l:word = tolower(a:word)
         let l:prefix = tolower(a:prefix)
