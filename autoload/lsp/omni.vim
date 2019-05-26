@@ -63,12 +63,23 @@ function! lsp#omni#complete(findstart, base) abort
             while s:completion['status'] is# s:completion_status_pending && !complete_check()
                 sleep 10m
             endwhile
-            let l:base = tolower(a:base)
-            let s:completion['matches'] = filter(s:completion['matches'], {_, match -> stridx(tolower(match['word']), l:base) == 0})
+            let ignorecase = g:lsp_omni_completion_ignorecase || &g:ignorecase
+            let s:completion['matches'] = filter(s:completion['matches'], {_, match -> s:prefix_match(match['word'], a:base, ignorecase)})
             let s:completion['status'] = ''
             return s:completion['matches']
         endif
     endif
+endfunction
+
+function! s:prefix_match(word, prefix, ignorecase)
+    if a:ignorecase
+        let l:word = tolower(a:word)
+        let l:prefix = tolower(a:prefix)
+    else
+        let l:word = a:word
+        let l:prefix = a:prefix
+    endif
+    return stridx(l:word, l:prefix) == 0
 endfunction
 
 function! s:handle_omnicompletion(server_name, complete_counter, data) abort
