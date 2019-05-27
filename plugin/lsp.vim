@@ -25,7 +25,6 @@ let g:lsp_use_event_queue = get(g:, 'lsp_use_event_queue', has('nvim') || has('p
 let g:lsp_insert_text_enabled= get(g:, 'lsp_insert_text_enabled', 1)
 let g:lsp_text_edit_enabled = get(g:, 'lsp_text_edit_enabled', has('patch-8.0.1493'))
 let g:lsp_highlight_references_enabled = get(g:, 'lsp_highlight_references_enabled', 1)
-let g:lsp_omni_completion_ignorecase = get(g:, 'lsp_omni_completion_ignorecase', 0)
 
 if g:lsp_auto_enable
     augroup lsp_auto_enable
