@@ -13,6 +13,7 @@ CONTENTS                                                  *vim-lsp-contents*
       g:lsp_diagnostics_enabled             |g:lsp_diagnostics_enabled|
       g:lsp_auto_enable                     |g:lsp_auto_enable|
       g:lsp_preview_keep_focus              |g:lsp_preview_keep_focus|
+      g:lsp_preview_float		    |g:lsp_preview_float|
       g:lsp_insert_text_enabled             |g:lsp_insert_text_enabled|
       g:lsp_text_edit_enabled               |g:lsp_text_edit_enabled|
       g:lsp_diagnostics_echo_cursor         |g:lsp_diagnostics_echo_cursor|
@@ -153,6 +154,23 @@ g:lsp_preview_keep_focus                         *g:lsp_preview_keep_focus*
 	let g:lsp_preview_keep_focus = 0
 
     * |preview-window| can be closed using the default vim mapping - `<c-w><c-z>`.
+
+g:lsp_preview_float                         *g:lsp_preview_float*
+    Type: |Number|
+    Default: `1`
+
+    If set and nvim_win_open() is available, hover information are shown in a
+    floating window as |preview-window| at the cursor position.
+    The |preview-window| is closed automatically on cursor moves, unless it is
+    focused. While focused it may be closed with <esc>.
+    This feature requires neovim 0.4.0 (current master).
+
+    Example:
+	" Opens preview windows as floating
+	let g:lsp_preview_float = 1
+
+	" Opens preview windows as normal windows
+	let g:lsp_preview_float = 0
 
 g:lsp_insert_text_enabled                       *g:lsp_insert_text_enabled*
     Type: |Number|
@@ -566,6 +584,9 @@ Gets the hover information and displays it in the |preview-window|.
  * |preview-window| can be closed using the default vim mapping - `<c-w><c-z>`.
  * To control the default focus of |preview-window| for |LspHover|
    configure |g:lsp_preview_keep_focus|.
+ * If using neovim with nvim_win_open() available, |g:lsp_preview_float| can be
+   set to enable a floating preview at the cursor which is closed automatically
+   on cursormove if not focused and can be closed with <esc> if focused.
 
 
 LspNextError						     *LspNextError*
