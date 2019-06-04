@@ -11,7 +11,7 @@ function! lsp#ui#vim#output#closepreview() abort
   autocmd! lsp_float_preview_close CursorMoved,CursorMovedI,VimResized *
 endfunction
 
-function! s:get_float_positioning(height, width)
+function! s:get_float_positioning(height, width) abort
     let l:height = a:height
     let l:width = a:width
     " For a start show it below/above the cursor
@@ -31,7 +31,7 @@ function! s:get_float_positioning(height, width)
         let l:height = &lines -l:y
       endif
     endif
-    let l:col = col(".")
+    let l:col = col('.')
     " Positioning is not window but screen relative
     let l:opts = {
           \ 'relative': 'win',
@@ -48,13 +48,13 @@ function! lsp#ui#vim#output#floatingpreview(data) abort
     call setbufvar(l:buf, '&signcolumn', 'no')
 
     " Try to get as much pace right-bolow the cursor, but at least 10x10
-    let l:width = max([float2nr(&columns - col(".") - 10), 10])
+    let l:width = max([float2nr(&columns - col('.') - 10), 10])
     let l:height = max([&lines - winline() + 1, 10])
 
     let l:opts = s:get_float_positioning(l:height, l:width)
 
     let s:win = nvim_open_win(buf, v:true, l:opts)
-    call nvim_win_set_option(s:win, 'winhl', "Normal:Pmenu,NormalNC:Pmenu")
+    call nvim_win_set_option(s:win, 'winhl', 'Normal:Pmenu,NormalNC:Pmenu')
     call nvim_win_set_option(s:win, 'foldenable', v:false)
     call nvim_win_set_option(s:win, 'wrap', v:true)
     call nvim_win_set_option(s:win, 'statusline', '')
@@ -87,7 +87,7 @@ function! lsp#ui#vim#output#preview(data) abort
 
     let &l:filetype = l:ft . '.lsp-hover'
     " Get size information while still having the buffer active
-    let l:bufferlines = line("$")
+    let l:bufferlines = line('$')
     let l:maxwidth = max(map(getline(1, '$'), 'strdisplaywidth(v:val)'))
 
     if g:lsp_preview_keep_focus
