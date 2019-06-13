@@ -11,24 +11,43 @@ function! lsp#ui#vim#output#closepreview() abort
   autocmd! lsp_float_preview_close CursorMoved,CursorMovedI,VimResized *
 endfunction
 
+function! s:bufwidth()
+  let width = winwidth(0)
+  let numberwidth = max([&numberwidth, strlen(line('$'))+1])
+  let numwidth = (&number || &relativenumber)? numberwidth : 0
+  let foldwidth = &foldcolumn
+
+  if &signcolumn == 'yes'
+    let signwidth = 2
+  elseif &signcolumn == 'auto'
+    let signs = execute(printf('sign place buffer=%d', bufnr('')))
+    let signs = split(signs, "\n")
+    let signwidth = len(signs)>2? 2: 0
+  else
+    let signwidth = 0
+  endif
+  return width - numwidth - foldwidth - signwidth
+endfunction
+
+
 function! s:get_float_positioning(height, width) abort
     let l:height = a:height
     let l:width = a:width
     " For a start show it below/above the cursor
     " TODO: add option to configure it 'docked' at the bottom/top/right
     let l:y = winline()
-    if l:y + l:height >= &lines
+    if l:y + l:height >= winheight(0)
       " Float does not fit
       if l:y - 2 > l:height
         " Fits above
         let l:y = winline() - l:height
-      elseif l:y - 2 > &lines - l:y
+      elseif l:y - 2 > winheight(0) - l:y
         " Take space above cursor
         let l:y = 1
         let l:height = winline()-2
       else
         " Take space below cursor
-        let l:height = &lines -l:y
+        let l:height = winheight(0) -l:y
       endif
     endif
     let l:col = col('.')
@@ -48,7 +67,7 @@ function! lsp#ui#vim#output#floatingpreview(data) abort
     call setbufvar(l:buf, '&signcolumn', 'no')
 
     " Try to get as much pace right-bolow the cursor, but at least 10x10
-    let l:width = max([float2nr(&columns - col('.') - 10), 10])
+    let l:width = max([s:bufwidth(), 10])
     let l:height = max([&lines - winline() + 1, 10])
 
     let l:opts = s:get_float_positioning(l:height, l:width)
