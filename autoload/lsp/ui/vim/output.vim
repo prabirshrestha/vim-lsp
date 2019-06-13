@@ -1,4 +1,4 @@
-let s:supports_floating = exists('*nvim_open_win')
+let s:supports_floating = exists('*nvim_open_win') || has('patch-8.1.1517')
 let s:win = v:false
 
 function! lsp#ui#vim#output#closepreview() abort
@@ -63,6 +63,7 @@ function! s:get_float_positioning(height, width) abort
 endfunction
 
 function! lsp#ui#vim#output#floatingpreview(data) abort
+  if has("nvim")
     let l:buf = nvim_create_buf(v:false, v:true)
     call setbufvar(l:buf, '&signcolumn', 'no')
 
@@ -83,6 +84,43 @@ function! lsp#ui#vim#output#floatingpreview(data) abort
     " Enable closing the preview with esc, but map only in the scratch buffer
     nmap <buffer><silent> <esc> :pclose<cr>
     return s:win
+  else
+    return popup_atcursor('...', {
+        \  'moved': 'any',
+		    \  'border': [1, 1, 1, 1],
+		\})
+  endif
+endfunction
+
+function! s:setcontent(lines, ft) abort
+  if s:supports_floating && g:lsp_preview_float && !has("nvim")
+    " vim popup
+    echom "Vimp Popup SetContent"
+    call setbufline(winbufnr(s:win), 1, a:lines)
+    call win_execute(s:win, 'setlocal filetype=' . a:ft . '.lsp-hover')
+  else
+    " nvim floating
+    call setline(1, a:lines)
+    setlocal readonly nomodifiable
+    let &l:filetype = a:ft . '.lsp-hover'
+  endif
+endfunction
+
+function! s:adjust_float_placement(bufferlines, maxwidth) abort
+    if has("nvim")
+      let l:win_config = {}
+      let l:height = min([winheight(s:win), a:bufferlines])
+      let l:width = min([winwidth(s:win), a:maxwidth])
+      let l:win_config = s:get_float_positioning(l:height, l:width)
+      call nvim_win_set_config(s:win, l:win_config )
+    endif
+endfunction
+
+function! s:add_float_closing_hooks() abort
+      augroup lsp_float_preview_close
+        autocmd! lsp_float_preview_close CursorMoved,CursorMovedI,VimResized *
+        autocmd CursorMoved,CursorMovedI,VimResized * call lsp#ui#vim#output#closepreview()
+      augroup END
 endfunction
 
 function! lsp#ui#vim#output#preview(data) abort
@@ -92,19 +130,16 @@ function! lsp#ui#vim#output#preview(data) abort
     let l:current_window_id = win_getid()
 
     if s:supports_floating && g:lsp_preview_float
-      call lsp#ui#vim#output#floatingpreview(a:data)
+      let s:win = lsp#ui#vim#output#floatingpreview(a:data)
     else
       execute &previewheight.'new'
+      let s:win = win_getid()
     endif
-    let s:win = win_getid()
 
-    let l:ft = s:append(a:data)
-    " Delete first empty line
-    0delete _
+    let l:lines = []
+    let l:ft = s:append(a:data, l:lines)
+    call s:setcontent(l:lines, l:ft)
 
-    setlocal readonly nomodifiable
-
-    let &l:filetype = l:ft . '.lsp-hover'
     " Get size information while still having the buffer active
     let l:bufferlines = line('$')
     let l:maxwidth = max(map(getline(1, '$'), 'strdisplaywidth(v:val)'))
@@ -116,39 +151,32 @@ function! lsp#ui#vim#output#preview(data) abort
 
     echo ''
 
-    if s:supports_floating && s:win && g:lsp_preview_float
-      let l:win_config = {}
-      let l:height = min([winheight(s:win), l:bufferlines])
-      let l:width = min([winwidth(s:win), l:maxwidth])
-      let l:win_config = s:get_float_positioning(l:height, l:width)
-      call nvim_win_set_config(s:win, l:win_config )
-      augroup lsp_float_preview_close
-        autocmd! lsp_float_preview_close CursorMoved,CursorMovedI,VimResized *
-        autocmd CursorMoved,CursorMovedI,VimResized * call lsp#ui#vim#output#closepreview()
-      augroup END
+    if s:supports_floating && s:win && g:lsp_preview_float && has("nvim")
+      call s:adjust_float_placement(l:bufferlines, l:maxwidth)
+      call s:add_float_closing_hooks()
     endif
     return ''
 endfunction
 
-function! s:append(data) abort
+function! s:append(data, lines) abort
     if type(a:data) == type([])
         for l:entry in a:data
-            call s:append(entry)
+            call s:append(entry, a:lines)
         endfor
 
         return 'markdown'
     elseif type(a:data) == type('')
-        silent put =a:data
+        call extend(a:lines, split(a:data, "\n"))
 
         return 'markdown'
     elseif type(a:data) == type({}) && has_key(a:data, 'language')
-        silent put ='```'.a:data.language
-        silent put =a:data.value
-        silent put ='```'
+        call add(a:lines, '```'.a:data.language)
+        call extend(a:lines, split(a:data.value, '\n'))
+        call add(a:lines, '```')
 
         return 'markdown'
     elseif type(a:data) == type({}) && has_key(a:data, 'kind')
-        silent put =a:data.value
+        call add(a:lines, a:data.value)
 
         return a:data.kind ==? 'plaintext' ? 'text' : a:data.kind
     endif
