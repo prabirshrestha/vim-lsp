@@ -11,15 +11,15 @@ function! lsp#ui#vim#output#closepreview() abort
   autocmd! lsp_float_preview_close CursorMoved,CursorMovedI,VimResized *
 endfunction
 
-function! s:bufwidth()
+function! s:bufwidth() abort
   let width = winwidth(0)
   let numberwidth = max([&numberwidth, strlen(line('$'))+1])
   let numwidth = (&number || &relativenumber)? numberwidth : 0
   let foldwidth = &foldcolumn
 
-  if &signcolumn == 'yes'
+  if &signcolumn ==? 'yes'
     let signwidth = 2
-  elseif &signcolumn == 'auto'
+  elseif &signcolumn ==? 'auto'
     let signs = execute(printf('sign place buffer=%d', bufnr('')))
     let signs = split(signs, "\n")
     let signwidth = len(signs)>2? 2: 0
@@ -63,7 +63,7 @@ function! s:get_float_positioning(height, width) abort
 endfunction
 
 function! lsp#ui#vim#output#floatingpreview(data) abort
-  if has("nvim")
+  if has('nvim')
     let l:buf = nvim_create_buf(v:false, v:true)
     call setbufvar(l:buf, '&signcolumn', 'no')
 
@@ -93,9 +93,8 @@ function! lsp#ui#vim#output#floatingpreview(data) abort
 endfunction
 
 function! s:setcontent(lines, ft) abort
-  if s:supports_floating && g:lsp_preview_float && !has("nvim")
+  if s:supports_floating && g:lsp_preview_float && !has('nvim')
     " vim popup
-    echom "Vimp Popup SetContent"
     call setbufline(winbufnr(s:win), 1, a:lines)
     call win_execute(s:win, 'setlocal filetype=' . a:ft . '.lsp-hover')
   else
@@ -107,7 +106,7 @@ function! s:setcontent(lines, ft) abort
 endfunction
 
 function! s:adjust_float_placement(bufferlines, maxwidth) abort
-    if has("nvim")
+    if has('nvim')
       let l:win_config = {}
       let l:height = min([winheight(s:win), a:bufferlines])
       let l:width = min([winwidth(s:win), a:maxwidth])
@@ -151,7 +150,7 @@ function! lsp#ui#vim#output#preview(data) abort
 
     echo ''
 
-    if s:supports_floating && s:win && g:lsp_preview_float && has("nvim")
+    if s:supports_floating && s:win && g:lsp_preview_float && has('nvim')
       call s:adjust_float_placement(l:bufferlines, l:maxwidth)
       call s:add_float_closing_hooks()
     endif
