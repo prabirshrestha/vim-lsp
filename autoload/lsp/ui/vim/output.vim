@@ -40,7 +40,7 @@ function! s:get_float_positioning(height, width) abort
       " Float does not fit
       if l:y - 2 > l:height
         " Fits above
-        let l:y = winline() - l:height
+        let l:y = winline() - l:height -1
       elseif l:y - 2 > winheight(0) - l:y
         " Take space above cursor
         let l:y = 1
