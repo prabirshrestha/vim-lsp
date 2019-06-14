@@ -14,6 +14,7 @@ CONTENTS                                                  *vim-lsp-contents*
       g:lsp_auto_enable                     |g:lsp_auto_enable|
       g:lsp_preview_keep_focus              |g:lsp_preview_keep_focus|
       g:lsp_preview_float		    |g:lsp_preview_float|
+      g:lsp_preview_autoclose		    |g:lsp_preview_autoclose|
       g:lsp_insert_text_enabled             |g:lsp_insert_text_enabled|
       g:lsp_text_edit_enabled               |g:lsp_text_edit_enabled|
       g:lsp_diagnostics_echo_cursor         |g:lsp_diagnostics_echo_cursor|
@@ -54,6 +55,9 @@ CONTENTS                                                  *vim-lsp-contents*
     Autocommands                          |vim-lsp-autocommands|
       lsp_complete_done                     |lsp_complete_done|
     Mappings                              |vim-lsp-mappings|
+       <plug>(lsp-preview-close)            |<plug>(lsp-preview-close)|
+       <plug>(lsp-preview-focus)            |<plug>(lsp-preview-focus)|
+
     Autocomplete                          |vim-lsp-autocomplete|
       omnifunc                              |vim-lsp-omnifunc|
       asyncomplete.vim                      |vim-lsp-asyncomplete|
@@ -171,6 +175,23 @@ g:lsp_preview_float                         *g:lsp_preview_float*
 
 	" Opens preview windows as normal windows
 	let g:lsp_preview_float = 0
+
+g:lsp_preview_autoclose                         *g:lsp_preview_autoclose*
+    Type: |Number|
+    Default: `1`
+
+    Indicates if an opened floating preview shall be automatically closed upon
+    movement of the cursor. If set to 1, the window will close automatically if
+    the cursor is moved and the preview is not focused. If set to 0, it will
+    remain open until explicitly closed (e.g. with <plug>(lsp-preview-close),
+    or <ESC> when focused).
+
+    Example:
+	" Preview closes on cursor move
+	let g:lsp_preview_autoclose = 1
+
+	" Preview remains open and waits for an explicit call
+	let g:lsp_preview_autoclose = 0
 
 g:lsp_insert_text_enabled                       *g:lsp_insert_text_enabled*
     Type: |Number|
@@ -661,6 +682,8 @@ Available plug mappings are following:
   (lsp-hover)
   (lsp-next-error)
   (lsp-next-reference)
+  (lsp-preview-close)
+  (lsp-preview-focus)
   (lsp-previous-error)
   (lsp-previous-reference)
   (lsp-references)
@@ -674,6 +697,16 @@ Available plug mappings are following:
 
 See also |vim-lsp-commands|
 
+<plug>(lsp-preview-close)	         	     *<plug>(lsp-preview-close)*
+
+Closes an opened preview window
+
+<plug>(lsp-preview-focus)	         	     *<plug>(lsp-preview-focus)*
+
+Transfers focus to an opened preview window or back to the previous window if
+focus is already on the preview window.
+
+  
 ===============================================================================
 Autocomplete                                          *vim-lsp-autocomplete*
 

@@ -1,14 +1,39 @@
 let s:supports_floating = exists('*nvim_open_win') || has('patch-8.1.1517')
 let s:win = v:false
+let s:prevwin = v:false
 
 function! lsp#ui#vim#output#closepreview() abort
   if win_getid() == s:win
     " Don't close if window got focus
     return
   endif
-  pclose
+  "closing floats in vim8.1 must use popup_close() (nvim could use nvim_win_close but pclose
+  "works)
+  if s:supports_floating && s:win && g:lsp_preview_float && !has('nvim')
+    " TODO: 
+    call popup_close(s:win)
+  else
+    pclose 
+  endif
   let s:win = v:false
   autocmd! lsp_float_preview_close CursorMoved,CursorMovedI,VimResized *
+endfunction
+
+function! lsp#ui#vim#output#focuspreview() abort
+  " This does not work for vim8.1 popup but will work for nvim and old preview
+  if s:win
+    if win_getid() != s:win
+      let s:prevwin = win_getid()
+      call win_gotoid(s:win)
+    elseif s:prevwin
+      " Temporarily disable hooks
+      " TODO: remove this when closing logic is able to distinguish different move directions
+      autocmd! lsp_float_preview_close CursorMoved,CursorMovedI,VimResized *
+      call win_gotoid(s:prevwin)
+      call s:add_float_closing_hooks()
+      let s:prevwin = v:false
+    endif
+  endif
 endfunction
 
 function! s:bufwidth() abort
@@ -83,13 +108,13 @@ function! lsp#ui#vim#output#floatingpreview(data) abort
     call nvim_win_set_option(s:win, 'cursorline', v:false)
     " Enable closing the preview with esc, but map only in the scratch buffer
     nmap <buffer><silent> <esc> :pclose<cr>
-    return s:win
   else
-    return popup_atcursor('...', {
+    let s:win = popup_atcursor('...', {
         \  'moved': 'any',
 		    \  'border': [1, 1, 1, 1],
 		\})
   endif
+  return s:win
 endfunction
 
 function! s:setcontent(lines, ft) abort
@@ -116,10 +141,12 @@ function! s:adjust_float_placement(bufferlines, maxwidth) abort
 endfunction
 
 function! s:add_float_closing_hooks() abort
+    if g:lsp_preview_autoclose
       augroup lsp_float_preview_close
         autocmd! lsp_float_preview_close CursorMoved,CursorMovedI,VimResized *
         autocmd CursorMoved,CursorMovedI,VimResized * call lsp#ui#vim#output#closepreview()
       augroup END
+    endif
 endfunction
 
 function! lsp#ui#vim#output#preview(data) abort
