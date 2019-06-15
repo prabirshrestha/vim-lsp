@@ -57,7 +57,17 @@ function! lsp#utils#text_edit#apply_text_edits(uri, text_edits) abort
             let l:was_view = winsaveview()
 
             set paste
-            set selection=exclusive
+
+            let l:start_line = l:merged_text_edit['merged']['range']['start']['line']
+            let l:end_line = l:merged_text_edit['merged']['range']['end']['line']
+            let l:end_character = l:merged_text_edit['merged']['range']['end']['character']
+            if l:start_line < l:end_line && l:end_character <= 0
+                " set inclusive if end position was newline character.
+                set selection=inclusive
+            else
+                set selection=exclusive
+            endif
+
             set virtualedit=onemore
 
             silent execute l:cmd

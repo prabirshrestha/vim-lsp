@@ -93,7 +93,7 @@ Describe lsp#utils#text_edit
             Assert Equals(l:buffer_text, ['foo', 'replacedar', ''])
         End
 
-        It delete range string
+        It replace range string to empty newText
             call s:set_text(['foo', 'bar'])
 
             call lsp#utils#text_edit#apply_text_edits(
@@ -114,6 +114,257 @@ Describe lsp#utils#text_edit
 
             let l:buffer_text = s:get_text()
             Assert Equals(l:buffer_text, ['foo', 'ar', ''])
+        End
+
+        It single line start character is -1
+            call s:set_text(['foo', 'bar'])
+
+            call lsp#utils#text_edit#apply_text_edits(
+                    \ expand('%'),
+                    \ [{
+                    \   'range': {
+                    \       'start': {
+                    \           'line': 1,
+                    \           'character': -1
+                    \       },
+                    \       'end': {
+                    \           'line': 1,
+                    \           'character': 3
+                    \       }
+                    \   },
+                    \   'newText': ''
+                    \ }])
+
+            let l:buffer_text = s:get_text()
+            Assert Equals(l:buffer_text, ['foo', '', ''])
+        End
+
+        It single line start character is 0
+            call s:set_text(['foo', 'bar'])
+
+            call lsp#utils#text_edit#apply_text_edits(
+                    \ expand('%'),
+                    \ [{
+                    \   'range': {
+                    \       'start': {
+                    \           'line': 1,
+                    \           'character': 0
+                    \       },
+                    \       'end': {
+                    \           'line': 1,
+                    \           'character': 3
+                    \       }
+                    \   },
+                    \   'newText': ''
+                    \ }])
+
+            let l:buffer_text = s:get_text()
+            Assert Equals(l:buffer_text, ['foo', '', ''])
+        End
+
+        It single line start character is 1
+            call s:set_text(['foo', 'bar'])
+
+            call lsp#utils#text_edit#apply_text_edits(
+                    \ expand('%'),
+                    \ [{
+                    \   'range': {
+                    \       'start': {
+                    \           'line': 1,
+                    \           'character': 1
+                    \       },
+                    \       'end': {
+                    \           'line': 1,
+                    \           'character': 3
+                    \       }
+                    \   },
+                    \   'newText': ''
+                    \ }])
+
+            let l:buffer_text = s:get_text()
+            Assert Equals(l:buffer_text, ['foo', 'b', ''])
+        End
+
+        It single line end character is `len(getline('.')) - 1`
+            call s:set_text(['foo', 'bar'])
+
+            call lsp#utils#text_edit#apply_text_edits(
+                    \ expand('%'),
+                    \ [{
+                    \   'range': {
+                    \       'start': {
+                    \           'line': 1,
+                    \           'character': 0
+                    \       },
+                    \       'end': {
+                    \           'line': 1,
+                    \           'character': 2
+                    \       }
+                    \   },
+                    \   'newText': ''
+                    \ }])
+
+            let l:buffer_text = s:get_text()
+            Assert Equals(l:buffer_text, ['foo', 'r', ''])
+        End
+
+        It single line end character is `len(getline('.'))`
+            call s:set_text(['foo', 'bar'])
+
+            call lsp#utils#text_edit#apply_text_edits(
+                    \ expand('%'),
+                    \ [{
+                    \   'range': {
+                    \       'start': {
+                    \           'line': 1,
+                    \           'character': 0
+                    \       },
+                    \       'end': {
+                    \           'line': 1,
+                    \           'character': 3
+                    \       }
+                    \   },
+                    \   'newText': ''
+                    \ }])
+
+            let l:buffer_text = s:get_text()
+            Assert Equals(l:buffer_text, ['foo', '', ''])
+        End
+
+        It single line end character is `len(getline('.')) + 1`
+            call s:set_text(['foo', 'bar'])
+
+            call lsp#utils#text_edit#apply_text_edits(
+                    \ expand('%'),
+                    \ [{
+                    \   'range': {
+                    \       'start': {
+                    \           'line': 1,
+                    \           'character': 0
+                    \       },
+                    \       'end': {
+                    \           'line': 1,
+                    \           'character': 4
+                    \       }
+                    \   },
+                    \   'newText': ''
+                    \ }])
+
+            " if newline character deleting, need end position is next line zero character.
+            let l:buffer_text = s:get_text()
+            Assert Equals(l:buffer_text, ['foo', '', ''])
+        End
+
+        It replace range string to empty newText, multiline top to top
+            call s:set_text(['foo', 'bar', 'baz'])
+
+            call lsp#utils#text_edit#apply_text_edits(
+                    \ expand('%'),
+                    \ [{
+                    \   'range': {
+                    \       'start': {
+                    \           'line': 0,
+                    \           'character': 0
+                    \       },
+                    \       'end': {
+                    \           'line': 1,
+                    \           'character': 0
+                    \       }
+                    \   },
+                    \   'newText': ''
+                    \ }])
+
+            let l:buffer_text = s:get_text()
+            Assert Equals(l:buffer_text, ['bar', 'baz', ''])
+        End
+
+        It replace range string to empty newText, multiline top to tail
+            call s:set_text(['foo', 'bar', 'baz'])
+
+            call lsp#utils#text_edit#apply_text_edits(
+                    \ expand('%'),
+                    \ [{
+                    \   'range': {
+                    \       'start': {
+                    \           'line': 0,
+                    \           'character': 0
+                    \       },
+                    \       'end': {
+                    \           'line': 1,
+                    \           'character': 2
+                    \       }
+                    \   },
+                    \   'newText': ''
+                    \ }])
+
+            let l:buffer_text = s:get_text()
+            Assert Equals(l:buffer_text, ['r', 'baz', ''])
+
+            call s:set_text(['foo', 'bar', 'baz'])
+
+            call lsp#utils#text_edit#apply_text_edits(
+                    \ expand('%'),
+                    \ [{
+                    \   'range': {
+                    \       'start': {
+                    \           'line': 0,
+                    \           'character': 0
+                    \       },
+                    \       'end': {
+                    \           'line': 1,
+                    \           'character': 3
+                    \       }
+                    \   },
+                    \   'newText': ''
+                    \ }])
+
+            let l:buffer_text = s:get_text()
+            Assert Equals(l:buffer_text, ['', 'baz', ''])
+
+            call s:set_text(['foo', 'bar', 'baz'])
+
+            call lsp#utils#text_edit#apply_text_edits(
+                    \ expand('%'),
+                    \ [{
+                    \   'range': {
+                    \       'start': {
+                    \           'line': 0,
+                    \           'character': 0
+                    \       },
+                    \       'end': {
+                    \           'line': 1,
+                    \           'character': 4
+                    \       }
+                    \   },
+                    \   'newText': ''
+                    \ }])
+
+            " if newline character deleting, need end position is next line zero character.
+            let l:buffer_text = s:get_text()
+            Assert Equals(l:buffer_text, ['', 'baz', ''])
+        End
+
+        It replace range string to empty newText, multiline middle to middle
+            call s:set_text(['foo', 'bar', 'baz'])
+
+            call lsp#utils#text_edit#apply_text_edits(
+                    \ expand('%'),
+                    \ [{
+                    \   'range': {
+                    \       'start': {
+                    \           'line': 0,
+                    \           'character': 1
+                    \       },
+                    \       'end': {
+                    \           'line': 1,
+                    \           'character': 2
+                    \       }
+                    \   },
+                    \   'newText': ''
+                    \ }])
+
+            let l:buffer_text = s:get_text()
+            Assert Equals(l:buffer_text, ['fr', 'baz', ''])
         End
 
         It preserves v:completed_item
