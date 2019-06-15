@@ -167,7 +167,7 @@ function! s:remove_typed_part(word) abort
     return strpart(a:word, l:overlap_length)
 endfunction
 
-function! lsp#omni#get_vim_completion_item(item, ...) abort
+function! lsp#omni#default_get_vim_completion_item(item, ...) abort
     let l:do_remove_typed_part = get(a:, 1, 0)
 
     if g:lsp_insert_text_enabled && has_key(a:item, 'insertText') && !empty(a:item['insertText'])
@@ -242,6 +242,10 @@ function! lsp#omni#get_vim_completion_item(item, ...) abort
     return l:completion
 endfunction
 
+function! lsp#omni#get_vim_completion_item(...) abort
+    return call(g:lsp_get_vim_completion_item[0], a:000)
+endfunction
+
 augroup lsp_completion_item_text_edit
     autocmd!
     autocmd CompleteDone * call <SID>apply_text_edits()
@@ -265,16 +269,19 @@ function! s:apply_text_edits() abort
     "       ],
     "     }
     if !g:lsp_text_edit_enabled
+        doautocmd User lsp_complete_done
         return
     endif
 
     " completion faild or not select complete item
     if empty(v:completed_item)
+        doautocmd User lsp_complete_done
         return
     endif
 
     " check user_data
     if !has_key(v:completed_item, 'user_data')
+        doautocmd User lsp_complete_done
         return
     endif
 
@@ -283,10 +290,12 @@ function! s:apply_text_edits() abort
         let l:user_data = json_decode(v:completed_item['user_data'])
     catch
         " do nothing if user_data is not json type string.
+        doautocmd User lsp_complete_done
         return
     endtry
 
     if type(l:user_data) != type({})
+        doautocmd User lsp_complete_done
         return
     endif
 
@@ -319,6 +328,8 @@ function! s:apply_text_edits() abort
     let l:pos[2] += l:col_offset
     call setpos("'a", l:saved_mark)
     call setpos('.', l:pos)
+
+    doautocmd User lsp_complete_done
 endfunction
 
 function! s:expand_range(text_edit, expand_length) abort

@@ -22,6 +22,8 @@ CONTENTS                                                  *vim-lsp-contents*
       g:lsp_textprop_enabled                |g:lsp_textprop_enabled|
       g:lsp_use_event_queue                 |g:lsp_use_event_queue|
       g:lsp_highlight_references_enabled    |g:lsp_highlight_references_enabled|
+      g:lsp_get_vim_completion_item         |g:lsp_get_vim_completion_item|
+      g:lsp_get_supported_capabilities      |g:lsp_get_supported_capabilities|
     Functions                             |vim-lsp-functions|
       enable                                |vim-lsp-enable|
       disable                               |vim-lsp-disable|
@@ -48,10 +50,13 @@ CONTENTS                                                  *vim-lsp-contents*
       LspRename                             |LspRename|
       LspTypeDefinition                     |LspTypeDefinition|
       LspWorkspaceSymbol                    |LspWorkspaceSymbol|
+    Autocommands                          |vim-lsp-autocommands|
+      lsp_complete_done                     |lsp_complete_done|
     Mappings                              |vim-lsp-mappings|
     Autocomplete                          |vim-lsp-autocomplete|
       omnifunc                              |vim-lsp-omnifunc|
       asyncomplete.vim                      |vim-lsp-asyncomplete|
+    Snippets                              |vim-lsp-snippets|
     License                               |vim-lsp-license|
 
 
@@ -281,6 +286,32 @@ g:lsp_highlight_references_enabled         *g:lsp_highlight_references_enabled*
     highlight lspReference ctermfg=red guifg=red ctermbg=green guibg=green
 <
 
+g:lsp_get_vim_completion_item               *g:lsp_get_vim_completion_item*
+    Type: |List|
+    Default: `[function('lsp#omni#default_get_vim_completion_item')]`
+
+    A |List| containing one element of type |Funcref|. This element is a
+    reference to the function that vim-lsp should use to produce the items in
+    the completion menu. Changing this variable allows customizing how items
+    are displayed in the completion menu, or adding custom `user_data` to
+    items (see |complete-items|).
+
+    Note: You can reuse functionality provided by vim-lsp by calling
+    `lsp#omni#default_get_vim_completion_item` from within your function.
+
+g:lsp_get_supported_capabilities         *g:lsp_get_supported_capabilities*
+    Type: |List|
+    Default: `[function('lsp#default_get_supported_capabilities')]`
+
+    A |List| containing one element of type |Funcref|. This element is a
+    reference to the function that vim-lsp should use to obtain the supported
+    LSP capabilities. Changing this variable allows customizing which
+    capabilities vim-lsp sends to a language server.
+
+    Note: You can obtain the default supported capabilities of vim-lsp by
+    calling `lsp#omni#default_get_supported_capabilities` from within your
+    function.
+
 ===============================================================================
 FUNCTIONS	                                        *vim-lsp-functions*
 
@@ -455,12 +486,12 @@ Get the status of a server.
     "running", "not running".
 
 			 *vim-lsp-utils-find_nearest_parent_file_directory*
-utils#find_nearest_parent_file_directory            
+utils#find_nearest_parent_file_directory
 
-Find the nearest parent directory which contains the specific files or 
-diretories. The method has two parameters. The first is the path where 
-searching starts. The second is the files or directories names which 
-you want to find. The return value is the directory path which is found 
+Find the nearest parent directory which contains the specific files or
+diretories. The method has two parameters. The first is the path where
+searching starts. The second is the files or directories names which
+you want to find. The return value is the directory path which is found
 the most times.
 This method is mainly used to generate 'root_uri' when registering server.
 
@@ -471,7 +502,7 @@ This method is mainly used to generate 'root_uri' when registering server.
 		\ 'cmd': {server_info->['ccls']},
 		\ 'root_uri':{server_info->lsp#utils#path_to_uri(
 		\	lsp#utils#find_nearest_parent_file_directory(
-		\		lsp#utils#get_buffer_path(), 
+		\		lsp#utils#get_buffer_path(),
 		\		['.ccls', 'compile_commands.json', '.git/']
 		\	))},
 		\ 'initialization_options': {},
@@ -578,6 +609,21 @@ LspStatus                                                        *LspStatus*
 Prints the status of all registered servers.
 
 ===============================================================================
+Autocommands                                          *vim-lsp-autocommands*
+
+lsp_complete_done                                        *lsp_complete_done*
+
+This autocommand is run after Insert mode completion is done, similar to
+|CompleteDone|. However, the difference is that |lsp_complete_done| is run
+only after vim-lsp has finished executing its internal |CompleteDone|
+autocommands (e.g. applying text edits). It is thus ideal to use for snippet
+expansion, or custom post processing of completed items. Just like
+|CompleteDone|, the Vim variable |v:completed_item| contains information about
+the completed item. It is guaranteed that vim-lsp does not change the content
+of this variable during its |CompleteDone| autocommands.
+
+
+===============================================================================
 Mappings	                                          *vim-lsp-mappings*
 
 To map keys to the feature of vim-lsp, use <plug> mappings:
@@ -635,6 +681,24 @@ Example:
     Plug 'prabirshrestha/asyncomplete-lsp.vim'
 
 For additional configuration refer to asyncomplete.vim docs.
+
+===============================================================================
+Snippets                                                  *vim-lsp-snippets*
+
+To integrate snippets in vim-lsp, you will first have to install a third-party
+snippet plugin, and a plugin that integrates it in vim-lsp. At the moment,
+you have two options:
+
+1. UltiSnips and vim-lsp-ultisnips
+https://github.com/SirVer/ultisnips
+https://github.com/thomasfaingnaert/vim-lsp-ultisnips
+
+2. neosnippet.vim and vim-lsp-neosnippet
+https://github.com/Shougo/neosnippet.vim
+https://github.com/thomasfaingnaert/vim-lsp-neosnippet
+
+Refer to the readme and docs of vim-lsp-ultisnips and vim-lsp-neosnippet for
+more information and configuration options.
 
 ===============================================================================
 License                                                    *vim-lsp-license*
