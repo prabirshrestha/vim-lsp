@@ -1,30 +1,30 @@
 let s:supports_floating = exists('*nvim_open_win') || has('patch-8.1.1517')
-let s:win = v:false
+let s:winid = v:false
 let s:prevwin = v:false
 
 function! lsp#ui#vim#output#closepreview() abort
-  if win_getid() == s:win
+  if win_getid() == s:winid
     " Don't close if window got focus
     return
   endif
   "closing floats in vim8.1 must use popup_close() (nvim could use nvim_win_close but pclose
   "works)
-  if s:supports_floating && s:win && g:lsp_preview_float && !has('nvim')
+  if s:supports_floating && s:winid && g:lsp_preview_float && !has('nvim')
     " TODO: 
-    call popup_close(s:win)
+    call popup_close(s:winid)
   else
     pclose 
   endif
-  let s:win = v:false
+  let s:winid = v:false
   autocmd! lsp_float_preview_close CursorMoved,CursorMovedI,VimResized *
 endfunction
 
 function! lsp#ui#vim#output#focuspreview() abort
   " This does not work for vim8.1 popup but will work for nvim and old preview
-  if s:win
-    if win_getid() != s:win
+  if s:winid
+    if win_getid() != s:winid
       let s:prevwin = win_getid()
-      call win_gotoid(s:win)
+      call win_gotoid(s:winid)
     elseif s:prevwin
       " Temporarily disable hooks
       " TODO: remove this when closing logic is able to distinguish different move directions
@@ -98,30 +98,30 @@ function! lsp#ui#vim#output#floatingpreview(data) abort
 
     let l:opts = s:get_float_positioning(l:height, l:width)
 
-    let s:win = nvim_open_win(buf, v:true, l:opts)
-    call nvim_win_set_option(s:win, 'winhl', 'Normal:Pmenu,NormalNC:Pmenu')
-    call nvim_win_set_option(s:win, 'foldenable', v:false)
-    call nvim_win_set_option(s:win, 'wrap', v:true)
-    call nvim_win_set_option(s:win, 'statusline', '')
-    call nvim_win_set_option(s:win, 'number', v:false)
-    call nvim_win_set_option(s:win, 'relativenumber', v:false)
-    call nvim_win_set_option(s:win, 'cursorline', v:false)
+    let s:winid = nvim_open_win(buf, v:true, l:opts)
+    call nvim_win_set_option(s:winid, 'winhl', 'Normal:Pmenu,NormalNC:Pmenu')
+    call nvim_win_set_option(s:winid, 'foldenable', v:false)
+    call nvim_win_set_option(s:winid, 'wrap', v:true)
+    call nvim_win_set_option(s:winid, 'statusline', '')
+    call nvim_win_set_option(s:winid, 'number', v:false)
+    call nvim_win_set_option(s:winid, 'relativenumber', v:false)
+    call nvim_win_set_option(s:winid, 'cursorline', v:false)
     " Enable closing the preview with esc, but map only in the scratch buffer
     nmap <buffer><silent> <esc> :pclose<cr>
   else
-    let s:win = popup_atcursor('...', {
+    let s:winid = popup_atcursor('...', {
         \  'moved': 'any',
 		    \  'border': [1, 1, 1, 1],
 		\})
   endif
-  return s:win
+  return s:winid
 endfunction
 
 function! s:setcontent(lines, ft) abort
   if s:supports_floating && g:lsp_preview_float && !has('nvim')
     " vim popup
-    call setbufline(winbufnr(s:win), 1, a:lines)
-    call win_execute(s:win, 'setlocal filetype=' . a:ft . '.lsp-hover')
+    call setbufline(winbufnr(s:winid), 1, a:lines)
+    call win_execute(s:winid, 'setlocal filetype=' . a:ft . '.lsp-hover')
   else
     " nvim floating
     call setline(1, a:lines)
@@ -133,10 +133,10 @@ endfunction
 function! s:adjust_float_placement(bufferlines, maxwidth) abort
     if has('nvim')
       let l:win_config = {}
-      let l:height = min([winheight(s:win), a:bufferlines])
-      let l:width = min([winwidth(s:win), a:maxwidth])
+      let l:height = min([winheight(s:winid), a:bufferlines])
+      let l:width = min([winwidth(s:winid), a:maxwidth])
       let l:win_config = s:get_float_positioning(l:height, l:width)
-      call nvim_win_set_config(s:win, l:win_config )
+      call nvim_win_set_config(s:winid, l:win_config )
     endif
 endfunction
 
@@ -156,10 +156,10 @@ function! lsp#ui#vim#output#preview(data) abort
     let l:current_window_id = win_getid()
 
     if s:supports_floating && g:lsp_preview_float
-      let s:win = lsp#ui#vim#output#floatingpreview(a:data)
+      let s:winid = lsp#ui#vim#output#floatingpreview(a:data)
     else
       execute &previewheight.'new'
-      let s:win = win_getid()
+      let s:winid = win_getid()
     endif
 
     let l:lines = []
@@ -177,7 +177,7 @@ function! lsp#ui#vim#output#preview(data) abort
 
     echo ''
 
-    if s:supports_floating && s:win && g:lsp_preview_float && has('nvim')
+    if s:supports_floating && s:winid && g:lsp_preview_float && has('nvim')
       call s:adjust_float_placement(l:bufferlines, l:maxwidth)
       call s:add_float_closing_hooks()
     endif
