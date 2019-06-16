@@ -163,11 +163,16 @@ g:lsp_preview_float                         *g:lsp_preview_float*
     Type: |Number|
     Default: `1`
 
-    If set and nvim_win_open() is available, hover information are shown in a
-    floating window as |preview-window| at the cursor position.
+    If set and nvim_win_open() or popup_create is available, hover information
+    are shown in a floating window as |preview-window| at the cursor position.
     The |preview-window| is closed automatically on cursor moves, unless it is
     focused. While focused it may be closed with <esc>.
-    This feature requires neovim 0.4.0 (current master).
+    After opening an autocmd User event lsp_float_opened is issued, as well as
+    and lsp_float_closed upon closing. This can be used to alter the preview
+    window (using lsp#ui#vim#output#getpreviewwinid() to get the window id), or
+    setup custom bindings while a preview is open.
+    This feature requires neovim 0.4.0 (current master) or
+    Vim8.1 with has('patch-8.1.1517').
 
     Example:
 	" Opens preview windows as floating
@@ -175,6 +180,11 @@ g:lsp_preview_float                         *g:lsp_preview_float*
 
 	" Opens preview windows as normal windows
 	let g:lsp_preview_float = 0
+
+	" Close preview window with <esc>
+	autocmd User lsp_float_opened nmap <buffer> <silent> <esc>
+		      \ <Plug>(lsp-preview-close)
+	autocmd User lsp_float_closed nunmap <buffer> <esc>
 
 g:lsp_preview_autoclose                         *g:lsp_preview_autoclose*
     Type: |Number|

@@ -17,6 +17,7 @@ function! lsp#ui#vim#output#closepreview() abort
   endif
   let s:winid = v:false
   autocmd! lsp_float_preview_close CursorMoved,CursorMovedI,VimResized *
+  doautocmd User lsp_float_closed
 endfunction
 
 function! lsp#ui#vim#output#focuspreview() abort
@@ -149,18 +150,27 @@ function! s:add_float_closing_hooks() abort
     endif
 endfunction
 
+function! lsp#ui#vim#output#getpreviewwinid() abort
+    return s:winid
+endfunction
+
+function! s:open_preview(data) abort
+    if s:supports_floating && g:lsp_preview_float
+      let l:winid = lsp#ui#vim#output#floatingpreview(a:data)
+    else
+      execute &previewheight.'new'
+      let l:winid = win_getid()
+    endif
+    return l:winid
+endfunction
+
 function! lsp#ui#vim#output#preview(data) abort
     " Close any previously opened preview window
     pclose
 
     let l:current_window_id = win_getid()
 
-    if s:supports_floating && g:lsp_preview_float
-      let s:winid = lsp#ui#vim#output#floatingpreview(a:data)
-    else
-      execute &previewheight.'new'
-      let s:winid = win_getid()
-    endif
+    let s:winid = s:open_preview(a:data)
 
     let l:lines = []
     let l:ft = s:append(a:data, l:lines)
@@ -177,9 +187,12 @@ function! lsp#ui#vim#output#preview(data) abort
 
     echo ''
 
-    if s:supports_floating && s:winid && g:lsp_preview_float && has('nvim')
-      call s:adjust_float_placement(l:bufferlines, l:maxwidth)
-      call s:add_float_closing_hooks()
+    if s:supports_floating && s:winid && g:lsp_preview_float
+      if has('nvim')
+        call s:adjust_float_placement(l:bufferlines, l:maxwidth)
+        call s:add_float_closing_hooks()
+      endif
+      doautocmd User lsp_float_opened
     endif
     return ''
 endfunction
