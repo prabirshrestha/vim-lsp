@@ -25,6 +25,7 @@ augroup _lsp_silent_
     autocmd User lsp_unregister_server silent
     autocmd User lsp_server_init silent
     autocmd User lsp_server_exit silent
+    autocmd User lsp_complete_done silent
 augroup END
 
 function! lsp#log_verbose(...) abort
@@ -369,6 +370,14 @@ function! s:ensure_start(buf, server_name, cb) abort
     endif
 endfunction
 
+function! lsp#default_get_supported_capabilities(server_info) abort
+    return {
+    \   'workspace': {
+    \       'applyEdit': v:true
+    \   }
+    \ }
+endfunction
+
 function! s:ensure_init(buf, server_name, cb) abort
     let l:server = s:servers[a:server_name]
 
@@ -406,11 +415,7 @@ function! s:ensure_init(buf, server_name, cb) abort
     if has_key(l:server_info, 'capabilities')
         let l:capabilities = l:server_info['capabilities']
     else
-        let l:capabilities = {
-        \   'workspace': {
-        \       'applyEdit': v:true
-        \   }
-        \ }
+        let l:capabilities = call(g:lsp_get_supported_capabilities[0], [server_info])
     endif
 
     let l:request = {

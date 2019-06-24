@@ -8,7 +8,7 @@ let g:lsp_async_completion = get(g:, 'lsp_async_completion', 0)
 let g:lsp_log_file = get(g:, 'lsp_log_file', '')
 let g:lsp_log_verbose = get(g:, 'lsp_log_verbose', 1)
 let g:lsp_debug_servers = get(g:, 'lsp_debug_servers', [])
-let g:lsp_signs_enabled = get(g:, 'lsp_signs_enabled', has('patch-8.1.0772') && exists('*sign_define'))
+let g:lsp_signs_enabled = get(g:, 'lsp_signs_enabled', exists('*sign_define') && (has('nvim') || has('patch-8.1.0772')))
 let g:lsp_virtual_text_enabled = get(g:, 'lsp_virtual_text_enabled', exists('*nvim_buf_set_virtual_text'))
 let g:lsp_highlights_enabled = get(g:, 'lsp_highlights_enabled', exists('*nvim_buf_add_highlight'))
 let g:lsp_textprop_enabled = get(g:, 'lsp_textprop_enabled', exists('*prop_add') && !g:lsp_highlights_enabled)
@@ -25,6 +25,9 @@ let g:lsp_use_event_queue = get(g:, 'lsp_use_event_queue', has('nvim') || has('p
 let g:lsp_insert_text_enabled= get(g:, 'lsp_insert_text_enabled', 1)
 let g:lsp_text_edit_enabled = get(g:, 'lsp_text_edit_enabled', has('patch-8.0.1493'))
 let g:lsp_highlight_references_enabled = get(g:, 'lsp_highlight_references_enabled', 1)
+
+let g:lsp_get_vim_completion_item = get(g:, 'lsp_get_vim_completion_item', [function('lsp#omni#default_get_vim_completion_item')])
+let g:lsp_get_supported_capabilities = get(g:, 'lsp_get_supported_capabilities', [function('lsp#default_get_supported_capabilities')])
 
 if g:lsp_auto_enable
     augroup lsp_auto_enable

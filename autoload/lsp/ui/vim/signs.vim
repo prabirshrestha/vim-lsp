@@ -1,7 +1,7 @@
 " TODO: handle !has('signs')
 " TODO: handle signs clearing when server exits
 " https://github.com/vim/vim/pull/3652
-let s:supports_signs = has('signs') && has('patch-8.1.0772') && exists('*sign_define')
+let s:supports_signs = exists('*sign_define') && (has('nvim') || has('patch-8.1.0772'))
 let s:enabled = 0
 let s:signs = {} " { server_name: { path: {} } }
 let s:severity_sign_names_mapping = {
