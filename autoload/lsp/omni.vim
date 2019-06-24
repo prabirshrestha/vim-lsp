@@ -63,12 +63,30 @@ function! lsp#omni#complete(findstart, base) abort
             while s:completion['status'] is# s:completion_status_pending && !complete_check()
                 sleep 10m
             endwhile
-            let l:base = tolower(a:base)
-            let s:completion['matches'] = filter(s:completion['matches'], {_, match -> stridx(tolower(match['word']), l:base) == 0})
+
+            let l:current_line = strpart(getline('.'), 0, col('.') - 1)
+            let s:start_pos = match(l:current_line, '\k*$')
+            let l:last_typed_word = strpart(l:current_line, s:start_pos)
+
+            let s:completion['matches'] = filter(s:completion['matches'], {_, item -> s:filter_match(item, l:last_typed_word)})
             let s:completion['status'] = ''
-            return s:completion['matches']
+
+            call timer_start(0, function('s:display_completions'))
+
+            return v:none
         endif
     endif
+endfunction
+
+function! s:filter_match(item, last_typed_word) abort
+    let l:label = trim(a:item['word'])
+    let l:match_pattern = '^' . a:last_typed_word
+
+    return l:label =~? l:match_pattern
+endfunction
+
+function! s:display_completions(timer) abort
+    call complete(s:start_pos + 1, s:completion['matches'])
 endfunction
 
 function! s:handle_omnicompletion(server_name, complete_counter, data) abort
@@ -147,6 +165,7 @@ endfunction
 
 
 function! s:remove_typed_part(word) abort
+    return a:word
     let l:current_line = strpart(getline('.'), 0, col('.') - 1)
 
     let l:overlap_length = 0
