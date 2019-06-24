@@ -140,19 +140,19 @@ function! s:get_completion_result(data) abort
         let l:incomplete = 0
     endif
 
-    let l:current_line = strpart(getline('.'), 0, col('.') - 1)
-    let l:start_pos = match(l:current_line, '\k\+$')
-    let l:last_typed_word = strpart(l:current_line, l:start_pos)
-
-    let l:items = filter(l:items, {_, item -> s:filter_completion_item(item, l:last_typed_word)})
+    let l:items = filter(l:items, {_, item -> s:filter_completion_item(item)})
     let l:matches = type(l:items) == type([]) ? map(l:items, {_, item -> lsp#omni#get_vim_completion_item(item, 1) }) : []
 
     return {'matches': l:matches, 'incomplete': l:incomplete}
 endfunction
 
-function! s:filter_completion_item(item, last_typed_word) abort
+function! s:filter_completion_item(item) abort
+    let l:current_line = strpart(getline('.'), 0, col('.') - 1)
+    let l:start_pos = match(l:current_line, '\k\+$')
+    let l:last_typed_word = strpart(l:current_line, l:start_pos)
     let l:label = trim(a:item['label'])
-    let l:match_pattern = '^' . a:last_typed_word
+
+    let l:match_pattern = '^' . l:last_typed_word
 
     return l:label =~? l:match_pattern
 endfunction
