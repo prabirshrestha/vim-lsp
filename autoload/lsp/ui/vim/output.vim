@@ -10,12 +10,13 @@ function! lsp#ui#vim#output#closepreview() abort
   "closing floats in vim8.1 must use popup_close() (nvim could use nvim_win_close but pclose
   "works)
   if s:supports_floating && s:winid && g:lsp_preview_float && !has('nvim')
-    " TODO: 
     call popup_close(s:winid)
   else
     pclose 
   endif
   let s:winid = v:false
+  augroup lsp_float_preview_close
+  augroup end
   autocmd! lsp_float_preview_close CursorMoved,CursorMovedI,VimResized *
   doautocmd User lsp_float_closed
 endfunction
@@ -122,7 +123,17 @@ function! s:setcontent(lines, ft) abort
   if s:supports_floating && g:lsp_preview_float && !has('nvim')
     " vim popup
     call setbufline(winbufnr(s:winid), 1, a:lines)
+    let l:lightline_toggle = v:false
+    if exists('#lightline') && !has("nvim")
+      " Lightline does not work in popups but does not recognize it yet.
+      " It is ugly to have an check for an other plugin here, better fix lightline...
+      let l:lightline_toggle = v:true
+      call lightline#disable()
+    endif
     call win_execute(s:winid, 'setlocal filetype=' . a:ft . '.lsp-hover')
+    if l:lightline_toggle
+      call lightline#enable()
+    endif
   else
     " nvim floating
     call setline(1, a:lines)
