@@ -158,37 +158,12 @@ function! s:get_completion_result(data) abort
         let l:incomplete = 0
     endif
 
-    let l:matches = type(l:items) == type([]) ? map(l:items, {_, item -> lsp#omni#get_vim_completion_item(item, 1) }) : []
+    let l:matches = type(l:items) == type([]) ? map(l:items, {_, item -> lsp#omni#get_vim_completion_item(item) }) : []
 
     return {'matches': l:matches, 'incomplete': l:incomplete}
 endfunction
 
-
-function! s:remove_typed_part(word) abort
-    return a:word
-    let l:current_line = strpart(getline('.'), 0, col('.') - 1)
-
-    let l:overlap_length = 0
-    let l:i = 1
-    let l:max_possible_overlap = min([len(a:word), len(l:current_line)])
-
-    while l:i <= l:max_possible_overlap
-        let l:current_line_suffix = strpart(l:current_line, len(l:current_line) - l:i, l:i)
-        let l:word_prefix = strpart(a:word, 0, l:i)
-
-        if l:current_line_suffix == l:word_prefix
-            let l:overlap_length = l:i
-        endif
-
-        let l:i += 1
-    endwhile
-
-    return strpart(a:word, l:overlap_length)
-endfunction
-
-function! lsp#omni#default_get_vim_completion_item(item, ...) abort
-    let l:do_remove_typed_part = get(a:, 1, 0)
-
+function! lsp#omni#default_get_vim_completion_item(item) abort
     if g:lsp_insert_text_enabled && has_key(a:item, 'insertText') && !empty(a:item['insertText'])
         if has_key(a:item, 'insertTextFormat') && a:item['insertTextFormat'] != 1
             let l:word = a:item['label']
@@ -201,9 +176,6 @@ function! lsp#omni#default_get_vim_completion_item(item, ...) abort
         let l:abbr = a:item['label']
     endif
 
-    if l:do_remove_typed_part
-        let l:word = s:remove_typed_part(l:word)
-    endif
     let l:kind = lsp#omni#get_kind_text(a:item)
 
     let l:completion = {
