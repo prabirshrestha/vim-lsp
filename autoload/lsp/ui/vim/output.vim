@@ -237,7 +237,7 @@ function! s:append(data, lines) abort
 
         return 'markdown'
     elseif type(a:data) == type({}) && has_key(a:data, 'kind')
-        call add(a:lines, a:data.value)
+        call extend(a:lines, split(a:data.value, '\n'))
 
         return a:data.kind ==? 'plaintext' ? 'text' : a:data.kind
     endif
