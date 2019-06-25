@@ -63,7 +63,7 @@ For more information, refer to the readme and documentation of the respective pl
 |--|--|
 |`:LspCodeAction`| Gets a list of possible commands that can be applied to a file so it can be fixed (quick fix) |
 |`:LspDeclaration`| Go to declaration |
-|`:LspDefinition`| Go to definition |
+|`:LspDefinition`| Go to the definition of the word under the cursor, and open in the current window |
 |`:LspDocumentDiagnostics`| Get current document diagnostics information |
 |`:LspDocumentFormat`| Format entire document |
 |`:LspDocumentRangeFormat`| Format document selection |
@@ -72,6 +72,7 @@ For more information, refer to the readme and documentation of the respective pl
 |`:LspImplementation` | Show implementation of interface |
 |`:LspNextError`| jump to next error |
 |`:LspNextReference`| jump to next reference to the symbol under cursor |
+|`:LspPeekDefinition`| Go to the definition of the word under the cursor, but open in preview window |
 |`:LspPreviousError`| jump to previous error |
 |`:LspPreviousReference`| jump to previous reference to the symbol under cursor |
 |`:LspReferences`| Find references |

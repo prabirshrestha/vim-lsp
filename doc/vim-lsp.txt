@@ -43,6 +43,7 @@ CONTENTS                                                  *vim-lsp-contents*
       LspHover                              |LspHover|
       LspNextError                          |LspNextError|
       LspNextReference                      |LspNextReference|
+      LspPeekDefinition                     |LspPeekDefinition|
       LspPreviousError                      |LspPreviousError|
       LspPreviousReference                  |LspPreviousReference|
       LspImplementation                     |LspImplementation|
@@ -537,6 +538,8 @@ LspDefinition						     *LspDefinition*
 
 Go to definition.
 
+Also see |LspPeekDefinition|.
+
 LspDocumentFormat					 *LspDocumentFormat*
 
 Format the entire document.
@@ -575,6 +578,11 @@ Jump to Next err diagnostics
 LspNextReference                                          *LspNextReference*
 
 Jump to the next reference of the symbol under cursor.
+
+LspPeekDefinition                                        *LspPeekDefinition*
+
+Like |LspDefinition|, but opens the definition in the preview window instead
+of the current window.
 
 LspPreviousError					 *LspPreviousError*
 
