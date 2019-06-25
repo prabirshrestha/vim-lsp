@@ -13,6 +13,9 @@ CONTENTS                                                  *vim-lsp-contents*
       g:lsp_diagnostics_enabled             |g:lsp_diagnostics_enabled|
       g:lsp_auto_enable                     |g:lsp_auto_enable|
       g:lsp_preview_keep_focus              |g:lsp_preview_keep_focus|
+      g:lsp_preview_float		    |g:lsp_preview_float|
+      g:lsp_preview_autoclose		    |g:lsp_preview_autoclose|
+      g:lsp_preview_doubletap		    |g:lsp_preview_doubletap|
       g:lsp_insert_text_enabled             |g:lsp_insert_text_enabled|
       g:lsp_text_edit_enabled               |g:lsp_text_edit_enabled|
       g:lsp_diagnostics_echo_cursor         |g:lsp_diagnostics_echo_cursor|
@@ -53,6 +56,9 @@ CONTENTS                                                  *vim-lsp-contents*
     Autocommands                          |vim-lsp-autocommands|
       lsp_complete_done                     |lsp_complete_done|
     Mappings                              |vim-lsp-mappings|
+       <plug>(lsp-preview-close)            |<plug>(lsp-preview-close)|
+       <plug>(lsp-preview-focus)            |<plug>(lsp-preview-focus)|
+
     Autocomplete                          |vim-lsp-autocomplete|
       omnifunc                              |vim-lsp-omnifunc|
       asyncomplete.vim                      |vim-lsp-asyncomplete|
@@ -153,6 +159,68 @@ g:lsp_preview_keep_focus                         *g:lsp_preview_keep_focus*
 	let g:lsp_preview_keep_focus = 0
 
     * |preview-window| can be closed using the default vim mapping - `<c-w><c-z>`.
+
+g:lsp_preview_float                         *g:lsp_preview_float*
+    Type: |Number|
+    Default: `1`
+
+    If set and nvim_win_open() or popup_create is available, hover information
+    are shown in a floating window as |preview-window| at the cursor position.
+    The |preview-window| is closed automatically on cursor moves, unless it is
+    focused. While focused it may be closed with <esc>.
+    After opening an autocmd User event lsp_float_opened is issued, as well as
+    and lsp_float_closed upon closing. This can be used to alter the preview
+    window (using lsp#ui#vim#output#getpreviewwinid() to get the window id), or
+    setup custom bindings while a preview is open.
+    This feature requires neovim 0.4.0 (current master) or
+    Vim8.1 with has('patch-8.1.1517').
+
+    Example:
+	" Opens preview windows as floating
+	let g:lsp_preview_float = 1
+
+	" Opens preview windows as normal windows
+	let g:lsp_preview_float = 0
+
+	" Close preview window with <esc>
+	autocmd User lsp_float_opened nmap <buffer> <silent> <esc>
+		      \ <Plug>(lsp-preview-close)
+	autocmd User lsp_float_closed nunmap <buffer> <esc>
+
+g:lsp_preview_autoclose                         *g:lsp_preview_autoclose*
+    Type: |Number|
+    Default: `1`
+
+    Indicates if an opened floating preview shall be automatically closed upon
+    movement of the cursor. If set to 1, the window will close automatically if
+    the cursor is moved and the preview is not focused. If set to 0, it will
+    remain open until explicitly closed (e.g. with <plug>(lsp-preview-close),
+    or <ESC> when focused).
+
+    Example:
+	" Preview closes on cursor move
+	let g:lsp_preview_autoclose = 1
+
+	" Preview remains open and waits for an explicit call
+	let g:lsp_preview_autoclose = 0
+
+g:lsp_preview_doubletap                         *g:lsp_preview_doubletap*
+    Type: |List|
+    Default: `[function('lsp#ui#vim#output#focuspreview')]`
+
+    When preview is called twice with the same data while the preview is still
+    open, the function in `lsp_preview_doubletap` is called instead. To disable
+    this and just "refresh" the preview, set to ´0´.
+
+    Example:
+	" Focus preview on repeated preview (does not work for vim8.1 popups)
+	let g:lsp_preview_doubletap = [function('lsp#ui#vim#output#focuspreview')]
+
+	" Closes the preview window on the second call to preview
+	let g:lsp_preview_doubletap = [function('lsp#ui#vim#output#closepreview')]
+
+	" Disables double tap feature; refreshes the preview on consecutive taps
+	let g:lsp_preview_doubletap = 0
 
 g:lsp_insert_text_enabled                       *g:lsp_insert_text_enabled*
     Type: |Number|
@@ -566,6 +634,9 @@ Gets the hover information and displays it in the |preview-window|.
  * |preview-window| can be closed using the default vim mapping - `<c-w><c-z>`.
  * To control the default focus of |preview-window| for |LspHover|
    configure |g:lsp_preview_keep_focus|.
+ * If using neovim with nvim_win_open() available, |g:lsp_preview_float| can be
+   set to enable a floating preview at the cursor which is closed automatically
+   on cursormove if not focused and can be closed with <esc> if focused.
 
 
 LspNextError						     *LspNextError*
@@ -640,6 +711,8 @@ Available plug mappings are following:
   (lsp-hover)
   (lsp-next-error)
   (lsp-next-reference)
+  (lsp-preview-close)
+  (lsp-preview-focus)
   (lsp-previous-error)
   (lsp-previous-reference)
   (lsp-references)
@@ -653,6 +726,16 @@ Available plug mappings are following:
 
 See also |vim-lsp-commands|
 
+<plug>(lsp-preview-close)	         	     *<plug>(lsp-preview-close)*
+
+Closes an opened preview window
+
+<plug>(lsp-preview-focus)	         	     *<plug>(lsp-preview-focus)*
+
+Transfers focus to an opened preview window or back to the previous window if
+focus is already on the preview window.
+
+  
 ===============================================================================
 Autocomplete                                          *vim-lsp-autocomplete*
 
