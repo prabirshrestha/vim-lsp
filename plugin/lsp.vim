@@ -38,7 +38,8 @@ endif
 
 command! -range LspCodeAction call lsp#ui#vim#code_action()
 command! LspDeclaration call lsp#ui#vim#declaration()
-command! LspDefinition call lsp#ui#vim#definition()
+command! LspDefinition call lsp#ui#vim#definition(0)
+command! LspPeekDefinition call lsp#ui#vim#definition(1)
 command! LspDocumentSymbol call lsp#ui#vim#document_symbol()
 command! LspDocumentDiagnostics call lsp#ui#vim#diagnostics#document_diagnostics()
 command! -nargs=? -complete=customlist,lsp#utils#empty_complete LspHover call lsp#ui#vim#hover#get_hover_under_cursor()
@@ -60,7 +61,8 @@ command! LspPreviousReference call lsp#ui#vim#references#jump(-1)
 
 nnoremap <plug>(lsp-code-action) :<c-u>call lsp#ui#vim#code_action()<cr>
 nnoremap <plug>(lsp-declaration) :<c-u>call lsp#ui#vim#declaration()<cr>
-nnoremap <plug>(lsp-definition) :<c-u>call lsp#ui#vim#definition()<cr>
+nnoremap <plug>(lsp-definition) :<c-u>call lsp#ui#vim#definition(0)<cr>
+nnoremap <plug>(lsp-peek-definition) :<c-u>call lsp#ui#vim#definition(1)<cr>
 nnoremap <plug>(lsp-document-symbol) :<c-u>call lsp#ui#vim#document_symbol()<cr>
 nnoremap <plug>(lsp-document-diagnostics) :<c-u>call lsp#ui#vim#diagnostics#document_diagnostics()<cr>
 nnoremap <plug>(lsp-hover) :<c-u>call lsp#ui#vim#hover#get_hover_under_cursor()<cr>

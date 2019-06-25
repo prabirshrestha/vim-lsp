@@ -13,7 +13,7 @@ function! lsp#ui#vim#implementation() abort
         call s:not_supported('Retrieving implementation')
         return
     endif
-    let l:ctx = { 'counter': len(l:servers), 'list':[], 'last_req_id': s:last_req_id, 'jump_if_one': 1 }
+    let l:ctx = { 'counter': len(l:servers), 'list':[], 'last_req_id': s:last_req_id, 'jump_if_one': 1, 'in_preview': 0 }
     for l:server in l:servers
         call lsp#send_request(l:server, {
             \ 'method': 'textDocument/implementation',
@@ -37,7 +37,7 @@ function! lsp#ui#vim#type_definition() abort
         call s:not_supported('Retrieving type definition')
         return
     endif
-    let l:ctx = { 'counter': len(l:servers), 'list':[], 'last_req_id': s:last_req_id, 'jump_if_one': 1 }
+    let l:ctx = { 'counter': len(l:servers), 'list':[], 'last_req_id': s:last_req_id, 'jump_if_one': 1, 'in_preview': 0 }
     for l:server in l:servers
         call lsp#send_request(l:server, {
             \ 'method': 'textDocument/typeDefinition',
@@ -62,7 +62,7 @@ function! lsp#ui#vim#declaration() abort
         return
     endif
 
-    let l:ctx = { 'counter': len(l:servers), 'list':[], 'last_req_id': s:last_req_id, 'jump_if_one': 1 }
+    let l:ctx = { 'counter': len(l:servers), 'list':[], 'last_req_id': s:last_req_id, 'jump_if_one': 1, 'in_preview': 0 }
     for l:server in l:servers
         call lsp#send_request(l:server, {
             \ 'method': 'textDocument/declaration',
@@ -77,7 +77,7 @@ function! lsp#ui#vim#declaration() abort
     echo 'Retrieving declaration ...'
 endfunction
 
-function! lsp#ui#vim#definition() abort
+function! lsp#ui#vim#definition(in_preview) abort
     let l:servers = filter(lsp#get_whitelisted_servers(), 'lsp#capabilities#has_definition_provider(v:val)')
     let s:last_req_id = s:last_req_id + 1
     call setqflist([])
@@ -87,7 +87,7 @@ function! lsp#ui#vim#definition() abort
         return
     endif
 
-    let l:ctx = { 'counter': len(l:servers), 'list':[], 'last_req_id': s:last_req_id, 'jump_if_one': 1 }
+    let l:ctx = { 'counter': len(l:servers), 'list':[], 'last_req_id': s:last_req_id, 'jump_if_one': 1, 'in_preview': a:in_preview }
     for l:server in l:servers
         call lsp#send_request(l:server, {
             \ 'method': 'textDocument/definition',
@@ -108,7 +108,7 @@ function! lsp#ui#vim#references() abort
 
     call setqflist([])
 
-    let l:ctx = { 'counter': len(l:servers), 'list':[], 'last_req_id': s:last_req_id, 'jump_if_one': 0 }
+    let l:ctx = { 'counter': len(l:servers), 'list':[], 'last_req_id': s:last_req_id, 'jump_if_one': 0, 'in_preview': 0 }
     if len(l:servers) == 0
         call s:not_supported('Retrieving references')
         return
@@ -418,7 +418,7 @@ function! s:handle_symbol(server, last_req_id, type, data) abort
     endif
 endfunction
 
-function! s:handle_location(ctx, server, type, data) abort "ctx = {counter, list, jump_if_one, last_req_id}
+function! s:handle_location(ctx, server, type, data) abort "ctx = {counter, list, jump_if_one, last_req_id, in_preview}
     if a:ctx['last_req_id'] != s:last_req_id
         return
     endif
@@ -435,9 +435,10 @@ function! s:handle_location(ctx, server, type, data) abort "ctx = {counter, list
         if empty(a:ctx['list'])
             call lsp#utils#error('No ' . a:type .' found')
         else
-            if len(a:ctx['list']) == 1 && a:ctx['jump_if_one']
+            let l:loc = a:ctx['list'][0]
+
+            if len(a:ctx['list']) == 1 && a:ctx['jump_if_one'] && !a:ctx['in_preview']
                 normal! m'
-                let l:loc = a:ctx['list'][0]
                 let l:buffer = bufnr(l:loc['filename'])
                 if &modified && !&hidden
                     let l:cmd = l:buffer !=# -1 ? 'sb ' . l:buffer : 'split ' . fnameescape(l:loc['filename'])
@@ -447,10 +448,33 @@ function! s:handle_location(ctx, server, type, data) abort "ctx = {counter, list
                 execute l:cmd . ' | call cursor('.l:loc['lnum'].','.l:loc['col'].')'
                 echo 'Retrieved ' . a:type
                 redraw
-            else
+            elseif !a:ctx['in_preview']
                 call setqflist(a:ctx['list'])
                 echo 'Retrieved ' . a:type
                 botright copen
+            else
+                " Close any preview window that is open already
+                pclose
+
+                " Save current window
+                let l:current_window = win_getid()
+
+                " Open preview window with correct file
+                execute &previewheight . 'new'
+                execute 'edit ' . fnameescape(l:loc['filename'])
+
+                " Move cursor to specified position
+                execute printf('call cursor(%d, %d)', l:loc['lnum'], l:loc['col'])
+
+                " Set window properties
+                let &l:previewwindow = 1
+                let &l:statusline = ' LSP Peek ' . a:type
+
+                " Centre screen on location
+                normal! zz
+
+                " Restore current window
+                call win_gotoid(l:current_window)
             endif
         endif
     endif
