@@ -162,7 +162,7 @@ function! s:register_events() abort
         endif
         autocmd CursorMoved * call s:on_cursor_moved()
         autocmd BufWinEnter,BufWinLeave,InsertEnter * call lsp#ui#vim#references#clean_references()
-        autocmd CursorMoved * call lsp#ui#vim#references#highlight(v:false)
+        autocmd CursorMoved * if g:lsp_highlight_references_enabled | call lsp#ui#vim#references#highlight(v:false) | endif
     augroup END
     call s:on_text_document_did_open()
 endfunction
