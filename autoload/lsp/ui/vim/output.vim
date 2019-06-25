@@ -1,6 +1,7 @@
 let s:supports_floating = exists('*nvim_open_win') || has('patch-8.1.1517')
 let s:winid = v:false
 let s:prevwin = v:false
+let s:preview_data = v:false
 
 function! lsp#ui#vim#output#closepreview() abort
   if win_getid() == s:winid
@@ -12,9 +13,10 @@ function! lsp#ui#vim#output#closepreview() abort
   if s:supports_floating && s:winid && g:lsp_preview_float && !has('nvim')
     call popup_close(s:winid)
   else
-    pclose 
+    pclose
   endif
   let s:winid = v:false
+  let s:preview_data = v:false
   augroup lsp_float_preview_close
   augroup end
   autocmd! lsp_float_preview_close CursorMoved,CursorMovedI,VimResized *
@@ -124,7 +126,7 @@ function! s:setcontent(lines, ft) abort
     " vim popup
     call setbufline(winbufnr(s:winid), 1, a:lines)
     let l:lightline_toggle = v:false
-    if exists('#lightline') && !has("nvim")
+    if exists('#lightline') && !has('nvim')
       " Lightline does not work in popups but does not recognize it yet.
       " It is ugly to have an check for an other plugin here, better fix lightline...
       let l:lightline_toggle = v:true
@@ -176,6 +178,14 @@ function! s:open_preview(data) abort
 endfunction
 
 function! lsp#ui#vim#output#preview(data) abort
+    if s:winid && type(s:preview_data) == type(a:data)
+       \ && s:preview_data == a:data
+       \ && type(g:lsp_preview_doubletap) == 3
+       \ && len(g:lsp_preview_doubletap) >= 1
+       \ && type(g:lsp_preview_doubletap[0]) == 2
+        echo ''
+        return call(g:lsp_preview_doubletap[0], [])
+    endif
     " Close any previously opened preview window
     pclose
 
@@ -183,6 +193,7 @@ function! lsp#ui#vim#output#preview(data) abort
 
     let s:winid = s:open_preview(a:data)
 
+    let s:preview_data = a:data
     let l:lines = []
     let l:ft = s:append(a:data, l:lines)
     call s:setcontent(l:lines, l:ft)

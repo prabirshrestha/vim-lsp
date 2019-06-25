@@ -15,6 +15,7 @@ CONTENTS                                                  *vim-lsp-contents*
       g:lsp_preview_keep_focus              |g:lsp_preview_keep_focus|
       g:lsp_preview_float		    |g:lsp_preview_float|
       g:lsp_preview_autoclose		    |g:lsp_preview_autoclose|
+      g:lsp_preview_doubletap		    |g:lsp_preview_doubletap|
       g:lsp_insert_text_enabled             |g:lsp_insert_text_enabled|
       g:lsp_text_edit_enabled               |g:lsp_text_edit_enabled|
       g:lsp_diagnostics_echo_cursor         |g:lsp_diagnostics_echo_cursor|
@@ -202,6 +203,24 @@ g:lsp_preview_autoclose                         *g:lsp_preview_autoclose*
 
 	" Preview remains open and waits for an explicit call
 	let g:lsp_preview_autoclose = 0
+
+g:lsp_preview_doubletap                         *g:lsp_preview_doubletap*
+    Type: |List|
+    Default: `[function('lsp#ui#vim#output#focuspreview')]`
+
+    When preview is called twice with the same data while the preview is still
+    open, the function in `lsp_preview_doubletap` is called instead. To disable
+    this and just "refresh" the preview, set to ´0´.
+
+    Example:
+	" Focus preview on repeated preview (does not work for vim8.1 popups)
+	let g:lsp_preview_doubletap = [function('lsp#ui#vim#output#focuspreview')]
+
+	" Closes the preview window on the second call to preview
+	let g:lsp_preview_doubletap = [function('lsp#ui#vim#output#closepreview')]
+
+	" Disables double tap feature; refreshes the preview on consecutive taps
+	let g:lsp_preview_doubletap = 0
 
 g:lsp_insert_text_enabled                       *g:lsp_insert_text_enabled*
     Type: |Number|
