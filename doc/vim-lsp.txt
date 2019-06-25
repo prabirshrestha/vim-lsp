@@ -581,7 +581,7 @@ Jump to the next reference of the symbol under cursor.
 
 LspPeekDefinition                                        *LspPeekDefinition*
 
-Like |LspDefinition|, but opens the definition in the preview window instead
+Like |LspDefinition|, but opens the definition in the |preview-window| instead
 of the current window.
 
 LspPreviousError					 *LspPreviousError*
