@@ -34,6 +34,8 @@ CONTENTS                                                  *vim-lsp-contents*
       stop_server                           |vim-lsp-stop_server|
       utils#find_nearest_parent_file_directory
                               |vim-lsp-utils-find_nearest_parent_file_directory|
+      vim-lsp-get_buffer_diagnostics_counts |vim-lsp-get_buffer_diagnostics_counts|
+      vim-lsp-get_buffer_first_error_line   |vim-lsp-get_buffer_first_error_line|
     Commands                              |vim-lsp-commands|
       LspCodeAction                         |LspCodeAction|
       LspDocumentDiagnostics                |LspDocumentDiagnostics|
@@ -583,6 +585,19 @@ This method is mainly used to generate 'root_uri' when registering server.
 	  be regarded as a directory name, otherwise as a file name.
 	* If there is not directory with the specific files or diretories
 	  found, the method will return an empty string.
+
+lsp#get_buffer_diagnostics_counts    *vim-lsp-get_buffer_diagnostics_counts*
+
+Get dict with diagnostic counts for current buffer. Useful e.g. for display
+in status line.
+
+    Returns dictionary with keys "error", "warning", "information", "hint".
+
+lsp#get_buffer_first_error_line        *vim-lsp-get_buffer_first_error_line*
+
+Get line number of first error in current buffer.
+
+    Returns |Number| or |v:null| if there are no errors.
 
 ===============================================================================
 Commands	                                          *vim-lsp-commands*
