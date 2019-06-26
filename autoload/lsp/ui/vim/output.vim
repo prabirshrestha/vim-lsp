@@ -279,7 +279,17 @@ function! lsp#ui#vim#output#preview(data, options) abort
           let &scrolloff = 0
 
           call nvim_win_set_cursor(s:winid, [a:options['cursor']['line'], a:options['cursor']['col']])
-          normal! zt
+          if has_key(a:options['cursor'], 'align')
+              let l:align = a:options['cursor']['align']
+
+              if l:align == "top"
+                  normal! zt
+              elseif l:align == "center"
+                  normal! zz
+              elseif l:align == "bottom"
+                  normal! zb
+              endif
+          endif
 
           " Finally, go back to the original window
           call win_gotoid(l:current_window_id)
