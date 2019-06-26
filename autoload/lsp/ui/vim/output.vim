@@ -145,6 +145,13 @@ function! s:setcontent(lines, ft) abort
   else
     " nvim floating
     call setline(1, a:lines)
+
+    " Set maximum width of floating window, if specified
+    if g:lsp_popup_max_width > 0
+        let &l:textwidth = g:lsp_popup_max_width
+        normal! gggqGgg
+    endif
+
     setlocal readonly nomodifiable
     let &l:filetype = a:ft . '.lsp-hover'
   endif
@@ -203,19 +210,6 @@ function! lsp#ui#vim#output#preview(data) abort
     let l:lines = []
     let l:ft = s:append(a:data, l:lines)
     call s:setcontent(l:lines, l:ft)
-
-    " Set maximum width of floating window, if specified
-    if g:lsp_popup_max_width > 0 && s:supports_floating && s:winid && g:lsp_preview_float && has('nvim')
-        let &l:textwidth = g:lsp_popup_max_width
-
-        let &l:readonly = 0
-        let &l:modifiable = 1
-
-        normal! gggqGgg
-
-        let &l:readonly = 1
-        let &l:modifiable = 0
-    endif
 
     " Get size information while still having the buffer active
     let l:bufferlines = line('$')
