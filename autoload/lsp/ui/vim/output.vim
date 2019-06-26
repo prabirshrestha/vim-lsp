@@ -117,7 +117,6 @@ function! lsp#ui#vim#output#floatingpreview(data) abort
         \  'moved': 'any',
 		    \  'border': [1, 1, 1, 1],
 		\})
-    call setwinvar(s:winid, '&wincolor', g:lsp_popup_highlight)
   endif
   return s:winid
 endfunction
