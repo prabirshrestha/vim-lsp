@@ -118,8 +118,8 @@ function! lsp#ui#vim#output#floatingpreview(data) abort
                 \ 'border': [1, 1, 1, 1],
                 \ }
 
-    if g:lsp_popup_max_width > 0
-        let l:options['maxwidth'] = g:lsp_popup_max_width
+    if g:lsp_preview_max_width > 0
+        let l:options['maxwidth'] = g:lsp_preview_max_width
     endif
 
     let s:winid = popup_atcursor('...', l:options)
@@ -147,8 +147,8 @@ function! s:setcontent(lines, ft) abort
     call setline(1, a:lines)
 
     " Set maximum width of floating window, if specified
-    if g:lsp_popup_max_width > 0
-        let &l:textwidth = g:lsp_popup_max_width
+    if g:lsp_preview_max_width > 0
+        let &l:textwidth = g:lsp_preview_max_width
         normal! gggqGgg
     endif
 
