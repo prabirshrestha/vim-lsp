@@ -91,7 +91,7 @@ function! s:get_float_positioning(height, width) abort
     return l:opts
 endfunction
 
-function! lsp#ui#vim#output#floatingpreview(data) abort
+function! lsp#ui#vim#output#floatingpreview(data, options) abort
   if has('nvim')
     let l:buf = nvim_create_buf(v:false, v:true)
     call setbufvar(l:buf, '&signcolumn', 'no')
@@ -113,10 +113,28 @@ function! lsp#ui#vim#output#floatingpreview(data) abort
     " Enable closing the preview with esc, but map only in the scratch buffer
     nmap <buffer><silent> <esc> :pclose<cr>
   else
-    let s:winid = popup_atcursor('...', {
-        \  'moved': 'any',
-		    \  'border': [1, 1, 1, 1],
-		\})
+    let l:options = {
+                \ 'moved': 'any',
+                \ 'border': [1, 1, 1, 1],
+                \ }
+
+    if has_key(a:options, 'cursor')
+      if has_key(a:options['cursor'], 'align')
+          let l:align = a:options['cursor']['align']
+
+          if l:align == "top"
+              let l:options['firstline'] = a:options['cursor']['line']
+          elseif l:align == "center"
+              " TODO
+              let l:options['firstline'] = a:options['cursor']['line']
+          elseif l:align == "bottom"
+              " TODO
+              let l:options['firstline'] = a:options['cursor']['line']
+          endif
+      endif
+    endif
+
+    let s:winid = popup_atcursor('...', l:options)
   endif
   return s:winid
 endfunction
@@ -167,9 +185,9 @@ function! lsp#ui#vim#output#getpreviewwinid() abort
     return s:winid
 endfunction
 
-function! s:open_preview(data) abort
+function! s:open_preview(data, options) abort
     if s:supports_floating && g:lsp_preview_float
-      let l:winid = lsp#ui#vim#output#floatingpreview(a:data)
+      let l:winid = lsp#ui#vim#output#floatingpreview(a:data, a:options)
     else
       execute &previewheight.'new'
       let l:winid = win_getid()
@@ -191,7 +209,7 @@ function! lsp#ui#vim#output#preview(data, options) abort
 
     let l:current_window_id = win_getid()
 
-    let s:winid = s:open_preview(a:data)
+    let s:winid = s:open_preview(a:data, a:options)
 
     let s:preview_data = a:data
     let l:lines = []
@@ -207,26 +225,28 @@ function! lsp#ui#vim#output#preview(data, options) abort
     let l:bufferlines = line('$')
     let l:maxwidth = max(map(getline(1, '$'), 'strdisplaywidth(v:val)'))
 
-    " Don't use 'scrolloff', it might mess up the cursor's position
-    let &l:scrolloff = 0
+    if !s:supports_floating || !g:lsp_preview_float
+        " Don't use 'scrolloff', it might mess up the cursor's position
+        let &l:scrolloff = 0
 
-    " Set options of preview window
-    if has_key(a:options, 'statusline')
-        let &l:statusline = a:options['statusline']
-    endif
+        " Set options of preview window
+        if has_key(a:options, 'statusline')
+            let &l:statusline = a:options['statusline']
+        endif
 
-    if has_key(a:options, 'cursor')
-        execute printf('call cursor(%d, %d)', a:options['cursor']['line'], a:options['cursor']['col'])
+        if has_key(a:options, 'cursor')
+            execute printf('call cursor(%d, %d)', a:options['cursor']['line'], a:options['cursor']['col'])
 
-        if has_key(a:options['cursor'], 'align')
-            let l:align = a:options['cursor']['align']
+            if has_key(a:options['cursor'], 'align')
+                let l:align = a:options['cursor']['align']
 
-            if l:align == "top"
-                normal! zt
-            elseif l:align == "center"
-                normal! zz
-            elseif l:align == "bottom"
-                normal! zb
+                if l:align == "top"
+                    normal! zt
+                elseif l:align == "center"
+                    normal! zz
+                elseif l:align == "bottom"
+                    normal! zb
+                endif
             endif
         endif
     endif
