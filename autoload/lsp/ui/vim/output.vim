@@ -201,6 +201,20 @@ function! s:open_preview(data, options) abort
     return l:winid
 endfunction
 
+function! s:align_preview(options) abort
+    if has_key(a:options['cursor'], 'align')
+        let l:align = a:options['cursor']['align']
+
+        if l:align ==? 'top'
+            normal! zt
+        elseif l:align ==? 'center'
+            normal! zz
+        elseif l:align ==? 'bottom'
+            normal! zb
+        endif
+    endif
+endfunction
+
 function! lsp#ui#vim#output#preview(data, options) abort
     if s:winid && type(s:preview_data) == type(a:data)
        \ && s:preview_data == a:data
@@ -242,18 +256,7 @@ function! lsp#ui#vim#output#preview(data, options) abort
 
         if has_key(a:options, 'cursor')
             execute printf('call cursor(%d, %d)', a:options['cursor']['line'], a:options['cursor']['col'])
-
-            if has_key(a:options['cursor'], 'align')
-                let l:align = a:options['cursor']['align']
-
-                if l:align ==? 'top'
-                    normal! zt
-                elseif l:align ==? 'center'
-                    normal! zz
-                elseif l:align ==? 'bottom'
-                    normal! zb
-                endif
-            endif
+            call s:align_preview(a:options)
         endif
     endif
 
@@ -279,17 +282,7 @@ function! lsp#ui#vim#output#preview(data, options) abort
           let &scrolloff = 0
 
           call nvim_win_set_cursor(s:winid, [a:options['cursor']['line'], a:options['cursor']['col']])
-          if has_key(a:options['cursor'], 'align')
-              let l:align = a:options['cursor']['align']
-
-              if l:align ==? 'top'
-                  normal! zt
-              elseif l:align ==? 'center'
-                  normal! zz
-              elseif l:align ==? 'bottom'
-                  normal! zb
-              endif
-          endif
+          call s:align_preview(a:options)
 
           " Finally, go back to the original window
           call win_gotoid(l:current_window_id)
