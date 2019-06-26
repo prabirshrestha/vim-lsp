@@ -27,6 +27,7 @@ CONTENTS                                                  *vim-lsp-contents*
       g:lsp_highlight_references_enabled    |g:lsp_highlight_references_enabled|
       g:lsp_get_vim_completion_item         |g:lsp_get_vim_completion_item|
       g:lsp_get_supported_capabilities      |g:lsp_get_supported_capabilities|
+      g:lsp_popup_max_width		    |g:lsp_popup_max_width|
     Functions                             |vim-lsp-functions|
       enable                                |vim-lsp-enable|
       disable                               |vim-lsp-disable|
@@ -381,6 +382,15 @@ g:lsp_get_supported_capabilities         *g:lsp_get_supported_capabilities*
     Note: You can obtain the default supported capabilities of vim-lsp by
     calling `lsp#omni#default_get_supported_capabilities` from within your
     function.
+
+g:lsp_popup_max_width                               *g:lsp_popup_max_width*
+    Type: |Number|
+    Default: `-1`
+
+    If positive, determines the maximum width of the popup window in
+    characters. Lines longer than `g:lsp_popup_max_width` will be wrapped to
+    fit in the popup window. Use a value of `-1` to disable setting a maximum
+    width.
 
 ===============================================================================
 FUNCTIONS	                                        *vim-lsp-functions*
@@ -750,7 +760,7 @@ Closes an opened preview window
 Transfers focus to an opened preview window or back to the previous window if
 focus is already on the preview window.
 
-  
+
 ===============================================================================
 Autocomplete                                          *vim-lsp-autocomplete*
 
