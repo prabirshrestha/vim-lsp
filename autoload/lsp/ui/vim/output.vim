@@ -128,12 +128,12 @@ function! lsp#ui#vim#output#floatingpreview(data, options) abort
       if has_key(a:options['cursor'], 'align')
           let l:align = a:options['cursor']['align']
 
-          if l:align == "top"
+          if l:align ==? 'top'
               let l:options['firstline'] = a:options['cursor']['line']
-          elseif l:align == "center"
+          elseif l:align ==? 'center'
               " TODO
               let l:options['firstline'] = a:options['cursor']['line']
-          elseif l:align == "bottom"
+          elseif l:align ==? 'bottom'
               " TODO
               let l:options['firstline'] = a:options['cursor']['line']
           endif
@@ -246,11 +246,11 @@ function! lsp#ui#vim#output#preview(data, options) abort
             if has_key(a:options['cursor'], 'align')
                 let l:align = a:options['cursor']['align']
 
-                if l:align == "top"
+                if l:align ==? 'top'
                     normal! zt
-                elseif l:align == "center"
+                elseif l:align ==? 'center'
                     normal! zz
-                elseif l:align == "bottom"
+                elseif l:align ==? 'bottom'
                     normal! zb
                 endif
             endif
@@ -282,11 +282,11 @@ function! lsp#ui#vim#output#preview(data, options) abort
           if has_key(a:options['cursor'], 'align')
               let l:align = a:options['cursor']['align']
 
-              if l:align == "top"
+              if l:align ==? 'top'
                   normal! zt
-              elseif l:align == "center"
+              elseif l:align ==? 'center'
                   normal! zz
-              elseif l:align == "bottom"
+              elseif l:align ==? 'bottom'
                   normal! zb
               endif
           endif
