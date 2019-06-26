@@ -387,10 +387,10 @@ g:lsp_preview_max_width                           *g:lsp_preview_max_width*
     Type: |Number|
     Default: `-1`
 
-    If positive, determines the maximum width of the popup window in
+    If positive, determines the maximum width of the preview window in
     characters. Lines longer than `g:lsp_preview_max_width` will be wrapped to
-    fit in the popup window. Use a value of `-1` to disable setting a maximum
-    width.
+    fit in the preview window. Use a value of `-1` to disable setting a
+    maximum width.
 
 ===============================================================================
 FUNCTIONS	                                        *vim-lsp-functions*
