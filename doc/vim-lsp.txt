@@ -27,7 +27,6 @@ CONTENTS                                                  *vim-lsp-contents*
       g:lsp_highlight_references_enabled    |g:lsp_highlight_references_enabled|
       g:lsp_get_vim_completion_item         |g:lsp_get_vim_completion_item|
       g:lsp_get_supported_capabilities      |g:lsp_get_supported_capabilities|
-      g:lsp_popup_highlight                 |g:lsp_popup_highlight|
     Functions                             |vim-lsp-functions|
       enable                                |vim-lsp-enable|
       disable                               |vim-lsp-disable|
@@ -382,19 +381,6 @@ g:lsp_get_supported_capabilities         *g:lsp_get_supported_capabilities*
     Note: You can obtain the default supported capabilities of vim-lsp by
     calling `lsp#omni#default_get_supported_capabilities` from within your
     function.
-
-g:lsp_popup_highlight                               *g:lsp_popup_highlight*
-    Type: |String|
-    Default: `"Pmenu"`
-
-    A |String| indicating the highlight group name to use in the vim-lsp popup
-    window. This sets the |'wincolor'| to the specified highlight group.
-
-    Example:
->
-        highlight PopupWindow guibg=#fdf6e3
-        let g:lsp_popup_highlight = "PopupWindow"
-<
 
 ===============================================================================
 FUNCTIONS	                                        *vim-lsp-functions*
@@ -764,7 +750,7 @@ Closes an opened preview window
 Transfers focus to an opened preview window or back to the previous window if
 focus is already on the preview window.
 
-
+  
 ===============================================================================
 Autocomplete                                          *vim-lsp-autocomplete*
 
