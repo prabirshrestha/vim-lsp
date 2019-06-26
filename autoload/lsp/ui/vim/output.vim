@@ -177,7 +177,7 @@ function! s:open_preview(data) abort
     return l:winid
 endfunction
 
-function! lsp#ui#vim#output#preview(data) abort
+function! lsp#ui#vim#output#preview(data, options) abort
     if s:winid && type(s:preview_data) == type(a:data)
        \ && s:preview_data == a:data
        \ && type(g:lsp_preview_doubletap) == 3
@@ -196,11 +196,40 @@ function! lsp#ui#vim#output#preview(data) abort
     let s:preview_data = a:data
     let l:lines = []
     let l:ft = s:append(a:data, l:lines)
+
+    if has_key(a:options, 'filetype')
+        let l:ft = a:options['filetype']
+    endif
+
     call s:setcontent(l:lines, l:ft)
 
     " Get size information while still having the buffer active
     let l:bufferlines = line('$')
     let l:maxwidth = max(map(getline(1, '$'), 'strdisplaywidth(v:val)'))
+
+    " Don't use 'scrolloff', it might mess up the cursor's position
+    let &l:scrolloff = 0
+
+    " Set options of preview window
+    if has_key(a:options, 'statusline')
+        let &l:statusline = a:options['statusline']
+    endif
+
+    if has_key(a:options, 'cursor')
+        execute printf('call cursor(%d, %d)', a:options['cursor']['line'], a:options['cursor']['col'])
+
+        if has_key(a:options['cursor'], 'align')
+            let l:align = a:options['cursor']['align']
+
+            if l:align == "top"
+                normal! zt
+            elseif l:align == "center"
+                normal! zz
+            elseif l:align == "bottom"
+                normal! zb
+            endif
+        endif
+    endif
 
     if g:lsp_preview_keep_focus
       " restore focus to the previous window
@@ -227,7 +256,7 @@ function! s:append(data, lines) abort
 
         return 'markdown'
     elseif type(a:data) == type('')
-        call extend(a:lines, split(a:data, "\n"))
+        call extend(a:lines, split(a:data, "\n", v:true))
 
         return 'markdown'
     elseif type(a:data) == type({}) && has_key(a:data, 'language')
@@ -237,7 +266,7 @@ function! s:append(data, lines) abort
 
         return 'markdown'
     elseif type(a:data) == type({}) && has_key(a:data, 'kind')
-        call extend(a:lines, split(a:data.value, '\n'))
+        call extend(a:lines, split(a:data.value, '\n', v:true))
 
         return a:data.kind ==? 'plaintext' ? 'text' : a:data.kind
     endif

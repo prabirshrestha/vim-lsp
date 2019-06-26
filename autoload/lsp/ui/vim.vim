@@ -453,28 +453,12 @@ function! s:handle_location(ctx, server, type, data) abort "ctx = {counter, list
                 echo 'Retrieved ' . a:type
                 botright copen
             else
-                " Close any preview window that is open already
-                pclose
-
-                " Save current window
-                let l:current_window = win_getid()
-
-                " Open preview window with correct file
-                execute &previewheight . 'new'
-                execute 'edit ' . fnameescape(l:loc['filename'])
-
-                " Move cursor to specified position
-                execute printf('call cursor(%d, %d)', l:loc['lnum'], l:loc['col'])
-
-                " Set window properties
-                let &l:previewwindow = 1
-                let &l:statusline = ' LSP Peek ' . a:type
-
-                " Centre screen on location
-                normal! zz
-
-                " Restore current window
-                call win_gotoid(l:current_window)
+                let l:lines = readfile(fnameescape(l:loc['filename']))
+                call lsp#ui#vim#output#preview(l:lines, {
+                            \   'statusline': ' LSP Peek ' . a:type,
+                            \   'cursor': { 'line': l:loc['lnum'], 'col': l:loc['col'], 'align': 'center' },
+                            \   'filetype': &filetype
+                            \ })
             endif
         endif
     endif
