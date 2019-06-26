@@ -71,7 +71,7 @@ nnoremap <plug>(lsp-rename) :<c-u>call lsp#ui#vim#rename()<cr>
 nnoremap <plug>(lsp-type-definition) :<c-u>call lsp#ui#vim#type_definition()<cr>
 nnoremap <plug>(lsp-workspace-symbol) :<c-u>call lsp#ui#vim#workspace_symbol()<cr>
 nnoremap <plug>(lsp-document-format) :<c-u>call lsp#ui#vim#document_format()<cr>
-vnoremap <plug>(lsp-document-format) :call lsp#ui#vim#document_range_format()<cr>
+vnoremap <plug>(lsp-document-format) :<Home>silent <End>call lsp#ui#vim#document_range_format()<cr>
 nnoremap <plug>(lsp-implementation) :<c-u>call lsp#ui#vim#implementation()<cr>
 nnoremap <plug>(lsp-status) :<c-u>echo lsp#get_server_status()<cr>
 nnoremap <plug>(lsp-next-reference) :<c-u>call lsp#ui#vim#references#jump(+1)<cr>
