@@ -196,6 +196,9 @@ function! s:set_cursor(current_window_id, options) abort
 
       let &scrolloff = l:old_scrolloff
     else
+      " Don't use 'scrolloff', it might mess up the cursor's position
+      let &l:scrolloff = 0
+
       call cursor(a:options['cursor']['line'], a:options['cursor']['col'])
     endif
 endfunction
@@ -261,10 +264,7 @@ function! lsp#ui#vim#output#preview(data, options) abort
     let l:maxwidth = max(map(getline(1, '$'), 'strdisplaywidth(v:val)'))
 
     if !s:supports_floating || !g:lsp_preview_float
-        " Don't use 'scrolloff', it might mess up the cursor's position
-        let &l:scrolloff = 0
-
-        " Set options of preview window
+        " Set statusline
         if has_key(a:options, 'statusline')
             let &l:statusline = a:options['statusline']
         endif
