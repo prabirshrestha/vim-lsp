@@ -91,7 +91,7 @@ function! s:get_float_positioning(height, width) abort
     return l:opts
 endfunction
 
-function! lsp#ui#vim#output#floatingpreview(data, options) abort
+function! lsp#ui#vim#output#floatingpreview(data) abort
   if has('nvim')
     let l:buf = nvim_create_buf(v:false, v:true)
     call setbufvar(l:buf, '&signcolumn', 'no')
@@ -110,7 +110,6 @@ function! lsp#ui#vim#output#floatingpreview(data, options) abort
     call nvim_win_set_option(s:winid, 'number', v:false)
     call nvim_win_set_option(s:winid, 'relativenumber', v:false)
     call nvim_win_set_option(s:winid, 'cursorline', v:false)
-
     " Enable closing the preview with esc, but map only in the scratch buffer
     nmap <buffer><silent> <esc> :pclose<cr>
   else
@@ -168,9 +167,9 @@ function! lsp#ui#vim#output#getpreviewwinid() abort
     return s:winid
 endfunction
 
-function! s:open_preview(data, options) abort
+function! s:open_preview(data) abort
     if s:supports_floating && g:lsp_preview_float
-      let l:winid = lsp#ui#vim#output#floatingpreview(a:data, a:options)
+      let l:winid = lsp#ui#vim#output#floatingpreview(a:data)
     else
       execute &previewheight.'new'
       let l:winid = win_getid()
@@ -241,7 +240,7 @@ function! lsp#ui#vim#output#preview(data, options) abort
 
     let l:current_window_id = win_getid()
 
-    let s:winid = s:open_preview(a:data, a:options)
+    let s:winid = s:open_preview(a:data)
 
     let s:preview_data = a:data
     let l:lines = []
