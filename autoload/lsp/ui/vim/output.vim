@@ -206,7 +206,16 @@ function! s:align_preview(options) abort
     let l:align = a:options['cursor']['align']
 
     if s:supports_floating && g:lsp_preview_float && !has('nvim')
-        call popup_setoptions(s:winid, {'firstline': a:options['cursor']['line']})
+        let l:pos = popup_getpos(s:winid)
+        let l:height = l:pos['core_height']
+
+        if l:align ==? 'top'
+            call popup_setoptions(s:winid, {'firstline': a:options['cursor']['line']})
+        elseif l:align ==? 'center'
+            call popup_setoptions(s:winid, {'firstline': a:options['cursor']['line'] - l:height / 2})
+        elseif l:align ==? 'bottom'
+            call popup_setoptions(s:winid, {'firstline': a:options['cursor']['line'] - l:height})
+        endif
     else
         if l:align ==? 'top'
             normal! zt
