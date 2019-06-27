@@ -182,7 +182,8 @@ function! s:set_cursor(current_window_id, options) abort
         return
     endif
 
-    if has('nvim')
+    if s:supports_floating && g:lsp_preview_float && has('nvim')
+      " Neovim floats
       " Go back to the preview window to set the cursor
       call win_gotoid(s:winid)
       let l:old_scrolloff = &scrolloff
@@ -195,11 +196,15 @@ function! s:set_cursor(current_window_id, options) abort
       call win_gotoid(a:current_window_id)
 
       let &scrolloff = l:old_scrolloff
+    elseif s:supports_floating && g:lsp_preview_float && !has('nvim')
+      " Vim popups
+      call s:align_preview(a:options)
     else
+      " Preview
       " Don't use 'scrolloff', it might mess up the cursor's position
       let &l:scrolloff = 0
-
       call cursor(a:options['cursor']['line'], a:options['cursor']['col'])
+      call s:align_preview(a:options)
     endif
 endfunction
 
@@ -212,6 +217,7 @@ function! s:align_preview(options) abort
     let l:align = a:options['cursor']['align']
 
     if s:supports_floating && g:lsp_preview_float && !has('nvim')
+        " Vim popups
         let l:pos = popup_getpos(s:winid)
         let l:height = l:pos['core_height']
 
@@ -223,6 +229,7 @@ function! s:align_preview(options) abort
             call popup_setoptions(s:winid, {'firstline': a:options['cursor']['line'] - l:height})
         endif
     else
+        " Preview and Neovim floats
         if l:align ==? 'top'
             normal! zt
         elseif l:align ==? 'center'
@@ -269,8 +276,7 @@ function! lsp#ui#vim#output#preview(data, options) abort
             let &l:statusline = a:options['statusline']
         endif
 
-        call s:set_cursor(-1, a:options)
-        call s:align_preview(a:options)
+        call s:set_cursor(l:current_window_id, a:options)
     endif
 
     " Go to the previous window to adjust positioning
@@ -280,11 +286,13 @@ function! lsp#ui#vim#output#preview(data, options) abort
 
     if s:supports_floating && s:winid && g:lsp_preview_float
       if has('nvim')
+        " Neovim floats
         call s:adjust_float_placement(l:bufferlines, l:maxwidth)
         call s:set_cursor(l:current_window_id, a:options)
         call s:add_float_closing_hooks()
       else
-        call s:align_preview(a:options)
+        " Vim popups
+        call s:set_cursor(l:current_window_id, a:options)
       endif
       doautocmd User lsp_float_opened
     endif
