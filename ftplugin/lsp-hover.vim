@@ -6,8 +6,7 @@ if has('patch-8.1.1517') && g:lsp_preview_float && !has('nvim')
 else
   setlocal previewwindow buftype=nofile bufhidden=wipe noswapfile nobuflisted
 endif
-setlocal nocursorline nofoldenable
-setlocal nonumber norelativenumber
+setlocal nocursorline nofoldenable nonumber norelativenumber
 
 if has('syntax')
     setlocal nospell
