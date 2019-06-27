@@ -2,13 +2,8 @@ let s:supports_floating = exists('*nvim_open_win') || has('patch-8.1.1517')
 let s:winid = v:false
 let s:prevwin = v:false
 let s:preview_data = v:false
-let s:suppress_close = v:false
 
 function! lsp#ui#vim#output#closepreview() abort
-  if s:suppress_close
-    return
-  endif
-
   if win_getid() == s:winid
     " Don't close if window got focus
     return
@@ -268,11 +263,8 @@ function! lsp#ui#vim#output#preview(data, options) abort
     if s:supports_floating && s:winid && g:lsp_preview_float
       if has('nvim')
         call s:adjust_float_placement(l:bufferlines, l:maxwidth)
-        call s:add_float_closing_hooks()
 
         if has_key(a:options, 'cursor')
-          let s:suppress_close = v:true
-
           " Go back to the preview window to set the cursor
           call win_gotoid(s:winid)
           let l:old_scrolloff = &scrolloff
@@ -285,8 +277,9 @@ function! lsp#ui#vim#output#preview(data, options) abort
           call win_gotoid(l:current_window_id)
 
           let &scrolloff = l:old_scrolloff
-          let s:suppress_close = v:false
         endif
+
+        call s:add_float_closing_hooks()
       endif
       doautocmd User lsp_float_opened
     endif
