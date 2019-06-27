@@ -223,7 +223,7 @@ function! s:align_preview(options) abort
         " Vim popups
         let l:pos = popup_getpos(s:winid)
         let l:height = min([l:pos['core_height'], winheight(0) - winline() - 2])
-        let l:width = 40
+        let l:width = l:pos['core_width']
 
         let l:options = {
                     \ 'minwidth': l:width,
