@@ -82,7 +82,7 @@ function! s:filter_match(item, last_typed_word) abort
     let l:label = trim(a:item['word'])
     let l:match_pattern = '^' . a:last_typed_word
 
-    return l:label =~? l:match_pattern
+    return l:label =~ l:match_pattern
 endfunction
 
 function! s:display_completions(timer) abort
