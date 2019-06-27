@@ -250,7 +250,7 @@ function! lsp#ui#vim#output#preview(data, options) abort
         endif
 
         if has_key(a:options, 'cursor')
-            execute printf('call cursor(%d, %d)', a:options['cursor']['line'], a:options['cursor']['col'])
+            call cursor(a:options['cursor']['line'], a:options['cursor']['col'])
             call s:align_preview(a:options)
         endif
     endif
