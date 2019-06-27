@@ -241,6 +241,7 @@ function! s:align_preview(options) abort
         endif
 
         call popup_setoptions(s:winid, l:options)
+        redraw!
     else
         " Preview and Neovim floats
         if l:align ==? 'top'
