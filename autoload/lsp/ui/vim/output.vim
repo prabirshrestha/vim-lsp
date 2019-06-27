@@ -287,12 +287,10 @@ function! lsp#ui#vim#output#preview(data, options) abort
       doautocmd User lsp_float_opened
     endif
 
-
     if !g:lsp_preview_keep_focus
       " set the focus to the preview window
       call win_gotoid(s:winid)
     endif
-
     return ''
 endfunction
 
