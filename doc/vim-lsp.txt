@@ -27,6 +27,7 @@ CONTENTS                                                  *vim-lsp-contents*
       g:lsp_highlight_references_enabled    |g:lsp_highlight_references_enabled|
       g:lsp_get_vim_completion_item         |g:lsp_get_vim_completion_item|
       g:lsp_get_supported_capabilities      |g:lsp_get_supported_capabilities|
+      g:lsp_peek_alignment                  |g:lsp_peek_alignment|
     Functions                             |vim-lsp-functions|
       enable                                |vim-lsp-enable|
       disable                               |vim-lsp-disable|
@@ -383,6 +384,15 @@ g:lsp_get_supported_capabilities         *g:lsp_get_supported_capabilities*
     calling `lsp#omni#default_get_supported_capabilities` from within your
     function.
 
+g:lsp_peek_alignment                                 *g:lsp_peek_alignment*
+    Type: |String|
+    Default: `"center"`
+
+    Determines how to align the location of interest for e.g.
+    |LspPeekDefinition|. Three values are possible: `"top"`, `"center"` and
+    `"bottom"`, which place the location of interest at the first, middle and
+    last lines of the preview/popup/floating window, respectively.
+
 ===============================================================================
 FUNCTIONS	                                        *vim-lsp-functions*
 
@@ -670,6 +680,8 @@ LspPeekDefinition                                        *LspPeekDefinition*
 Like |LspDefinition|, but opens the definition in the |preview-window| instead
 of the current window.
 
+Also see |g:lsp_peek_alignment|.
+
 LspPreviousError					 *LspPreviousError*
 
 Jump to Previous err diagnostics
@@ -759,7 +771,7 @@ Closes an opened preview window
 Transfers focus to an opened preview window or back to the previous window if
 focus is already on the preview window.
 
-  
+
 ===============================================================================
 Autocomplete                                          *vim-lsp-autocomplete*
 

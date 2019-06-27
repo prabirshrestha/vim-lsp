@@ -28,6 +28,7 @@ let g:lsp_highlight_references_enabled = get(g:, 'lsp_highlight_references_enabl
 let g:lsp_preview_float = get(g:, 'lsp_preview_float', 1)
 let g:lsp_preview_autoclose = get(g:, 'lsp_preview_autoclose', 1)
 let g:lsp_preview_doubletap = get(g:, 'lsp_preview_doubletap', [function('lsp#ui#vim#output#focuspreview')])
+let g:lsp_peek_alignment = get(g:, 'lsp_peek_alignment', 'center')
 
 let g:lsp_get_vim_completion_item = get(g:, 'lsp_get_vim_completion_item', [function('lsp#omni#default_get_vim_completion_item')])
 let g:lsp_get_supported_capabilities = get(g:, 'lsp_get_supported_capabilities', [function('lsp#default_get_supported_capabilities')])

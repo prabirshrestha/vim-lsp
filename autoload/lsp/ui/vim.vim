@@ -456,7 +456,7 @@ function! s:handle_location(ctx, server, type, data) abort "ctx = {counter, list
                 let l:lines = readfile(fnameescape(l:loc['filename']))
                 call lsp#ui#vim#output#preview(l:lines, {
                             \   'statusline': ' LSP Peek ' . a:type,
-                            \   'cursor': { 'line': l:loc['lnum'], 'col': l:loc['col'], 'align': 'center' },
+                            \   'cursor': { 'line': l:loc['lnum'], 'col': l:loc['col'], 'align': g:lsp_peek_alignment },
                             \   'filetype': &filetype
                             \ })
             endif
