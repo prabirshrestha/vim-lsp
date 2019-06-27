@@ -196,6 +196,25 @@ function! s:open_preview(data, options) abort
     return l:winid
 endfunction
 
+function! s:set_cursor(current_window_id, options) abort
+    if has_key(a:options, 'cursor')
+      if has('nvim')
+        " Go back to the preview window to set the cursor
+        call win_gotoid(s:winid)
+        let l:old_scrolloff = &scrolloff
+        let &scrolloff = 0
+
+        call nvim_win_set_cursor(s:winid, [a:options['cursor']['line'], a:options['cursor']['col']])
+        call s:align_preview(a:options)
+
+        " Finally, go back to the original window
+        call win_gotoid(a:current_window_id)
+
+        let &scrolloff = l:old_scrolloff
+      endif
+    endif
+endfunction
+
 function! s:align_preview(options) abort
     if has_key(a:options['cursor'], 'align')
         let l:align = a:options['cursor']['align']
@@ -263,22 +282,7 @@ function! lsp#ui#vim#output#preview(data, options) abort
     if s:supports_floating && s:winid && g:lsp_preview_float
       if has('nvim')
         call s:adjust_float_placement(l:bufferlines, l:maxwidth)
-
-        if has_key(a:options, 'cursor')
-          " Go back to the preview window to set the cursor
-          call win_gotoid(s:winid)
-          let l:old_scrolloff = &scrolloff
-          let &scrolloff = 0
-
-          call nvim_win_set_cursor(s:winid, [a:options['cursor']['line'], a:options['cursor']['col']])
-          call s:align_preview(a:options)
-
-          " Finally, go back to the original window
-          call win_gotoid(l:current_window_id)
-
-          let &scrolloff = l:old_scrolloff
-        endif
-
+        call s:set_cursor(l:current_window_id, a:options)
         call s:add_float_closing_hooks()
       endif
       doautocmd User lsp_float_opened
