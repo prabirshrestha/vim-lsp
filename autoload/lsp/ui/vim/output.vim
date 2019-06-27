@@ -198,7 +198,6 @@ function! s:set_cursor(current_window_id, options) abort
       let &scrolloff = l:old_scrolloff
     elseif s:supports_floating && g:lsp_preview_float && !has('nvim')
       " Vim popups
-      call popup_setoptions(s:winid, {'firstline': a:options['cursor']['line']})
       function! AlignVimPopup(timer) closure
           call s:align_preview(a:options)
       endfunction
