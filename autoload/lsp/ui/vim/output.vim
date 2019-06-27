@@ -114,28 +114,10 @@ function! lsp#ui#vim#output#floatingpreview(data, options) abort
     " Enable closing the preview with esc, but map only in the scratch buffer
     nmap <buffer><silent> <esc> :pclose<cr>
   else
-    let l:options = {
-                \ 'moved': 'any',
-                \ 'border': [1, 1, 1, 1],
-                \ }
-
-    if has_key(a:options, 'cursor')
-      if has_key(a:options['cursor'], 'align')
-          let l:align = a:options['cursor']['align']
-
-          if l:align ==? 'top'
-              let l:options['firstline'] = a:options['cursor']['line']
-          elseif l:align ==? 'center'
-              " TODO
-              let l:options['firstline'] = a:options['cursor']['line']
-          elseif l:align ==? 'bottom'
-              " TODO
-              let l:options['firstline'] = a:options['cursor']['line']
-          endif
-      endif
-    endif
-
-    let s:winid = popup_atcursor('...', l:options)
+    let s:winid = popup_atcursor('...', {
+        \  'moved': 'any',
+		    \  'border': [1, 1, 1, 1],
+		\})
   endif
   return s:winid
 endfunction
@@ -216,9 +198,16 @@ function! s:set_cursor(current_window_id, options) abort
 endfunction
 
 function! s:align_preview(options) abort
-    if has_key(a:options['cursor'], 'align')
-        let l:align = a:options['cursor']['align']
+    if !has_key(a:options, 'cursor') ||
+     \ !has_key(a:options['cursor'], 'align')
+        return
+    endif
 
+    let l:align = a:options['cursor']['align']
+
+    if s:supports_floating && g:lsp_preview_float && !has('nvim')
+        call popup_setoptions(s:winid, {'firstline': a:options['cursor']['line']})
+    else
         if l:align ==? 'top'
             normal! zt
         elseif l:align ==? 'center'
@@ -284,9 +273,12 @@ function! lsp#ui#vim#output#preview(data, options) abort
         call s:adjust_float_placement(l:bufferlines, l:maxwidth)
         call s:set_cursor(l:current_window_id, a:options)
         call s:add_float_closing_hooks()
+      else
+        call s:align_preview(a:options)
       endif
       doautocmd User lsp_float_opened
     endif
+
 
     if !g:lsp_preview_keep_focus
       " set the focus to the preview window
