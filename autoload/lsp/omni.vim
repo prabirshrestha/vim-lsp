@@ -73,7 +73,7 @@ function! lsp#omni#complete(findstart, base) abort
 
             call timer_start(0, function('s:display_completions'))
 
-            return v:none
+            return exists('v:none') ? v:none : []
         endif
     endif
 endfunction
