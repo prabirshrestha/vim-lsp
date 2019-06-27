@@ -178,21 +178,25 @@ function! s:open_preview(data) abort
 endfunction
 
 function! s:set_cursor(current_window_id, options) abort
-    if has_key(a:options, 'cursor')
-      if has('nvim')
-        " Go back to the preview window to set the cursor
-        call win_gotoid(s:winid)
-        let l:old_scrolloff = &scrolloff
-        let &scrolloff = 0
+    if !has_key(a:options, 'cursor')
+        return
+    endif
 
-        call nvim_win_set_cursor(s:winid, [a:options['cursor']['line'], a:options['cursor']['col']])
-        call s:align_preview(a:options)
+    if has('nvim')
+      " Go back to the preview window to set the cursor
+      call win_gotoid(s:winid)
+      let l:old_scrolloff = &scrolloff
+      let &scrolloff = 0
 
-        " Finally, go back to the original window
-        call win_gotoid(a:current_window_id)
+      call nvim_win_set_cursor(s:winid, [a:options['cursor']['line'], a:options['cursor']['col']])
+      call s:align_preview(a:options)
 
-        let &scrolloff = l:old_scrolloff
-      endif
+      " Finally, go back to the original window
+      call win_gotoid(a:current_window_id)
+
+      let &scrolloff = l:old_scrolloff
+    else
+      call cursor(a:options['cursor']['line'], a:options['cursor']['col'])
     endif
 endfunction
 
@@ -265,10 +269,8 @@ function! lsp#ui#vim#output#preview(data, options) abort
             let &l:statusline = a:options['statusline']
         endif
 
-        if has_key(a:options, 'cursor')
-            call cursor(a:options['cursor']['line'], a:options['cursor']['col'])
-            call s:align_preview(a:options)
-        endif
+        call s:set_cursor(-1, a:options)
+        call s:align_preview(a:options)
     endif
 
     " Go to the previous window to adjust positioning
