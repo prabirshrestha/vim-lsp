@@ -222,15 +222,25 @@ function! s:align_preview(options) abort
     if s:supports_floating && g:lsp_preview_float && !has('nvim')
         " Vim popups
         let l:pos = popup_getpos(s:winid)
-        let l:height = l:pos['core_height']
+        let l:height = min([l:pos['core_height'], winheight(0) - winline() - 2])
+        let l:width = 40
+
+        let l:options = {
+                    \ 'minwidth': l:width,
+                    \ 'maxwidth': l:width,
+                    \ 'minheight': l:height,
+                    \ 'maxheight': l:height
+                    \ }
 
         if l:align ==? 'top'
-            call popup_setoptions(s:winid, {'firstline': a:options['cursor']['line'], 'maxheight': l:height})
+            let l:options['firstline'] = a:options['cursor']['line']
         elseif l:align ==? 'center'
-            call popup_setoptions(s:winid, {'firstline': a:options['cursor']['line'] - (l:height - 1) / 2, 'maxheight': l:height})
+            let l:options['firstline'] = a:options['cursor']['line'] - (l:height - 1) / 2
         elseif l:align ==? 'bottom'
-            call popup_setoptions(s:winid, {'firstline': a:options['cursor']['line'] - l:height + 1, 'maxheight': l:height})
+            let l:options['firstline'] = a:options['cursor']['line'] - l:height + 1
         endif
+
+        call popup_setoptions(s:winid, l:options)
     else
         " Preview and Neovim floats
         if l:align ==? 'top'
