@@ -198,7 +198,11 @@ function! s:set_cursor(current_window_id, options) abort
       let &scrolloff = l:old_scrolloff
     elseif s:supports_floating && g:lsp_preview_float && !has('nvim')
       " Vim popups
-      call s:align_preview(a:options)
+      call popup_setoptions(s:winid, {'firstline': a:options['cursor']['line']})
+      function! AlignVimPopup(timer) closure
+          call s:align_preview(a:options)
+      endfunction
+      call timer_start(0, function('AlignVimPopup'))
     else
       " Preview
       " Don't use 'scrolloff', it might mess up the cursor's position
@@ -222,11 +226,11 @@ function! s:align_preview(options) abort
         let l:height = l:pos['core_height']
 
         if l:align ==? 'top'
-            call popup_setoptions(s:winid, {'firstline': a:options['cursor']['line']})
+            call popup_setoptions(s:winid, {'firstline': a:options['cursor']['line'], 'maxheight': l:height})
         elseif l:align ==? 'center'
-            call popup_setoptions(s:winid, {'firstline': a:options['cursor']['line'] - l:height / 2})
+            call popup_setoptions(s:winid, {'firstline': a:options['cursor']['line'] - (l:height - 1) / 2, 'maxheight': l:height})
         elseif l:align ==? 'bottom'
-            call popup_setoptions(s:winid, {'firstline': a:options['cursor']['line'] - l:height})
+            call popup_setoptions(s:winid, {'firstline': a:options['cursor']['line'] - l:height + 1, 'maxheight': l:height})
         endif
     else
         " Preview and Neovim floats
