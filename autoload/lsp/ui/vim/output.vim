@@ -261,10 +261,7 @@ function! lsp#ui#vim#output#preview(data, options) abort
     endif
 
     " Go to the previous window to adjust positioning
-    if g:lsp_preview_keep_focus
-      " restore focus to the previous window
-      call win_gotoid(l:current_window_id)
-    endif
+    call win_gotoid(l:current_window_id)
 
     echo ''
 
@@ -292,6 +289,11 @@ function! lsp#ui#vim#output#preview(data, options) abort
         endif
       endif
       doautocmd User lsp_float_opened
+    endif
+
+    if !g:lsp_preview_keep_focus
+      " set the focus to the preview window
+      call win_gotoid(s:winid)
     endif
 
     return ''
