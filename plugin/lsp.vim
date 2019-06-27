@@ -25,6 +25,9 @@ let g:lsp_use_event_queue = get(g:, 'lsp_use_event_queue', has('nvim') || has('p
 let g:lsp_insert_text_enabled= get(g:, 'lsp_insert_text_enabled', 1)
 let g:lsp_text_edit_enabled = get(g:, 'lsp_text_edit_enabled', has('patch-8.0.1493'))
 let g:lsp_highlight_references_enabled = get(g:, 'lsp_highlight_references_enabled', 1)
+let g:lsp_preview_float = get(g:, 'lsp_preview_float', 1)
+let g:lsp_preview_autoclose = get(g:, 'lsp_preview_autoclose', 1)
+let g:lsp_preview_doubletap = get(g:, 'lsp_preview_doubletap', [function('lsp#ui#vim#output#focuspreview')])
 
 let g:lsp_get_vim_completion_item = get(g:, 'lsp_get_vim_completion_item', [function('lsp#omni#default_get_vim_completion_item')])
 let g:lsp_get_supported_capabilities = get(g:, 'lsp_get_supported_capabilities', [function('lsp#default_get_supported_capabilities')])
@@ -64,6 +67,8 @@ nnoremap <plug>(lsp-definition) :<c-u>call lsp#ui#vim#definition()<cr>
 nnoremap <plug>(lsp-document-symbol) :<c-u>call lsp#ui#vim#document_symbol()<cr>
 nnoremap <plug>(lsp-document-diagnostics) :<c-u>call lsp#ui#vim#diagnostics#document_diagnostics()<cr>
 nnoremap <plug>(lsp-hover) :<c-u>call lsp#ui#vim#hover#get_hover_under_cursor()<cr>
+nnoremap <plug>(lsp-preview-close) :<c-u>call lsp#ui#vim#output#closepreview()<cr>
+nnoremap <plug>(lsp-preview-focus) :<c-u>call lsp#ui#vim#output#focuspreview()<cr>
 nnoremap <plug>(lsp-next-error) :<c-u>call lsp#ui#vim#diagnostics#next_error()<cr>
 nnoremap <plug>(lsp-previous-error) :<c-u>call lsp#ui#vim#diagnostics#previous_error()<cr>
 nnoremap <plug>(lsp-references) :<c-u>call lsp#ui#vim#references()<cr>

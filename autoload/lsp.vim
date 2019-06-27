@@ -26,6 +26,8 @@ augroup _lsp_silent_
     autocmd User lsp_server_init silent
     autocmd User lsp_server_exit silent
     autocmd User lsp_complete_done silent
+    autocmd User lsp_float_opened silent
+    autocmd User lsp_float_closed silent
 augroup END
 
 function! lsp#log_verbose(...) abort
@@ -160,7 +162,7 @@ function! s:register_events() abort
         endif
         autocmd CursorMoved * call s:on_cursor_moved()
         autocmd BufWinEnter,BufWinLeave,InsertEnter * call lsp#ui#vim#references#clean_references()
-        autocmd CursorMoved * call lsp#ui#vim#references#highlight(v:false)
+        autocmd CursorMoved * if g:lsp_highlight_references_enabled | call lsp#ui#vim#references#highlight(v:false) | endif
     augroup END
     call s:on_text_document_did_open()
 endfunction
@@ -780,4 +782,15 @@ function! s:send_didchange_queue(...) abort
         endfor
     endfor
     let s:didchange_queue = []
+endfunction
+
+" Return dict with diagnostic counts for current buffer
+" { 'error': 1, 'warning': 0, 'information': 0, 'hint': 0 }
+function! lsp#get_buffer_diagnostics_counts() abort
+    return lsp#ui#vim#diagnostics#get_buffer_diagnostics_counts()
+endfunction
+
+" Return first error line or v:null if there are no errors
+function! lsp#get_buffer_first_error_line() abort
+    return lsp#ui#vim#diagnostics#get_buffer_first_error_line()
 endfunction
