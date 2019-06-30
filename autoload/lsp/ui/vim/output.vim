@@ -222,7 +222,12 @@ function! s:align_preview(options) abort
     if s:supports_floating && g:lsp_preview_float && !has('nvim')
         " Vim popups
         let l:pos = popup_getpos(s:winid)
-        let l:height = min([l:pos['core_height'], winheight(0) - winline() - 2])
+        let l:below = l:pos['core_line'] < winline()
+        if l:below
+            let l:height = min([l:pos['core_height'], winheight(0) - winline() - 2])
+        else
+            let l:height = min([l:pos['core_height'], winline() - 3])
+        endif
         let l:width = l:pos['core_width']
 
         let l:options = {
