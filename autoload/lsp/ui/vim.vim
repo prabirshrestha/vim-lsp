@@ -4,7 +4,7 @@ function! s:not_supported(what) abort
     return lsp#utils#error(a:what.' not supported for '.&filetype)
 endfunction
 
-function! lsp#ui#vim#implementation() abort
+function! lsp#ui#vim#implementation(in_preview) abort
     let l:servers = filter(lsp#get_whitelisted_servers(), 'lsp#capabilities#has_implementation_provider(v:val)')
     let s:last_req_id = s:last_req_id + 1
     call setqflist([])
@@ -13,7 +13,7 @@ function! lsp#ui#vim#implementation() abort
         call s:not_supported('Retrieving implementation')
         return
     endif
-    let l:ctx = { 'counter': len(l:servers), 'list':[], 'last_req_id': s:last_req_id, 'jump_if_one': 1, 'in_preview': 0 }
+    let l:ctx = { 'counter': len(l:servers), 'list':[], 'last_req_id': s:last_req_id, 'jump_if_one': 1, 'in_preview': a:in_preview }
     for l:server in l:servers
         call lsp#send_request(l:server, {
             \ 'method': 'textDocument/implementation',
@@ -28,7 +28,7 @@ function! lsp#ui#vim#implementation() abort
     echo 'Retrieving implementation ...'
 endfunction
 
-function! lsp#ui#vim#type_definition() abort
+function! lsp#ui#vim#type_definition(in_preview) abort
     let l:servers = filter(lsp#get_whitelisted_servers(), 'lsp#capabilities#has_type_definition_provider(v:val)')
     let s:last_req_id = s:last_req_id + 1
     call setqflist([])
@@ -37,7 +37,7 @@ function! lsp#ui#vim#type_definition() abort
         call s:not_supported('Retrieving type definition')
         return
     endif
-    let l:ctx = { 'counter': len(l:servers), 'list':[], 'last_req_id': s:last_req_id, 'jump_if_one': 1, 'in_preview': 0 }
+    let l:ctx = { 'counter': len(l:servers), 'list':[], 'last_req_id': s:last_req_id, 'jump_if_one': 1, 'in_preview': a:in_preview }
     for l:server in l:servers
         call lsp#send_request(l:server, {
             \ 'method': 'textDocument/typeDefinition',
@@ -52,7 +52,7 @@ function! lsp#ui#vim#type_definition() abort
     echo 'Retrieving type definition ...'
 endfunction
 
-function! lsp#ui#vim#declaration() abort
+function! lsp#ui#vim#declaration(in_preview) abort
     let l:servers = filter(lsp#get_whitelisted_servers(), 'lsp#capabilities#has_declaration_provider(v:val)')
     let s:last_req_id = s:last_req_id + 1
     call setqflist([])
@@ -62,7 +62,7 @@ function! lsp#ui#vim#declaration() abort
         return
     endif
 
-    let l:ctx = { 'counter': len(l:servers), 'list':[], 'last_req_id': s:last_req_id, 'jump_if_one': 1, 'in_preview': 0 }
+    let l:ctx = { 'counter': len(l:servers), 'list':[], 'last_req_id': s:last_req_id, 'jump_if_one': 1, 'in_preview': a:in_preview }
     for l:server in l:servers
         call lsp#send_request(l:server, {
             \ 'method': 'textDocument/declaration',

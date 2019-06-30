@@ -62,23 +62,26 @@ For more information, refer to the readme and documentation of the respective pl
 | Command | Description|
 |--|--|
 |`:LspCodeAction`| Gets a list of possible commands that can be applied to a file so it can be fixed (quick fix) |
-|`:LspDeclaration`| Go to declaration |
+|`:LspDeclaration`| Go to the declaration of the word under the cursor, and open in the current window |
 |`:LspDefinition`| Go to the definition of the word under the cursor, and open in the current window |
 |`:LspDocumentDiagnostics`| Get current document diagnostics information |
 |`:LspDocumentFormat`| Format entire document |
 |`:LspDocumentRangeFormat`| Format document selection |
 |`:LspDocumentSymbol`| Show document symbols |
 |`:LspHover`| Show hover information |
-|`:LspImplementation` | Show implementation of interface |
+|`:LspImplementation` | Show implementation of interface in the current window |
 |`:LspNextError`| jump to next error |
 |`:LspNextReference`| jump to next reference to the symbol under cursor |
+|`:LspPeekDeclaration`| Go to the declaration of the word under the cursor, but open in preview window |
 |`:LspPeekDefinition`| Go to the definition of the word under the cursor, but open in preview window |
+|`:LspPeekImplementation`| Go to the implementation of an interface, but open in preview window |
+|`:LspPeekTypeDefinition`| Go to the type definition of the word under the cursor, but open in preview window |
 |`:LspPreviousError`| jump to previous error |
 |`:LspPreviousReference`| jump to previous reference to the symbol under cursor |
 |`:LspReferences`| Find references |
 |`:LspRename`| Rename symbol |
 |`:LspStatus` | Show the status of the language server |
-|`:LspTypeDefinition`| Go to type definition |
+|`:LspTypeDefinition`| Go to the type definition of the word under the cursor, and open in the current window |
 |`:LspWorkspaceSymbol`| Search/Show workspace symbol |
 
 ### Diagnostics

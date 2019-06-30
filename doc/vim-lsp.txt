@@ -49,7 +49,10 @@ CONTENTS                                                  *vim-lsp-contents*
       LspHover                              |LspHover|
       LspNextError                          |LspNextError|
       LspNextReference                      |LspNextReference|
+      LspPeekDeclaration                    |LspPeekDeclaration|
       LspPeekDefinition                     |LspPeekDefinition|
+      LspPeekImplementation                 |LspPeekImplementation|
+      LspPeekTypeDefinition                 |LspPeekTypeDefinition|
       LspPreviousError                      |LspPreviousError|
       LspPreviousReference                  |LspPreviousReference|
       LspImplementation                     |LspImplementation|
@@ -627,6 +630,8 @@ LspDeclaration						    *LspDeclaration*
 Go to declaration. Useful for languages such as C/C++ where there is a clear
 distinction between declaration and definition.
 
+Also see |LspPeekDeclaration|.
+
 LspDefinition						     *LspDefinition*
 
 Go to definition.
@@ -675,12 +680,33 @@ LspNextReference                                          *LspNextReference*
 
 Jump to the next reference of the symbol under cursor.
 
+LspPeekDeclaration                                      *LspPeekDeclaration*
+
+Like |LspDeclaration|, but opens the declaration in the |preview-window|
+instead of the current window.
+
+Also see |g:lsp_peek_alignment| and |g:lsp_preview_float|.
+
 LspPeekDefinition                                        *LspPeekDefinition*
 
 Like |LspDefinition|, but opens the definition in the |preview-window| instead
 of the current window.
 
-Also see |g:lsp_peek_alignment|.
+Also see |g:lsp_peek_alignment| and |g:lsp_preview_float|.
+
+LspPeekImplementation                               *LspPeekImplementation*
+
+Like |LspImplementation|, but opens the implementation in the |preview-window|
+instead of the current window.
+
+Also see |g:lsp_peek_alignment| and |g:lsp_preview_float|.
+
+LspPeekTypeDefinition                               *LspPeekTypeDefinition*
+
+Like |LspTypeDefinition|, but opens the type definition in the
+|preview-window| instead of the current window.
+
+Also see |g:lsp_peek_alignment| and |g:lsp_preview_float|.
 
 LspPreviousError					 *LspPreviousError*
 
@@ -694,6 +720,8 @@ LspImplementation                                        *LspImplementation*
 
 Find all implementation of interface.
 
+Also see |LspPeekImplementation|.
+
 LspReferences						     *LspReferences*
 
 Find all references.
@@ -705,6 +733,8 @@ Rename the symbol.
 LspTypeDefinition				  	 *LspTypeDefinition*
 
 Go to the type definition.
+
+Also see |LspPeekTypeDefinition|.
 
 LspWorkspaceSymbol					*LspWorkspaceSymbol*
 
@@ -740,6 +770,7 @@ Available plug mappings are following:
 
   (lsp-code-action)
   (lsp-declaration)
+  (lsp-peek-declaration)
   (lsp-definition)
   (lsp-peek-definition)
   (lsp-document-symbol)
@@ -757,7 +788,9 @@ Available plug mappings are following:
   (lsp-document-format)
   (lsp-document-format)
   (lsp-implementation)
+  (lsp-peek-implementation)
   (lsp-type-definition)
+  (lsp-peek-type-definition)
   (lsp-status)
 
 See also |vim-lsp-commands|
