@@ -64,11 +64,21 @@ function! lsp#omni#complete(findstart, base) abort
                 sleep 10m
             endwhile
 
-            let l:current_line = strpart(getline('.'), 0, col('.') - 1)
-            let s:start_pos = match(l:current_line, '\k*$')
-            let l:last_typed_word = strpart(l:current_line, s:start_pos)
+            " TODO: Allow multiple servers
+            let l:server_name = l:info['server_names'][0]
+            let l:server_info = lsp#get_server_info(l:server_name)
 
-            let s:completion['matches'] = filter(s:completion['matches'], {_, item -> s:filter_match(item, l:last_typed_word)})
+            let l:typed_pattern = has_key(l:server_info, 'config') && has_key(l:server_info['config'], 'typed_pattern') ? l:server_info['config']['typed_pattern'] : '\k*$'
+            let l:current_line = strpart(getline('.'), 0, col('.') - 1)
+            let s:start_pos = match(l:current_line, l:typed_pattern)
+
+            let l:filter = has_key(l:server_info, 'config') && has_key(l:server_info['config'], 'filter') ? l:server_info['config']['filter'] : { 'name': 'none' }
+
+            if l:filter['name'] ==? 'prefix'
+                let l:last_typed_word = strpart(l:current_line, s:start_pos)
+                let s:completion['matches'] = filter(s:completion['matches'], {_, item -> s:prefix_filter(item, l:last_typed_word)})
+            endif
+
             let s:completion['status'] = ''
 
             call timer_start(0, function('s:display_completions'))
@@ -78,7 +88,7 @@ function! lsp#omni#complete(findstart, base) abort
     endif
 endfunction
 
-function! s:filter_match(item, last_typed_word) abort
+function! s:prefix_filter(item, last_typed_word) abort
     let l:label = trim(a:item['word'])
     let l:match_pattern = '^' . a:last_typed_word
 
