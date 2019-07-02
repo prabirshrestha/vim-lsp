@@ -546,6 +546,9 @@ position. Thus, `/$` means "current cursor position" in this context. By
 default, vim-lsp uses all characters in `'iskeyword'` in front of the cursor
 as typed word.
 
+    Example:
+	'config': { 'typed_pattern': '\k*$' }
+
 This key is also used to align the completion menu: the completion menu is
 placed so its left border is at the column that matches the start of the
 `typed_pattern`.
