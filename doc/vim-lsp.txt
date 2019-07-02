@@ -523,6 +523,10 @@ The vim |dict| containing information about the server.
 
 	    'cmd': function('s:myserver_cmd')
 
+    Using the `config` key, you can also specify a custom 'typed word
+    pattern', or a custom filter for completion items, see
+    |vim-lsp-typed_pattern| and |vim-lsp-completion-filter|.
+
   * workspace_config:
     optional vim |dict|
     Used to pass workspace configuration to the server after
@@ -531,6 +535,42 @@ The vim |dict| containing information about the server.
     Example:
 	'workspace_config': {'pyls': {'plugins': \
 		{'pydocstyle': {'enabled': v:true}}}}
+
+typed_pattern                                        *vim-lsp-typed_pattern*
+    Type: |String| (|pattern|)
+    Default: `'\k*$'`
+
+Vim-lsp uses a |regexp| to determine what you have typed so far. The pattern
+is matched against the current line, from column 0 up until the cursor's
+position. Thus, `/$` means "current cursor position" in this context. By
+default, vim-lsp uses all characters in `'iskeyword'` in front of the cursor
+as typed word.
+
+This key is also used to align the completion menu: the completion menu is
+placed so its left border is at the column that matches the start of the
+`typed_pattern`.
+
+filter                                           *vim-lsp-completion-filter*
+
+You can filter the completion items returned from the server by specifying a
+completion filter using the `filter` key in the server info's `config` |dict|.
+The value of the `filter` key is itself a |dict| containing at least a key
+`name`, which specifies which filter to use.
+
+    Example:
+        'config': { 'filter': { 'name': 'none' } }
+
+    Available filters are:
+        - `none` (default)
+          Do not filter completion items, use all items returned from the
+          language server.
+
+        - `prefix`
+          Only allow completion items that are a prefix of the already typed
+          word. For the meaning of "already typed", see
+          |vim-lsp-typed_pattern|. The case (in)sensitivity of the matching is
+          determined by `'ignorecase'`.
+
 
 
 lsp#stop_server                                        *vim-lsp-stop_server*
@@ -750,7 +790,7 @@ Closes an opened preview window
 Transfers focus to an opened preview window or back to the previous window if
 focus is already on the preview window.
 
-  
+
 ===============================================================================
 Autocomplete                                          *vim-lsp-autocomplete*
 
