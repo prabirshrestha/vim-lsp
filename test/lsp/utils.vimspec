@@ -45,4 +45,40 @@ Describe lsp#utils
             endfor
         End
     End
+
+    Describe lsp#utils#find_nearest_parent_file_directory
+        It should return the root directory if it is found
+            let tests = [
+            \  {'from': './test/testproject/src/main.cpp', 'target': ['.ccls', 'compile_commands.json', 'README.md', 'git/'], 'root': './test/testproject'},
+            \  {'from': './test/testproject/src/main.cpp', 'target': ['.ccls', 'build/', 'CMakeLists.txt', 'git/'], 'root': './test/testproject'},
+            \  {'from': './test/testproject/src/main.cpp', 'target': '.ccls', 'root': './test/testproject'},
+            \  {'from': './test/testproject/src/main.cpp', 'target': 'git/', 'root': './test/testproject'},
+            \  {'from': './test/testproject/src/main.cpp', 'target': 'CMakeLists.txt', 'root': './test/testproject/src'},
+            \  {'from': './test/testproject/README.md', 'target': ['.ccls', 'compile_commands.json', 'README.md', 'git/'], 'root': './test/testproject'},
+            \  {'from': './test/testproject/README.md', 'target': ['.ccls', 'build/', 'CMakeLists.txt', 'git/'], 'root': './test/testproject'},
+            \  {'from': './test/testproject/README.md', 'target': '.ccls', 'root': './test/testproject'},
+            \  {'from': './test/testproject/README.md', 'target': 'git/', 'root': './test/testproject'},
+            \  {'from': './test/testproject/README.md', 'target': 'CMakeLists.txt', 'root': './test/testproject'},
+            \]
+            for test in tests
+                let path = lsp#utils#find_nearest_parent_file_directory(fnamemodify(test.from, ':p:h'), test.target)
+                Assert Equals(path, fnamemodify(test.root, ':p:h'))
+            endfor
+        End
+
+        It should return an empty string if not target has been found
+            let tests = [
+            \  {'from': './test/testproject/src/main.cpp', 'target': ['fdrvbws/', 'asbr/', 'bgdf/', 'abfrb.txt', 'ngo.c']},
+            \  {'from': './test/testproject/src/main.cpp', 'target': 'asbr/'},
+            \  {'from': './test/testproject/src/main.cpp', 'target': 'btr.c'},
+            \  {'from': './test/testproject/.gitignore', 'target': ['fdrvbws/', 'asbr/', 'bgdf/', 'abfrb.txt', 'ngo.c']},
+            \  {'from': './test/testproject/.gitignore', 'target': 'asbr/'},
+            \  {'from': './test/testproject/.gitignore', 'target': 'btr.c'},
+            \]
+            for test in tests
+                let path = lsp#utils#find_nearest_parent_file_directory(fnamemodify(test.from, ':p:h'), test.target)
+                Assert Empty(path)
+            endfor
+        End
+    End
 End

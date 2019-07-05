@@ -25,6 +25,9 @@ augroup _lsp_silent_
     autocmd User lsp_unregister_server silent
     autocmd User lsp_server_init silent
     autocmd User lsp_server_exit silent
+    autocmd User lsp_complete_done silent
+    autocmd User lsp_float_opened silent
+    autocmd User lsp_float_closed silent
 augroup END
 
 function! lsp#log_verbose(...) abort
@@ -48,8 +51,11 @@ function! lsp#enable() abort
         let s:already_setup = 1
     endif
     let s:enabled = 1
-    if g:lsp_diagnostics_enabled && g:lsp_signs_enabled
-        call lsp#ui#vim#signs#enable()
+    if g:lsp_diagnostics_enabled
+        if g:lsp_signs_enabled | call lsp#ui#vim#signs#enable() | endif
+        if g:lsp_virtual_text_enabled | call lsp#ui#vim#virtual#enable() | endif
+        if g:lsp_highlights_enabled | call lsp#ui#vim#highlights#enable() | endif
+        if g:lsp_textprop_enabled | call lsp#ui#vim#diagnostics#textprop#enable() | endif
     endif
     call s:register_events()
 endfunction
@@ -155,6 +161,8 @@ function! s:register_events() abort
             autocmd TextChangedP * call s:on_text_document_did_change()
         endif
         autocmd CursorMoved * call s:on_cursor_moved()
+        autocmd BufWinEnter,BufWinLeave,InsertEnter * call lsp#ui#vim#references#clean_references()
+        autocmd CursorMoved * if g:lsp_highlight_references_enabled | call lsp#ui#vim#references#highlight(v:false) | endif
     augroup END
     call s:on_text_document_did_open()
 endfunction
@@ -168,6 +176,7 @@ endfunction
 
 function! s:on_text_document_did_open() abort
     let l:buf = bufnr('%')
+    if getbufvar(l:buf, '&buftype') ==# 'terminal' | return | endif
     call lsp#log('s:on_text_document_did_open()', l:buf, &filetype, getcwd(), lsp#utils#get_buffer_uri(l:buf))
     for l:server_name in lsp#get_whitelisted_servers(l:buf)
         call s:ensure_flush(l:buf, l:server_name, function('s:Noop'))
@@ -176,6 +185,7 @@ endfunction
 
 function! s:on_text_document_did_save() abort
     let l:buf = bufnr('%')
+    if getbufvar(l:buf, '&buftype') ==# 'terminal' | return | endif
     call lsp#log('s:on_text_document_did_save()', l:buf)
     for l:server_name in lsp#get_whitelisted_servers(l:buf)
         call s:ensure_flush(l:buf, l:server_name, {result->s:call_did_save(l:buf, l:server_name, result, function('s:Noop'))})
@@ -184,11 +194,14 @@ endfunction
 
 function! s:on_text_document_did_change() abort
     let l:buf = bufnr('%')
+    if getbufvar(l:buf, '&buftype') ==# 'terminal' | return | endif
     call lsp#log('s:on_text_document_did_change()', l:buf)
     call s:add_didchange_queue(l:buf)
 endfunction
 
 function! s:on_cursor_moved() abort
+    let l:buf = bufnr('%')
+    if getbufvar(l:buf, '&buftype') ==# 'terminal' | return | endif
     call lsp#ui#vim#diagnostics#echo#cursor_moved()
 endfunction
 
@@ -214,7 +227,7 @@ function! s:call_did_save(buf, server_name, result, cb) abort
     let l:buffer_info = l:buffers[l:path]
 
     let l:params = {
-        \ 'textDocument': s:get_text_document_identifier(a:buf, l:buffer_info),
+        \ 'textDocument': s:get_text_document_identifier(a:buf),
         \ }
 
     if l:did_save_options['includeText']
@@ -232,6 +245,7 @@ endfunction
 
 function! s:on_text_document_did_close() abort
     let l:buf = bufnr('%')
+    if getbufvar(l:buf, '&buftype') ==# 'terminal' | return | endif
     call lsp#log('s:on_text_document_did_close()', l:buf)
 endfunction
 
@@ -343,6 +357,7 @@ function! s:ensure_start(buf, server_name, cb) abort
         \ 'on_stderr': function('s:on_stderr', [a:server_name]),
         \ 'on_exit': function('s:on_exit', [a:server_name]),
         \ 'on_notification': function('s:on_notification', [a:server_name]),
+        \ 'on_request': function('s:on_request', [a:server_name]),
         \ })
 
     if l:lsp_id > 0
@@ -355,6 +370,14 @@ function! s:ensure_start(buf, server_name, cb) abort
         call lsp#log(l:msg)
         call a:cb(l:msg)
     endif
+endfunction
+
+function! lsp#default_get_supported_capabilities(server_info) abort
+    return {
+    \   'workspace': {
+    \       'applyEdit': v:true
+    \   }
+    \ }
 endfunction
 
 function! s:ensure_init(buf, server_name, cb) abort
@@ -394,31 +417,27 @@ function! s:ensure_init(buf, server_name, cb) abort
     if has_key(l:server_info, 'capabilities')
         let l:capabilities = l:server_info['capabilities']
     else
-        let l:capabilities = {
-        \   'workspace': {
-        \       'applyEdit ': v:true
-        \   }
-        \ }
+        let l:capabilities = call(g:lsp_get_supported_capabilities[0], [server_info])
     endif
 
+    let l:request = {
+    \   'method': 'initialize',
+    \   'params': {
+    \     'processId': getpid(),
+    \     'capabilities': l:capabilities,
+    \     'rootUri': l:root_uri,
+    \     'rootPath': lsp#utils#uri_to_path(l:root_uri),
+    \     'trace': 'off',
+    \   },
+    \ }
+
     if has_key(l:server_info, 'initialization_options')
-        let l:initialization_options = l:server_info['initialization_options']
-    else
-        let l:initialization_options = {}
+        let l:request.params['initializationOptions'] = l:server_info['initialization_options']
     endif
 
     let l:server['init_callbacks'] = [a:cb]
 
-    call s:send_request(a:server_name, {
-        \ 'method': 'initialize',
-        \ 'params': {
-        \   'capabilities': l:capabilities,
-        \   'rootUri': l:root_uri,
-        \   'rootPath': lsp#utils#uri_to_path(l:root_uri),
-        \   'trace': 'off',
-        \   'initializationOptions': l:initialization_options,
-        \ },
-        \ })
+    call s:send_request(a:server_name, l:request)
 endfunction
 
 function! s:ensure_conf(buf, server_name, cb) abort
@@ -487,7 +506,7 @@ function! s:ensure_changed(buf, server_name, cb) abort
     call s:send_notification(a:server_name, {
         \ 'method': 'textDocument/didChange',
         \ 'params': {
-        \   'textDocument': s:get_text_document_identifier(a:buf, l:buffer_info),
+        \   'textDocument': s:get_versioned_text_document_identifier(a:buf, l:buffer_info),
         \   'contentChanges': s:text_changes(a:buf, a:server_name),
         \ }
         \ })
@@ -554,6 +573,13 @@ function! s:send_notification(server_name, data) abort
     call lsp#client#send_notification(l:lsp_id, a:data)
 endfunction
 
+function! s:send_response(server_name, data) abort
+    let l:lsp_id = s:servers[a:server_name]['lsp_id']
+    let l:data = copy(a:data)
+    call lsp#log_verbose('--->', l:lsp_id, a:server_name, l:data)
+    call lsp#client#send_response(l:lsp_id, a:data)
+endfunction
+
 function! s:on_stderr(server_name, id, data, event) abort
     call lsp#log_verbose('<---(stderr)', a:id, a:server_name, a:data)
 endfunction
@@ -596,6 +622,17 @@ function! s:on_notification(server_name, id, data, event) abort
     endfor
 endfunction
 
+function! s:on_request(server_name, id, request) abort
+    call lsp#log_verbose('<---', a:id, a:request)
+    if a:request['method'] ==# 'workspace/applyEdit'
+        call lsp#utils#workspace_edit#apply_workspace_edit(a:request['params']['edit'])
+        call s:send_response(a:server_name, { 'id': a:request['id'], 'result': { 'applied': v:true } })
+    else
+        " Error returned according to json-rpc specification.
+        call s:send_response(a:server_name, { 'id': a:request['id'], 'error': { 'code': -32601, 'message': 'Method not found' } })
+    endif
+endfunction
+
 function! s:handle_initialize(server_name, data) abort
     let l:response = a:data['response']
     let l:server = s:servers[a:server_name]
@@ -606,9 +643,11 @@ function! s:handle_initialize(server_name, data) abort
     if !lsp#client#is_error(l:response)
         let l:server['init_result'] = l:response
     else
-      let l:server['failed'] = l:response['error']
-      call lsp#utils#error('Failed to initialize ' . a:server_name . ' with error ' . l:response['error']['code'] . ': ' . l:response['error']['message'])
+        let l:server['failed'] = l:response['error']
+        call lsp#utils#error('Failed to initialize ' . a:server_name . ' with error ' . l:response['error']['code'] . ': ' . l:response['error']['message'])
     endif
+
+    call s:send_notification(a:server_name, { 'method': 'initialized', 'params': {} })
 
     for l:Init_callback in l:init_callbacks
         call l:Init_callback(a:data)
@@ -687,7 +726,11 @@ function! lsp#get_position(...) abort
     return { 'line': line('.') - 1, 'character': pos+1 }
 endfunction
 
-function! s:get_text_document_identifier(buf, buffer_info) abort
+function! s:get_text_document_identifier(buf) abort
+    return { 'uri': lsp#utils#get_buffer_uri(a:buf) }
+endfunction
+
+function! s:get_versioned_text_document_identifier(buf, buffer_info) abort
     return {
         \ 'uri': lsp#utils#get_buffer_uri(a:buf),
         \ 'version': a:buffer_info['version'],
@@ -740,4 +783,15 @@ function! s:send_didchange_queue(...) abort
         endfor
     endfor
     let s:didchange_queue = []
+endfunction
+
+" Return dict with diagnostic counts for current buffer
+" { 'error': 1, 'warning': 0, 'information': 0, 'hint': 0 }
+function! lsp#get_buffer_diagnostics_counts() abort
+    return lsp#ui#vim#diagnostics#get_buffer_diagnostics_counts()
+endfunction
+
+" Return first error line or v:null if there are no errors
+function! lsp#get_buffer_first_error_line() abort
+    return lsp#ui#vim#diagnostics#get_buffer_first_error_line()
 endfunction

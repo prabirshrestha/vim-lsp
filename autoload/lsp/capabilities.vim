@@ -61,6 +61,10 @@ function! lsp#capabilities#has_type_definition_provider(server_name) abort
     return s:has_bool_provider(a:server_name, 'typeDefinitionProvider')
 endfunction
 
+function! lsp#capabilities#has_document_highlight_provider(server_name) abort
+    return s:has_bool_provider(a:server_name, 'documentHighlightProvider')
+endfunction
+
 " [supports_did_save (boolean), { 'includeText': boolean }]
 function! lsp#capabilities#get_text_document_save_registration_options(server_name) abort
     let l:capabilities = lsp#get_server_capabilities(a:server_name)

@@ -1,7 +1,7 @@
 " TODO: handle !has('signs')
 " TODO: handle signs clearing when server exits
 " https://github.com/vim/vim/pull/3652
-let s:supports_signs = has('signs') && has('patch-8.1.0772') && exists('*sign_define')
+let s:supports_signs = exists('*sign_define') && (has('nvim') || has('patch-8.1.0772'))
 let s:enabled = 0
 let s:signs = {} " { server_name: { path: {} } }
 let s:severity_sign_names_mapping = {
@@ -39,74 +39,6 @@ function! lsp#ui#vim#signs#enable() abort
     endif
 endfunction
 
-function! lsp#ui#vim#signs#next_error() abort
-    let l:signs = s:get_signs(bufnr('%'))
-    if empty(l:signs)
-        return
-    endif
-    let l:view = winsaveview()
-    let l:next_line = 0
-    for l:sign in l:signs
-        if l:sign['name'] ==# 'LspError' && l:sign['lnum'] > l:view['lnum']
-            let l:next_line = l:sign['lnum']
-            break
-        endif
-    endfor
-
-    if l:next_line == 0
-        return
-    endif
-
-    let l:view['lnum'] = l:next_line
-    let l:view['topline'] = 1
-    let l:height = winheight(0)
-    let totalnum = line('$')
-    if totalnum > l:height
-        let l:half = l:height / 2
-        if l:totalnum - l:half < l:view['lnum']
-            let l:view['topline'] = l:totalnum - l:height + 1
-        else
-            let l:view['topline'] = l:view['lnum'] - l:half
-        endif
-    endif
-    call winrestview(l:view)
-endfunction
-
-function! lsp#ui#vim#signs#previous_error() abort
-    let l:signs = s:get_signs(bufnr('%'))
-    if empty(l:signs)
-        return
-    endif
-    let l:view = winsaveview()
-    let l:next_line = 0
-    let l:index = len(l:signs) - 1
-    while l:index >= 0
-        if l:signs[l:index]['lnum'] < l:view['lnum']
-            let l:next_line = l:signs[l:index]['lnum']
-            break
-        endif
-        let l:index = l:index - 1
-    endwhile
-
-    if l:next_line == 0
-        return
-    endif
-
-    let l:view['lnum'] = l:next_line
-    let l:view['topline'] = 1
-    let l:height = winheight(0)
-    let totalnum = line('$')
-    if totalnum > l:height
-        let l:half = l:height / 2
-        if l:totalnum - l:half < l:view['lnum']
-            let l:view['topline'] = l:totalnum - l:height + 1
-        else
-            let l:view['topline'] = l:view['lnum'] - l:half
-        endif
-    endif
-    call winrestview(l:view)
-endfunction
-
 " Set default sign text to handle case when user provides empty dict
 function! s:add_sign(sign_name, sign_default_text, sign_options) abort
     if !s:supports_signs | return | endif
@@ -129,12 +61,6 @@ function! s:define_signs() abort
     call s:add_sign('LspWarning', 'W>', g:lsp_signs_warning)
     call s:add_sign('LspInformation', 'I>', g:lsp_signs_information)
     call s:add_sign('LspHint', 'H>', g:lsp_signs_hint)
-endfunction
-
-function! s:get_signs(bufnr) abort
-    if !s:supports_signs | return [] | endif
-    let l:signs = sign_getplaced(a:bufnr, { 'group': '*' })
-    return !empty(l:signs) ? l:signs[0]['signs'] : []
 endfunction
 
 function! lsp#ui#vim#signs#disable() abort
@@ -173,7 +99,7 @@ function! lsp#ui#vim#signs#set(server_name, data) abort
 endfunction
 
 function! s:clear_signs(server_name, path) abort
-    if !s:supports_signs | return | endif
+    if !s:supports_signs || !bufloaded(a:path) | return | endif
     let l:sign_group = s:get_sign_group(a:server_name)
     call sign_unplace(l:sign_group, { 'buffer': a:path })
 endfunction
@@ -190,8 +116,8 @@ function! s:place_signs(server_name, path, diagnostics) abort
     if !empty(a:diagnostics) && bufnr(a:path) >= 0
         for l:item in a:diagnostics
             let l:line = l:item['range']['start']['line'] + 1
+            let l:character = l:item['range']['start']['character'] + 1
 
-            let l:name = 'LspError'
             if has_key(l:item, 'severity') && !empty(l:item['severity'])
                 let l:sign_name = get(s:severity_sign_names_mapping, l:item['severity'], 'LspError')
                 " pass 0 and let vim generate sign id
@@ -201,3 +127,4 @@ function! s:place_signs(server_name, path, diagnostics) abort
         endfor
     endif
 endfunction
+" vim sw=4 ts=4 et
