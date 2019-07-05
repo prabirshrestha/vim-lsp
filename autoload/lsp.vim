@@ -722,7 +722,7 @@ function! lsp#get_text_document_identifier(...) abort
 endfunction
 
 function! lsp#get_position(...) abort
-    let pos = lsp#utils#strlen(getline('.')[:col('.')])
+    let pos = lsp#utils#col('.')
     return { 'line': line('.') - 1, 'character': pos+1 }
 endfunction
 

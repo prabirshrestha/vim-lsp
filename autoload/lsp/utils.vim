@@ -198,3 +198,10 @@ function! lsp#utils#strlen(str) abort
     endif
     return strlen(a:str)
 endfunction
+
+function! lsp#utils#col(m) abort
+    if g:lsp_use_utf16
+      return lsp#utils#strlen(getline(a:m)[:col(a:m)])
+    endif
+    return a:m
+endfunction
