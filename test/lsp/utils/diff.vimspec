@@ -101,22 +101,49 @@ Describe lsp#utils#diff
             let got = lsp#utils#diff#compute(lines1, lines2)
             Assert Equals(got, want)
 
-            let lines1 = [
-            \  'f𐐀o',
-            \]
-            let lines2 = [
-            \  'foo',
-            \]
-            let want = {
-            \  'range': {
-            \    'start': { 'line': 0, 'character': 1 },
-            \    'end': { 'line': 0, 'character': 3 }
-            \  },
-            \  'text': 'o',
-            \  "rangeLength": 2
-            \}
-            let got = lsp#utils#diff#compute(lines1, lines2)
-            Assert Equals(got, want)
+            let old_lsp_use_utf16 = get(g:, 'lsp_use_utf16', 0)
+
+            try
+                let g:lsp_use_utf16 = 0
+
+                let lines1 = [
+                \  'f𐐀o',
+                \]
+                let lines2 = [
+                \  'foo',
+                \]
+                let want = {
+                \  'range': {
+                \    'start': { 'line': 0, 'character': 1 },
+                \    'end': { 'line': 0, 'character': 5 }
+                \  },
+                \  'text': 'o',
+                \  "rangeLength": 4
+                \}
+                let got = lsp#utils#diff#compute(lines1, lines2)
+                Assert Equals(got, want)
+
+                let g:lsp_use_utf16 = 1
+
+                let lines1 = [
+                \  'f𐐀o',
+                \]
+                let lines2 = [
+                \  'foo',
+                \]
+                let want = {
+                \  'range': {
+                \    'start': { 'line': 0, 'character': 1 },
+                \    'end': { 'line': 0, 'character': 3 }
+                \  },
+                \  'text': 'o',
+                \  "rangeLength": 2
+                \}
+                let got = lsp#utils#diff#compute(lines1, lines2)
+                Assert Equals(got, want)
+            finally
+                let g:lsp_use_utf16 = old_lsp_use_utf16
+            endtry
         End
     End
 End
