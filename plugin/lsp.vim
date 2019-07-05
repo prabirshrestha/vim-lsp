@@ -32,6 +32,8 @@ let g:lsp_preview_doubletap = get(g:, 'lsp_preview_doubletap', [function('lsp#ui
 let g:lsp_get_vim_completion_item = get(g:, 'lsp_get_vim_completion_item', [function('lsp#omni#default_get_vim_completion_item')])
 let g:lsp_get_supported_capabilities = get(g:, 'lsp_get_supported_capabilities', [function('lsp#default_get_supported_capabilities')])
 
+let g:lsp_use_utf16 = get(g:, 'lsp_use_utf16', 0)
+
 if g:lsp_auto_enable
     augroup lsp_auto_enable
         autocmd!

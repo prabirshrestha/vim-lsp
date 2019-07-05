@@ -191,3 +191,10 @@ function! lsp#utils#count_utf16_code_units(str) abort
     let l:len = len(l:rs)
     return l:len + len(filter(l:rs, 'char2nr(v:val)>=0x10000'))
 endfunction
+
+function! lsp#utils#strlen(str) abort
+    if g:lsp_use_utf16
+        return lsp#utils#count_utf16_code_units(a:str)
+    endif
+    return strlen(a:str)
+endfunction
