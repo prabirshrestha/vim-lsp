@@ -2,10 +2,8 @@ function! lsp#utils#is_remote_uri(uri) abort
     return a:uri =~# '^\w\+::' || a:uri =~# '^\w\+://'
 endfunction
 
-" Decode uri function is taken from vital framework: https://github.com/vim-jp/vital.vim
-" For it's license (NYSL), see http://www.kmonos.net/nysl/index.en.html
 function! s:decode_uri(uri) abort
-    let l:ret = substitute(a:uri, '+', ' ', 'g')
+    let l:ret = substitute(a:uri, '[?#].*', '', '')
     return substitute(l:ret, '%\(\x\x\)', '\=printf("%c", str2nr(submatch(1), 16))', 'g')
 endfunction
 
@@ -45,7 +43,7 @@ if has('win32') || has('win64')
         else
             " You must not encode the volume information on the path if
             " present
-            let l:end_pos_volume = matchstrpos(a:path, '\C[A-Z]:')[2]
+            let l:end_pos_volume = matchstrpos(a:path, '\c[A-Z]:')[2]
 
             if l:end_pos_volume == -1
                 let l:end_pos_volume = 0
@@ -109,13 +107,38 @@ function! lsp#utils#find_nearest_parent_file(path, filename) abort
 endfunction
 
 " Find a nearest to a `path` parent filename `filename` by traversing the filesystem upwards
+" The filename ending with '/' or '\' will be regarded as directory name,
+" otherwith as file name
 function! lsp#utils#find_nearest_parent_file_directory(path, filename) abort
-    let l:path = lsp#utils#find_nearest_parent_file(a:path, a:filename)
+    if type(a:filename) == 3
+        let l:matched_paths = {}
+        for current_name in a:filename
+            let l:path = lsp#utils#find_nearest_parent_file_directory(a:path, current_name)
 
-    if !empty(l:path)
-        return fnamemodify(l:path, ':p:h')
+            if !empty(l:path)
+                if has_key(l:matched_paths, l:path)
+                    let l:matched_paths[l:path] += 1
+                else
+                    let l:matched_paths[l:path] = 1
+                endif
+            endif
+        endfor
+        return empty(l:matched_paths) ? 
+                    \ '' : 
+                    \ keys(l:matched_paths)[index(values(l:matched_paths), max(values(l:matched_paths)))]
+
+    elseif type(a:filename) == 1
+        if a:filename[-1:] ==# '/' || a:filename[-1:] ==# '\'
+            let l:modify_str = ':p:h:h'
+            let l:path = lsp#utils#find_nearest_parent_directory(a:path, a:filename[:-2])
+        else
+            let l:modify_str = ':p:h'
+            let l:path = lsp#utils#find_nearest_parent_file(a:path, a:filename)
+        endif
+
+        return empty(l:path) ? '' : fnamemodify(l:path, l:modify_str)
     else
-        return ''
+        echoerr "The type of argument \"filename\" must be String or List"
     endif
 endfunction
 
@@ -141,14 +164,19 @@ endfunction
 
 function! lsp#utils#echo_with_truncation(msg) abort
     let l:msg = a:msg
-    let l:winwidth = winwidth(0)
+
+    if &laststatus == 0 || (&laststatus == 1 && tabpagewinnr(tabpagenr(), '$') == 1)
+        let l:winwidth = winwidth(0)
+
+        if &ruler
+            let l:winwidth -= 18
+        endif
+    else
+        let l:winwidth = &columns
+    endif
 
     if &showcmd
         let l:winwidth -= 11
-    endif
-
-    if &laststatus != 2 && &ruler
-        let l:winwidth -= 18
     endif
 
     if l:winwidth > 5 && l:winwidth < strdisplaywidth(l:msg)

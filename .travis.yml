@@ -1,0 +1,100 @@
+sudo: false
+language: generic
+git:
+    depth: 3
+
+env:
+    global:
+        - DOWNLOADS_DIR=$HOME/downloads
+
+matrix:
+    allow_failures:
+        - os: osx
+          env: VIM_TYPE=neovim VIM_VERSION=nightly
+        - os: linux
+          dist: trusty
+          python: "3.6"
+          env: VIM_TYPE=neovim VIM_VERSION=nightly
+        - os: windows
+          language: shell
+          env: VIM_TYPE=neovim VIM_VERSION=nightly
+    include:
+        - os: osx
+          env: VIM_TYPE=neovim VIM_VERSION=0.3.1
+        - os: osx
+          env: VIM_TYPE=vim VIM_VERSION=default
+        - os: linux
+          dist: trusty
+          python: "3.6"
+          env: VIM_TYPE=neovim VIM_VERSION=0.3.1
+        - os: windows
+          language: shell
+          env: VIM_TYPE=neovim VIM_VERSION=0.3.1
+        - os: windows
+          language: shell
+          env: VIM_TYPE=vim VIM_VERSION=default
+
+addons:
+    apt:
+        packages:
+            - python3
+            - python3-pip
+
+before_install:
+    - mkdir -p "$DOWNLOADS_DIR"
+    - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
+        export PATH="$HOME/Library/Python/3.6/bin:$PATH";
+        pip3 install --user setuptools --upgrade;
+        pip3 install --user vim-vint typing;
+        if [[ "$VIM_TYPE" == "neovim" ]]; then
+            if [[ "$VIM_VERSION" == "nightly" ]]; then export VIM_URL="https://github.com/neovim/neovim/releases/download/nightly/nvim-macos.tar.gz"; fi;
+            if [[ "$VIM_VERSION" != "nightly" ]]; then export VIM_URL="https://github.com/neovim/neovim/releases/download/v$VIM_VERSION/nvim-macos.tar.gz"; fi;
+            wget "$VIM_URL" -O "$DOWNLOADS_DIR/neovim.tar.gz";
+            tar xzvf "$DOWNLOADS_DIR/neovim.tar.gz" -C "$DOWNLOADS_DIR";
+            export PATH="$DOWNLOADS_DIR/nvim-osx64/bin:$PATH";
+        fi;
+      elif [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
+        sudo apt-get update && sudo apt-get install python3-dev;
+        pip3 install --user setuptools --upgrade;
+        pip3 install --user vim-vint typing;
+        if [[ "$VIM_TYPE" == "neovim" ]]; then
+            if [[ "$VIM_VERSION" == "nightly" ]]; then export VIM_URL="https://github.com/neovim/neovim/releases/download/nightly/nvim.appimage"; fi;
+            if [[ "$VIM_VERSION" != "nightly" ]]; then export VIM_URL="https://github.com/neovim/neovim/releases/download/v$VIM_VERSION/nvim.appimage"; fi;
+            mkdir -p "$DOWNLOADS_DIR/neovim-linux/bin";
+            wget "$VIM_URL" -O "$DOWNLOADS_DIR/neovim-linux/bin/nvim";
+            chmod u+x "$DOWNLOADS_DIR/neovim-linux/bin/nvim";
+            export PATH="$DOWNLOADS_DIR/neovim-linux/bin:$PATH";
+        fi;
+      elif [[ "$TRAVIS_OS_NAME" == "windows" ]]; then
+        powershell -Command "Set-ExecutionPolicy RemoteSigned -scope CurrentUser";
+        powershell -Command "iex (new-object net.webclient).downloadstring('https://get.scoop.sh')";
+        export PATH="$HOME/scoop/shims:$PATH;"; 
+        export PATH="$APPDATA/Python/Python37/Scripts:$PATH;";
+        powershell -Command "scoop install python";
+        python3 -m pip install --user vim-vint typing;
+        if [[ "$VIM_TYPE" == "neovim" ]]; then
+            if [[ "$VIM_VERSION" == "nightly" ]]; then export VIM_URL="https://github.com/neovim/neovim/releases/download/nightly/nvim-win64.zip"; fi;
+            if [[ "$VIM_VERSION" != "nightly" ]]; then export VIM_URL="https://github.com/neovim/neovim/releases/download/v$VIM_VERSION/nvim-win64.zip"; fi;
+            wget "$VIM_URL" -O "$DOWNLOADS_DIR/neovim-win64.zip";
+            unzip "$DOWNLOADS_DIR/neovim-win64.zip" -d "$DOWNLOADS_DIR";
+            export PATH="$DOWNLOADS_DIR/Neovim/bin:$PATH";
+        fi;
+      fi
+    - git clone --depth 1 --branch v1.5.4 --single-branch https://github.com/thinca/vim-themis /tmp/vim-themis
+    - export PATH="/tmp/vim-themis/bin:$PATH";
+    - if [[ "$VIM_TYPE" == "neovim" ]]; then export THEMIS_VIM=nvim; fi;
+
+before_script:
+    - uname -a
+    - which -a python
+    - if [[ "$VIM_TYPE" == "vim" ]]; then vim --version; fi;
+    - if [[ "$VIM_TYPE" == "neovim" ]]; then nvim --version; fi;
+
+script:
+    - if [[ "$VIM_TYPE" == "vim" ]]; then vint autoload ftplugin plugin; fi;
+    - if [[ "$VIM_TYPE" == "neovim" ]]; then vint --enable-neovim autoload ftplugin plugin; fi;
+    - if [[ "$TRAVIS_OS_NAME" == "windows" && "$VIM_TYPE" == "neovim" ]]; then
+        powershell -Command "themis --reporter spec";
+      else
+        themis --reporter spec;
+      fi;

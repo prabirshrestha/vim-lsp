@@ -82,7 +82,13 @@ function! s:on_stdout(id, data, event) abort
         if exists('l:response')
             " call appropriate callbacks
             let l:on_notification_data = { 'response': l:response }
-            if has_key(l:response, 'id')
+            if has_key(l:response, 'method') && has_key(l:response, 'id')
+                " it is a request from a server
+                let l:request = l:response
+                if has_key(l:ctx['opts'], 'on_request')
+                    call l:ctx['opts']['on_request'](a:id, l:request)
+                endif
+            elseif has_key(l:response, 'id')
                 " it is a request->response
                 if !(type(l:response['id']) == type(0) || type(l:response['id']) == type(''))
                     " response['id'] can be number | string | null based on the spec
@@ -105,7 +111,7 @@ function! s:on_stdout(id, data, event) abort
                     try
                         call l:ctx['on_notifications'][l:response['id']](a:id, l:on_notification_data, 'on_notification')
                     catch
-                        call lsp#log('s:on_stdout client request on_notification() error', v:exception)
+                        call lsp#log('s:on_stdout client request on_notification() error', v:exception, v:throwpoint)
                     endtry
                     unlet l:ctx['on_notifications'][l:response['id']]
                 endif
@@ -199,13 +205,14 @@ endfunction
 
 let s:send_type_request = 1
 let s:send_type_notification = 2
-function! s:lsp_send(id, opts, type) abort " opts = { method, params?, on_notification }
+let s:send_type_response = 3
+function! s:lsp_send(id, opts, type) abort " opts = { id?, method?, result?, params?, on_notification }
     let l:ctx = get(s:clients, a:id, {})
     if empty(l:ctx)
         return -1
     endif
 
-    let l:request = { 'jsonrpc': '2.0', 'method': a:opts['method'] }
+    let l:request = { 'jsonrpc': '2.0' }
 
     if (a:type == s:send_type_request)
         let l:ctx['request_sequence'] = l:ctx['request_sequence'] + 1
@@ -216,8 +223,20 @@ function! s:lsp_send(id, opts, type) abort " opts = { method, params?, on_notifi
         endif
     endif
 
+    if has_key(a:opts, 'id')
+        let l:request['id'] = a:opts['id']
+    endif
+    if has_key(a:opts, 'method')
+        let l:request['method'] = a:opts['method']
+    endif
     if has_key(a:opts, 'params')
         let l:request['params'] = a:opts['params']
+    endif
+    if has_key(a:opts, 'result')
+        let l:request['result'] = a:opts['result']
+    endif
+    if has_key(a:opts, 'error')
+        let l:request['error'] = a:opts['error']
     endif
 
     let l:json = json_encode(l:request)
@@ -226,7 +245,13 @@ function! s:lsp_send(id, opts, type) abort " opts = { method, params?, on_notifi
     call async#job#send(a:id, l:payload)
 
     if (a:type == s:send_type_request)
-        return l:request['id']
+        let l:id = l:request['id']
+        if get(a:opts, 'sync', 0) !=# 0
+            while has_key(l:ctx['requests'], l:request['id'])
+                sleep 1m
+            endwhile
+        endif
+        return l:id
     else
         return 0
     endif
@@ -237,8 +262,15 @@ function! s:lsp_get_last_request_id(id) abort
 endfunction
 
 function! s:lsp_is_error(obj_or_response) abort
-    return has_key(a:obj_or_response, 'error')
+    let vt = type(a:obj_or_response)
+    if vt == type('')
+        return len(a:obj_or_response) > 0
+    elseif vt == type({})
+        return has_key(a:obj_or_response, 'error')
+    endif
+    return 0
 endfunction
+
 
 function! s:is_server_instantiated_notification(notification) abort
     return !has_key(a:notification, 'request')
@@ -262,12 +294,28 @@ function! lsp#client#send_notification(client_id, opts) abort
     return s:lsp_send(a:client_id, a:opts, s:send_type_notification)
 endfunction
 
+function! lsp#client#send_response(client_id, opts) abort
+    return s:lsp_send(a:client_id, a:opts, s:send_type_response)
+endfunction
+
 function! lsp#client#get_last_request_id(client_id) abort
     return s:lsp_get_last_request_id(a:client_id)
 endfunction
 
 function! lsp#client#is_error(obj_or_response) abort
     return s:lsp_is_error(a:obj_or_response)
+endfunction
+
+function! lsp#client#error_message(obj_or_response) abort
+    try
+        return a:obj_or_response['error']['data']['message']
+    catch
+    endtry
+    try
+        return a:obj_or_response['error']['message']
+    catch
+    endtry
+    return string(a:obj_or_response)
 endfunction
 
 function! lsp#client#is_server_instantiated_notification(notification) abort

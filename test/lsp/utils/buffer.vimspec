@@ -1,0 +1,88 @@
+Describe lsp#utils#buffer
+
+    Before each
+        % delete _
+        0put ='foo'
+        1put ='bar'
+        3delete _
+    End
+
+    After all
+        % delete _
+    End
+
+    Describe lsp#utils#buffer#_get_lines
+        It adds a blank line when nobinary and fixendofline are set
+            if !exists('+fixendofline')
+                Skip This test requires 'fixendofline'
+            endif
+            setl nobinary
+            setl fixendofline
+            Assert Equals(lsp#utils#buffer#_get_lines(bufnr('$')), ['foo', 'bar', ''])
+        End
+
+        It adds a blank line when nobinary, nofixendofline, and endofline are set
+            if !exists('+fixendofline')
+                Skip This test requires 'fixendofline'
+            endif
+            setl nobinary
+            setl nofixendofline
+            setl endofline
+            Assert Equals(lsp#utils#buffer#_get_lines(bufnr('$')), ['foo', 'bar', ''])
+        End
+
+        It adds a blank line when binary and endofline are set
+            if !exists('+fixendofline')
+                Skip This test requires 'fixendofline'
+            endif
+            setl binary
+            setl endofline
+            Assert Equals(lsp#utils#buffer#_get_lines(bufnr('$')), ['foo', 'bar', ''])
+        End
+
+        It does not add a blank line when nobinary, nofixendofline, and noendofline are set
+            if !exists('+fixendofline')
+                Skip This test requires 'fixendofline'
+            endif
+            setl nobinary
+            setl nofixendofline
+            setl noendofline
+            Assert Equals(lsp#utils#buffer#_get_lines(bufnr('$')), ['foo', 'bar'])
+        End
+
+        It does not add a blank line when binary and noendofline are set
+            if !exists('+fixendofline')
+                Skip This test requires 'fixendofline'
+            endif
+            setl binary
+            setl noendofline
+            Assert Equals(lsp#utils#buffer#_get_lines(bufnr('$')), ['foo', 'bar'])
+        End
+
+        It adds a blank line when nobinary is set
+            if exists('+fixendofline')
+                Skip This test is not for 'fixendofline'
+            endif
+            setl nobinary
+            Assert Equals(lsp#utils#buffer#_get_lines(bufnr('$')), ['foo', 'bar', ''])
+        End
+
+        It adds a blank line when binary and endofline are set
+            if exists('+fixendofline')
+                Skip This test is not for 'fixendofline'
+            endif
+            setl binary
+            setl endofline
+            Assert Equals(lsp#utils#buffer#_get_lines(bufnr('$')), ['foo', 'bar', ''])
+        End
+
+        It does not add a blank line when binary and noendofline are set
+            if exists('+fixendofline')
+                Skip This test is not for 'fixendofline'
+            endif
+            setl binary
+            setl noendofline
+            Assert Equals(lsp#utils#buffer#_get_lines(bufnr('$')), ['foo', 'bar'])
+        End
+    End
+End

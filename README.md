@@ -39,9 +39,19 @@ if executable('typescript-language-server')
 endif
 ```
 
+vim-lsp supports incremental changes of Language Server Protocol.
+
 ## auto-complete
 
 Refer to docs on configuring omnifunc or [asyncomplete.vim](https://github.com/prabirshrestha/asyncomplete.vim).
+
+## Snippets
+vim-lsp does not support snippets by default. If you want snippet integration, you will first have to install a third-party snippet plugin and a plugin that integrates it in vim-lsp.
+At the moment, you have two options:
+1. [UltiSnips](https://github.com/SirVer/ultisnips) together with [vim-lsp-ultisnips](https://github.com/thomasfaingnaert/vim-lsp-ultisnips)
+2. [neosnippet.vim](https://github.com/Shougo/neosnippet.vim) together with [vim-lsp-neosnippet](https://github.com/thomasfaingnaert/vim-lsp-neosnippet)
+
+For more information, refer to the readme and documentation of the respective plugins.
 
 ## Supported commands
 
@@ -52,21 +62,37 @@ Refer to docs on configuring omnifunc or [asyncomplete.vim](https://github.com/p
 | Command | Description|
 |--|--|
 |`:LspCodeAction`| Gets a list of possible commands that can be applied to a file so it can be fixed (quick fix) |
-|`:LspDocumentDiagnostics`| Get current document diagnostics information |
+|`:LspDeclaration`| Go to declaration |
 |`:LspDefinition`| Go to definition |
+|`:LspDocumentDiagnostics`| Get current document diagnostics information |
 |`:LspDocumentFormat`| Format entire document |
 |`:LspDocumentRangeFormat`| Format document selection |
 |`:LspDocumentSymbol`| Show document symbols |
 |`:LspHover`| Show hover information |
-|`:LspNextError`| jump to next error |
-|`:LspPreviousError`| jump to previous error |
 |`:LspImplementation` | Show implementation of interface |
+|`:LspNextError`| jump to next error |
+|`:LspNextReference`| jump to next reference to the symbol under cursor |
+|`:LspPreviousError`| jump to previous error |
+|`:LspPreviousReference`| jump to previous reference to the symbol under cursor |
 |`:LspReferences`| Find references |
 |`:LspRename`| Rename symbol |
+|`:LspStatus` | Show the status of the language server |
 |`:LspTypeDefinition`| Go to type definition |
 |`:LspWorkspaceSymbol`| Search/Show workspace symbol |
 
 ### Diagnostics
+
+Document diagnostics (e.g. warnings, errors) are enabled by default, but if you
+preferred to turn them off and use other plugins instead (like
+[Neomake](https://github.com/neomake/neomake) or
+[ALE](https://github.com/w0rp/ale), set `g:lsp_diagnostics_enabled` to
+`0`:
+
+```viml
+let g:lsp_diagnostics_enabled = 0         " disable diagnostics support
+```
+
+#### Signs
 
 ```viml
 let g:lsp_signs_enabled = 1         " enable signs
@@ -86,6 +112,48 @@ Also two highlight groups for every sign group are defined (for example for LspE
 ```viml
 highlight link LspErrorText GruvboxRedSign " requires gruvbox
 highlight clear LspWarningLine
+```
+
+#### Highlights
+
+Highlighting diagnostics requires either NeoVim 0.3+ or Vim with patch 8.1.0579.
+They are enabled by default when supported, but can be turned off respectively by
+
+```viml
+let g:lsp_highlights_enabled = 0
+let g:lsp_textprop_enabled = 0
+```
+
+Can be customized by setting or linking `LspErrorHighlight`, `LspWarningHighlight`,
+`LspInformationHighlight` and `LspHintHighlight` highlight groups.
+
+#### Virtual text
+
+In NeoVim 0.3 or newer you can use virtual text feature (enabled by default).
+You can disable it by adding
+
+```viml
+let g:lsp_virtual_text_enabled = 0
+```
+
+To your configuration.
+
+Virtual text will use the same highlight groups as signs feature.
+
+### Highlight references
+
+References to the symbol under the cursor are highlighted by default. To
+disable, set in your configuration:
+
+```viml
+let g:lsp_highlight_references_enabled = 0
+```
+
+To change the style of the highlighting, you can set or link the `lspReference`
+highlight group, e.g.:
+
+```viml
+highlight lspReference ctermfg=red guifg=red ctermbg=green guibg=green
 ```
 
 ## Debugging
