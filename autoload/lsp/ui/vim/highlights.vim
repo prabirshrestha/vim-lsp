@@ -69,7 +69,7 @@ endfunction
 
 function! s:clear_all_highlights(namespace) abort
     if a:namespace =~# '^' . s:ns_key
-        let l:ns = s:get_highlight_group(a:namespace)
+        let l:ns = nvim_create_namespace(a:namespace)
         for l:bufnr in nvim_list_bufs()
             call nvim_buf_clear_namespace(l:bufnr, l:ns, 0, -1)
         endfor
