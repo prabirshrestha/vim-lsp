@@ -176,7 +176,7 @@ function! lsp#utils#echo_with_truncation(msg) abort
     endif
 
     if &showcmd
-        let l:winwidth -= 11
+        let l:winwidth -= 12
     endif
 
     if l:winwidth > 5 && l:winwidth < strdisplaywidth(l:msg)
