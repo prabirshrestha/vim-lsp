@@ -435,6 +435,14 @@ function! s:handle_location(ctx, server, type, data) abort "ctx = {counter, list
         if empty(a:ctx['list'])
             call lsp#utils#error('No ' . a:type .' found')
         else
+            if exists('*gettagstack') && exists('*settagstack')
+                let from = [bufnr('%'), line('.'), col('.'), 0]
+                let tagname = expand('<cword>')
+                let winid = win_getid()
+                call settagstack(winid, {'items': [{'from': from, 'tagname': tagname}]}, 'a')
+                call settagstack(winid, {'curidx': len(gettagstack(winid)['items']) + 1})
+            endif
+
             if len(a:ctx['list']) == 1 && a:ctx['jump_if_one']
                 normal! m'
                 let l:loc = a:ctx['list'][0]
