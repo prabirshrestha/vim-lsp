@@ -29,6 +29,7 @@ let g:lsp_preview_float = get(g:, 'lsp_preview_float', 1)
 let g:lsp_preview_autoclose = get(g:, 'lsp_preview_autoclose', 1)
 let g:lsp_preview_doubletap = get(g:, 'lsp_preview_doubletap', [function('lsp#ui#vim#output#focuspreview')])
 let g:lsp_peek_alignment = get(g:, 'lsp_peek_alignment', 'center')
+let g:lsp_preview_max_width = get(g:, 'lsp_preview_max_width', -1)
 
 let g:lsp_get_vim_completion_item = get(g:, 'lsp_get_vim_completion_item', [function('lsp#omni#default_get_vim_completion_item')])
 let g:lsp_get_supported_capabilities = get(g:, 'lsp_get_supported_capabilities', [function('lsp#default_get_supported_capabilities')])
@@ -84,7 +85,7 @@ nnoremap <plug>(lsp-type-definition) :<c-u>call lsp#ui#vim#type_definition(0)<cr
 nnoremap <plug>(lsp-peek-type-definition) :<c-u>call lsp#ui#vim#type_definition(1)<cr>
 nnoremap <plug>(lsp-workspace-symbol) :<c-u>call lsp#ui#vim#workspace_symbol()<cr>
 nnoremap <plug>(lsp-document-format) :<c-u>call lsp#ui#vim#document_format()<cr>
-vnoremap <plug>(lsp-document-format) :call lsp#ui#vim#document_range_format()<cr>
+vnoremap <plug>(lsp-document-format) :<Home>silent <End>call lsp#ui#vim#document_range_format()<cr>
 nnoremap <plug>(lsp-implementation) :<c-u>call lsp#ui#vim#implementation(0)<cr>
 nnoremap <plug>(lsp-peek-implementation) :<c-u>call lsp#ui#vim#implementation(1)<cr>
 nnoremap <plug>(lsp-status) :<c-u>echo lsp#get_server_status()<cr>

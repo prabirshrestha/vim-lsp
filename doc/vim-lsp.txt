@@ -28,6 +28,7 @@ CONTENTS                                                  *vim-lsp-contents*
       g:lsp_get_vim_completion_item         |g:lsp_get_vim_completion_item|
       g:lsp_get_supported_capabilities      |g:lsp_get_supported_capabilities|
       g:lsp_peek_alignment                  |g:lsp_peek_alignment|
+      g:lsp_preview_max_width               |g:lsp_preview_max_width|
     Functions                             |vim-lsp-functions|
       enable                                |vim-lsp-enable|
       disable                               |vim-lsp-disable|
@@ -175,24 +176,50 @@ g:lsp_preview_float                         *g:lsp_preview_float*
     are shown in a floating window as |preview-window| at the cursor position.
     The |preview-window| is closed automatically on cursor moves, unless it is
     focused. While focused it may be closed with <esc>.
-    After opening an autocmd User event lsp_float_opened is issued, as well as
-    and lsp_float_closed upon closing. This can be used to alter the preview
-    window (using lsp#ui#vim#output#getpreviewwinid() to get the window id), or
-    setup custom bindings while a preview is open.
+
     This feature requires neovim 0.4.0 (current master) or
     Vim8.1 with has('patch-8.1.1517').
 
     Example:
+    >
 	" Opens preview windows as floating
 	let g:lsp_preview_float = 1
 
 	" Opens preview windows as normal windows
 	let g:lsp_preview_float = 0
+    <
 
+    After opening an autocmd User event lsp_float_opened is issued, as well as
+    and lsp_float_closed upon closing. This can be used to alter the preview
+    window (using lsp#ui#vim#output#getpreviewwinid() to get the window id),
+    setup custom bindings while a preview is open, or change the highlighting
+    of the window.
+
+    Example of custom keybindings:
+    >
 	" Close preview window with <esc>
 	autocmd User lsp_float_opened nmap <buffer> <silent> <esc>
 		      \ <Plug>(lsp-preview-close)
 	autocmd User lsp_float_closed nunmap <buffer> <esc>
+    <
+
+    Example of customising the highlighting:
+    >
+	highlight PopupWindow ctermbg=lightblue guibg=lightblue
+
+	augroup lsp_float_colours
+	    autocmd!
+	    if !has('nvim')
+		autocmd User lsp_float_opened
+		    \ call win_execute(lsp#ui#vim#output#getpreviewwinid(),
+		    \		       'setlocal wincolor=PopupWindow')
+	    else
+		autocmd User lsp_float_opened
+		    \ call nvim_win_set_option(lsp#ui#vim#output#getpreviewwinid(),
+		    \			       'winhighlight', 'Normal:PopupWindow')
+	    endif
+	augroup end
+    <
 
 g:lsp_preview_autoclose                         *g:lsp_preview_autoclose*
     Type: |Number|
@@ -395,6 +422,15 @@ g:lsp_peek_alignment                                 *g:lsp_peek_alignment*
     |LspPeekDefinition|. Three values are possible: `"top"`, `"center"` and
     `"bottom"`, which place the location of interest at the first, middle and
     last lines of the preview/popup/floating window, respectively.
+
+g:lsp_preview_max_width                           *g:lsp_preview_max_width*
+    Type: |Number|
+    Default: `-1`
+
+    If positive, determines the maximum width of the preview window in
+    characters. Lines longer than `g:lsp_preview_max_width` will be wrapped to
+    fit in the preview window. Use a value of `-1` to disable setting a
+    maximum width.
 
 ===============================================================================
 FUNCTIONS	                                        *vim-lsp-functions*
