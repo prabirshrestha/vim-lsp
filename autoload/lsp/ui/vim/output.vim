@@ -113,10 +113,16 @@ function! lsp#ui#vim#output#floatingpreview(data) abort
     " Enable closing the preview with esc, but map only in the scratch buffer
     nmap <buffer><silent> <esc> :pclose<cr>
   else
-    let s:winid = popup_atcursor('...', {
-        \  'moved': 'any',
-		    \  'border': [1, 1, 1, 1],
-		\})
+    let l:options = {
+                \ 'moved': 'any',
+                \ 'border': [1, 1, 1, 1],
+                \ }
+
+    if g:lsp_preview_max_width > 0
+        let l:options['maxwidth'] = g:lsp_preview_max_width
+    endif
+
+    let s:winid = popup_atcursor('...', l:options)
   endif
   return s:winid
 endfunction
@@ -139,6 +145,13 @@ function! s:setcontent(lines, ft) abort
   else
     " nvim floating
     call setline(1, a:lines)
+
+    " Set maximum width of floating window, if specified
+    if g:lsp_preview_max_width > 0
+        let &l:textwidth = g:lsp_preview_max_width
+        normal! gggqGgg
+    endif
+
     setlocal readonly nomodifiable
     let &l:filetype = a:ft . '.lsp-hover'
   endif
