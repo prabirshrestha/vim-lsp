@@ -235,7 +235,7 @@ function! s:align_preview(options) abort
     if s:supports_floating && g:lsp_preview_float && !has('nvim')
         " Vim popups
         let l:pos = popup_getpos(s:winid)
-        let l:below = l:pos['core_line'] < winline()
+        let l:below = winline() < winheight(0) / 2
         if l:below
             let l:height = min([l:pos['core_height'], winheight(0) - winline() - 2])
         else
@@ -247,7 +247,9 @@ function! s:align_preview(options) abort
                     \ 'minwidth': l:width,
                     \ 'maxwidth': l:width,
                     \ 'minheight': l:height,
-                    \ 'maxheight': l:height
+                    \ 'maxheight': l:height,
+                    \ 'pos': l:below ? 'topleft' : 'botleft',
+                    \ 'line': l:below ? 'cursor+1' : 'cursor-1'
                     \ }
 
         if l:align ==? 'top'
