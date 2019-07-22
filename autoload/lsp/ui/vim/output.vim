@@ -1,4 +1,8 @@
 let s:supports_floating = exists('*nvim_open_win') || has('patch-8.1.1517')
+let s:use_vim_popup = s:supports_floating && g:lsp_preview_float && !has('nvim')
+let s:use_nvim_float = s:supports_floating && g:lsp_preview_float && has('nvim')
+let s:use_preview = !s:use_vim_popup && !s:use_nvim_float
+
 let s:winid = v:false
 let s:prevwin = v:false
 let s:preview_data = v:false
@@ -10,7 +14,7 @@ function! lsp#ui#vim#output#closepreview() abort
   endif
   "closing floats in vim8.1 must use popup_close() (nvim could use nvim_win_close but pclose
   "works)
-  if s:supports_floating && s:winid && g:lsp_preview_float && !has('nvim')
+  if s:use_vim_popup && s:winid
     call popup_close(s:winid)
   else
     pclose
@@ -92,7 +96,7 @@ function! s:get_float_positioning(height, width) abort
 endfunction
 
 function! lsp#ui#vim#output#floatingpreview(data) abort
-  if has('nvim')
+  if s:use_nvim_float
     let l:buf = nvim_create_buf(v:false, v:true)
     call setbufvar(l:buf, '&signcolumn', 'no')
 
@@ -112,7 +116,7 @@ function! lsp#ui#vim#output#floatingpreview(data) abort
     call nvim_win_set_option(s:winid, 'cursorline', v:false)
     " Enable closing the preview with esc, but map only in the scratch buffer
     nmap <buffer><silent> <esc> :pclose<cr>
-  else
+  elseif s:use_vim_popup
     let l:options = {
                 \ 'moved': 'any',
                 \ 'border': [1, 1, 1, 1],
@@ -128,7 +132,7 @@ function! lsp#ui#vim#output#floatingpreview(data) abort
 endfunction
 
 function! s:setcontent(lines, ft) abort
-  if s:supports_floating && g:lsp_preview_float && !has('nvim')
+  if s:use_vim_popup
     " vim popup
     call setbufline(winbufnr(s:winid), 1, a:lines)
     let l:lightline_toggle = v:false
@@ -143,7 +147,7 @@ function! s:setcontent(lines, ft) abort
       call lightline#enable()
     endif
   else
-    " nvim floating
+    " nvim floating or preview
     call setline(1, a:lines)
 
     " Set maximum width of floating window, if specified
@@ -158,7 +162,7 @@ function! s:setcontent(lines, ft) abort
 endfunction
 
 function! s:adjust_float_placement(bufferlines, maxwidth) abort
-    if has('nvim')
+    if s:use_nvim_float
       let l:win_config = {}
       let l:height = min([winheight(s:winid), a:bufferlines])
       let l:width = min([winwidth(s:winid), a:maxwidth])
@@ -181,7 +185,7 @@ function! lsp#ui#vim#output#getpreviewwinid() abort
 endfunction
 
 function! s:open_preview(data) abort
-    if s:supports_floating && g:lsp_preview_float
+    if s:use_vim_popup || s:use_nvim_float
       let l:winid = lsp#ui#vim#output#floatingpreview(a:data)
     else
       execute &previewheight.'new'
@@ -220,11 +224,12 @@ function! lsp#ui#vim#output#preview(data) abort
 
     echo ''
 
-    if s:supports_floating && s:winid && g:lsp_preview_float
-      if has('nvim')
+    if s:winid && (s:use_vim_popup || s:use_nvim_float)
+      if s:use_nvim_float
         call s:adjust_float_placement(l:bufferlines, l:maxwidth)
         call s:add_float_closing_hooks()
       endif
+
       doautocmd User lsp_float_opened
     endif
 
