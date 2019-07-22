@@ -27,6 +27,7 @@ CONTENTS                                                  *vim-lsp-contents*
       g:lsp_highlight_references_enabled    |g:lsp_highlight_references_enabled|
       g:lsp_get_vim_completion_item         |g:lsp_get_vim_completion_item|
       g:lsp_get_supported_capabilities      |g:lsp_get_supported_capabilities|
+      g:lsp_ignorecase                      |g:lsp_ignorecase|
     Functions                             |vim-lsp-functions|
       enable                                |vim-lsp-enable|
       disable                               |vim-lsp-disable|
@@ -382,6 +383,14 @@ g:lsp_get_supported_capabilities         *g:lsp_get_supported_capabilities*
     calling `lsp#omni#default_get_supported_capabilities` from within your
     function.
 
+g:lsp_ignorecase                                         *g:lsp_ignorecase*
+    Type: |Boolean|
+    Default: the value of |'ignorecase'|
+
+    Determines whether or not case should be ignored when filtering completion
+    items. See |vim-lsp-completion-filter|. By default, the value of
+    |'ignorecase'| is used.
+
 ===============================================================================
 FUNCTIONS	                                        *vim-lsp-functions*
 
@@ -572,7 +581,7 @@ The value of the `filter` key is itself a |dict| containing at least a key
           Only allow completion items that are a prefix of the already typed
           word. For the meaning of "already typed", see
           |vim-lsp-typed_pattern|. The case (in)sensitivity of the matching is
-          determined by `'ignorecase'`.
+          determined by |g:lsp_ignorecase|.
 
 
 

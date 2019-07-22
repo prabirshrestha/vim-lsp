@@ -92,7 +92,11 @@ function! s:prefix_filter(item, last_typed_word) abort
     let l:label = trim(a:item['word'])
     let l:match_pattern = '^' . a:last_typed_word
 
-    return l:label =~ l:match_pattern
+    if g:lsp_ignorecase
+        return l:label =~? l:match_pattern
+    else
+        return l:label =~# l:match_pattern
+    endif
 endfunction
 
 function! s:display_completions(timer) abort
