@@ -65,6 +65,9 @@ function! lsp#disable() abort
         return
     endif
     call lsp#ui#vim#signs#disable()
+    call lsp#ui#vim#virtual#disable()
+    call lsp#ui#vim#highlights#disable()
+    call lsp#ui#vim#diagnostics#textprop#disable()
     call s:unregister_events()
     let s:enabled = 0
 endfunction
