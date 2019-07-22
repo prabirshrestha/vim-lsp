@@ -28,6 +28,8 @@ let g:lsp_highlight_references_enabled = get(g:, 'lsp_highlight_references_enabl
 let g:lsp_preview_float = get(g:, 'lsp_preview_float', 1)
 let g:lsp_preview_autoclose = get(g:, 'lsp_preview_autoclose', 1)
 let g:lsp_preview_doubletap = get(g:, 'lsp_preview_doubletap', [function('lsp#ui#vim#output#focuspreview')])
+let g:lsp_peek_alignment = get(g:, 'lsp_peek_alignment', 'center')
+let g:lsp_preview_max_width = get(g:, 'lsp_preview_max_width', -1)
 let g:lsp_ignorecase = get(g:, 'lsp_ignorecase', &ignorecase)
 
 let g:lsp_get_vim_completion_item = get(g:, 'lsp_get_vim_completion_item', [function('lsp#omni#default_get_vim_completion_item')])
@@ -41,8 +43,10 @@ if g:lsp_auto_enable
 endif
 
 command! -range LspCodeAction call lsp#ui#vim#code_action()
-command! LspDeclaration call lsp#ui#vim#declaration()
-command! LspDefinition call lsp#ui#vim#definition()
+command! LspDeclaration call lsp#ui#vim#declaration(0)
+command! LspPeekDeclaration call lsp#ui#vim#declaration(1)
+command! LspDefinition call lsp#ui#vim#definition(0)
+command! LspPeekDefinition call lsp#ui#vim#definition(1)
 command! LspDocumentSymbol call lsp#ui#vim#document_symbol()
 command! LspDocumentDiagnostics call lsp#ui#vim#diagnostics#document_diagnostics()
 command! -nargs=? -complete=customlist,lsp#utils#empty_complete LspHover call lsp#ui#vim#hover#get_hover_under_cursor()
@@ -50,21 +54,25 @@ command! LspNextError call lsp#ui#vim#diagnostics#next_error()
 command! LspPreviousError call lsp#ui#vim#diagnostics#previous_error()
 command! LspReferences call lsp#ui#vim#references()
 command! LspRename call lsp#ui#vim#rename()
-command! LspTypeDefinition call lsp#ui#vim#type_definition()
+command! LspTypeDefinition call lsp#ui#vim#type_definition(0)
+command! LspPeekTypeDefinition call lsp#ui#vim#type_definition(1)
 command! LspWorkspaceSymbol call lsp#ui#vim#workspace_symbol()
 command! -range LspDocumentFormat call lsp#ui#vim#document_format()
 command! -range LspDocumentFormatSync call lsp#ui#vim#document_format_sync()
 command! -range LspDocumentRangeFormat call lsp#ui#vim#document_range_format()
 command! -range LspDocumentRangeFormatSync call lsp#ui#vim#document_range_format_sync()
-command! LspImplementation call lsp#ui#vim#implementation()
+command! LspImplementation call lsp#ui#vim#implementation(0)
+command! LspPeekImplementation call lsp#ui#vim#implementation(1)
 command! LspTypeDefinition call lsp#ui#vim#type_definition()
 command! -nargs=0 LspStatus echo lsp#get_server_status()
 command! LspNextReference call lsp#ui#vim#references#jump(+1)
 command! LspPreviousReference call lsp#ui#vim#references#jump(-1)
 
 nnoremap <plug>(lsp-code-action) :<c-u>call lsp#ui#vim#code_action()<cr>
-nnoremap <plug>(lsp-declaration) :<c-u>call lsp#ui#vim#declaration()<cr>
-nnoremap <plug>(lsp-definition) :<c-u>call lsp#ui#vim#definition()<cr>
+nnoremap <plug>(lsp-declaration) :<c-u>call lsp#ui#vim#declaration(0)<cr>
+nnoremap <plug>(lsp-peek-declaration) :<c-u>call lsp#ui#vim#declaration(1)<cr>
+nnoremap <plug>(lsp-definition) :<c-u>call lsp#ui#vim#definition(0)<cr>
+nnoremap <plug>(lsp-peek-definition) :<c-u>call lsp#ui#vim#definition(1)<cr>
 nnoremap <plug>(lsp-document-symbol) :<c-u>call lsp#ui#vim#document_symbol()<cr>
 nnoremap <plug>(lsp-document-diagnostics) :<c-u>call lsp#ui#vim#diagnostics#document_diagnostics()<cr>
 nnoremap <plug>(lsp-hover) :<c-u>call lsp#ui#vim#hover#get_hover_under_cursor()<cr>
@@ -74,11 +82,13 @@ nnoremap <plug>(lsp-next-error) :<c-u>call lsp#ui#vim#diagnostics#next_error()<c
 nnoremap <plug>(lsp-previous-error) :<c-u>call lsp#ui#vim#diagnostics#previous_error()<cr>
 nnoremap <plug>(lsp-references) :<c-u>call lsp#ui#vim#references()<cr>
 nnoremap <plug>(lsp-rename) :<c-u>call lsp#ui#vim#rename()<cr>
-nnoremap <plug>(lsp-type-definition) :<c-u>call lsp#ui#vim#type_definition()<cr>
+nnoremap <plug>(lsp-type-definition) :<c-u>call lsp#ui#vim#type_definition(0)<cr>
+nnoremap <plug>(lsp-peek-type-definition) :<c-u>call lsp#ui#vim#type_definition(1)<cr>
 nnoremap <plug>(lsp-workspace-symbol) :<c-u>call lsp#ui#vim#workspace_symbol()<cr>
 nnoremap <plug>(lsp-document-format) :<c-u>call lsp#ui#vim#document_format()<cr>
-vnoremap <plug>(lsp-document-format) :call lsp#ui#vim#document_range_format()<cr>
-nnoremap <plug>(lsp-implementation) :<c-u>call lsp#ui#vim#implementation()<cr>
+vnoremap <plug>(lsp-document-format) :<Home>silent <End>call lsp#ui#vim#document_range_format()<cr>
+nnoremap <plug>(lsp-implementation) :<c-u>call lsp#ui#vim#implementation(0)<cr>
+nnoremap <plug>(lsp-peek-implementation) :<c-u>call lsp#ui#vim#implementation(1)<cr>
 nnoremap <plug>(lsp-status) :<c-u>echo lsp#get_server_status()<cr>
 nnoremap <plug>(lsp-next-reference) :<c-u>call lsp#ui#vim#references#jump(+1)<cr>
 nnoremap <plug>(lsp-previous-reference) :<c-u>call lsp#ui#vim#references#jump(-1)<cr>

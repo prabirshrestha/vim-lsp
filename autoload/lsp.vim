@@ -65,6 +65,9 @@ function! lsp#disable() abort
         return
     endif
     call lsp#ui#vim#signs#disable()
+    call lsp#ui#vim#virtual#disable()
+    call lsp#ui#vim#highlights#disable()
+    call lsp#ui#vim#diagnostics#textprop#disable()
     call s:unregister_events()
     let s:enabled = 0
 endfunction
@@ -375,7 +378,8 @@ endfunction
 function! lsp#default_get_supported_capabilities(server_info) abort
     return {
     \   'workspace': {
-    \       'applyEdit': v:true
+    \       'applyEdit': v:true,
+    \       'configuration': v:true
     \   }
     \ }
 endfunction
@@ -627,6 +631,9 @@ function! s:on_request(server_name, id, request) abort
     if a:request['method'] ==# 'workspace/applyEdit'
         call lsp#utils#workspace_edit#apply_workspace_edit(a:request['params']['edit'])
         call s:send_response(a:server_name, { 'id': a:request['id'], 'result': { 'applied': v:true } })
+    elseif a:request['method'] ==# 'workspace/configuration'
+        let l:response_items = map(a:request['params']['items'], { key, val -> lsp#utils#workspace_config#get_value(a:server_name, val) })
+        call s:send_response(a:server_name, { 'id': a:request['id'], 'result': l:response_items })
     else
         " Error returned according to json-rpc specification.
         call s:send_response(a:server_name, { 'id': a:request['id'], 'error': { 'code': -32601, 'message': 'Method not found' } })

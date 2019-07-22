@@ -113,10 +113,16 @@ function! lsp#ui#vim#output#floatingpreview(data) abort
     " Enable closing the preview with esc, but map only in the scratch buffer
     nmap <buffer><silent> <esc> :pclose<cr>
   else
-    let s:winid = popup_atcursor('...', {
-        \  'moved': 'any',
-		    \  'border': [1, 1, 1, 1],
-		\})
+    let l:options = {
+                \ 'moved': 'any',
+                \ 'border': [1, 1, 1, 1],
+                \ }
+
+    if g:lsp_preview_max_width > 0
+        let l:options['maxwidth'] = g:lsp_preview_max_width
+    endif
+
+    let s:winid = popup_atcursor('...', l:options)
   endif
   return s:winid
 endfunction
@@ -139,6 +145,13 @@ function! s:setcontent(lines, ft) abort
   else
     " nvim floating
     call setline(1, a:lines)
+
+    " Set maximum width of floating window, if specified
+    if g:lsp_preview_max_width > 0
+        let &l:textwidth = g:lsp_preview_max_width
+        normal! gggqGgg
+    endif
+
     setlocal readonly nomodifiable
     let &l:filetype = a:ft . '.lsp-hover'
   endif
@@ -177,7 +190,91 @@ function! s:open_preview(data) abort
     return l:winid
 endfunction
 
-function! lsp#ui#vim#output#preview(data) abort
+function! s:set_cursor(current_window_id, options) abort
+    if !has_key(a:options, 'cursor')
+        return
+    endif
+
+    if s:supports_floating && g:lsp_preview_float && has('nvim')
+      " Neovim floats
+      " Go back to the preview window to set the cursor
+      call win_gotoid(s:winid)
+      let l:old_scrolloff = &scrolloff
+      let &scrolloff = 0
+
+      call nvim_win_set_cursor(s:winid, [a:options['cursor']['line'], a:options['cursor']['col']])
+      call s:align_preview(a:options)
+
+      " Finally, go back to the original window
+      call win_gotoid(a:current_window_id)
+
+      let &scrolloff = l:old_scrolloff
+    elseif s:supports_floating && g:lsp_preview_float && !has('nvim')
+      " Vim popups
+      function! AlignVimPopup(timer) closure abort
+          call s:align_preview(a:options)
+      endfunction
+      call timer_start(0, function('AlignVimPopup'))
+    else
+      " Preview
+      " Don't use 'scrolloff', it might mess up the cursor's position
+      let &l:scrolloff = 0
+      call cursor(a:options['cursor']['line'], a:options['cursor']['col'])
+      call s:align_preview(a:options)
+    endif
+endfunction
+
+function! s:align_preview(options) abort
+    if !has_key(a:options, 'cursor') ||
+     \ !has_key(a:options['cursor'], 'align')
+        return
+    endif
+
+    let l:align = a:options['cursor']['align']
+
+    if s:supports_floating && g:lsp_preview_float && !has('nvim')
+        " Vim popups
+        let l:pos = popup_getpos(s:winid)
+        let l:below = winline() < winheight(0) / 2
+        if l:below
+            let l:height = min([l:pos['core_height'], winheight(0) - winline() - 2])
+        else
+            let l:height = min([l:pos['core_height'], winline() - 3])
+        endif
+        let l:width = l:pos['core_width']
+
+        let l:options = {
+                    \ 'minwidth': l:width,
+                    \ 'maxwidth': l:width,
+                    \ 'minheight': l:height,
+                    \ 'maxheight': l:height,
+                    \ 'pos': l:below ? 'topleft' : 'botleft',
+                    \ 'line': l:below ? 'cursor+1' : 'cursor-1'
+                    \ }
+
+        if l:align ==? 'top'
+            let l:options['firstline'] = a:options['cursor']['line']
+        elseif l:align ==? 'center'
+            let l:options['firstline'] = a:options['cursor']['line'] - (l:height - 1) / 2
+        elseif l:align ==? 'bottom'
+            let l:options['firstline'] = a:options['cursor']['line'] - l:height + 1
+        endif
+
+        call popup_setoptions(s:winid, l:options)
+        redraw!
+    else
+        " Preview and Neovim floats
+        if l:align ==? 'top'
+            normal! zt
+        elseif l:align ==? 'center'
+            normal! zz
+        elseif l:align ==? 'bottom'
+            normal! zb
+        endif
+    endif
+endfunction
+
+function! lsp#ui#vim#output#preview(data, options) abort
     if s:winid && type(s:preview_data) == type(a:data)
        \ && s:preview_data == a:data
        \ && type(g:lsp_preview_doubletap) == 3
@@ -196,21 +293,40 @@ function! lsp#ui#vim#output#preview(data) abort
     let s:preview_data = a:data
     let l:lines = []
     let l:ft = s:append(a:data, l:lines)
+
+    if has_key(a:options, 'filetype')
+        let l:ft = a:options['filetype']
+    endif
+
     call s:setcontent(l:lines, l:ft)
 
     " Get size information while still having the buffer active
     let l:bufferlines = line('$')
     let l:maxwidth = max(map(getline(1, '$'), 'strdisplaywidth(v:val)'))
 
-    " restore focus to the previous window
+    if !s:supports_floating || !g:lsp_preview_float
+        " Set statusline
+        if has_key(a:options, 'statusline')
+            let &l:statusline = a:options['statusline']
+        endif
+
+        call s:set_cursor(l:current_window_id, a:options)
+    endif
+
+    " Go to the previous window to adjust positioning
     call win_gotoid(l:current_window_id)
 
     echo ''
 
     if s:supports_floating && s:winid && g:lsp_preview_float
       if has('nvim')
+        " Neovim floats
         call s:adjust_float_placement(l:bufferlines, l:maxwidth)
+        call s:set_cursor(l:current_window_id, a:options)
         call s:add_float_closing_hooks()
+      else
+        " Vim popups
+        call s:set_cursor(l:current_window_id, a:options)
       endif
       doautocmd User lsp_float_opened
     endif
@@ -230,7 +346,7 @@ function! s:append(data, lines) abort
 
         return 'markdown'
     elseif type(a:data) == type('')
-        call extend(a:lines, split(a:data, "\n"))
+        call extend(a:lines, split(a:data, "\n", v:true))
 
         return 'markdown'
     elseif type(a:data) == type({}) && has_key(a:data, 'language')
@@ -240,7 +356,7 @@ function! s:append(data, lines) abort
 
         return 'markdown'
     elseif type(a:data) == type({}) && has_key(a:data, 'kind')
-        call extend(a:lines, split(a:data.value, '\n'))
+        call extend(a:lines, split(a:data.value, '\n', v:true))
 
         return a:data.kind ==? 'plaintext' ? 'text' : a:data.kind
     endif

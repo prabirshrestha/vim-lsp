@@ -95,6 +95,12 @@ function! s:clear_highlights(server_name, path) abort
     if !s:enabled | return | endif
 
     let l:bufnr = bufnr(a:path)
+
+    if l:bufnr == -1
+        call lsp#log('Skipping clear_highlights for ' . a:path . ': buffer is not loaded')
+        return
+    endif
+
     for l:severity in keys(s:severity_sign_names_mapping)
         let l:prop_type = s:get_prop_type(a:server_name, l:severity)
         call prop_remove({

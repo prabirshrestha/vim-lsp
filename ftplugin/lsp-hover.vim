@@ -6,14 +6,13 @@ if has('patch-8.1.1517') && g:lsp_preview_float && !has('nvim')
 else
   setlocal previewwindow buftype=nofile bufhidden=wipe noswapfile nobuflisted
 endif
-setlocal nocursorline nofoldenable
+setlocal nocursorline nofoldenable nonumber norelativenumber
 
 if has('syntax')
     setlocal nospell
 endif
 
-let &l:statusline = ' LSP Hover'
-
 let b:undo_ftplugin = 'setlocal pvw< bt< bh< swf< bl< cul< fen<' .
             \ (has('syntax') ? ' spell<' : '') .
+            \ ' number< relativenumber<' .
             \ ' | unlet! g:markdown_fenced_languages'

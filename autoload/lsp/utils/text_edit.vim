@@ -185,7 +185,16 @@ function! s:generate_sub_cmd_replace(text_edit) abort
 
     let l:sub_cmd = s:preprocess_cmd(a:text_edit['range'])
     let l:sub_cmd .= s:generate_move_start_cmd(l:start_line, l:start_character) " move to the first position
-    let l:sub_cmd .= 'v'
+
+    " If start and end position are 0, we are selecting a range of lines.
+    " Thus, we can use linewise-visual mode, which avoids some inconsistencies
+    " when applying text edits.
+    if l:start_character == 0 && l:end_character == 0
+        let l:sub_cmd .= 'V'
+    else
+        let l:sub_cmd .= 'v'
+    endif
+
     let l:sub_cmd .= s:generate_move_end_cmd(l:end_line, l:end_character) " move to the last position
 
     if len(l:new_text) == 0
