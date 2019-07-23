@@ -295,9 +295,10 @@ function! lsp#ui#vim#output#preview(data, options) abort
     call s:setcontent(l:lines, l:ft)
 
     " Get size information while still having the buffer active
+    let l:maxwidth = max(map(getline(1, '$'), 'strdisplaywidth(v:val)'))
     if g:lsp_preview_max_width > 0
       let l:bufferlines = 0
-      let l:maxwidth = g:lsp_preview_max_width
+      let l:maxwidth = min([g:lsp_preview_max_width, l:maxwidth])
 
       " Determine, for each line, how many "virtual" lines it spans, and add
       " these together for all lines in the buffer
@@ -307,7 +308,6 @@ function! lsp#ui#vim#output#preview(data, options) abort
       endfor
     else
       let l:bufferlines = line('$')
-      let l:maxwidth = max(map(getline(1, '$'), 'strdisplaywidth(v:val)'))
     endif
 
     if !s:supports_floating || !g:lsp_preview_float
