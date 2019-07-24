@@ -156,7 +156,10 @@ function! s:setcontent(lines, ft) abort
     endif
 
     setlocal readonly nomodifiable
-    let &l:filetype = a:ft . '.lsp-hover'
+    try
+        let &l:filetype = a:ft . '.lsp-hover'
+    catch
+    endtry
   endif
 endfunction
 
