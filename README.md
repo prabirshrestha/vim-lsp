@@ -53,6 +53,18 @@ At the moment, you have two options:
 
 For more information, refer to the readme and documentation of the respective plugins.
 
+## Folding
+
+You can let the language server automatically handle folding for you. To enable this, you have to set `'foldmethod'`, `'foldexpr'` and (optionally) `'foldtext'`:
+
+```vim
+set foldmethod=expr
+  \ foldexpr=lsp#ui#vim#folding#foldexpr()
+  \ foldtext=lsp#ui#vim#folding#foldtext()
+```
+
+Also see `:h vim-lsp-folding`.
+
 ## Supported commands
 
 **Note:**

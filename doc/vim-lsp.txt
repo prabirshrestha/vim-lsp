@@ -43,6 +43,8 @@ CONTENTS                                                  *vim-lsp-contents*
       LspDocumentDiagnostics                |LspDocumentDiagnostics|
       LspDeclaration                        |LspDeclaration|
       LspDefinition                         |LspDefinition|
+      LspDocumentFold                       |LspDocumentFold|
+      LspDocumentFoldSync                   |LspDocumentFoldSync|
       LspDocumentFormat                     |LspDocumentFormat|
       LspDocumentFormatSync                 |LspDocumentFormatSync|
       LspDocumentRangeFormat                |LspDocumentRangeFormat|
@@ -71,6 +73,7 @@ CONTENTS                                                  *vim-lsp-contents*
       omnifunc                              |vim-lsp-omnifunc|
       asyncomplete.vim                      |vim-lsp-asyncomplete|
     Snippets                              |vim-lsp-snippets|
+    Folding                               |vim-lsp-folding|
     License                               |vim-lsp-license|
 
 
@@ -674,6 +677,14 @@ Go to definition.
 
 Also see |LspPeekDefinition|.
 
+LspDocumentFold                                          *LspDocumentFold*
+
+Recalculate folds for the current buffer.
+
+LspDocumentFoldSync                                      *LspDocumentFoldSync*
+
+Same as |LspDocumentFold|, but synchronous.
+
 LspDocumentFormat					 *LspDocumentFormat*
 
 Format the entire document.
@@ -887,6 +898,33 @@ https://github.com/thomasfaingnaert/vim-lsp-neosnippet
 
 Refer to the readme and docs of vim-lsp-ultisnips and vim-lsp-neosnippet for
 more information and configuration options.
+
+===============================================================================
+Folding                                                    *vim-lsp-folding*
+
+You can also let the language server handle folding for you. To enable this
+feature, you will have to set |'foldmethod'|, |'foldexpr'| and |'foldtext'| (the
+latter is optional) correctly:
+
+    set foldmethod=expr
+      \ foldexpr=lsp#ui#vim#folding#foldexpr()
+      \ foldtext=lsp#ui#vim#folding#foldtext()
+
+You may want to enable this only for certain filetypes, e.g. for Javascript
+only:
+
+    augroup lsp_folding
+	autocmd!
+	autocmd FileType javascript setlocal
+	    \ foldmethod=expr
+	    \ foldexpr=lsp#ui#vim#folding#foldexpr()
+	    \ foldtext=lsp#ui#vim#folding#foldtext()
+    augroup end
+
+To display open and closed folds at the side of the window, see
+|'foldcolumn'|.
+If you want to remove the dashes at the end of the folds, you can change
+the fold item of |'fillchars'|.
 
 ===============================================================================
 License                                                    *vim-lsp-license*
