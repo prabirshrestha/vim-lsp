@@ -7,112 +7,114 @@
 "
 " Finds a single change between the common prefix, and common postfix.
 function! lsp#utils#diff#compute(old, new) abort
-  let [l:start_line, l:start_char] = s:FirstDifference(a:old, a:new)
-  let [l:end_line, l:end_char] =
-      \ s:LastDifference(a:old[l:start_line :], a:new[l:start_line :], l:start_char)
+  let [start_line, start_char] = s:FirstDifference(a:old, a:new)
+  let [end_line, end_char] =
+      \ s:LastDifference(a:old[start_line :], a:new[start_line :], start_char)
 
-  let l:text = s:ExtractText(a:new, l:start_line, l:start_char, l:end_line, l:end_char)
-  let l:length = s:Length(a:old, l:start_line, l:start_char, l:end_line, l:end_char)
+  let text = s:ExtractText(a:new, start_line, start_char, end_line, end_char)
+  let length = s:Length(a:old, start_line, start_char, end_line, end_char)
 
-  let l:adj_end_line = len(a:old) + l:end_line
-  let l:adj_end_char = l:end_line == 0 ? 0 : strlen(a:old[l:end_line]) + l:end_char + 1
+  let adj_end_line = len(a:old) + end_line
+  let adj_end_char = end_line == 0 ? 0 : strchars(a:old[end_line]) + end_char + 1
 
-  let l:result = { 'range': {'start': {'line': l:start_line, 'character': l:start_char},
-      \  'end': {'line': l:adj_end_line, 'character': l:adj_end_char}},
-      \ 'text': l:text,
-      \ 'rangeLength': l:length,
+  let result = { 'range': {'start': {'line': start_line, 'character': start_char},
+      \ 'end': {'line': adj_end_line, 'character': adj_end_char}},
+      \ 'text': text,
+      \ 'rangeLength': length,
       \}
 
-  return l:result
+  return result
 endfunction
 
 " Finds the line and character of the first different character between two
 " list of Strings.
 function! s:FirstDifference(old, new) abort
-  let l:line_count = min([len(a:old), len(a:new)])
-  if l:line_count ==# 0
-    return [0, 0]
-  endif
-  let l:i = 0
-  while l:i < l:line_count
-    if a:old[l:i] !=# a:new[l:i] | break | endif
-    let l:i += 1
+  let line_count = min([len(a:old), len(a:new)])
+  if line_count == 0 | return [0, 0] | endif
+  let i = 0
+  while i < line_count
+    if a:old[i] !=# a:new[i] | break | endif
+    let i += 1
   endwhile
-  if l:i >= l:line_count
-    return [l:line_count - 1, strlen(a:old[l:line_count - 1])]
+  if i >= line_count
+    return [line_count - 1, strchars(a:old[line_count - 1])]
   endif
-  let l:old_line = a:old[l:i]
-  let l:new_line = a:new[l:i]
-  let l:length = min([strlen(l:old_line), strlen(l:new_line)])
-  let l:j = 0
-  while l:j < l:length
-    if l:old_line[l:j : l:j] !=# l:new_line[l:j : l:j] | break | endif
-    let l:j += 1
+  let old_line = a:old[i]
+  let new_line = a:new[i]
+  let length = min([strchars(old_line), strchars(new_line)])
+  let j = 0
+  while j < length
+    if strgetchar(old_line, j) != strgetchar(new_line, j) | break | endif
+    let j += 1
   endwhile
-  return [l:i, l:j]
+  return [i, j]
 endfunction
 
 function! s:LastDifference(old, new, start_char) abort
-  let l:line_count = min([len(a:old), len(a:new)])
-  if l:line_count == 0 | return [0, 0] | endif
-  let l:i = -1
-  while l:i >= -1 * l:line_count
-    if a:old[l:i] !=# a:new[l:i] | break | endif
-    let l:i -= 1
+  let line_count = min([len(a:old), len(a:new)])
+  if line_count == 0 | return [0, 0] | endif
+  let i = -1
+  while i >= -1 * line_count
+    if a:old[i] !=# a:new[i] | break | endif
+    let i -= 1
   endwhile
-  if l:i <= -1 * l:line_count
-    let l:i = -1 * l:line_count
-    let l:old_line = a:old[l:i][a:start_char :]
-    let l:new_line = a:new[l:i][a:start_char :]
+  if i <= -1 * line_count
+    let i = -1 * line_count
+    let old_line = strcharpart(a:old[i], a:start_char)
+    let new_line = strcharpart(a:new[i], a:start_char)
   else
-    let l:old_line = a:old[l:i]
-    let l:new_line = a:new[l:i]
+    let old_line = a:old[i]
+    let new_line = a:new[i]
   endif
-  let l:length = min([strlen(l:old_line), strlen(l:new_line)])
-  let l:j = -1
-  while l:j >= -1 * l:length
-    if l:old_line[l:j : l:j] !=# l:new_line[l:j : l:j] | break | endif
-    let l:j -= 1
+  let old_line_length = strchars(old_line)
+  let new_line_length = strchars(new_line)
+  let length = min([old_line_length, new_line_length])
+  let j = -1
+  while j >= -1 * length
+    if  strgetchar(old_line, old_line_length + j) !=
+        \ strgetchar(new_line, new_line_length + j)
+      break
+    endif
+    let j -= 1
   endwhile
-  return [l:i, l:j]
+  return [i, j]
 endfunction
 
 function! s:ExtractText(lines, start_line, start_char, end_line, end_char) abort
   if a:start_line == len(a:lines) + a:end_line
     if a:end_line == 0 | return '' | endif
-    let l:result = a:lines[a:start_line][a:start_char : a:end_char]
-    " json_encode treats empty string computed this was as 'null'
-    if strlen(l:result) == 0 | let l:result = '' | endif
-    return l:result
+    let l:line = a:lines[a:start_line]
+    let l:length = strchars(l:line) + a:end_char - a:start_char + 1
+    return strcharpart(l:line, a:start_char, l:length)
   endif
-  let l:result = a:lines[a:start_line][a:start_char :]."\n"
-  let l:adj_end_line = len(a:lines) + a:end_line
-  for l:line in a:lines[a:start_line + 1 : a:end_line - 1]
-    let l:result .= l:line."\n"
+  let result = strcharpart(a:lines[a:start_line], a:start_char)."\n"
+  for line in a:lines[a:start_line + 1:a:end_line - 1]
+    let result .= line."\n"
   endfor
   if a:end_line != 0
-    let l:result .= a:lines[a:end_line][:a:end_char]
+    let l:line = a:lines[a:end_line]
+    let l:length = strchars(l:line) + a:end_char + 1
+    let result .= strcharpart(l:line, 0, l:length)
   endif
-  return l:result
+  return result
 endfunction
 
-function! s:Length(lines, start_line, start_char, end_line, end_char)
-    \ abort
-  let l:adj_end_line = len(a:lines) + a:end_line
-  if l:adj_end_line >= len(a:lines)
-    let l:adj_end_char = a:end_char - 1
+function! s:Length(lines, start_line, start_char, end_line, end_char) abort
+  let adj_end_line = len(a:lines) + a:end_line
+  if adj_end_line >= len(a:lines)
+    let adj_end_char = a:end_char - 1
   else
-    let l:adj_end_char = strlen(a:lines[l:adj_end_line]) + a:end_char
+    let adj_end_char = strchars(a:lines[adj_end_line]) + a:end_char
   endif
-  if a:start_line == l:adj_end_line
-    return l:adj_end_char - a:start_char + 1
+  if a:start_line == adj_end_line
+    return adj_end_char - a:start_char + 1
   endif
-  let l:result = strlen(a:lines[a:start_line]) - a:start_char + 1
-  let l:line = a:start_line + 1
-  while l:line < l:adj_end_line
-    let l:result += strlen(a:lines[l:line]) + 1
-    let l:line += 1
+  let result = strchars(a:lines[a:start_line]) - a:start_char + 1
+  let line = a:start_line + 1
+  while line < adj_end_line
+    let result += strchars(a:lines[line]) + 1
+    let line += 1
   endwhile
-  let l:result += l:adj_end_char + 1
-  return l:result
+  let result += adj_end_char + 1
+  return result
 endfunction
