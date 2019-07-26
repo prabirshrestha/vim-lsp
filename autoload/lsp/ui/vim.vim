@@ -438,7 +438,7 @@ function! s:handle_location(ctx, server, type, data) abort "ctx = {counter, list
             if exists('*gettagstack') && exists('*settagstack')
                 let from = [bufnr('%'), line('.'), col('.'), 0]
                 let tagname = expand('<cword>')
-                let item = {'from': from, 'tagname': tagname}
+                let item = {'bufnr': from[0], 'from': from, 'tagname': tagname}
                 let winid = win_getid()
                 let stack = gettagstack(winid)
                 if stack['length'] == stack['curidx']
