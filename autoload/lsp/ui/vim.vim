@@ -438,9 +438,28 @@ function! s:handle_location(ctx, server, type, data) abort "ctx = {counter, list
             if exists('*gettagstack') && exists('*settagstack')
                 let from = [bufnr('%'), line('.'), col('.'), 0]
                 let tagname = expand('<cword>')
+                let item = {'from': from, 'tagname': tagname}
                 let winid = win_getid()
-                call settagstack(winid, {'items': [{'from': from, 'tagname': tagname}]}, 'a')
-                call settagstack(winid, {'curidx': len(gettagstack(winid)['items']) + 1})
+                let stack = gettagstack(winid)
+                if stack['length'] == stack['curidx']
+                    " Replace the last items with item.
+                    let action = 'r'
+                    let stack['items'][stack['curidx']-1] = item
+                elseif stack['length'] > stack['curidx']
+                    " Replace items after used items with item.
+                    let action = 'r'
+                    if stack['curidx'] > 1
+                        let stack['items'] = add(stack['items'][:stack['curidx']-2], item)
+                    else
+                        let stack['items'] = [item]
+                    endif
+                else
+                    " Append item.
+                    let action = 'a'
+                    let stack['items'] = [item]
+                endif
+                let stack['curidx'] += 1
+                call settagstack(winid, stack, action)
             endif
 
             let l:loc = a:ctx['list'][0]
