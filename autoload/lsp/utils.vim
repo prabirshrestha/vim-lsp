@@ -185,3 +185,19 @@ function! lsp#utils#echo_with_truncation(msg) abort
 
     exec 'echo l:msg'
 endfunction
+
+function! lsp#utils#count_utf16_code_units(str) abort
+    let l:rs = split(a:str, '\zs')
+    let l:len = len(l:rs)
+    return l:len + len(filter(l:rs, 'char2nr(v:val)>=0x10000'))
+endfunction
+
+function! lsp#utils#col(expr) abort
+    let l:line = getline(a:expr)
+    let l:vim_col = col(a:expr)
+    let l:vim_len = strlen(l:line)
+    let l:utf16_len = lsp#utils#count_utf16_code_units(l:line[0 : min([l:vim_len, l:vim_col]) - 1])
+    let l:utf16_len = l:utf16_len + max([0, l:vim_col - l:vim_len]) " fix for virtual-edit or end-of-line in insert-mode.
+    return l:utf16_len
+endfunction
+

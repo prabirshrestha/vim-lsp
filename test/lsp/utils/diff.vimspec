@@ -1,4 +1,313 @@
 Describe lsp#utils#diff
+    Describe lsp#utils#diff#first_difference
+        It should return first difference when all new text
+            let lines1 = [
+            \]
+            let lines2 = [
+            \  'ä𐐀Foo',
+            \  'ä𐐀bar',
+            \  'ä𐐀baz',
+            \]
+            Assert Equals(lsp#utils#diff#first_difference(lines1, lines2),
+                        \ [0, 0, 0])
+        End
+
+        It should return first difference when remove all text
+            let lines1 = [
+            \  'ä𐐀Foo',
+            \  'ä𐐀bar',
+            \  'ä𐐀baz',
+            \]
+            let lines2 = [
+            \]
+            Assert Equals(lsp#utils#diff#first_difference(lines1, lines2),
+                        \ [0, 0, 0])
+        End
+
+        It should return first difference when changed first line character
+            let lines1 = [
+            \  'ä𐐀foo',
+            \  'ä𐐀bar',
+            \  'ä𐐀baz',
+            \]
+            let lines2 = [
+            \  'ä𐐀Foo',
+            \  'ä𐐀bar',
+            \  'ä𐐀baz',
+            \]
+            Assert Equals(lsp#utils#diff#first_difference(lines1, lines2),
+                        \ [0, 2, 3])
+        End
+
+        It should return first difference when changed second line character
+            let lines1 = [
+            \  'ä𐐀foo',
+            \  'ä𐐀bar',
+            \  'ä𐐀baz',
+            \]
+            let lines2 = [
+            \  'ä𐐀foo',
+            \  'ä𐐀bAr',
+            \  'ä𐐀baz',
+            \]
+            Assert Equals(lsp#utils#diff#first_difference(lines1, lines2),
+                        \ [1, 3, 4])
+        End
+
+        It should return first difference when changed last line character
+            let lines1 = [
+            \  'ä𐐀foo',
+            \  'ä𐐀bar',
+            \  'ä𐐀baz',
+            \]
+            let lines2 = [
+            \  'ä𐐀foo',
+            \  'ä𐐀bar',
+            \  'ä𐐀baZ',
+            \]
+            Assert Equals(lsp#utils#diff#first_difference(lines1, lines2),
+                        \ [2, 4, 5])
+        End
+
+        It should return first difference when append part of text
+            let lines1 = [
+            \  'ä𐐀foo',
+            \  'ä𐐀bar',
+            \  'ä𐐀baz',
+            \]
+            let lines2 = [
+            \  'ä𐐀foo',
+            \  'ä𐐀bara',
+            \  'ä𐐀baz',
+            \]
+            Assert Equals(lsp#utils#diff#first_difference(lines1, lines2),
+                        \ [1, 5, 6])
+        End
+
+        It should return first difference when remove part of text
+            let lines1 = [
+            \  'ä𐐀foo',
+            \  'ä𐐀bar',
+            \  'ä𐐀baz',
+            \]
+            let lines2 = [
+            \  'ä𐐀foo',
+            \  'ä𐐀ba',
+            \  'ä𐐀baz',
+            \]
+            Assert Equals(lsp#utils#diff#first_difference(lines1, lines2),
+                        \ [1, 4, 5])
+        End
+    End
+
+    Describe lsp#utils#diff#last_difference
+        It should return last difference when all new text
+            let lines1 = [
+            \]
+            let lines2 = [
+            \  'ä𐐀foo',
+            \  'ä𐐀bar',
+            \  'ä𐐀baz',
+            \]
+            let first = lsp#utils#diff#first_difference(lines1, lines2)
+            Assert Equals(lsp#utils#diff#last_difference(lines1, lines2, first[1], first[2]),
+                        \ [-1, -1, 0])
+        End
+
+        It should return last difference when remove all text
+            let lines1 = [
+            \  'ä𐐀foo',
+            \  'ä𐐀bar',
+            \  'ä𐐀baz',
+            \]
+            let lines2 = [
+            \]
+            let first = lsp#utils#diff#first_difference(lines1, lines2)
+            Assert Equals(lsp#utils#diff#last_difference(lines1, lines2, first[1], first[2]),
+                        \ [-1, -1, 6])
+        End
+
+        It should return last difference when changed first line character
+            let lines1 = [
+            \  'ä𐐀foo',
+            \  'ä𐐀bar',
+            \  'ä𐐀baz',
+            \]
+            let lines2 = [
+            \  'ä𐐀𐐀oo',
+            \  'ä𐐀bar',
+            \  'ä𐐀baz',
+            \]
+            let first = lsp#utils#diff#first_difference(lines1, lines2)
+            Assert Equals(lsp#utils#diff#last_difference(lines1, lines2, first[1], first[2]),
+                        \ [-3, -3, 4])
+        End
+
+        It should return last difference when changed second line character
+            let lines1 = [
+            \  'ä𐐀foo',
+            \  'ä𐐀bar',
+            \  'ä𐐀baz',
+            \]
+            let lines2 = [
+            \  'ä𐐀foo',
+            \  'ä𐐀baR',
+            \  'ä𐐀baz',
+            \]
+            let first = lsp#utils#diff#first_difference(lines1, lines2)
+            Assert Equals(lsp#utils#diff#last_difference(lines1, lines2, first[1], first[2]),
+                        \ [-2, -1, 6])
+        End
+
+        It should return last difference when changed last line character
+            let lines1 = [
+            \  'ä𐐀foo',
+            \  'ä𐐀bar',
+            \  'ä𐐀baz',
+            \]
+            let lines2 = [
+            \  'ä𐐀foo',
+            \  'ä𐐀bar',
+            \  'ä𐐀baZ',
+            \]
+            let first = lsp#utils#diff#first_difference(lines1, lines2)
+            Assert Equals(lsp#utils#diff#last_difference(lines1, lines2, first[1], first[2]),
+                        \ [-1, -1, 6])
+        End
+    End
+
+    Describe lsp#utils#diff#extract_text
+        It should return difference text when change one character in first line
+            let lines1 = [
+            \  'ä𐐀foo',
+            \  'ä𐐀bar',
+            \  'ä𐐀baz',
+            \]
+            let lines2 = [
+            \  'ä𐐀𐐀oo',
+            \  'ä𐐀bar',
+            \  'ä𐐀baz',
+            \]
+            let first = lsp#utils#diff#first_difference(lines1, lines2)
+            let last = lsp#utils#diff#last_difference(lines1, lines2, first[1], first[2])
+            Assert Equals(lsp#utils#diff#extract_text(lines2, first[0], first[1], last[0], last[1]),
+                        \ join([
+                        \   '𐐀'
+                        \ ], "\n"))
+        End
+
+        It should return difference text when change one character in second line
+            let lines1 = [
+            \  'ä𐐀foo',
+            \  'ä𐐀bar',
+            \  'ä𐐀baz',
+            \]
+            let lines2 = [
+            \  'ä𐐀foo',
+            \  'ä𐐀baR',
+            \  'ä𐐀baz',
+            \]
+            let first = lsp#utils#diff#first_difference(lines1, lines2)
+            let last = lsp#utils#diff#last_difference(lines1, lines2, first[1], first[2])
+            Assert Equals(lsp#utils#diff#extract_text(lines2, first[0], first[1], last[0], last[1]),
+                        \ join([
+                        \   'R'
+                        \ ], "\n"))
+        End
+
+        It should return difference text when change one character in last line
+            let lines1 = [
+            \  'ä𐐀foo',
+            \  'ä𐐀bar',
+            \  'ä𐐀baz',
+            \]
+            let lines2 = [
+            \  'ä𐐀foo',
+            \  'ä𐐀bar',
+            \  'ä𐐀baZ',
+            \]
+            let first = lsp#utils#diff#first_difference(lines1, lines2)
+            let last = lsp#utils#diff#last_difference(lines1, lines2, first[1], first[2])
+            Assert Equals(lsp#utils#diff#extract_text(lines2, first[0], first[1], last[0], last[1]),
+                        \ join([
+                        \   'Z'
+                        \ ], "\n"))
+        End
+
+        It should return difference text when change range of text
+            let lines1 = [
+            \  'ä𐐀foo',
+            \  'ä𐐀bar',
+            \  'ä𐐀baz',
+            \]
+            let lines2 = [
+            \  'ä𐐀Foo',
+            \  'ä𐐀bar',
+            \  'ä𐐀baZ',
+            \]
+            let first = lsp#utils#diff#first_difference(lines1, lines2)
+            let last = lsp#utils#diff#last_difference(lines1, lines2, first[1], first[2])
+            Assert Equals(lsp#utils#diff#extract_text(lines2, first[0], first[1], last[0], last[1]),
+                        \ join([
+                        \   'Foo',
+                        \  'ä𐐀bar',
+                        \  'ä𐐀baZ',
+                        \ ], "\n"))
+        End
+    End
+
+    Describe lsp#utils#diff#length
+        It should return modified length when first line changed
+            let lines1 = [
+            \  'ä𐐀foo',
+            \  'ä𐐀bar',
+            \  'ä𐐀baz',
+            \]
+            let lines2 = [
+            \  'ä𐐀Foo',
+            \  'ä𐐀bar',
+            \  'ä𐐀baz',
+            \]
+            let first = lsp#utils#diff#first_difference(lines1, lines2)
+            let last = lsp#utils#diff#last_difference(lines1, lines2, first[1], first[2])
+            Assert Equals(lsp#utils#diff#length(lines1, first[0], first[1], last[0], last[1]),
+                        \ 1)
+        End
+
+        It should return modified length when multibyte changed
+            let lines1 = [
+            \  'ä𐐀foo',
+            \  'ä𐐀bar',
+            \  'ä𐐀baz',
+            \]
+            let lines2 = [
+            \  'äafoo',
+            \  'ä𐐀bar',
+            \  'ä𐐀baz',
+            \]
+            let first = lsp#utils#diff#first_difference(lines1, lines2)
+            let last = lsp#utils#diff#last_difference(lines1, lines2, first[1], first[2])
+            Assert Equals(lsp#utils#diff#length(lines1, first[0], first[1], last[0], last[1]),
+                        \ 2)
+        End
+
+        It should return modified length when range changed
+            let lines1 = [
+            \  'ä𐐀foo',
+            \  'ä𐐀bar',
+            \  'ä𐐀baz',
+            \]
+            let lines2 = [
+            \  'ä𐐀Foo',
+            \  'ä𐐀bar',
+            \  'ä𐐀baZ',
+            \]
+            let first = lsp#utils#diff#first_difference(lines1, lines2)
+            let last = lsp#utils#diff#last_difference(lines1, lines2, first[1], first[2])
+            Assert Equals(lsp#utils#diff#length(lines1, first[0], first[1], last[0], last[1]),
+                        \ 17)
+        End
+    End
 
     Describe lsp#utils#diff#compute
         It should return diff of one letter
@@ -59,7 +368,7 @@ Describe lsp#utils#diff
             \    'start': { 'line': 0, 'character': 0 },
             \    'end': { 'line': 0, 'character': 0, }
             \  },
-            \  'text': "foo\nbar\nbaz\n",
+            \  'text': "foo\nbar\nbaz",
             \  "rangeLength": 0
             \}
             let got = lsp#utils#diff#compute(lines1, lines2)
@@ -74,10 +383,46 @@ Describe lsp#utils#diff
             let want = {
             \  'range': {
             \    'start': { 'line': 0, 'character': 0 },
-            \    'end': { 'line': 3, 'character': 0, }
+            \    'end': { 'line': 2, 'character': 3, }
             \  },
             \  'text': '',
-            \  "rangeLength": 12
+            \  "rangeLength": 11
+            \}
+            let got = lsp#utils#diff#compute(lines1, lines2)
+            Assert Equals(got, want)
+        End
+
+        It should return diff familier with utf-16 surrogate pairs
+            let lines1 = [
+            \  'foo',
+            \]
+            let lines2 = [
+            \  'f𐐀o',
+            \]
+            let want = {
+            \  'range': {
+            \    'start': { 'line': 0, 'character': 1 },
+            \    'end': { 'line': 0, 'character': 2 }
+            \  },
+            \  'text': '𐐀',
+            \  "rangeLength": 1
+            \}
+            let got = lsp#utils#diff#compute(lines1, lines2)
+            Assert Equals(got, want)
+
+            let lines1 = [
+            \  'f𐐀o',
+            \]
+            let lines2 = [
+            \  'foo',
+            \]
+            let want = {
+            \  'range': {
+            \    'start': { 'line': 0, 'character': 1 },
+            \    'end': { 'line': 0, 'character': 3 }
+            \  },
+            \  'text': 'o',
+            \  "rangeLength": 2
             \}
             let got = lsp#utils#diff#compute(lines1, lines2)
             Assert Equals(got, want)
