@@ -281,11 +281,15 @@ function! lsp#ui#vim#document_range_format() abort
     return s:document_format_range(0)
 endfunction
 
+" Send request with the 'workspace/symbol' method.
+" The server responds with SymbolInformation[] or null.
+"
+" Documentation
+" - https://microsoft.github.io/language-server-protocol/specification#workspace_symbol
 function! lsp#ui#vim#workspace_symbol() abort
     let l:servers = filter(lsp#get_whitelisted_servers(), 'lsp#capabilities#has_workspace_symbol_provider(v:val)')
-    let s:last_req_id = s:last_req_id + 1
 
-    call setqflist([])
+    let s:last_req_id = s:last_req_id + 1
 
     if len(l:servers) == 0
         call s:not_supported('Retrieving workspace symbols')
@@ -307,14 +311,18 @@ function! lsp#ui#vim#workspace_symbol() abort
     echo 'Retrieving workspace symbols ...'
 endfunction
 
+" Send request with the 'textDocument/documentSymbol' method.
+" The server responds with DocumentSymbol[], SymbolInformation[] or null.
+"
+" Documentation
+" - https://microsoft.github.io/language-server-protocol/specification#textDocument_documentSymbol
 function! lsp#ui#vim#document_symbol() abort
     let l:servers = filter(lsp#get_whitelisted_servers(), 'lsp#capabilities#has_document_symbol_provider(v:val)')
+
     let s:last_req_id = s:last_req_id + 1
 
-    call setqflist([])
-
     if len(l:servers) == 0
-        call s:not_supported('Retrieving symbols')
+        call s:not_supported('Retrieving document symbols')
         return
     endif
 
@@ -396,26 +404,50 @@ function! lsp#ui#vim#code_action() abort
     echo 'Retrieving code actions ...'
 endfunction
 
+" Handles the response of the 'workspace/symbol' and
+" 'textDocument/documentSymbol' methods.
+"
+" Documentation
+" - https://microsoft.github.io/language-server-protocol/specification#workspace_symbol
+" - https://microsoft.github.io/language-server-protocol/specification#textDocument_documentSymbol
 function! s:handle_symbol(server, last_req_id, type, data) abort
+    " Ignore old requests
     if a:last_req_id != s:last_req_id
         return
     endif
 
+    " Check if the server responded, if not with an error
     if lsp#client#is_error(a:data['response'])
         call lsp#utils#error('Failed to retrieve '. a:type . ' for ' . a:server . ': ' . lsp#client#error_message(a:data['response']))
         return
     endif
 
-    let l:list = lsp#ui#vim#utils#symbols_to_loc_list(a:data)
+    " This member does not exist if there was an error invoking the method
+    if !has_key(a:data['response'], 'result')
+        return
+    endif
+
+    " Dictionary to contain all symbols
+    let l:symbols = a:data['response']['result']
+
+    " No symbols available
+    " - v:null
+    " - []
+    if empty(l:symbols)
+        call lsp#utils#error('No ' . a:type .' found')
+        return
+    endif
+
+    " Convert symbols to location list
+    let l:list = lsp#ui#vim#utils#symbols_to_loc_list(l:symbols)
 
     call setqflist(l:list)
 
-    if empty(l:list)
-        call lsp#utils#error('No ' . a:type .' found')
-    else
-        echo 'Retrieved ' . a:type
-        botright copen
-    endif
+    echo 'Retrieved ' . a:type
+
+    " Open the symbol list at the bottom and occupy the full width of the Vim
+    " window
+    botright copen
 endfunction
 
 function! s:handle_location(ctx, server, type, data) abort "ctx = {counter, list, jump_if_one, last_req_id, in_preview}
