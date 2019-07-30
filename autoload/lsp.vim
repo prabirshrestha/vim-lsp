@@ -384,6 +384,15 @@ function! lsp#default_get_supported_capabilities(server_info) abort
     \ }
 endfunction
 
+function! lsp#getpid()
+  if !has('win32unix')
+    return getpid()
+  endif
+
+  let cmd = 'cat /proc/' . getpid() . '/winpid'
+  return substitute(system(cmd), '\v\n', '', 'gi')
+endfunction
+
 function! s:ensure_init(buf, server_name, cb) abort
     let l:server = s:servers[a:server_name]
 
@@ -427,7 +436,7 @@ function! s:ensure_init(buf, server_name, cb) abort
     let l:request = {
     \   'method': 'initialize',
     \   'params': {
-    \     'processId': getpid(),
+    \     'processId': lsp#getpid(),
     \     'capabilities': l:capabilities,
     \     'rootUri': l:root_uri,
     \     'rootPath': lsp#utils#uri_to_path(l:root_uri),
