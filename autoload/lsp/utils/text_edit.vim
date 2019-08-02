@@ -166,18 +166,19 @@ function! s:generate_sub_cmd_insert(text_edit) abort
     let l:new_text = s:parse(a:text_edit['newText'])
 
     let l:sub_cmd = s:preprocess_cmd(a:text_edit['range'])
-    let l:sub_cmd .= s:generate_move_start_cmd(l:start_line - 1, l:start_character)
+    let l:sub_cmd .= s:generate_move_start_cmd(l:start_line, l:start_character)
 
     if has('win32unix')
-      l:merged_text_edit['merged']['newText'] = substitute(l:merged_text_edit['merged']['newText'], '\r', '', 'g')
+      let l:merged_text_edit['merged']['newText'] = substitute(l:merged_text_edit['merged']['newText'], '\r', '', 'g')
     endif
 
-    if l:start_character >= len(getline(l:start_line))
+    if l:start_character >= len(getline(l:start_line)) && getline(l:start_line) != ''
         let l:sub_cmd .= "\"=l:merged_text_edit['merged']['newText']\<CR>p"
     else
         let l:sub_cmd .= "\"=l:merged_text_edit['merged']['newText']\<CR>P"
     endif
 
+    echomsg "RETURNING " . l:sub_cmd
     return l:sub_cmd
 endfunction
 
