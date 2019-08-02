@@ -178,7 +178,6 @@ function! s:generate_sub_cmd_insert(text_edit) abort
         let l:sub_cmd .= "\"=l:merged_text_edit['merged']['newText']\<CR>P"
     endif
 
-    echomsg "RETURNING " . l:sub_cmd
     return l:sub_cmd
 endfunction
 
