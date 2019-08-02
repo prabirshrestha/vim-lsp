@@ -48,6 +48,10 @@ function! lsp#utils#text_edit#apply_text_edits(uri, text_edits) abort
 
     while l:i < len(l:text_edits)
         let l:merged_text_edit = s:merge_same_range(l:i, l:text_edits)
+        if has('win32unix')
+          let l:merged_text_edit['merged']['newText'] = substitute(l:merged_text_edit['merged']['newText'], '\r', '', 'g')
+        endif
+
         let l:cmd = s:build_cmd(a:uri, l:merged_text_edit['merged'])
 
         try
@@ -70,7 +74,6 @@ function! lsp#utils#text_edit#apply_text_edits(uri, text_edits) abort
 
             set virtualedit=onemore
 
-            let g:var=l:merged_text_edit['merged']['newText']
             silent execute l:cmd
         finally
             let &paste = l:was_paste
@@ -167,10 +170,6 @@ function! s:generate_sub_cmd_insert(text_edit) abort
 
     let l:sub_cmd = s:preprocess_cmd(a:text_edit['range'])
     let l:sub_cmd .= s:generate_move_start_cmd(l:start_line, l:start_character)
-
-    if has('win32unix')
-      let l:merged_text_edit['merged']['newText'] = substitute(l:merged_text_edit['merged']['newText'], '\r', '', 'g')
-    endif
 
     if l:start_character >= len(getline(l:start_line)) && getline(l:start_line) != ''
         let l:sub_cmd .= "\"=l:merged_text_edit['merged']['newText']\<CR>p"
