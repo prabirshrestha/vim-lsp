@@ -380,6 +380,11 @@ function! lsp#default_get_supported_capabilities(server_info) abort
     \   'workspace': {
     \       'applyEdit': v:true,
     \       'configuration': v:true
+    \   },
+    \   'textDocument': {
+    \       'semanticHighlightingCapabilities': {
+    \           'semanticHighlighting': lsp#ui#vim#semantic#is_enabled()
+    \       }
     \   }
     \ }
 endfunction
@@ -611,6 +616,8 @@ function! s:on_notification(server_name, id, data, event) abort
         if has_key(l:response, 'method')
             if g:lsp_diagnostics_enabled && l:response['method'] ==# 'textDocument/publishDiagnostics'
                 call lsp#ui#vim#diagnostics#handle_text_document_publish_diagnostics(a:server_name, a:data)
+            elseif l:response['method'] ==# 'textDocument/semanticHighlighting'
+                call lsp#ui#vim#semantic#handle_semantic(a:server_name, a:data)
             endif
         endif
     else

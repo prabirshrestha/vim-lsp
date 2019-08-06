@@ -66,6 +66,7 @@ command! LspTypeDefinition call lsp#ui#vim#type_definition()
 command! -nargs=0 LspStatus echo lsp#get_server_status()
 command! LspNextReference call lsp#ui#vim#references#jump(+1)
 command! LspPreviousReference call lsp#ui#vim#references#jump(-1)
+command! -nargs=? LspSemanticScopes call lsp#ui#vim#semantic#display_scope_tree(<args>)
 
 nnoremap <plug>(lsp-code-action) :<c-u>call lsp#ui#vim#code_action()<cr>
 nnoremap <plug>(lsp-declaration) :<c-u>call lsp#ui#vim#declaration(0)<cr>

@@ -65,6 +65,28 @@ function! lsp#capabilities#has_document_highlight_provider(server_name) abort
     return s:has_bool_provider(a:server_name, 'documentHighlightProvider')
 endfunction
 
+function! lsp#capabilities#has_semantic_highlight(server_name) abort
+    let l:capabilities = lsp#get_server_capabilities(a:server_name)
+
+    if empty(l:capabilities) || type(l:capabilities) != type({}) || !has_key(l:capabilities, 'semanticHighlighting')
+        return 0
+    endif
+
+    let l:semantic_hl = l:capabilities['semanticHighlighting']
+
+    if type(l:semantic_hl) != type({}) || !has_key(l:semantic_hl, 'scopes')
+        return 0
+    endif
+
+    let l:scopes = l:semantic_hl['scopes']
+
+    if type(l:scopes) != type([]) || empty(l:scopes)
+        return 0
+    endif
+
+    return 1
+endfunction
+
 " [supports_did_save (boolean), { 'includeText': boolean }]
 function! lsp#capabilities#get_text_document_save_registration_options(server_name) abort
     let l:capabilities = lsp#get_server_capabilities(a:server_name)
