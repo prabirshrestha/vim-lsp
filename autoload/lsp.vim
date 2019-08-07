@@ -801,3 +801,24 @@ endfunction
 function! lsp#get_buffer_first_error_line() abort
     return lsp#ui#vim#diagnostics#get_buffer_first_error_line()
 endfunction
+
+function! s:merge_dict(dict_old, dict_new) abort
+    for l:key in keys(a:dict_new)
+        if has_key(a:dict_old, l:key) && type(a:dict_old[l:key]) == v:t_dict && type(a:dict_new[l:key]) == v:t_dict
+            call s:merge_dict(a:dict_old[l:key], a:dict_new[l:key])
+        else
+            let a:dict_old[l:key] = a:dict_new[l:key]
+        endif
+    endfor
+endfunction
+
+function! lsp#update_workspace_config(server_name, workspace_config) abort
+    let l:server = s:servers[a:server_name]
+    let l:server_info = l:server['server_info']
+    if has_key(l:server_info, 'workspace_config')
+        call s:merge_dict(l:server_info['workspace_config'], a:workspace_config)
+    else
+        let l:server_info['workspace_config'] = a:workspace_config
+    endif
+    call s:ensure_conf(bufnr('%'), a:server_name, function('s:Noop'))
+endfunction
