@@ -6,6 +6,10 @@ let s:winid = v:false
 let s:prevwin = v:false
 let s:preview_data = v:false
 
+function! s:vim_popup_closed(...) abort
+    let s:preview_data = v:false
+endfunction
+
 function! lsp#ui#vim#output#closepreview() abort
   if win_getid() == s:winid
     " Don't close if window got focus
@@ -119,6 +123,7 @@ function! lsp#ui#vim#output#floatingpreview(data) abort
     let l:options = {
                 \ 'moved': 'any',
                 \ 'border': [1, 1, 1, 1],
+                \ 'callback': function('s:vim_popup_closed')
                 \ }
 
     if g:lsp_preview_max_width > 0
