@@ -276,7 +276,7 @@ function! s:align_preview(options) abort
     endif
 endfunction
 
-function! lsp#ui#vim#output#preview(data, options) abort
+function! lsp#ui#vim#output#preview(server, data, options) abort
     if s:winid && type(s:preview_data) == type(a:data)
        \ && s:preview_data == a:data
        \ && type(g:lsp_preview_doubletap) == 3
@@ -294,12 +294,22 @@ function! lsp#ui#vim#output#preview(data, options) abort
 
     let s:preview_data = a:data
     let l:lines = []
-    let l:ft = s:append(a:data, l:lines)
+    let l:syntax_lines = []
+    let l:ft = s:append(a:data, l:lines, l:syntax_lines)
 
     if has_key(a:options, 'filetype')
         let l:ft = a:options['filetype']
     endif
 
+    let l:server_info = lsp#get_server_info(a:server)
+    try
+        let l:do_conceal = l:server_info['config']['hover_conceal']
+    catch
+        let l:do_conceal = g:lsp_hover_conceal
+    endtry
+
+    call setbufvar(winbufnr(s:winid), 'lsp_syntax_highlights', l:syntax_lines)
+    call setbufvar(winbufnr(s:winid), 'lsp_do_conceal', l:do_conceal)
     call s:setcontent(l:lines, l:ft)
 
     " Get size information while still having the buffer active
@@ -353,10 +363,10 @@ function! lsp#ui#vim#output#preview(data, options) abort
     return ''
 endfunction
 
-function! s:append(data, lines) abort
+function! s:append(data, lines, syntax_lines) abort
     if type(a:data) == type([])
         for l:entry in a:data
-            call s:append(entry, a:lines)
+            call s:append(entry, a:lines, a:syntax_lines)
         endfor
 
         return 'markdown'
@@ -365,9 +375,15 @@ function! s:append(data, lines) abort
 
         return 'markdown'
     elseif type(a:data) == type({}) && has_key(a:data, 'language')
-        call add(a:lines, '```'.a:data.language)
-        call extend(a:lines, split(a:data.value, '\n'))
-        call add(a:lines, '```')
+        let l:new_lines = split(a:data.value, '\n')
+
+        let l:i = 1
+        while l:i <= len(l:new_lines)
+            call add(a:syntax_lines, { 'line': len(a:lines) + l:i, 'language': a:data.language })
+            let l:i += 1
+        endwhile
+
+        call extend(a:lines, l:new_lines)
 
         return 'markdown'
     elseif type(a:data) == type({}) && has_key(a:data, 'kind')
