@@ -185,3 +185,8 @@ function! lsp#utils#echo_with_truncation(msg) abort
 
     exec 'echo l:msg'
 endfunction
+
+function! lsp#utils#byteindex(expr, lnum, char) abort
+    let l:linestr = getbufline(a:expr, a:lnum)[0]
+    return strlen(strcharpart(l:linestr, 0, a:char)) + 1
+endfunction

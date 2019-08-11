@@ -357,7 +357,8 @@ function! s:get_cursor_pos_and_edit_length(text_edit) abort
     if !empty(a:text_edit)
         let l:start = a:text_edit['range']['start']
         let l:line = l:start['line'] + 1
-        let l:col = l:start['character'] + 1
+        let l:char = l:start['character']
+        let l:col = lsp#utils#byteindex('%', l:line, l:char)
         let l:length = len(a:text_edit['newText'])
         let l:pos = [0, l:line, l:col, 0]
     else
