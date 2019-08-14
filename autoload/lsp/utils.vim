@@ -190,7 +190,16 @@ endfunction
 " This function requires a buffer specifier (expr, see :help bufname()),
 " a line number (lnum, 1-based), and a character-index (char, 0-based).
 function! lsp#utils#byteindex(expr, lnum, char) abort
-    let l:linestr = getbufline(a:expr, a:lnum)[0]
+    let l:lines = getbufline(a:expr, a:lnum)
+    if l:lines == []
+        if type(a:expr) != v:t_string || !filereadable(a:expr)
+            " invalid a:expr
+            return a:char + 1
+        endif
+        " a:expr is a file that is not yet loaded as a buffer
+        let l:lines = readfile(a:expr, '', a:lnum)
+    endif
+    let l:linestr = l:lines[-1]
     return strlen(strcharpart(l:linestr, 0, a:char)) + 1
 endfunction
 
@@ -198,6 +207,15 @@ endfunction
 " This function requires a buffer specifier (expr, see :help bufname()),
 " a line number (lnum, 1-based), and a byte-index (char, 1-based).
 function! lsp#utils#charindex(expr, lnum, col) abort
-  let l:linestr = getbufline(a:expr, a:lnum)[0]
-  return strchars(strpart(l:linestr, 0, a:col - 1))
+    let l:lines = getbufline(a:expr, a:lnum)
+    if l:lines == []
+        if type(a:expr) != v:t_string || !filereadable(a:expr)
+            " invalid a:expr
+            return a:col - 1
+        endif
+        " a:expr is a file that is not yet loaded as a buffer
+        let l:lines = readfile(a:expr, '', a:lnum)
+    endif
+    let l:linestr = l:lines[-1]
+    return strchars(strpart(l:linestr, 0, a:col - 1))
 endfunction
