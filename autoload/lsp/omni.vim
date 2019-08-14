@@ -35,6 +35,7 @@ let s:completion_status_pending = 'pending'
 let s:is_user_data_support = has('patch-8.0.1493')
 let s:user_data_key = 'vim-lsp/textEdit'
 let s:user_data_additional_edits_key = 'vim-lsp/additionalTextEdits'
+let s:user_data_filtertext_key = 'vim-lsp/filterText'
 
 " }}}
 
@@ -89,7 +90,8 @@ function! lsp#omni#complete(findstart, base) abort
 endfunction
 
 function! s:prefix_filter(item, last_typed_word) abort
-    let l:label = trim(a:item['word'])
+    let l:user_data = json_decode(a:item['user_data'])
+    let l:label = trim(l:user_data[s:user_data_filtertext_key])
     let l:match_pattern = '^' . a:last_typed_word
 
     if g:lsp_ignorecase
@@ -211,6 +213,8 @@ function! lsp#omni#default_get_vim_completion_item(item) abort
         call lsp#log(l:no_support_error_message)
     endif
 
+    let l:user_data = {}
+
     " add user_data in completion item, when
     "     1. provided user_data
     "     2. provided textEdit or additionalTextEdits
@@ -218,7 +222,6 @@ function! lsp#omni#default_get_vim_completion_item(item) abort
     if g:lsp_text_edit_enabled
         let l:text_edit = get(a:item, 'textEdit', v:null)
         let l:additional_text_edits = get(a:item, 'additionalTextEdits', v:null)
-        let l:user_data = {}
 
         " type check
         if type(l:text_edit) == type({})
@@ -228,10 +231,15 @@ function! lsp#omni#default_get_vim_completion_item(item) abort
         if type(l:additional_text_edits) == type([]) && !empty(l:additional_text_edits)
             let l:user_data[s:user_data_additional_edits_key] = l:additional_text_edits
         endif
+    endif
 
-        if !empty(l:user_data)
-            let l:completion['user_data'] = json_encode(l:user_data)
-        endif
+    " Store filterText in user_data
+    if s:is_user_data_support
+        let l:user_data[s:user_data_filtertext_key] = get(a:item, 'filterText', l:completion['word'])
+    endif
+
+    if !empty(l:user_data)
+        let l:completion['user_data'] = json_encode(l:user_data)
     endif
 
     if has_key(a:item, 'detail') && !empty(a:item['detail'])
