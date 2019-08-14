@@ -92,8 +92,12 @@ function! lsp#omni#complete(findstart, base) abort
 endfunction
 
 function! s:get_filter_label(item) abort
+    if !has_key(a:item, 'user_data')
+        return trim(a:item['word'])
+    endif
+
     let l:user_data = json_decode(a:item['user_data'])
-    return trim(l:user_data[s:user_data_filtertext_key])
+    return trim(get(l:user_data, s:user_data_filtertext_key, a:item['word']))
 endfunction
 
 function! s:prefix_filter(item, last_typed_word) abort
@@ -250,8 +254,8 @@ function! lsp#omni#default_get_vim_completion_item(item) abort
     endif
 
     " Store filterText in user_data
-    if s:is_user_data_support
-        let l:user_data[s:user_data_filtertext_key] = get(a:item, 'filterText', l:completion['word'])
+    if s:is_user_data_support && has_key(a:item, 'filterText')
+        let l:user_data[s:user_data_filtertext_key] = a:item['filterText']
     endif
 
     if !empty(l:user_data)
