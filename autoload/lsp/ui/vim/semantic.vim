@@ -64,7 +64,7 @@ function! s:add_highlight(server, buf, line, highlights) abort
         " Clear text properties from the previous run
         for l:scope_idx in range(len(l:scopes))
             let l:scope = l:scopes[l:scope_idx]
-            call prop_remove({'bufnr': a:buf, 'type': s:get_textprop_name(a:server, l:scope_idx)}, a:line + 1)
+            call prop_remove({'bufnr': a:buf, 'type': s:get_textprop_name(a:server, l:scope_idx), 'all': v:true}, a:line + 1)
         endfor
 
         for l:highlight in a:highlights
