@@ -729,7 +729,9 @@ function! lsp#get_text_document_identifier(...) abort
 endfunction
 
 function! lsp#get_position(...) abort
-    return { 'line': line('.') - 1, 'character': col('.') -1 }
+    let l:line = line('.')
+    let l:char = lsp#utils#charindex('%', l:line, col('.'))
+    return { 'line': l:line - 1, 'character': l:char }
 endfunction
 
 function! s:get_text_document_identifier(buf) abort
