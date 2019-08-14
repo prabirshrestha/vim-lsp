@@ -619,6 +619,10 @@ completion filter using the `filter` key in the server info's `config` |dict|.
 The value of the `filter` key is itself a |dict| containing at least a key
 `name`, which specifies which filter to use.
 
+For the meaning of "already typed text" in the remainder of this section, see
+|vim-lsp-typed_pattern|. The case (in)sensitivity of the matching is
+determined by |g:lsp_ignorecase|.
+
     Example:
         'config': { 'filter': { 'name': 'none' } }
 
@@ -629,9 +633,10 @@ The value of the `filter` key is itself a |dict| containing at least a key
 
         - `prefix`
           Only allow completion items that are a prefix of the already typed
-          word. For the meaning of "already typed", see
-          |vim-lsp-typed_pattern|. The case (in)sensitivity of the matching is
-          determined by |g:lsp_ignorecase|.
+          word.
+
+	- `contains`
+	  Only allow completion items that contain the already typed word.
 
 
 

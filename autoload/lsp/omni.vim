@@ -74,10 +74,12 @@ function! lsp#omni#complete(findstart, base) abort
             let s:start_pos = match(l:current_line, l:typed_pattern)
 
             let l:filter = has_key(l:server_info, 'config') && has_key(l:server_info['config'], 'filter') ? l:server_info['config']['filter'] : { 'name': 'none' }
+            let l:last_typed_word = strpart(l:current_line, s:start_pos)
 
             if l:filter['name'] ==? 'prefix'
-                let l:last_typed_word = strpart(l:current_line, s:start_pos)
                 let s:completion['matches'] = filter(s:completion['matches'], {_, item -> s:prefix_filter(item, l:last_typed_word)})
+            elseif l:filter['name'] ==? 'contains'
+                let s:completion['matches'] = filter(s:completion['matches'], {_, item -> s:contains_filter(item, l:last_typed_word)})
             endif
 
             let s:completion['status'] = ''
@@ -89,15 +91,29 @@ function! lsp#omni#complete(findstart, base) abort
     endif
 endfunction
 
-function! s:prefix_filter(item, last_typed_word) abort
+function! s:get_filter_label(item) abort
     let l:user_data = json_decode(a:item['user_data'])
-    let l:label = trim(l:user_data[s:user_data_filtertext_key])
+    return trim(l:user_data[s:user_data_filtertext_key])
+endfunction
+
+function! s:prefix_filter(item, last_typed_word) abort
+    let l:label = s:get_filter_label(a:item)
     let l:match_pattern = '^' . a:last_typed_word
 
     if g:lsp_ignorecase
         return l:label =~? l:match_pattern
     else
         return l:label =~# l:match_pattern
+    endif
+endfunction
+
+function! s:contains_filter(item, last_typed_word) abort
+    let l:label = s:get_filter_label(a:item)
+
+    if g:lsp_ignorecase
+        return stridx(tolower(l:label), tolower(a:last_typed_word)) > 0
+    else
+        return stridx(l:label, a:last_typed_word) > 0
     endif
 endfunction
 
