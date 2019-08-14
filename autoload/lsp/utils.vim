@@ -193,3 +193,11 @@ function! lsp#utils#byteindex(expr, lnum, char) abort
     let l:linestr = getbufline(a:expr, a:lnum)[0]
     return strlen(strcharpart(l:linestr, 0, a:char)) + 1
 endfunction
+
+" Convert a byte-index (1-based) to a character-index (0-based)
+" This function requires a buffer specifier (expr, see :help bufname()),
+" a line number (lnum, 1-based), and a byte-index (char, 1-based).
+function! lsp#utils#charindex(expr, lnum, col) abort
+  let l:linestr = getbufline(a:expr, a:lnum)[0]
+  return strchars(strpart(l:linestr, 0, a:col - 1))
+endfunction
