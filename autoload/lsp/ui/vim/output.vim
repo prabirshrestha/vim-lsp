@@ -107,6 +107,10 @@ function! lsp#ui#vim#output#floatingpreview(data) abort
     let l:width = max([s:bufwidth(), 10])
     let l:height = max([&lines - winline() + 1, winline() - 1, 10])
 
+    if g:lsp_preview_max_height > 0
+        let l:height = min([g:lsp_preview_max_height, l:height])
+    endif
+
     let l:opts = s:get_float_positioning(l:height, l:width)
 
     let s:winid = nvim_open_win(buf, v:true, l:opts)
@@ -128,6 +132,10 @@ function! lsp#ui#vim#output#floatingpreview(data) abort
 
     if g:lsp_preview_max_width > 0
         let l:options['maxwidth'] = g:lsp_preview_max_width
+    endif
+
+    if g:lsp_preview_max_height > 0
+        let l:options['maxheight'] = g:lsp_preview_max_height
     endif
 
     let s:winid = popup_atcursor('...', l:options)
