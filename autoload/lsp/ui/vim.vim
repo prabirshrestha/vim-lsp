@@ -418,6 +418,33 @@ function! s:handle_symbol(server, last_req_id, type, data) abort
     endif
 endfunction
 
+function! s:update_tagstack() abort
+    let from = [bufnr('%'), line('.'), col('.'), 0]
+    let tagname = expand('<cword>')
+    let item = {'bufnr': from[0], 'from': from, 'tagname': tagname}
+    let winid = win_getid()
+    let stack = gettagstack(winid)
+    if stack['length'] == stack['curidx']
+        " Replace the last items with item.
+        let action = 'r'
+        let stack['items'][stack['curidx']-1] = item
+    elseif stack['length'] > stack['curidx']
+        " Replace items after used items with item.
+        let action = 'r'
+        if stack['curidx'] > 1
+            let stack['items'] = add(stack['items'][:stack['curidx']-2], item)
+        else
+            let stack['items'] = [item]
+        endif
+    else
+        " Append item.
+        let action = 'a'
+        let stack['items'] = [item]
+    endif
+    let stack['curidx'] += 1
+    call settagstack(winid, stack, action)
+endfunction
+
 function! s:handle_location(ctx, server, type, data) abort "ctx = {counter, list, jump_if_one, last_req_id, in_preview}
     if a:ctx['last_req_id'] != s:last_req_id
         return
@@ -436,30 +463,7 @@ function! s:handle_location(ctx, server, type, data) abort "ctx = {counter, list
             call lsp#utils#error('No ' . a:type .' found')
         else
             if exists('*gettagstack') && exists('*settagstack')
-                let from = [bufnr('%'), line('.'), col('.'), 0]
-                let tagname = expand('<cword>')
-                let item = {'bufnr': from[0], 'from': from, 'tagname': tagname}
-                let winid = win_getid()
-                let stack = gettagstack(winid)
-                if stack['length'] == stack['curidx']
-                    " Replace the last items with item.
-                    let action = 'r'
-                    let stack['items'][stack['curidx']-1] = item
-                elseif stack['length'] > stack['curidx']
-                    " Replace items after used items with item.
-                    let action = 'r'
-                    if stack['curidx'] > 1
-                        let stack['items'] = add(stack['items'][:stack['curidx']-2], item)
-                    else
-                        let stack['items'] = [item]
-                    endif
-                else
-                    " Append item.
-                    let action = 'a'
-                    let stack['items'] = [item]
-                endif
-                let stack['curidx'] += 1
-                call settagstack(winid, stack, action)
+                call s:update_tagstack()
             endif
 
             let l:loc = a:ctx['list'][0]
