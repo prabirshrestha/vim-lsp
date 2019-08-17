@@ -419,10 +419,10 @@ function! s:handle_symbol(server, last_req_id, type, data) abort
 endfunction
 
 function! s:update_tagstack() abort
-    let from = [bufnr('%'), line('.'), col('.'), 0]
-    let tagname = expand('<cword>')
-    let item = {'bufnr': from[0], 'from': from, 'tagname': tagname}
+    let bufnr = bufnr('%')
+    let item = {'bufnr': bufnr, 'from': [bufnr, line('.'), col('.'), 0], 'tagname': expand('<cword>')}
     let winid = win_getid()
+
     let stack = gettagstack(winid)
     if stack['length'] == stack['curidx']
         " Replace the last items with item.
@@ -442,6 +442,7 @@ function! s:update_tagstack() abort
         let stack['items'] = [item]
     endif
     let stack['curidx'] += 1
+
     call settagstack(winid, stack, action)
 endfunction
 
