@@ -303,7 +303,7 @@ g:lsp_signs_enabled                                   *g:lsp_signs_enabled*
 
 g:lsp_signs_priority                                  *g:lsp_signs_priority*
     Type: |Number|
-    Default: `15`
+    Default: `10`
 
     The priority value to be used for all placed signs. Requires
     |lsp_signs_enabled| set to 1. See |sign-priority| for more information.
