@@ -189,7 +189,7 @@ endfunction
 " Convert a character-index (0-based) to byte-index (1-based)
 " This function requires a buffer specifier (expr, see :help bufname()),
 " a line number (lnum, 1-based), and a character-index (char, 0-based).
-function! lsp#utils#byteindex(expr, lnum, char) abort
+function! lsp#utils#to_col(expr, lnum, char) abort
     let l:lines = getbufline(a:expr, a:lnum)
     if l:lines == []
         if type(a:expr) != v:t_string || !filereadable(a:expr)
