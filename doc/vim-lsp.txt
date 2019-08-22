@@ -20,6 +20,7 @@ CONTENTS                                                  *vim-lsp-contents*
       g:lsp_text_edit_enabled               |g:lsp_text_edit_enabled|
       g:lsp_diagnostics_echo_cursor         |g:lsp_diagnostics_echo_cursor|
       g:lsp_signs_enabled                   |g:lsp_signs_enabled|
+      g:lsp_signs_priority                  |g:lsp_signs_priority|
       g:lsp_virtual_text_enabled            |g:lsp_virtual_text_enabled|
       g:lsp_highlights_enabled              |g:lsp_highlights_enabled|
       g:lsp_textprop_enabled                |g:lsp_textprop_enabled|
@@ -300,6 +301,19 @@ g:lsp_signs_enabled                                   *g:lsp_signs_enabled*
     Example:
 	let g:lsp_signs_enabled = 1
 	let g:lsp_signs_enabled = 0
+
+g:lsp_signs_priority                                  *g:lsp_signs_priority*
+    Type: |Number|
+    Default: `10`
+
+    The priority value to be used for all placed signs. Requires
+    |lsp_signs_enabled| set to 1. See |sign-priority| for more information.
+
+    Example:
+>
+	let g:lsp_signs_priority = 5
+	let g:lsp_signs_priority = 15
+<
 
 g:lsp_virtual_text_enabled                            *g:lsp_virtual_text_enabled*
     Type: |Number|
