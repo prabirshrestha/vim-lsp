@@ -19,7 +19,7 @@ function! lsp#ui#vim#utils#locations_to_loc_list(result) abort
 
                 if has_key(l:cache, l:path)
                     let l:text = l:cache[l:path][l:index]
-                elseif l:bufnr >= 0
+                elseif l:bufnr >= 0 && !empty(getbufline(l:bufnr, 1, 2))
                     let l:contents = getbufline(l:bufnr, 1, '$')
                     let l:text = l:contents[l:index]
                 else
