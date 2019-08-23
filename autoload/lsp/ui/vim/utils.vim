@@ -15,17 +15,18 @@ function! lsp#ui#vim#utils#locations_to_loc_list(result) abort
                 let l:line = l:location['range']['start']['line'] + 1
                 let l:col = l:location['range']['start']['character'] + 1
                 let l:index = l:line - 1
-                let l:bufnr = bufnr(l:path)
 
                 if has_key(l:cache, l:path)
                     let l:text = l:cache[l:path][l:index]
-                elseif l:bufnr >= 0 && !empty(getbufline(l:bufnr, 1, 2))
-                    let l:contents = getbufline(l:bufnr, 1, '$')
-                    let l:text = l:contents[l:index]
                 else
-                    let l:contents = readfile(l:path)
-                    let l:cache[l:path] = l:contents
-                    let l:text = l:contents[l:index]
+                    let l:contents = getbufline(l:path, 1, '$')
+                    if !empty(l:contents)
+                        let l:text = l:contents[l:index]
+                    else
+                        let l:contents = readfile(l:path)
+                        let l:cache[l:path] = l:contents
+                        let l:text = l:contents[l:index]
+                    endif
                 endif
                 call add(l:list, {
                     \ 'filename': l:path,
