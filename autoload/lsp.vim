@@ -730,7 +730,7 @@ endfunction
 
 function! lsp#get_position(...) abort
     let l:line = line('.')
-    let l:char = lsp#utils#charindex('%', l:line, col('.'))
+    let l:char = lsp#utils#to_char('%', l:line, col('.'))
     return { 'line': l:line - 1, 'character': l:char }
 endfunction
 

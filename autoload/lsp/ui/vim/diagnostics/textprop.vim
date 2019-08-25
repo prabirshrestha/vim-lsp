@@ -119,10 +119,10 @@ function! s:place_highlights(server_name, path, diagnostics) abort
         for l:item in a:diagnostics
             let l:start_line = l:item['range']['start']['line'] + 1
             let l:start_char = l:item['range']['start']['character']
-            let l:start_col = lsp#utils#byteindex(l:bufnr, l:start_line, l:start_char)
+            let l:start_col = lsp#utils#to_col(l:bufnr, l:start_line, l:start_char)
             let l:end_line = l:item['range']['end']['line'] + 1
             let l:end_char = l:item['range']['end']['character']
-            let l:end_col = lsp#utils#byteindex(l:bufnr, l:end_line, l:end_char)
+            let l:end_col = lsp#utils#to_col(l:bufnr, l:end_line, l:end_char)
 
             let l:prop_type = s:get_prop_type(a:server_name, l:item['severity'])
             call prop_add(l:start_line, l:start_col, {

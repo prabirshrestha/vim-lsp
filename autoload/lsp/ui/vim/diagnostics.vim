@@ -67,7 +67,7 @@ function! lsp#ui#vim#diagnostics#get_diagnostics_under_cursor() abort
         let l:range = l:diagnostic['range']
         let l:start_line = l:range['start']['line'] + 1
         let l:start_char = l:range['start']['character']
-        let l:start_col = lsp#utils#byteindex('%', l:start_line, l:start_char)
+        let l:start_col = lsp#utils#to_col('%', l:start_line, l:start_char)
 
         if l:line == l:start_line
             let l:distance = abs(l:start_col - l:col)
@@ -95,7 +95,7 @@ function! lsp#ui#vim#diagnostics#next_error() abort
     for l:diagnostic in l:diagnostics
         let l:line = l:diagnostic['range']['start']['line'] + 1
         let l:char = l:diagnostic['range']['start']['character']
-        let l:col = lsp#utils#byteindex('%', l:line, l:char)
+        let l:col = lsp#utils#to_col('%', l:line, l:char)
         if l:line > l:view['lnum']
             \ || (l:line == l:view['lnum'] && l:col > l:view['col'] + 1)
             let l:next_line = l:line
@@ -108,7 +108,7 @@ function! lsp#ui#vim#diagnostics#next_error() abort
         " Wrap to start
         let l:next_line = l:diagnostics[0]['range']['start']['line'] + 1
         let l:next_char = l:diagnostics[0]['range']['start']['character']
-        let l:next_col = lsp#utils#byteindex('%', l:next_line, l:next_char) - 1
+        let l:next_col = lsp#utils#to_col('%', l:next_line, l:next_char) - 1
     endif
 
     let l:view['lnum'] = l:next_line
@@ -142,7 +142,7 @@ function! lsp#ui#vim#diagnostics#previous_error() abort
     while l:index >= 0
         let l:line = l:diagnostics[l:index]['range']['start']['line'] + 1
         let l:char = l:diagnostics[l:index]['range']['start']['character']
-        let l:col = lsp#utils#byteindex('%', l:line, l:char)
+        let l:col = lsp#utils#to_col('%', l:line, l:char)
         if l:line < l:view['lnum']
             \ || (l:line == l:view['lnum'] && l:col < l:view['col'])
             let l:next_line = l:line
@@ -156,7 +156,7 @@ function! lsp#ui#vim#diagnostics#previous_error() abort
         " Wrap to end
         let l:next_line = l:diagnostics[-1]['range']['start']['line'] + 1
         let l:next_char = l:diagnostics[-1]['range']['start']['character']
-        let l:next_col = lsp#utils#byteindex('%', l:next_line, l:next_char) - 1
+        let l:next_col = lsp#utils#to_col('%', l:next_line, l:next_char) - 1
     endif
 
     let l:view['lnum'] = l:next_line

@@ -18,10 +18,10 @@ function! s:range_to_position(bufnr, range) abort
 
     let l:start_line = l:start['line'] + 1
     let l:start_char = l:start['character']
-    let l:start_col = lsp#utils#byteindex(a:bufnr, l:start_line, l:start_char)
+    let l:start_col = lsp#utils#to_col(a:bufnr, l:start_line, l:start_char)
     let l:end_line = l:end['line'] + 1
     let l:end_char = l:end['character']
-    let l:end_col = lsp#utils#byteindex(a:bufnr, l:end_line, l:end_char)
+    let l:end_col = lsp#utils#to_col(a:bufnr, l:end_line, l:end_char)
     if l:end_line == l:start_line
         let l:position = [[
         \ l:start_line,

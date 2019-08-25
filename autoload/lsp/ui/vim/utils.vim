@@ -14,7 +14,7 @@ function! lsp#ui#vim#utils#locations_to_loc_list(result) abort
                 let l:path = lsp#utils#uri_to_path(l:location['uri'])
                 let l:line = l:location['range']['start']['line'] + 1
                 let l:char = l:location['range']['start']['character']
-                let l:col = lsp#utils#byteindex(l:path, l:line, l:char)
+                let l:col = lsp#utils#to_col(l:path, l:line, l:char)
                 let l:index = l:line - 1
                 if has_key(l:cache, l:path)
                     let l:text = l:cache[l:path][l:index]
@@ -81,7 +81,7 @@ function! lsp#ui#vim#utils#symbols_to_loc_list(result) abort
                 let l:bufnr = bufnr(l:path)
                 let l:line = l:location['range']['start']['line'] + 1
                 let l:char = l:location['range']['start']['character']
-                let l:col = lsp#utils#byteindex(l:path, l:line, l:char)
+                let l:col = lsp#utils#to_col(l:path, l:line, l:char)
                 call add(l:list, {
                     \ 'filename': l:path,
                     \ 'lnum': l:line,
@@ -122,7 +122,7 @@ function! lsp#ui#vim#utils#diagnostics_to_loc_list(result) abort
             let l:text .= l:item['message']
             let l:line = l:item['range']['start']['line'] + 1
             let l:char = l:item['range']['start']['character']
-            let l:col = lsp#utils#byteindex(l:path, l:line, l:char)
+            let l:col = lsp#utils#to_col(l:path, l:line, l:char)
             call add(l:list, {
                 \ 'filename': l:path,
                 \ 'lnum': l:line,
