@@ -16,8 +16,13 @@ function! lsp#ui#vim#utils#locations_to_loc_list(result) abort
                 let l:char = l:location['range']['start']['character']
                 let l:col = lsp#utils#to_col(l:path, l:line, l:char)
                 let l:index = l:line - 1
+                let l:bufnr = bufnr(l:path)
+
                 if has_key(l:cache, l:path)
                     let l:text = l:cache[l:path][l:index]
+                elseif l:bufnr >= 0
+                    let l:contents = getbufline(l:bufnr, 1, '$')
+                    let l:text = l:contents[l:index]
                 else
                     let l:contents = readfile(l:path)
                     let l:cache[l:path] = l:contents

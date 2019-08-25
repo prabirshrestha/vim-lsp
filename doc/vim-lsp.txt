@@ -20,6 +20,7 @@ CONTENTS                                                  *vim-lsp-contents*
       g:lsp_text_edit_enabled               |g:lsp_text_edit_enabled|
       g:lsp_diagnostics_echo_cursor         |g:lsp_diagnostics_echo_cursor|
       g:lsp_signs_enabled                   |g:lsp_signs_enabled|
+      g:lsp_signs_priority                  |g:lsp_signs_priority|
       g:lsp_virtual_text_enabled            |g:lsp_virtual_text_enabled|
       g:lsp_highlights_enabled              |g:lsp_highlights_enabled|
       g:lsp_textprop_enabled                |g:lsp_textprop_enabled|
@@ -29,6 +30,7 @@ CONTENTS                                                  *vim-lsp-contents*
       g:lsp_get_supported_capabilities      |g:lsp_get_supported_capabilities|
       g:lsp_peek_alignment                  |g:lsp_peek_alignment|
       g:lsp_preview_max_width               |g:lsp_preview_max_width|
+      g:lsp_preview_max_height		    |g:lsp_preview_max_height|
     Functions                             |vim-lsp-functions|
       enable                                |vim-lsp-enable|
       disable                               |vim-lsp-disable|
@@ -300,6 +302,19 @@ g:lsp_signs_enabled                                   *g:lsp_signs_enabled*
 	let g:lsp_signs_enabled = 1
 	let g:lsp_signs_enabled = 0
 
+g:lsp_signs_priority                                  *g:lsp_signs_priority*
+    Type: |Number|
+    Default: `10`
+
+    The priority value to be used for all placed signs. Requires
+    |lsp_signs_enabled| set to 1. See |sign-priority| for more information.
+
+    Example:
+>
+	let g:lsp_signs_priority = 5
+	let g:lsp_signs_priority = 15
+<
+
 g:lsp_virtual_text_enabled                            *g:lsp_virtual_text_enabled*
     Type: |Number|
     Default: `1` for neovim 0.3+
@@ -431,6 +446,13 @@ g:lsp_preview_max_width                           *g:lsp_preview_max_width*
     characters. Lines longer than `g:lsp_preview_max_width` will be wrapped to
     fit in the preview window. Use a value of `-1` to disable setting a
     maximum width.
+
+g:lsp_preview_max_height                         *g:lsp_preview_max_height*
+    Type: |Number|
+    Default: `-1`
+
+    If positive, determines the maximum height of the preview window in
+    characters. Use a value of `-1` to disable setting a maximum height.
 
 ===============================================================================
 FUNCTIONS	                                        *vim-lsp-functions*
