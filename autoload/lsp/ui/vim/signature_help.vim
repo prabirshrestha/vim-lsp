@@ -52,9 +52,9 @@ function! lsp#ui#vim#signature_help#setup() abort
     for l:server_name in lsp#get_whitelisted_servers(l:buf)
         let l:keys = lsp#capabilities#get_signature_help_trigger_characters(l:server_name)
         for l:key in l:keys
-            if maparg(l:key, 'i') == ''
+            if maparg(l:key, 'i') ==# ''
                 let l:action = l:key . '<c-o>:LspSignatureHelp<cr>'
-                exe 'inoremap' l:key  l:action
+                exe 'inoremap' '<buffer>' l:key  l:action
             endif
         endfor
     endfor
