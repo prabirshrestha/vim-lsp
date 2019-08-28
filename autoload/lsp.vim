@@ -659,6 +659,7 @@ function! s:handle_initialize(server_name, data) abort
     for l:Init_callback in l:init_callbacks
         call l:Init_callback(a:data)
     endfor
+    call lsp#ui#vim#signature_help#setup()
 
     doautocmd User lsp_server_init
 endfunction
