@@ -31,6 +31,7 @@ CONTENTS                                                  *vim-lsp-contents*
       g:lsp_peek_alignment                  |g:lsp_peek_alignment|
       g:lsp_preview_max_width               |g:lsp_preview_max_width|
       g:lsp_preview_max_height		    |g:lsp_preview_max_height|
+      g:lsp_signature_help_enabled          |g:lsp_signature_help_enabled|
     Functions                             |vim-lsp-functions|
       enable                                |vim-lsp-enable|
       disable                               |vim-lsp-disable|
@@ -453,6 +454,17 @@ g:lsp_preview_max_height                         *g:lsp_preview_max_height*
 
     If positive, determines the maximum height of the preview window in
     characters. Use a value of `-1` to disable setting a maximum height.
+
+g:lsp_signature_help_enabled                *g:lsp_signature_help_enabled*
+    Type: |Number|
+    Default: `1`
+
+    Enable support for signature help. Set to `0` to disable.
+
+    Example:
+>
+	let g:lsp_signature_help_enabled = 1
+	let g:lsp_signature_help_enabled = 0
 
 ===============================================================================
 FUNCTIONS	                                        *vim-lsp-functions*
