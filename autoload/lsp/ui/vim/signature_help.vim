@@ -47,7 +47,7 @@ function! s:handle_signature_help(server, data) abort
     endif
 endfunction
 
-function! s:insert_char_pre()
+function! s:insert_char_pre() abort
     let l:buf = bufnr('%')
     for l:server_name in lsp#get_whitelisted_servers(l:buf)
         let l:keys = lsp#capabilities#get_signature_help_trigger_characters(l:server_name)
