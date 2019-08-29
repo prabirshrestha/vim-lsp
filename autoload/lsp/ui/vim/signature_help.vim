@@ -39,7 +39,11 @@ function! s:handle_signature_help(server, data) abort
 
     if !empty(a:data['response']['result']) && !empty(a:data['response']['result']['signatures'])
         let l:signature = a:data['response']['result']['signatures'][0]
-        call lsp#ui#vim#output#preview([signature['label'], signature['documentation']], {'statusline': ' LSP SignatureHelp'})
+        let l:contents = [l:signature['label']]
+        if has_key(l:signature, 'documentation')
+            call add(l:contents, l:signature['documentation'])
+        endif
+        call lsp#ui#vim#output#preview(l:contents, {'statusline': ' LSP SignatureHelp'})
         return
     else
         " signature help is used while inserting. So this must be graceful.
