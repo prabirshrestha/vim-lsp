@@ -59,6 +59,14 @@ let s:symbol_kinds = {
     \ '16': 'number',
     \ '17': 'boolean',
     \ '18': 'array',
+    \ '19': 'object',
+    \ '20': 'key',
+    \ '21': 'null',
+    \ '22': 'enum member',
+    \ '23': 'struct',
+    \ '24': 'event',
+    \ '25': 'operator',
+    \ '26': 'type parameter',
     \ }
 
 let s:diagnostic_severity = {
