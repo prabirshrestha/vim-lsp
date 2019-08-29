@@ -47,15 +47,21 @@ function! s:handle_signature_help(server, data) abort
     endif
 endfunction
 
-function! lsp#ui#vim#signature_help#setup() abort
+function! s:insert_char_pre()
     let l:buf = bufnr('%')
     for l:server_name in lsp#get_whitelisted_servers(l:buf)
         let l:keys = lsp#capabilities#get_signature_help_trigger_characters(l:server_name)
         for l:key in l:keys
-            if maparg(l:key, 'i') ==# ''
-                let l:action = l:key . '<c-o>:LspSignatureHelp<cr>'
-                exe 'inoremap' '<buffer>' l:key  l:action
+            if l:key ==# v:char
+                call timer_start(0, {_-> lsp#ui#vim#signature_help#get_signature_help_under_cursor() })
             endif
         endfor
     endfor
+endfunction
+
+function! lsp#ui#vim#signature_help#setup() abort
+    augroup _lsp_signature_help_
+        autocmd!
+        autocmd InsertCharPre <buffer> call s:insert_char_pre()
+    augroup END
 endfunction
