@@ -4,7 +4,7 @@ function! s:not_supported(what) abort
     return lsp#utils#error(a:what.' not supported for '.&filetype)
 endfunction
 
-function! lsp#ui#vim#implementation() abort
+function! lsp#ui#vim#implementation(in_preview) abort
     let l:servers = filter(lsp#get_whitelisted_servers(), 'lsp#capabilities#has_implementation_provider(v:val)')
     let s:last_req_id = s:last_req_id + 1
     call setqflist([])
@@ -13,7 +13,7 @@ function! lsp#ui#vim#implementation() abort
         call s:not_supported('Retrieving implementation')
         return
     endif
-    let l:ctx = { 'counter': len(l:servers), 'list':[], 'last_req_id': s:last_req_id, 'jump_if_one': 1 }
+    let l:ctx = { 'counter': len(l:servers), 'list':[], 'last_req_id': s:last_req_id, 'jump_if_one': 1, 'in_preview': a:in_preview }
     for l:server in l:servers
         call lsp#send_request(l:server, {
             \ 'method': 'textDocument/implementation',
@@ -28,7 +28,7 @@ function! lsp#ui#vim#implementation() abort
     echo 'Retrieving implementation ...'
 endfunction
 
-function! lsp#ui#vim#type_definition() abort
+function! lsp#ui#vim#type_definition(in_preview) abort
     let l:servers = filter(lsp#get_whitelisted_servers(), 'lsp#capabilities#has_type_definition_provider(v:val)')
     let s:last_req_id = s:last_req_id + 1
     call setqflist([])
@@ -37,7 +37,7 @@ function! lsp#ui#vim#type_definition() abort
         call s:not_supported('Retrieving type definition')
         return
     endif
-    let l:ctx = { 'counter': len(l:servers), 'list':[], 'last_req_id': s:last_req_id, 'jump_if_one': 1 }
+    let l:ctx = { 'counter': len(l:servers), 'list':[], 'last_req_id': s:last_req_id, 'jump_if_one': 1, 'in_preview': a:in_preview }
     for l:server in l:servers
         call lsp#send_request(l:server, {
             \ 'method': 'textDocument/typeDefinition',
@@ -52,7 +52,7 @@ function! lsp#ui#vim#type_definition() abort
     echo 'Retrieving type definition ...'
 endfunction
 
-function! lsp#ui#vim#declaration() abort
+function! lsp#ui#vim#declaration(in_preview) abort
     let l:servers = filter(lsp#get_whitelisted_servers(), 'lsp#capabilities#has_declaration_provider(v:val)')
     let s:last_req_id = s:last_req_id + 1
     call setqflist([])
@@ -62,7 +62,7 @@ function! lsp#ui#vim#declaration() abort
         return
     endif
 
-    let l:ctx = { 'counter': len(l:servers), 'list':[], 'last_req_id': s:last_req_id, 'jump_if_one': 1 }
+    let l:ctx = { 'counter': len(l:servers), 'list':[], 'last_req_id': s:last_req_id, 'jump_if_one': 1, 'in_preview': a:in_preview }
     for l:server in l:servers
         call lsp#send_request(l:server, {
             \ 'method': 'textDocument/declaration',
@@ -77,7 +77,7 @@ function! lsp#ui#vim#declaration() abort
     echo 'Retrieving declaration ...'
 endfunction
 
-function! lsp#ui#vim#definition() abort
+function! lsp#ui#vim#definition(in_preview) abort
     let l:servers = filter(lsp#get_whitelisted_servers(), 'lsp#capabilities#has_definition_provider(v:val)')
     let s:last_req_id = s:last_req_id + 1
     call setqflist([])
@@ -87,7 +87,7 @@ function! lsp#ui#vim#definition() abort
         return
     endif
 
-    let l:ctx = { 'counter': len(l:servers), 'list':[], 'last_req_id': s:last_req_id, 'jump_if_one': 1 }
+    let l:ctx = { 'counter': len(l:servers), 'list':[], 'last_req_id': s:last_req_id, 'jump_if_one': 1, 'in_preview': a:in_preview }
     for l:server in l:servers
         call lsp#send_request(l:server, {
             \ 'method': 'textDocument/definition',
@@ -108,7 +108,7 @@ function! lsp#ui#vim#references() abort
 
     call setqflist([])
 
-    let l:ctx = { 'counter': len(l:servers), 'list':[], 'last_req_id': s:last_req_id, 'jump_if_one': 0 }
+    let l:ctx = { 'counter': len(l:servers), 'list':[], 'last_req_id': s:last_req_id, 'jump_if_one': 0, 'in_preview': 0 }
     if len(l:servers) == 0
         call s:not_supported('Retrieving references')
         return
@@ -418,7 +418,35 @@ function! s:handle_symbol(server, last_req_id, type, data) abort
     endif
 endfunction
 
-function! s:handle_location(ctx, server, type, data) abort "ctx = {counter, list, jump_if_one, last_req_id}
+function! s:update_tagstack() abort
+    let l:bufnr = bufnr('%')
+    let l:item = {'bufnr': l:bufnr, 'from': [l:bufnr, line('.'), col('.'), 0], 'tagname': expand('<cword>')}
+    let l:winid = win_getid()
+
+    let l:stack = gettagstack(l:winid)
+    if l:stack['length'] == l:stack['curidx']
+        " Replace the last items with item.
+        let l:action = 'r'
+        let l:stack['items'][l:stack['curidx']-1] = l:item
+    elseif l:stack['length'] > l:stack['curidx']
+        " Replace items after used items with item.
+        let l:action = 'r'
+        if l:stack['curidx'] > 1
+            let l:stack['items'] = add(l:stack['items'][:l:stack['curidx']-2], l:item)
+        else
+            let l:stack['items'] = [l:item]
+        endif
+    else
+        " Append item.
+        let l:action = 'a'
+        let l:stack['items'] = [l:item]
+    endif
+    let l:stack['curidx'] += 1
+
+    call settagstack(l:winid, l:stack, l:action)
+endfunction
+
+function! s:handle_location(ctx, server, type, data) abort "ctx = {counter, list, jump_if_one, last_req_id, in_preview}
     if a:ctx['last_req_id'] != s:last_req_id
         return
     endif
@@ -435,9 +463,14 @@ function! s:handle_location(ctx, server, type, data) abort "ctx = {counter, list
         if empty(a:ctx['list'])
             call lsp#utils#error('No ' . a:type .' found')
         else
-            if len(a:ctx['list']) == 1 && a:ctx['jump_if_one']
+            if exists('*gettagstack') && exists('*settagstack')
+                call s:update_tagstack()
+            endif
+
+            let l:loc = a:ctx['list'][0]
+
+            if len(a:ctx['list']) == 1 && a:ctx['jump_if_one'] && !a:ctx['in_preview']
                 normal! m'
-                let l:loc = a:ctx['list'][0]
                 let l:buffer = bufnr(l:loc['filename'])
                 if &modified && !&hidden
                     let l:cmd = l:buffer !=# -1 ? 'sb ' . l:buffer : 'split ' . fnameescape(l:loc['filename'])
@@ -447,10 +480,17 @@ function! s:handle_location(ctx, server, type, data) abort "ctx = {counter, list
                 execute l:cmd . ' | call cursor('.l:loc['lnum'].','.l:loc['col'].')'
                 echo 'Retrieved ' . a:type
                 redraw
-            else
+            elseif !a:ctx['in_preview']
                 call setqflist(a:ctx['list'])
                 echo 'Retrieved ' . a:type
                 botright copen
+            else
+                let l:lines = readfile(fnameescape(l:loc['filename']))
+                call lsp#ui#vim#output#preview(l:lines, {
+                            \   'statusline': ' LSP Peek ' . a:type,
+                            \   'cursor': { 'line': l:loc['lnum'], 'col': l:loc['col'], 'align': g:lsp_peek_alignment },
+                            \   'filetype': &filetype
+                            \ })
             endif
         endif
     endif

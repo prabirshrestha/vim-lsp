@@ -29,6 +29,9 @@ CONTENTS                                                  *vim-lsp-contents*
       g:lsp_highlight_references_enabled    |g:lsp_highlight_references_enabled|
       g:lsp_get_vim_completion_item         |g:lsp_get_vim_completion_item|
       g:lsp_get_supported_capabilities      |g:lsp_get_supported_capabilities|
+      g:lsp_peek_alignment                  |g:lsp_peek_alignment|
+      g:lsp_preview_max_width               |g:lsp_preview_max_width|
+      g:lsp_preview_max_height		    |g:lsp_preview_max_height|
     Functions                             |vim-lsp-functions|
       enable                                |vim-lsp-enable|
       disable                               |vim-lsp-disable|
@@ -50,6 +53,10 @@ CONTENTS                                                  *vim-lsp-contents*
       LspHover                              |LspHover|
       LspNextError                          |LspNextError|
       LspNextReference                      |LspNextReference|
+      LspPeekDeclaration                    |LspPeekDeclaration|
+      LspPeekDefinition                     |LspPeekDefinition|
+      LspPeekImplementation                 |LspPeekImplementation|
+      LspPeekTypeDefinition                 |LspPeekTypeDefinition|
       LspPreviousError                      |LspPreviousError|
       LspPreviousReference                  |LspPreviousReference|
       LspImplementation                     |LspImplementation|
@@ -437,6 +444,31 @@ g:lsp_get_supported_capabilities         *g:lsp_get_supported_capabilities*
     calling `lsp#omni#default_get_supported_capabilities` from within your
     function.
 
+g:lsp_peek_alignment                                 *g:lsp_peek_alignment*
+    Type: |String|
+    Default: `"center"`
+
+    Determines how to align the location of interest for e.g.
+    |LspPeekDefinition|. Three values are possible: `"top"`, `"center"` and
+    `"bottom"`, which place the location of interest at the first, middle and
+    last lines of the preview/popup/floating window, respectively.
+
+g:lsp_preview_max_width                           *g:lsp_preview_max_width*
+    Type: |Number|
+    Default: `-1`
+
+    If positive, determines the maximum width of the preview window in
+    characters. Lines longer than `g:lsp_preview_max_width` will be wrapped to
+    fit in the preview window. Use a value of `-1` to disable setting a
+    maximum width.
+
+g:lsp_preview_max_height                         *g:lsp_preview_max_height*
+    Type: |Number|
+    Default: `-1`
+
+    If positive, determines the maximum height of the preview window in
+    characters. Use a value of `-1` to disable setting a maximum height.
+
 ===============================================================================
 FUNCTIONS	                                        *vim-lsp-functions*
 
@@ -671,9 +703,13 @@ LspDeclaration						    *LspDeclaration*
 Go to declaration. Useful for languages such as C/C++ where there is a clear
 distinction between declaration and definition.
 
+Also see |LspPeekDeclaration|.
+
 LspDefinition						     *LspDefinition*
 
 Go to definition.
+
+Also see |LspPeekDefinition|.
 
 LspDocumentFormat					 *LspDocumentFormat*
 
@@ -717,6 +753,34 @@ LspNextReference                                          *LspNextReference*
 
 Jump to the next reference of the symbol under cursor.
 
+LspPeekDeclaration                                      *LspPeekDeclaration*
+
+Like |LspDeclaration|, but opens the declaration in the |preview-window|
+instead of the current window.
+
+Also see |g:lsp_peek_alignment| and |g:lsp_preview_float|.
+
+LspPeekDefinition                                        *LspPeekDefinition*
+
+Like |LspDefinition|, but opens the definition in the |preview-window| instead
+of the current window.
+
+Also see |g:lsp_peek_alignment| and |g:lsp_preview_float|.
+
+LspPeekImplementation                               *LspPeekImplementation*
+
+Like |LspImplementation|, but opens the implementation in the |preview-window|
+instead of the current window.
+
+Also see |g:lsp_peek_alignment| and |g:lsp_preview_float|.
+
+LspPeekTypeDefinition                               *LspPeekTypeDefinition*
+
+Like |LspTypeDefinition|, but opens the type definition in the
+|preview-window| instead of the current window.
+
+Also see |g:lsp_peek_alignment| and |g:lsp_preview_float|.
+
 LspPreviousError					 *LspPreviousError*
 
 Jump to Previous err diagnostics
@@ -729,6 +793,8 @@ LspImplementation                                        *LspImplementation*
 
 Find all implementation of interface.
 
+Also see |LspPeekImplementation|.
+
 LspReferences						     *LspReferences*
 
 Find all references.
@@ -740,6 +806,8 @@ Rename the symbol.
 LspTypeDefinition				  	 *LspTypeDefinition*
 
 Go to the type definition.
+
+Also see |LspPeekTypeDefinition|.
 
 LspWorkspaceSymbol					*LspWorkspaceSymbol*
 
@@ -775,7 +843,9 @@ Available plug mappings are following:
 
   (lsp-code-action)
   (lsp-declaration)
+  (lsp-peek-declaration)
   (lsp-definition)
+  (lsp-peek-definition)
   (lsp-document-symbol)
   (lsp-document-diagnostics)
   (lsp-hover)
@@ -791,7 +861,9 @@ Available plug mappings are following:
   (lsp-document-format)
   (lsp-document-format)
   (lsp-implementation)
+  (lsp-peek-implementation)
   (lsp-type-definition)
+  (lsp-peek-type-definition)
   (lsp-status)
 
 See also |vim-lsp-commands|
