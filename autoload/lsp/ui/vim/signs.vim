@@ -124,7 +124,6 @@ function! s:place_signs(server_name, path, diagnostics) abort
     if !empty(a:diagnostics) && bufnr(a:path) >= 0
         for l:item in a:diagnostics
             let l:line = l:item['range']['start']['line'] + 1
-            let l:character = l:item['range']['start']['character'] + 1
 
             if has_key(l:item, 'severity') && !empty(l:item['severity'])
                 let l:sign_name = get(s:severity_sign_names_mapping, l:item['severity'], 'LspError')
