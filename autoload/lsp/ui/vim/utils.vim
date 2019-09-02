@@ -16,17 +16,18 @@ function! lsp#ui#vim#utils#locations_to_loc_list(result) abort
                 let l:char = l:location['range']['start']['character']
                 let l:col = lsp#utils#to_col(l:path, l:line, l:char)
                 let l:index = l:line - 1
-                let l:bufnr = bufnr(l:path)
 
                 if has_key(l:cache, l:path)
                     let l:text = l:cache[l:path][l:index]
-                elseif l:bufnr >= 0
-                    let l:contents = getbufline(l:bufnr, 1, '$')
-                    let l:text = l:contents[l:index]
                 else
-                    let l:contents = readfile(l:path)
-                    let l:cache[l:path] = l:contents
-                    let l:text = l:contents[l:index]
+                    let l:contents = getbufline(l:path, 1, '$')
+                    if !empty(l:contents)
+                        let l:text = l:contents[l:index]
+                    else
+                        let l:contents = readfile(l:path)
+                        let l:cache[l:path] = l:contents
+                        let l:text = l:contents[l:index]
+                    endif
                 endif
                 call add(l:list, {
                     \ 'filename': l:path,
@@ -60,6 +61,14 @@ let s:symbol_kinds = {
     \ '16': 'number',
     \ '17': 'boolean',
     \ '18': 'array',
+    \ '19': 'object',
+    \ '20': 'key',
+    \ '21': 'null',    
+    \ '22': 'enum member',    
+    \ '23': 'struct',    
+    \ '24': 'event',    
+    \ '25': 'operator',    
+    \ '26': 'type parameter',    
     \ }
 
 let s:diagnostic_severity = {
