@@ -123,3 +123,15 @@ function! lsp#capabilities#get_signature_help_trigger_characters(server_name) ab
     endif
     return []
 endfunction
+
+function! lsp#capabilities#get_completion_trigger_characters(server_name) abort
+    let l:capabilities = lsp#get_server_capabilities(a:server_name)
+    if !empty(l:capabilities) && has_key(l:capabilities, 'completionProvider')
+        if type(l:capabilities['completionProvider']) == type({})
+            if has_key(l:capabilities['completionProvider'], 'triggerCharacters')
+                return l:capabilities['completionProvider']['triggerCharacters']
+            endif
+        endif
+    endif
+    return []
+endfunction

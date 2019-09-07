@@ -68,10 +68,16 @@ function! lsp#omni#complete(findstart, base) abort
             " TODO: Allow multiple servers
             let l:server_name = l:info['server_names'][0]
             let l:server_info = lsp#get_server_info(l:server_name)
+            let l:trigger_chars = copy(lsp#capabilities#get_completion_trigger_characters(l:server_name))
 
-            let l:typed_pattern = has_key(l:server_info, 'config') && has_key(l:server_info['config'], 'typed_pattern') ? l:server_info['config']['typed_pattern'] : '\k*$'
+            let l:typed_pattern = has_key(l:server_info, 'config') && has_key(l:server_info['config'], 'typed_pattern') ? l:server_info['config']['typed_pattern'] : ''
             let l:current_line = strpart(getline('.'), 0, col('.') - 1)
-            let s:start_pos = match(l:current_line, l:typed_pattern)
+
+            if !empty(l:typed_pattern)
+                let s:start_pos = match(l:current_line, l:typed_pattern)
+            else
+                let s:start_pos = max(map(l:trigger_chars, {_, c -> strridx(l:current_line, c)})) + 1
+            endif
 
             let l:filter = has_key(l:server_info, 'config') && has_key(l:server_info['config'], 'filter') ? l:server_info['config']['filter'] : { 'name': 'none' }
             let l:last_typed_word = strpart(l:current_line, s:start_pos)
