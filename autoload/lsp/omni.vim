@@ -114,9 +114,9 @@ function! s:contains_filter(item, last_typed_word) abort
     let l:label = s:get_filter_label(a:item)
 
     if g:lsp_ignorecase
-        return stridx(tolower(l:label), tolower(a:last_typed_word)) > 0
+        return stridx(tolower(l:label), tolower(a:last_typed_word)) >= 0
     else
-        return stridx(l:label, a:last_typed_word) > 0
+        return stridx(l:label, a:last_typed_word) >= 0
     endif
 endfunction
 
