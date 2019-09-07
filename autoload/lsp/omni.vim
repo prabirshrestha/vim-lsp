@@ -102,12 +102,11 @@ endfunction
 
 function! s:prefix_filter(item, last_typed_word) abort
     let l:label = s:get_filter_label(a:item)
-    let l:match_pattern = '^' . a:last_typed_word
 
     if g:lsp_ignorecase
-        return l:label =~? l:match_pattern
+        return stridx(tolower(l:label), tolower(a:last_typed_word)) == 0
     else
-        return l:label =~# l:match_pattern
+        return stridx(l:label, a:last_typed_word) == 0
     endif
 endfunction
 
