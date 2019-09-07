@@ -157,6 +157,10 @@ function! s:get_symbol_text_from_kind(kind) abort
     return has_key(s:symbol_kinds, a:kind) ? s:symbol_kinds[a:kind] : 'unknown symbol ' . a:kind
 endfunction
 
+function! lsp#ui#vim#utils#get_symbol_kinds() abort
+    return map(keys(s:symbol_kinds), {idx, key -> str2nr(key)})
+endfunction
+
 function! s:get_diagnostic_severity_text(severity) abort
     return s:diagnostic_severity[a:severity]
 endfunction
