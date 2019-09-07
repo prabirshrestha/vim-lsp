@@ -631,16 +631,23 @@ The vim |dict| containing information about the server.
 
 typed_pattern                                        *vim-lsp-typed_pattern*
     Type: |String| (|pattern|)
-    Default: `'\k*$'`
+    Default: `''` (i.e. the empty |String|)
 
 Vim-lsp uses a |regexp| to determine what you have typed so far. The pattern
 is matched against the current line, from column 0 up until the cursor's
-position. Thus, |/$| means "current cursor position" in this context. By
-default, vim-lsp uses all characters in `'iskeyword'` in front of the cursor
-as typed word.
+position. Thus, |/$| means "current cursor position" in this context.
 
-    Example:
+For example:
 	'config': { 'typed_pattern': '\k*$' }
+
+This uses all characters in `'iskeyword'` in front of the cursor as typed
+word.
+
+If this |String| is empty (which is the default), the behaviour is different.
+Instead of using a regular expression, `vim-lsp` will use the completion
+trigger characters sent by the language server. The typed pattern is taken as
+the string from the last typed trigger character to the cursor's current
+position.
 
 This key is also used to align the completion menu: the completion menu is
 placed so its left border is at the column that matches the start of the
