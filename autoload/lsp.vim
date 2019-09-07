@@ -380,6 +380,18 @@ function! lsp#default_get_supported_capabilities(server_info) abort
     \   'workspace': {
     \       'applyEdit': v:true,
     \       'configuration': v:true
+    \   },
+    \   'textDocument': {
+    \       'completion': {
+    \           'completionItemKind': {
+    \              'valueSet': lsp#omni#get_completion_item_kinds()
+    \           }
+    \       },
+    \       'documentSymbol': {
+    \           'symbolKind': {
+    \              'valueSet': lsp#ui#vim#utils#get_symbol_kinds()
+    \           }
+    \       }
     \   }
     \ }
 endfunction
@@ -659,6 +671,9 @@ function! s:handle_initialize(server_name, data) abort
     for l:Init_callback in l:init_callbacks
         call l:Init_callback(a:data)
     endfor
+    if g:lsp_signature_help_enabled
+        call lsp#ui#vim#signature_help#setup()
+    endif
 
     doautocmd User lsp_server_init
 endfunction
