@@ -202,7 +202,7 @@ function! s:generate_sub_cmd_replace(text_edit) abort
     else
         let l:sub_cmd .= "\"=l:merged_text_edit['merged']['newText']\<CR>p"
     endif
-    if l:new_text =~ '^\n$'
+    if l:new_text =~# '^\n$'
         let l:sub_cmd .= 'dd'
     endif
 
