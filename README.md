@@ -63,6 +63,12 @@ set foldmethod=expr
   \ foldtext=lsp#ui#vim#folding#foldtext()
 ```
 
+If you would like to disable folding globally, you can add this to your configuration:
+
+```vim
+let g:lsp_fold_enabled = 0
+```
+
 Also see `:h vim-lsp-folding`.
 
 ## Supported commands

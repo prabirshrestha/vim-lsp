@@ -42,6 +42,11 @@ function! lsp#ui#vim#folding#send_request(server_name, buf, sync) abort
         return
     endif
 
+    if !g:lsp_fold_enabled
+        call lsp#log('Skip sending fold request: folding was disabled explicitly')
+        return
+    endif
+
     if has('textprop')
         call s:set_textprops(a:buf)
     endif

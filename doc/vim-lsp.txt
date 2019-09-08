@@ -33,6 +33,7 @@ CONTENTS                                                  *vim-lsp-contents*
       g:lsp_preview_max_width               |g:lsp_preview_max_width|
       g:lsp_preview_max_height		    |g:lsp_preview_max_height|
       g:lsp_signature_help_enabled          |g:lsp_signature_help_enabled|
+      g:lsp_fold_enabled                    |g:lsp_fold_enabled|
     Functions                             |vim-lsp-functions|
       enable                                |vim-lsp-enable|
       disable                               |vim-lsp-disable|
@@ -483,6 +484,13 @@ g:lsp_signature_help_enabled                *g:lsp_signature_help_enabled*
 >
 	let g:lsp_signature_help_enabled = 1
 	let g:lsp_signature_help_enabled = 0
+
+g:lsp_fold_enabled                                    *g:lsp_fold_enabled*
+    Type: |Number|
+    Default: `1`
+
+    Determines whether or not folding is enabled globally. Set to `0` to
+    disable sending requests.
 
 ===============================================================================
 FUNCTIONS	                                        *vim-lsp-functions*
@@ -958,6 +966,9 @@ latter is optional) correctly:
     set foldmethod=expr
       \ foldexpr=lsp#ui#vim#folding#foldexpr()
       \ foldtext=lsp#ui#vim#folding#foldtext()
+
+Also, make sure you have not disabled folding globally, see
+|g:lsp_fold_enabled|.
 
 You may want to enable this only for certain filetypes, e.g. for Javascript
 only:
