@@ -43,7 +43,7 @@ function! s:handle_signature_help(server, data) abort
         if has_key(l:signature, 'documentation')
             call add(l:contents, l:signature['documentation'])
         endif
-        call lsp#ui#vim#output#preview(l:contents, {'statusline': ' LSP SignatureHelp'})
+        call lsp#ui#vim#output#preview(a:server, l:contents, {'statusline': ' LSP SignatureHelp'})
         return
     else
         " signature help is used while inserting. So this must be graceful.
