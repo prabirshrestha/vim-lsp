@@ -20,6 +20,8 @@ CONTENTS                                                  *vim-lsp-contents*
       g:lsp_text_edit_enabled               |g:lsp_text_edit_enabled|
       g:lsp_diagnostics_echo_cursor         |g:lsp_diagnostics_echo_cursor|
       g:lsp_signs_enabled                   |g:lsp_signs_enabled|
+      g:lsp_signs_priority                  |g:lsp_signs_priority|
+      g:lsp_signs_priority_map              |g:lsp_signs_priority_map|
       g:lsp_virtual_text_enabled            |g:lsp_virtual_text_enabled|
       g:lsp_highlights_enabled              |g:lsp_highlights_enabled|
       g:lsp_textprop_enabled                |g:lsp_textprop_enabled|
@@ -29,6 +31,8 @@ CONTENTS                                                  *vim-lsp-contents*
       g:lsp_get_supported_capabilities      |g:lsp_get_supported_capabilities|
       g:lsp_peek_alignment                  |g:lsp_peek_alignment|
       g:lsp_preview_max_width               |g:lsp_preview_max_width|
+      g:lsp_preview_max_height		    |g:lsp_preview_max_height|
+      g:lsp_signature_help_enabled          |g:lsp_signature_help_enabled|
     Functions                             |vim-lsp-functions|
       enable                                |vim-lsp-enable|
       disable                               |vim-lsp-disable|
@@ -303,6 +307,33 @@ g:lsp_signs_enabled                                   *g:lsp_signs_enabled*
 	let g:lsp_signs_enabled = 1
 	let g:lsp_signs_enabled = 0
 
+g:lsp_signs_priority                                  *g:lsp_signs_priority*
+    Type: |Number|
+    Default: `10` for vim/neovim with patch 8.1.0772
+
+    Configures the |sign-priority| for placed signs. Signs placed by other
+    plugins have a priority of 10 by default. Requires |lsp_signs_enabled|
+    set to 1.
+
+    Example:
+	let g:lsp_signs_priority = 11
+	let g:lsp_signs_priority = 9
+
+g:lsp_signs_priority_map                              *g:lsp_signs_priority_map*
+    Type: |Map|
+    Default: `{}` for vim/neovim with patch 8.1.0772
+
+    Overrides |g:lsp_signs_priority| per severity level or per server name
+    and severity level. Requires |lsp_signs_enabled| set to 1.
+
+    Example:
+        let g:lsp_signs_priority_map = {
+                \'LspError': 11,
+                \'LspWarning': 7,
+                \'clangd_LspWarning': 11,
+                \'clangd_LspInformation': 11
+                \}
+
 g:lsp_virtual_text_enabled                            *g:lsp_virtual_text_enabled*
     Type: |Number|
     Default: `1` for neovim 0.3+
@@ -434,6 +465,24 @@ g:lsp_preview_max_width                           *g:lsp_preview_max_width*
     characters. Lines longer than `g:lsp_preview_max_width` will be wrapped to
     fit in the preview window. Use a value of `-1` to disable setting a
     maximum width.
+
+g:lsp_preview_max_height                         *g:lsp_preview_max_height*
+    Type: |Number|
+    Default: `-1`
+
+    If positive, determines the maximum height of the preview window in
+    characters. Use a value of `-1` to disable setting a maximum height.
+
+g:lsp_signature_help_enabled                *g:lsp_signature_help_enabled*
+    Type: |Number|
+    Default: `1`
+
+    Enable support for signature help. Set to `0` to disable.
+
+    Example:
+>
+	let g:lsp_signature_help_enabled = 1
+	let g:lsp_signature_help_enabled = 0
 
 ===============================================================================
 FUNCTIONS	                                        *vim-lsp-functions*
