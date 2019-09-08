@@ -33,6 +33,7 @@ CONTENTS                                                  *vim-lsp-contents*
       g:lsp_preview_max_width               |g:lsp_preview_max_width|
       g:lsp_preview_max_height		    |g:lsp_preview_max_height|
       g:lsp_signature_help_enabled          |g:lsp_signature_help_enabled|
+      g:lsp_fold_enabled                    |g:lsp_fold_enabled|
     Functions                             |vim-lsp-functions|
       enable                                |vim-lsp-enable|
       disable                               |vim-lsp-disable|
@@ -47,6 +48,8 @@ CONTENTS                                                  *vim-lsp-contents*
       LspDocumentDiagnostics                |LspDocumentDiagnostics|
       LspDeclaration                        |LspDeclaration|
       LspDefinition                         |LspDefinition|
+      LspDocumentFold                       |LspDocumentFold|
+      LspDocumentFoldSync                   |LspDocumentFoldSync|
       LspDocumentFormat                     |LspDocumentFormat|
       LspDocumentFormatSync                 |LspDocumentFormatSync|
       LspDocumentRangeFormat                |LspDocumentRangeFormat|
@@ -75,6 +78,7 @@ CONTENTS                                                  *vim-lsp-contents*
       omnifunc                              |vim-lsp-omnifunc|
       asyncomplete.vim                      |vim-lsp-asyncomplete|
     Snippets                              |vim-lsp-snippets|
+    Folding                               |vim-lsp-folding|
     License                               |vim-lsp-license|
 
 
@@ -481,6 +485,13 @@ g:lsp_signature_help_enabled                *g:lsp_signature_help_enabled*
 	let g:lsp_signature_help_enabled = 1
 	let g:lsp_signature_help_enabled = 0
 
+g:lsp_fold_enabled                                    *g:lsp_fold_enabled*
+    Type: |Number|
+    Default: `1`
+
+    Determines whether or not folding is enabled globally. Set to `0` to
+    disable sending requests.
+
 ===============================================================================
 FUNCTIONS	                                        *vim-lsp-functions*
 
@@ -723,6 +734,14 @@ Go to definition.
 
 Also see |LspPeekDefinition|.
 
+LspDocumentFold                                          *LspDocumentFold*
+
+Recalculate folds for the current buffer.
+
+LspDocumentFoldSync                                      *LspDocumentFoldSync*
+
+Same as |LspDocumentFold|, but synchronous.
+
 LspDocumentFormat					 *LspDocumentFormat*
 
 Format the entire document.
@@ -936,6 +955,36 @@ https://github.com/thomasfaingnaert/vim-lsp-neosnippet
 
 Refer to the readme and docs of vim-lsp-ultisnips and vim-lsp-neosnippet for
 more information and configuration options.
+
+===============================================================================
+Folding                                                    *vim-lsp-folding*
+
+You can also let the language server handle folding for you. To enable this
+feature, you will have to set |'foldmethod'|, |'foldexpr'| and |'foldtext'| (the
+latter is optional) correctly:
+
+    set foldmethod=expr
+      \ foldexpr=lsp#ui#vim#folding#foldexpr()
+      \ foldtext=lsp#ui#vim#folding#foldtext()
+
+Also, make sure you have not disabled folding globally, see
+|g:lsp_fold_enabled|.
+
+You may want to enable this only for certain filetypes, e.g. for Javascript
+only:
+
+    augroup lsp_folding
+	autocmd!
+	autocmd FileType javascript setlocal
+	    \ foldmethod=expr
+	    \ foldexpr=lsp#ui#vim#folding#foldexpr()
+	    \ foldtext=lsp#ui#vim#folding#foldtext()
+    augroup end
+
+To display open and closed folds at the side of the window, see
+|'foldcolumn'|.
+If you want to remove the dashes at the end of the folds, you can change
+the fold item of |'fillchars'|.
 
 ===============================================================================
 License                                                    *vim-lsp-license*

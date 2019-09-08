@@ -394,6 +394,9 @@ function! lsp#default_get_supported_capabilities(server_info) abort
     \           'symbolKind': {
     \              'valueSet': lsp#ui#vim#utils#get_symbol_kinds()
     \           }
+    \       },
+    \       'foldingRange': {
+    \           'lineFoldingOnly': v:true
     \       }
     \   }
     \ }
@@ -529,6 +532,7 @@ function! s:ensure_changed(buf, server_name, cb) abort
         \   'contentChanges': s:text_changes(a:buf, a:server_name),
         \ }
         \ })
+    call lsp#ui#vim#folding#send_request(a:server_name, a:buf, 0)
 
     let l:msg = s:new_rpc_success('textDocument/didChange sent', { 'server_name': a:server_name, 'path': l:path })
     call lsp#log(l:msg)
@@ -566,6 +570,8 @@ function! s:ensure_open(buf, server_name, cb) abort
         \   'textDocument': s:get_text_document(a:buf, a:server_name, l:buffer_info)
         \ },
         \ })
+
+    call lsp#ui#vim#folding#send_request(a:server_name, a:buf, 0)
 
     let l:msg = s:new_rpc_success('textDocument/open sent', { 'server_name': a:server_name, 'path': l:path, 'filetype': getbufvar(a:buf, '&filetype') })
     call lsp#log(l:msg)
