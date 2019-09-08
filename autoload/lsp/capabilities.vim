@@ -54,6 +54,14 @@ function! lsp#capabilities#has_implementation_provider(server_name) abort
 endfunction
 
 function! lsp#capabilities#has_code_action_provider(server_name) abort
+    let l:capabilities = lsp#get_server_capabilities(a:server_name)
+    if !empty(l:capabilities) && has_key(l:capabilities, 'codeActionProvider')
+        if type(l:capabilities['codeActionProvider']) == type({})
+            if has_key(l:capabilities['codeActionProvider'], 'codeActionKinds') && type(l:capabilities['codeActionProvider']['codeActionKinds']) == type([])
+                return len(l:capabilities['codeActionProvider']['codeActionKinds']) != 0
+            endif
+        endif
+    endif
     return s:has_bool_provider(a:server_name, 'codeActionProvider')
 endfunction
 
@@ -63,6 +71,10 @@ endfunction
 
 function! lsp#capabilities#has_document_highlight_provider(server_name) abort
     return s:has_bool_provider(a:server_name, 'documentHighlightProvider')
+endfunction
+
+function! lsp#capabilities#has_folding_range_provider(server_name) abort
+    return s:has_bool_provider(a:server_name, 'foldingRangeProvider')
 endfunction
 
 " [supports_did_save (boolean), { 'includeText': boolean }]

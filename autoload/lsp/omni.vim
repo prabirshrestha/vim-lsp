@@ -342,7 +342,7 @@ function! s:apply_text_edits() abort
     " expand textEdit range, for omni complet inserted text.
     let l:text_edit = get(l:user_data, s:user_data_key, {})
     if !empty(l:text_edit)
-        let l:expanded_text_edit = s:expand_range(l:text_edit, len(v:completed_item['word']))
+        let l:expanded_text_edit = s:expand_range(l:text_edit, strchars(v:completed_item['word']))
         call add(l:all_text_edits, l:expanded_text_edit)
     endif
 
@@ -391,6 +391,10 @@ function! s:get_cursor_pos_and_edit_length(text_edit) abort
     endif
 
     return [l:pos, l:length]
+endfunction
+
+function! lsp#omni#get_completion_item_kinds() abort
+    return map(keys(s:kind_text_mappings), {idx, key -> str2nr(key)})
 endfunction
 
 " }}}

@@ -193,6 +193,7 @@ function! s:document_format(sync) abort
 
     " TODO: ask user to select server for formatting
     let l:server = l:servers[0]
+    redraw | echo 'Formatting document ...'
     call lsp#send_request(l:server, {
         \ 'method': 'textDocument/formatting',
         \ 'params': {
@@ -205,8 +206,6 @@ function! s:document_format(sync) abort
         \ 'sync': a:sync,
         \ 'on_notification': function('s:handle_text_edit', [l:server, s:last_req_id, 'document format']),
         \ })
-
-    echo 'Formatting document ...'
 endfunction
 
 function! lsp#ui#vim#document_format_sync() abort
@@ -253,13 +252,16 @@ function! s:document_format_range(sync) abort
     let l:server = l:servers[0]
 
     let [l:start_lnum, l:start_col, l:end_lnum, l:end_col] = s:get_visual_selection_pos()
+    let l:start_char = lsp#utils#to_char('%', l:start_lnum, l:start_col)
+    let l:end_char = lsp#utils#to_char('%', l:end_lnum, l:end_col)
+    redraw | echo 'Formatting document range ...'
     call lsp#send_request(l:server, {
         \ 'method': 'textDocument/rangeFormatting',
         \ 'params': {
         \   'textDocument': lsp#get_text_document_identifier(),
         \   'range': {
-        \       'start': { 'line': l:start_lnum - 1, 'character': l:start_col - 1 },
-        \       'end': { 'line': l:end_lnum - 1, 'character': l:end_col - 1 },
+        \       'start': { 'line': l:start_lnum - 1, 'character': l:start_char },
+        \       'end': { 'line': l:end_lnum - 1, 'character': l:end_char },
         \   },
         \   'options': {
         \       'tabSize': getbufvar(bufnr('%'), '&shiftwidth'),
@@ -269,8 +271,6 @@ function! s:document_format_range(sync) abort
         \ 'sync': a:sync,
         \ 'on_notification': function('s:handle_text_edit', [l:server, s:last_req_id, 'range format']),
         \ })
-
-    echo 'Formatting document range ...'
 endfunction
 
 function! lsp#ui#vim#document_range_format_sync() abort
@@ -349,9 +349,11 @@ function! s:get_visual_selection_range() abort
     if l:column_end - 1 > len(getline(l:line_end))
       let l:column_end = len(getline(l:line_end)) + 1
     endif
+    let l:char_start = lsp#utils#to_char('%', l:line_start, l:column_start)
+    let l:char_end = lsp#utils#to_char('%', l:line_end, l:column_end)
     return {
-          \ 'start': { 'line': l:line_start - 1, 'character': l:column_start - 1 },
-          \ 'end': { 'line': l:line_end - 1, 'character': l:column_end - 1 },
+          \ 'start': { 'line': l:line_start - 1, 'character': l:char_start },
+          \ 'end': { 'line': l:line_end - 1, 'character': l:char_end },
           \}
 endfunction
 
@@ -508,14 +510,24 @@ function! s:handle_rename_prepare(server, last_req_id, type, data) abort
 
     let l:range = a:data['response']['result']
     let l:lines = getline(1, '$')
-    if l:range['start']['line'] ==# l:range['end']['line']
-        let l:name = l:lines[l:range['start']['line']][l:range['start']['character'] : l:range['end']['character']-1]
+    let l:start_line = l:range['start']['line'] + 1
+    let l:start_char = l:range['start']['character']
+    let l:start_col = lsp#utils#to_col('%', l:start_line, l:start_char)
+    let l:end_line = l:range['end']['line'] + 1
+    let l:end_char = l:range['end']['character']
+    let l:end_col = lsp#utils#to_col('%', l:end_line, l:end_char)
+    if l:start_line ==# l:end_line
+        let l:name = l:lines[l:start_line - 1][l:start_col - 1 : l:end_col - 2]
     else
-        let l:name = l:lines[l:range['start']['line']][l:range['start']['character'] :]
-        for l:i in range(l:range['start']['line']+1, l:range['end']['line']-1)
+        let l:name = l:lines[l:start_line - 1][l:start_col - 1 :]
+        for l:i in range(l:start_line, l:end_line - 2)
             let l:name .= "\n" . l:lines[l:i]
         endfor
-        let l:name .= l:lines[l:range['end']['line']][: l:range['end']['character']-1]
+        if l:end_col - 2 < 0
+            let l:name .= "\n"
+        else
+            let l:name .= l:lines[l:end_line - 1][: l:end_col - 2]
+        endif
     endif
 
     call timer_start(1, {x->s:rename(a:server, input('new name: ', l:name), l:range['start'])})
@@ -548,7 +560,7 @@ function! s:handle_text_edit(server, last_req_id, type, data) abort
 
     call lsp#utils#text_edit#apply_text_edits(a:data['request']['params']['textDocument']['uri'], a:data['response']['result'])
 
-    echo 'Document formatted'
+    redraw | echo 'Document formatted'
 endfunction
 
 function! s:handle_code_action(server, last_req_id, type, data) abort
