@@ -125,3 +125,23 @@ function! lsp#capabilities#get_text_document_change_sync_kind(server_name) abort
     endif
     return 1
 endfunction
+
+function! lsp#capabilities#has_signature_help_provider(server_name) abort
+    let l:capabilities = lsp#get_server_capabilities(a:server_name)
+    if !empty(l:capabilities) && has_key(l:capabilities, 'signatureHelpProvider')
+        return 1
+    endif
+    return 0
+endfunction
+
+function! lsp#capabilities#get_signature_help_trigger_characters(server_name) abort
+    let l:capabilities = lsp#get_server_capabilities(a:server_name)
+    if !empty(l:capabilities) && has_key(l:capabilities, 'signatureHelpProvider')
+        if type(l:capabilities['signatureHelpProvider']) == type({})
+            if  has_key(l:capabilities['signatureHelpProvider'], 'triggerCharacters')
+                return l:capabilities['signatureHelpProvider']['triggerCharacters']
+            endif
+        endif
+    endif
+    return []
+endfunction

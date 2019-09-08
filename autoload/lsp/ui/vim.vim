@@ -193,6 +193,7 @@ function! s:document_format(sync) abort
 
     " TODO: ask user to select server for formatting
     let l:server = l:servers[0]
+    redraw | echo 'Formatting document ...'
     call lsp#send_request(l:server, {
         \ 'method': 'textDocument/formatting',
         \ 'params': {
@@ -205,8 +206,6 @@ function! s:document_format(sync) abort
         \ 'sync': a:sync,
         \ 'on_notification': function('s:handle_text_edit', [l:server, s:last_req_id, 'document format']),
         \ })
-
-    echo 'Formatting document ...'
 endfunction
 
 function! lsp#ui#vim#document_format_sync() abort
@@ -253,6 +252,7 @@ function! s:document_format_range(sync) abort
     let l:server = l:servers[0]
 
     let [l:start_lnum, l:start_col, l:end_lnum, l:end_col] = s:get_visual_selection_pos()
+    redraw | echo 'Formatting document range ...'
     call lsp#send_request(l:server, {
         \ 'method': 'textDocument/rangeFormatting',
         \ 'params': {
@@ -269,8 +269,6 @@ function! s:document_format_range(sync) abort
         \ 'sync': a:sync,
         \ 'on_notification': function('s:handle_text_edit', [l:server, s:last_req_id, 'range format']),
         \ })
-
-    echo 'Formatting document range ...'
 endfunction
 
 function! lsp#ui#vim#document_range_format_sync() abort
@@ -418,6 +416,34 @@ function! s:handle_symbol(server, last_req_id, type, data) abort
     endif
 endfunction
 
+function! s:update_tagstack() abort
+    let l:bufnr = bufnr('%')
+    let l:item = {'bufnr': l:bufnr, 'from': [l:bufnr, line('.'), col('.'), 0], 'tagname': expand('<cword>')}
+    let l:winid = win_getid()
+
+    let l:stack = gettagstack(l:winid)
+    if l:stack['length'] == l:stack['curidx']
+        " Replace the last items with item.
+        let l:action = 'r'
+        let l:stack['items'][l:stack['curidx']-1] = l:item
+    elseif l:stack['length'] > l:stack['curidx']
+        " Replace items after used items with item.
+        let l:action = 'r'
+        if l:stack['curidx'] > 1
+            let l:stack['items'] = add(l:stack['items'][:l:stack['curidx']-2], l:item)
+        else
+            let l:stack['items'] = [l:item]
+        endif
+    else
+        " Append item.
+        let l:action = 'a'
+        let l:stack['items'] = [l:item]
+    endif
+    let l:stack['curidx'] += 1
+
+    call settagstack(l:winid, l:stack, l:action)
+endfunction
+
 function! s:handle_location(ctx, server, type, data) abort "ctx = {counter, list, jump_if_one, last_req_id, in_preview}
     if a:ctx['last_req_id'] != s:last_req_id
         return
@@ -436,11 +462,7 @@ function! s:handle_location(ctx, server, type, data) abort "ctx = {counter, list
             call lsp#utils#error('No ' . a:type .' found')
         else
             if exists('*gettagstack') && exists('*settagstack')
-                let from = [bufnr('%'), line('.'), col('.'), 0]
-                let tagname = expand('<cword>')
-                let winid = win_getid()
-                call settagstack(winid, {'items': [{'from': from, 'tagname': tagname}]}, 'a')
-                call settagstack(winid, {'curidx': len(gettagstack(winid)['items']) + 1})
+                call s:update_tagstack()
             endif
 
             let l:loc = a:ctx['list'][0]
@@ -524,7 +546,7 @@ function! s:handle_text_edit(server, last_req_id, type, data) abort
 
     call lsp#utils#text_edit#apply_text_edits(a:data['request']['params']['textDocument']['uri'], a:data['response']['result'])
 
-    echo 'Document formatted'
+    redraw | echo 'Document formatted'
 endfunction
 
 function! s:handle_code_action(server, last_req_id, type, data) abort
