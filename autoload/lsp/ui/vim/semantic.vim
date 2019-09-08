@@ -58,6 +58,10 @@ function! s:init_highlight(server, buf) abort
 endfunction
 
 function! s:add_highlight(server, buf, line, highlights) abort
+    " Skip if the buffer doesn't exist. This might happen when a buffer is
+    " opened and quickly deleted.
+    if !bufexists(a:buf) | return | endif
+
     let l:scopes = lsp#ui#vim#semantic#get_scopes(a:server)
 
     if s:use_vim_textprops
