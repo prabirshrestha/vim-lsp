@@ -35,6 +35,7 @@ let g:lsp_peek_alignment = get(g:, 'lsp_peek_alignment', 'center')
 let g:lsp_preview_max_width = get(g:, 'lsp_preview_max_width', -1)
 let g:lsp_preview_max_height = get(g:, 'lsp_preview_max_height', -1)
 let g:lsp_signature_help_enabled = get(g:, 'lsp_signature_help_enabled', 1)
+let g:lsp_fold_enabled = get(g:, 'lsp_fold_enabled', 1)
 let g:lsp_hover_conceal = get(g:, 'lsp_hover_conceal', 1)
 
 let g:lsp_get_vim_completion_item = get(g:, 'lsp_get_vim_completion_item', [function('lsp#omni#default_get_vim_completion_item')])
@@ -73,6 +74,8 @@ command! -nargs=0 LspStatus echo lsp#get_server_status()
 command! LspNextReference call lsp#ui#vim#references#jump(+1)
 command! LspPreviousReference call lsp#ui#vim#references#jump(-1)
 command! -nargs=? -complete=customlist,lsp#utils#empty_complete LspSignatureHelp call lsp#ui#vim#signature_help#get_signature_help_under_cursor()
+command! LspDocumentFold call lsp#ui#vim#folding#fold(0)
+command! LspDocumentFoldSync call lsp#ui#vim#folding#fold(1)
 
 nnoremap <plug>(lsp-code-action) :<c-u>call lsp#ui#vim#code_action()<cr>
 nnoremap <plug>(lsp-declaration) :<c-u>call lsp#ui#vim#declaration(0)<cr>
