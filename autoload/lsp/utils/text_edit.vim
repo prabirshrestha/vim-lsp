@@ -167,7 +167,7 @@ function! s:generate_sub_cmd_insert(text_edit) abort
     let l:sub_cmd = s:preprocess_cmd(a:text_edit['range'])
     let l:sub_cmd .= s:generate_move_start_cmd(l:start_line, l:start_character)
 
-    if l:start_character >= len(getline(l:start_line))
+    if l:start_character >= strchars(getline(l:start_line))
         let l:sub_cmd .= "\"=l:merged_text_edit['merged']['newText']\<CR>p"
     else
         let l:sub_cmd .= "\"=l:merged_text_edit['merged']['newText']\<CR>P"
