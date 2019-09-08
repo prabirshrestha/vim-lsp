@@ -34,6 +34,7 @@ CONTENTS                                                  *vim-lsp-contents*
       g:lsp_preview_max_height		    |g:lsp_preview_max_height|
       g:lsp_signature_help_enabled          |g:lsp_signature_help_enabled|
       g:lsp_fold_enabled                    |g:lsp_fold_enabled|
+      g:lsp_hover_conceal                   |g:lsp_hover_conceal|
     Functions                             |vim-lsp-functions|
       enable                                |vim-lsp-enable|
       disable                               |vim-lsp-disable|
@@ -492,6 +493,18 @@ g:lsp_fold_enabled                                    *g:lsp_fold_enabled*
     Determines whether or not folding is enabled globally. Set to `0` to
     disable sending requests.
 
+g:lsp_hover_conceal                                   *g:lsp_hover_conceal*
+    Type: |Boolean|
+    Default: `1`
+
+    If `true` (`1`), |conceallevel| is set to `2` for hover windows. This
+    means that, for example, asterisks in markdown hovers are hidden, but the
+    text is still displayed bold. You may want to disable this if the filetype
+    of the popup has custom conceals which you don't want to use, or if
+    you're using Vim in a terminal.
+
+    To override this setting per server, see |vim-lsp-hover_conceal|.
+
 ===============================================================================
 FUNCTIONS	                                        *vim-lsp-functions*
 
@@ -642,6 +655,15 @@ The vim |dict| containing information about the server.
 	'workspace_config': {'pyls': {'plugins': \
 		{'pydocstyle': {'enabled': v:true}}}}
 
+hover_conceal                                          *vim-lsp_hover_conceal*
+    Type: |Boolean|
+    Default: |g:lsp_hover_conceal|
+
+    This takes precendence over the value of |g:lsp_hover_conceal|, to allow
+    overriding this setting per server.
+
+    Example:
+        'config': { 'hover_conceal': 1 }
 
 lsp#stop_server                                        *vim-lsp-stop_server*
 
