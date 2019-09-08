@@ -405,7 +405,7 @@ g:lsp_use_event_queue                               *g:lsp_use_event_queue*
 
 g:lsp_highlight_references_enabled         *g:lsp_highlight_references_enabled*
     Type: |Number|
-    Default: `1`
+    Default: `0`
 
     Enable highlighting of the references to the symbol under the cursor.
 

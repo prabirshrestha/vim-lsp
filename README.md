@@ -164,11 +164,11 @@ Virtual text will use the same highlight groups as signs feature.
 
 ### Highlight references
 
-References to the symbol under the cursor are highlighted by default. To
-disable, set in your configuration:
+Highlight references to the symbol under the cursor. To enable, set in your
+configuration:
 
 ```viml
-let g:lsp_highlight_references_enabled = 0
+let g:lsp_highlight_references_enabled = 1
 ```
 
 To change the style of the highlighting, you can set or link the `lspReference`
