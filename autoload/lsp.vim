@@ -191,7 +191,10 @@ function! s:on_text_document_did_save() abort
     if getbufvar(l:buf, '&buftype') ==# 'terminal' | return | endif
     call lsp#log('s:on_text_document_did_save()', l:buf)
     for l:server_name in lsp#get_whitelisted_servers(l:buf)
-        call s:ensure_flush(l:buf, l:server_name, {result->s:call_did_save(l:buf, l:server_name, result, function('s:Noop'))})
+        " We delay the callback by one loop iteration as calls to ensure_flush
+        " can introduce mmap'd file locks that linger on Windows and collide
+        " with the second lang server call preventing saves (see #455)
+        call s:ensure_flush(l:buf, l:server_name, {result->timer_start(0, {result->s:call_did_save(l:buf, l:server_name, result, function('s:Noop'))})})
     endfor
 endfunction
 
@@ -380,6 +383,18 @@ function! lsp#default_get_supported_capabilities(server_info) abort
     \   'workspace': {
     \       'applyEdit': v:true,
     \       'configuration': v:true
+    \   },
+    \   'textDocument': {
+    \       'completion': {
+    \           'completionItemKind': {
+    \              'valueSet': lsp#omni#get_completion_item_kinds()
+    \           }
+    \       },
+    \       'documentSymbol': {
+    \           'symbolKind': {
+    \              'valueSet': lsp#ui#vim#utils#get_symbol_kinds()
+    \           }
+    \       }
     \   }
     \ }
 endfunction

@@ -193,6 +193,7 @@ function! s:document_format(sync) abort
 
     " TODO: ask user to select server for formatting
     let l:server = l:servers[0]
+    redraw | echo 'Formatting document ...'
     call lsp#send_request(l:server, {
         \ 'method': 'textDocument/formatting',
         \ 'params': {
@@ -205,8 +206,6 @@ function! s:document_format(sync) abort
         \ 'sync': a:sync,
         \ 'on_notification': function('s:handle_text_edit', [l:server, s:last_req_id, 'document format']),
         \ })
-
-    echo 'Formatting document ...'
 endfunction
 
 function! lsp#ui#vim#document_format_sync() abort
@@ -255,6 +254,7 @@ function! s:document_format_range(sync) abort
     let [l:start_lnum, l:start_col, l:end_lnum, l:end_col] = s:get_visual_selection_pos()
     let l:start_char = lsp#utils#to_char('%', l:start_lnum, l:start_col)
     let l:end_char = lsp#utils#to_char('%', l:end_lnum, l:end_col)
+    redraw | echo 'Formatting document range ...'
     call lsp#send_request(l:server, {
         \ 'method': 'textDocument/rangeFormatting',
         \ 'params': {
@@ -271,8 +271,6 @@ function! s:document_format_range(sync) abort
         \ 'sync': a:sync,
         \ 'on_notification': function('s:handle_text_edit', [l:server, s:last_req_id, 'range format']),
         \ })
-
-    echo 'Formatting document range ...'
 endfunction
 
 function! lsp#ui#vim#document_range_format_sync() abort
@@ -562,7 +560,7 @@ function! s:handle_text_edit(server, last_req_id, type, data) abort
 
     call lsp#utils#text_edit#apply_text_edits(a:data['request']['params']['textDocument']['uri'], a:data['response']['result'])
 
-    echo 'Document formatted'
+    redraw | echo 'Document formatted'
 endfunction
 
 function! s:handle_code_action(server, last_req_id, type, data) abort

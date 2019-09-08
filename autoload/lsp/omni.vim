@@ -369,4 +369,8 @@ function! s:get_cursor_pos_and_edit_length(text_edit) abort
     return [l:pos, l:length]
 endfunction
 
+function! lsp#omni#get_completion_item_kinds() abort
+    return map(keys(s:kind_text_mappings), {idx, key -> str2nr(key)})
+endfunction
+
 " }}}
