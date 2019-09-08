@@ -53,6 +53,24 @@ At the moment, you have two options:
 
 For more information, refer to the readme and documentation of the respective plugins.
 
+## Folding
+
+You can let the language server automatically handle folding for you. To enable this, you have to set `'foldmethod'`, `'foldexpr'` and (optionally) `'foldtext'`:
+
+```vim
+set foldmethod=expr
+  \ foldexpr=lsp#ui#vim#folding#foldexpr()
+  \ foldtext=lsp#ui#vim#folding#foldtext()
+```
+
+If you would like to disable folding globally, you can add this to your configuration:
+
+```vim
+let g:lsp_fold_enabled = 0
+```
+
+Also see `:h vim-lsp-folding`.
+
 ## Semantic highlighting
 vim-lsp supports the unofficial extension to the LSP protocol for semantic highlighting (https://github.com/microsoft/vscode-languageserver-node/pull/367).
 This feature requires Neovim highlights, or Vim with the `textprop` feature enabled.
@@ -152,11 +170,11 @@ Virtual text will use the same highlight groups as signs feature.
 
 ### Highlight references
 
-References to the symbol under the cursor are highlighted by default. To
-disable, set in your configuration:
+Highlight references to the symbol under the cursor. To enable, set in your
+configuration:
 
 ```viml
-let g:lsp_highlight_references_enabled = 0
+let g:lsp_highlight_references_enabled = 1
 ```
 
 To change the style of the highlighting, you can set or link the `lspReference`

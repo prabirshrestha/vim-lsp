@@ -51,6 +51,10 @@ function! lsp#ui#vim#diagnostics#document_diagnostics() abort
     endif
 endfunction
 
+" Returns a diagnostic object, or empty dictionary if no diagnostics are available.
+"
+" Note: Consider renaming this method (s/diagnostics/diagnostic) to make
+" it clear that it returns just one diagnostic, not a list.
 function! lsp#ui#vim#diagnostics#get_diagnostics_under_cursor() abort
     let l:diagnostics = s:get_all_buffer_diagnostics()
     if !len(l:diagnostics)
@@ -60,7 +64,7 @@ function! lsp#ui#vim#diagnostics#get_diagnostics_under_cursor() abort
     let l:line = line('.')
     let l:col = col('.')
 
-    let l:closest_diagnostics = {}
+    let l:closest_diagnostic = {}
     let l:closest_distance = -1
 
     for l:diagnostic in l:diagnostics
@@ -72,13 +76,13 @@ function! lsp#ui#vim#diagnostics#get_diagnostics_under_cursor() abort
         if l:line == l:start_line
             let l:distance = abs(l:start_col - l:col)
             if l:closest_distance < 0 || l:distance < l:closest_distance
-                let l:closest_diagnostics = l:diagnostic
+                let l:closest_diagnostic = l:diagnostic
                 let l:closest_distance = l:distance
             endif
         endif
     endfor
 
-    return l:closest_diagnostics
+    return l:closest_diagnostic
 endfunction
 
 function! lsp#ui#vim#diagnostics#next_error() abort
