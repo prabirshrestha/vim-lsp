@@ -21,6 +21,7 @@ CONTENTS                                                  *vim-lsp-contents*
       g:lsp_diagnostics_echo_cursor         |g:lsp_diagnostics_echo_cursor|
       g:lsp_signs_enabled                   |g:lsp_signs_enabled|
       g:lsp_signs_priority                  |g:lsp_signs_priority|
+      g:lsp_signs_priority_map              |g:lsp_signs_priority_map|
       g:lsp_virtual_text_enabled            |g:lsp_virtual_text_enabled|
       g:lsp_highlights_enabled              |g:lsp_highlights_enabled|
       g:lsp_textprop_enabled                |g:lsp_textprop_enabled|
@@ -32,6 +33,8 @@ CONTENTS                                                  *vim-lsp-contents*
       g:lsp_preview_max_width               |g:lsp_preview_max_width|
       g:lsp_preview_max_height		    |g:lsp_preview_max_height|
       g:lsp_signature_help_enabled          |g:lsp_signature_help_enabled|
+      g:lsp_fold_enabled                    |g:lsp_fold_enabled|
+      g:lsp_hover_conceal                   |g:lsp_hover_conceal|
     Functions                             |vim-lsp-functions|
       enable                                |vim-lsp-enable|
       disable                               |vim-lsp-disable|
@@ -46,6 +49,8 @@ CONTENTS                                                  *vim-lsp-contents*
       LspDocumentDiagnostics                |LspDocumentDiagnostics|
       LspDeclaration                        |LspDeclaration|
       LspDefinition                         |LspDefinition|
+      LspDocumentFold                       |LspDocumentFold|
+      LspDocumentFoldSync                   |LspDocumentFoldSync|
       LspDocumentFormat                     |LspDocumentFormat|
       LspDocumentFormatSync                 |LspDocumentFormatSync|
       LspDocumentRangeFormat                |LspDocumentRangeFormat|
@@ -74,6 +79,7 @@ CONTENTS                                                  *vim-lsp-contents*
       omnifunc                              |vim-lsp-omnifunc|
       asyncomplete.vim                      |vim-lsp-asyncomplete|
     Snippets                              |vim-lsp-snippets|
+    Folding                               |vim-lsp-folding|
     License                               |vim-lsp-license|
 
 
@@ -305,16 +311,30 @@ g:lsp_signs_enabled                                   *g:lsp_signs_enabled*
 
 g:lsp_signs_priority                                  *g:lsp_signs_priority*
     Type: |Number|
-    Default: `10`
+    Default: `10` for vim/neovim with patch 8.1.0772
 
-    The priority value to be used for all placed signs. Requires
-    |lsp_signs_enabled| set to 1. See |sign-priority| for more information.
+    Configures the |sign-priority| for placed signs. Signs placed by other
+    plugins have a priority of 10 by default. Requires |lsp_signs_enabled|
+    set to 1.
 
     Example:
->
-	let g:lsp_signs_priority = 5
-	let g:lsp_signs_priority = 15
-<
+	let g:lsp_signs_priority = 11
+	let g:lsp_signs_priority = 9
+
+g:lsp_signs_priority_map                              *g:lsp_signs_priority_map*
+    Type: |Map|
+    Default: `{}` for vim/neovim with patch 8.1.0772
+
+    Overrides |g:lsp_signs_priority| per severity level or per server name
+    and severity level. Requires |lsp_signs_enabled| set to 1.
+
+    Example:
+        let g:lsp_signs_priority_map = {
+                \'LspError': 11,
+                \'LspWarning': 7,
+                \'clangd_LspWarning': 11,
+                \'clangd_LspInformation': 11
+                \}
 
 g:lsp_virtual_text_enabled                            *g:lsp_virtual_text_enabled*
     Type: |Number|
@@ -386,7 +406,7 @@ g:lsp_use_event_queue                               *g:lsp_use_event_queue*
 
 g:lsp_highlight_references_enabled         *g:lsp_highlight_references_enabled*
     Type: |Number|
-    Default: `1`
+    Default: `0`
 
     Enable highlighting of the references to the symbol under the cursor.
 
@@ -465,6 +485,25 @@ g:lsp_signature_help_enabled                *g:lsp_signature_help_enabled*
 >
 	let g:lsp_signature_help_enabled = 1
 	let g:lsp_signature_help_enabled = 0
+
+g:lsp_fold_enabled                                    *g:lsp_fold_enabled*
+    Type: |Number|
+    Default: `1`
+
+    Determines whether or not folding is enabled globally. Set to `0` to
+    disable sending requests.
+
+g:lsp_hover_conceal                                   *g:lsp_hover_conceal*
+    Type: |Boolean|
+    Default: `1`
+
+    If `true` (`1`), |conceallevel| is set to `2` for hover windows. This
+    means that, for example, asterisks in markdown hovers are hidden, but the
+    text is still displayed bold. You may want to disable this if the filetype
+    of the popup has custom conceals which you don't want to use, or if
+    you're using Vim in a terminal.
+
+    To override this setting per server, see |vim-lsp-hover_conceal|.
 
 ===============================================================================
 FUNCTIONS	                                        *vim-lsp-functions*
@@ -616,6 +655,15 @@ The vim |dict| containing information about the server.
 	'workspace_config': {'pyls': {'plugins': \
 		{'pydocstyle': {'enabled': v:true}}}}
 
+hover_conceal                                          *vim-lsp_hover_conceal*
+    Type: |Boolean|
+    Default: |g:lsp_hover_conceal|
+
+    This takes precendence over the value of |g:lsp_hover_conceal|, to allow
+    overriding this setting per server.
+
+    Example:
+        'config': { 'hover_conceal': 1 }
 
 lsp#stop_server                                        *vim-lsp-stop_server*
 
@@ -707,6 +755,14 @@ LspDefinition						     *LspDefinition*
 Go to definition.
 
 Also see |LspPeekDefinition|.
+
+LspDocumentFold                                          *LspDocumentFold*
+
+Recalculate folds for the current buffer.
+
+LspDocumentFoldSync                                      *LspDocumentFoldSync*
+
+Same as |LspDocumentFold|, but synchronous.
 
 LspDocumentFormat					 *LspDocumentFormat*
 
@@ -921,6 +977,36 @@ https://github.com/thomasfaingnaert/vim-lsp-neosnippet
 
 Refer to the readme and docs of vim-lsp-ultisnips and vim-lsp-neosnippet for
 more information and configuration options.
+
+===============================================================================
+Folding                                                    *vim-lsp-folding*
+
+You can also let the language server handle folding for you. To enable this
+feature, you will have to set |'foldmethod'|, |'foldexpr'| and |'foldtext'| (the
+latter is optional) correctly:
+
+    set foldmethod=expr
+      \ foldexpr=lsp#ui#vim#folding#foldexpr()
+      \ foldtext=lsp#ui#vim#folding#foldtext()
+
+Also, make sure you have not disabled folding globally, see
+|g:lsp_fold_enabled|.
+
+You may want to enable this only for certain filetypes, e.g. for Javascript
+only:
+
+    augroup lsp_folding
+	autocmd!
+	autocmd FileType javascript setlocal
+	    \ foldmethod=expr
+	    \ foldexpr=lsp#ui#vim#folding#foldexpr()
+	    \ foldtext=lsp#ui#vim#folding#foldtext()
+    augroup end
+
+To display open and closed folds at the side of the window, see
+|'foldcolumn'|.
+If you want to remove the dashes at the end of the folds, you can change
+the fold item of |'fillchars'|.
 
 ===============================================================================
 License                                                    *vim-lsp-license*

@@ -191,7 +191,10 @@ function! s:on_text_document_did_save() abort
     if getbufvar(l:buf, '&buftype') ==# 'terminal' | return | endif
     call lsp#log('s:on_text_document_did_save()', l:buf)
     for l:server_name in lsp#get_whitelisted_servers(l:buf)
-        call s:ensure_flush(l:buf, l:server_name, {result->s:call_did_save(l:buf, l:server_name, result, function('s:Noop'))})
+        " We delay the callback by one loop iteration as calls to ensure_flush
+        " can introduce mmap'd file locks that linger on Windows and collide
+        " with the second lang server call preventing saves (see #455)
+        call s:ensure_flush(l:buf, l:server_name, {result->timer_start(0, {result->s:call_did_save(l:buf, l:server_name, result, function('s:Noop'))})})
     endfor
 endfunction
 
@@ -380,6 +383,21 @@ function! lsp#default_get_supported_capabilities(server_info) abort
     \   'workspace': {
     \       'applyEdit': v:true,
     \       'configuration': v:true
+    \   },
+    \   'textDocument': {
+    \       'completion': {
+    \           'completionItemKind': {
+    \              'valueSet': lsp#omni#get_completion_item_kinds()
+    \           }
+    \       },
+    \       'documentSymbol': {
+    \           'symbolKind': {
+    \              'valueSet': lsp#ui#vim#utils#get_symbol_kinds()
+    \           }
+    \       },
+    \       'foldingRange': {
+    \           'lineFoldingOnly': v:true
+    \       }
     \   }
     \ }
 endfunction
@@ -514,6 +532,7 @@ function! s:ensure_changed(buf, server_name, cb) abort
         \   'contentChanges': s:text_changes(a:buf, a:server_name),
         \ }
         \ })
+    call lsp#ui#vim#folding#send_request(a:server_name, a:buf, 0)
 
     let l:msg = s:new_rpc_success('textDocument/didChange sent', { 'server_name': a:server_name, 'path': l:path })
     call lsp#log(l:msg)
@@ -551,6 +570,8 @@ function! s:ensure_open(buf, server_name, cb) abort
         \   'textDocument': s:get_text_document(a:buf, a:server_name, l:buffer_info)
         \ },
         \ })
+
+    call lsp#ui#vim#folding#send_request(a:server_name, a:buf, 0)
 
     let l:msg = s:new_rpc_success('textDocument/open sent', { 'server_name': a:server_name, 'path': l:path, 'filetype': getbufvar(a:buf, '&filetype') })
     call lsp#log(l:msg)
@@ -732,7 +753,9 @@ function! lsp#get_text_document_identifier(...) abort
 endfunction
 
 function! lsp#get_position(...) abort
-    return { 'line': line('.') - 1, 'character': col('.') -1 }
+    let l:line = line('.')
+    let l:char = lsp#utils#to_char('%', l:line, col('.'))
+    return { 'line': l:line - 1, 'character': l:char }
 endfunction
 
 function! s:get_text_document_identifier(buf) abort
