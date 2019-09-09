@@ -193,6 +193,8 @@ function! s:generate_sub_cmd_replace(text_edit) abort
 
     if len(l:new_text) == 0
         let l:sub_cmd .= 'x'
+	elseif l:end_character == 0
+        let l:sub_cmd .= "c\<C-R>=substitute(l:merged_text_edit['merged']['newText'], '\\n$', '', '')\<CR>"
     else
         let l:sub_cmd .= "c\<C-R>=l:merged_text_edit['merged']['newText']\<CR>"
     endif
