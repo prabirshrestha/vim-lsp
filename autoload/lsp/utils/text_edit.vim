@@ -162,16 +162,10 @@ endfunction
 function! s:generate_sub_cmd_insert(text_edit) abort
     let l:start_line = a:text_edit['range']['start']['line']
     let l:start_character = a:text_edit['range']['start']['character']
-    let l:new_text = s:parse(a:text_edit['newText'])
 
     let l:sub_cmd = s:preprocess_cmd(a:text_edit['range'])
     let l:sub_cmd .= s:generate_move_start_cmd(l:start_line, l:start_character)
-
-    if l:start_character >= len(getline(l:start_line))
-        let l:sub_cmd .= "\"=l:merged_text_edit['merged']['newText']\<CR>p"
-    else
-        let l:sub_cmd .= "\"=l:merged_text_edit['merged']['newText']\<CR>P"
-    endif
+    let l:sub_cmd .= "i\<C-R>=l:merged_text_edit['merged']['newText']\<CR>"
 
     return l:sub_cmd
 endfunction
@@ -200,11 +194,7 @@ function! s:generate_sub_cmd_replace(text_edit) abort
     if len(l:new_text) == 0
         let l:sub_cmd .= 'x'
     else
-        let l:sub_cmd .= "\"=l:merged_text_edit['merged']['newText']\<CR>p"
-    endif
-    " remove empty line
-    if l:new_text =~# '^\n$'
-        let l:sub_cmd .= '"_dd'
+        let l:sub_cmd .= "c\<C-R>=l:merged_text_edit['merged']['newText']\<CR>"
     endif
 
     return l:sub_cmd
