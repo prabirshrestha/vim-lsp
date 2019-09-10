@@ -7,7 +7,7 @@ endif
 
 " Global functions {{{1
 function! lsp#ui#vim#semantic#is_enabled() abort
-    return (s:use_vim_textprops || s:use_nvim_highlight) ? v:true : v:false
+    return g:lsp_semantic_enabled && (s:use_vim_textprops || s:use_nvim_highlight) ? v:true : v:false
 endfunction
 
 function! lsp#ui#vim#semantic#get_scopes(server) abort
@@ -20,6 +20,8 @@ function! lsp#ui#vim#semantic#get_scopes(server) abort
 endfunction
 
 function! lsp#ui#vim#semantic#handle_semantic(server, data) abort
+    if !g:lsp_semantic_enabled | return | endif
+
     if lsp#client#is_error(a:data['response'])
         call lsp#log('Skipping semantic highlight: response is invalid')
         return

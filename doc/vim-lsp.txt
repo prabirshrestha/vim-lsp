@@ -35,6 +35,7 @@ CONTENTS                                                  *vim-lsp-contents*
       g:lsp_signature_help_enabled          |g:lsp_signature_help_enabled|
       g:lsp_fold_enabled                    |g:lsp_fold_enabled|
       g:lsp_hover_conceal                   |g:lsp_hover_conceal|
+      g:lsp_semantic_enabled                |g:lsp_semantic_enabled|
     Functions                             |vim-lsp-functions|
       enable                                |vim-lsp-enable|
       disable                               |vim-lsp-disable|
@@ -506,6 +507,13 @@ g:lsp_hover_conceal                                   *g:lsp_hover_conceal*
     you're using Vim in a terminal.
 
     To override this setting per server, see |vim-lsp-hover_conceal|.
+
+g:lsp_semantic_enabled                             *g:lsp_semantic_enabled*
+    Type: |Boolean|
+    Default: `1`
+
+    Determines whether or not semantic highlighting is enabled globally. Set
+    to `0` to disable sending requests.
 
 ===============================================================================
 FUNCTIONS	                                        *vim-lsp-functions*
