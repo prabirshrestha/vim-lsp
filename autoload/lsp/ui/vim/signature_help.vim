@@ -38,8 +38,32 @@ function! s:handle_signature_help(server, data) abort
     endif
 
     if !empty(a:data['response']['result']) && !empty(a:data['response']['result']['signatures'])
-        let l:signature = a:data['response']['result']['signatures'][0]
-        let l:contents = [l:signature['label']]
+        " Get current signature.
+        let l:signatures = get(a:data['response']['result'], 'signatures', [])
+        let l:signature_index = get(a:data['response']['result'], 'activeSignature', 0)
+        let l:signature = get(l:signatures, l:signature_index, {})
+        if empty(l:signature)
+            return
+        endif
+
+        " Signature label.
+        let l:label = l:signature['label']
+
+        " Mark current parameter.
+        if has_key(a:data['response']['result'], 'activeParameter')
+            let l:parameters = get(l:signature, 'parameters', [])
+            let l:parameter_index = a:data['response']['result']['activeParameter']
+            let l:parameter = get(l:parameters, l:parameter_index, {})
+            let l:parameter_label = get(l:parameter, 'label', '')
+            if !empty(l:parameter_label)
+                let l:parts = split(l:label, '\V' . escape(l:parameter_label, '\/?'))
+                if len(l:parts) == 2
+                    let l:label = join([l:parts[0], '`', l:parameter_label, '`', l:parts[1]], '')
+                endif
+            endif
+        endif
+
+        let l:contents = [l:label]
         if has_key(l:signature, 'documentation')
             call add(l:contents, l:signature['documentation'])
         endif
