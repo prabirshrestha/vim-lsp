@@ -390,7 +390,16 @@ function! lsp#default_get_supported_capabilities(server_info) abort
     \              'valueSet': lsp#omni#get_completion_item_kinds()
     \           }
     \       },
+    \       'declaration': {
+    \           'linkSupport' : v:true
+    \       },
     \       'definition': {
+    \           'linkSupport' : v:true
+    \       },
+    \       'typeDefinition': {
+    \           'linkSupport' : v:true
+    \       },
+    \       'implementation': {
     \           'linkSupport' : v:true
     \       },
     \       'documentSymbol': {
