@@ -54,25 +54,35 @@ function! s:handle_signature_help(server, data) abort
             let l:parameters = get(l:signature, 'parameters', [])
             let l:parameter_index = a:data['response']['result']['activeParameter']
             let l:parameter = get(l:parameters, l:parameter_index, {})
-            let l:parameter_label = get(l:parameter, 'label', '')
+            let l:parameter_label = s:get_parameter_label(l:signature, l:parameter)
             if !empty(l:parameter_label)
-                let l:parts = split(l:label, '\V' . escape(l:parameter_label, '\/?'))
-                if len(l:parts) == 2
-                    let l:label = join([l:parts[0], '`', l:parameter_label, '`', l:parts[1]], '')
-                endif
+                let l:label = substitute(l:label, '\V\(' . escape(l:parameter_label, '\/?') . '\)', '`\1`', 'g')
             endif
         endif
 
         let l:contents = [l:label]
+
         if has_key(l:signature, 'documentation')
             call add(l:contents, l:signature['documentation'])
         endif
+
         call lsp#ui#vim#output#preview(a:server, l:contents, {'statusline': ' LSP SignatureHelp'})
         return
     else
         " signature help is used while inserting. So this must be graceful.
         "call lsp#utils#error('No signature help information found')
     endif
+endfunction
+
+function! s:get_parameter_label(signature, parameter) abort
+    if has_key(a:parameter, 'label')
+        if type(a:parameter) == v:t_list
+            let l:string_range = a:parameter['label']
+            return strcharpart(a:signature['label'], l:string_range[0], l:string_range[1])
+        endif
+        return a:parameter['label']
+    endif
+    return ''
 endfunction
 
 function! s:insert_char_pre() abort
