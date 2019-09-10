@@ -386,6 +386,9 @@ function! lsp#default_get_supported_capabilities(server_info) abort
     \   },
     \   'textDocument': {
     \       'completion': {
+    \           'completionItem': {
+    \              'documentationFormat': 'plaintext'
+    \           },
     \           'completionItemKind': {
     \              'valueSet': lsp#omni#get_completion_item_kinds()
     \           }
