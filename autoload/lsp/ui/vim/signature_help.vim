@@ -62,6 +62,15 @@ function! s:handle_signature_help(server, data) abort
 
         let l:contents = [l:label]
 
+        if exists('l:parameter')
+            let l:parameter_doc = s:get_parameter_doc(l:parameter)
+            if !empty(l:parameter_doc)
+                call add(l:contents, '')
+                call add(l:contents, l:parameter_doc)
+                call add(l:contents, '')
+            endif
+        endif
+
         if has_key(l:signature, 'documentation')
             call add(l:contents, l:signature['documentation'])
         endif
@@ -83,6 +92,19 @@ function! s:get_parameter_label(signature, parameter) abort
         return a:parameter['label']
     endif
     return ''
+endfunction
+
+function! s:get_parameter_doc(parameter) abort
+    if !has_key(a:parameter, 'documentation')
+        return ''
+    endif
+
+    if type(a:parameter['documentation']) == v:t_dict
+        let l:doc = copy(a:parameter['documentation'])
+        let l:doc['value'] = printf('***%s*** - %s', a:parameter['label'], l:doc['value'])
+        return l:doc
+    endif
+    return printf('***%s*** - %s', a:parameter['label'], l:doc)
 endfunction
 
 function! s:insert_char_pre() abort
