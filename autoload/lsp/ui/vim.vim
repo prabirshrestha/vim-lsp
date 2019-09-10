@@ -487,15 +487,14 @@ function! s:handle_location(ctx, server, type, data) abort "ctx = {counter, list
                 echo 'Retrieved ' . a:type
                 botright copen
             else
-                if has_key(l:loc,'viewstart') " locationLink
-                    let l:lines = readfile(fnameescape(l:loc['filename']))
+                let l:lines = readfile(fnameescape(l:loc['filename']))
+                if has_key(l:loc,'viewstart') " showing a locationLink
                     let l:view = l:lines[l:loc['viewstart'] : l:loc['viewend']]
                     call lsp#ui#vim#output#preview(a:server, l:view, {
                                 \   'statusline': ' LSP Peek ' . a:type,
                                 \   'filetype': &filetype
                                 \ })
-                else
-                    let l:lines = readfile(fnameescape(l:loc['filename']))
+                else " showing a location
                     call lsp#ui#vim#output#preview(a:server, l:lines, {
                                 \   'statusline': ' LSP Peek ' . a:type,
                                 \   'cursor': { 'line': l:loc['lnum'], 'col': l:loc['col'], 'align': g:lsp_peek_alignment },
