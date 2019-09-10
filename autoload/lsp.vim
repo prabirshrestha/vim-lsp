@@ -390,6 +390,9 @@ function! lsp#default_get_supported_capabilities(server_info) abort
     \              'valueSet': lsp#omni#get_completion_item_kinds()
     \           }
     \       },
+    \       'definition': {
+    \           'linkSupport' : v:true
+    \       },
     \       'documentSymbol': {
     \           'symbolKind': {
     \              'valueSet': lsp#ui#vim#utils#get_symbol_kinds()

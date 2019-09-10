@@ -9,34 +9,69 @@ function! lsp#ui#vim#utils#locations_to_loc_list(result) abort
 
     if !empty(l:locations) " some servers also return null so check to make sure it isn't empty
         let l:cache={}
-        for l:location in l:locations
-            if s:is_file_uri(l:location['uri'])
-                let l:path = lsp#utils#uri_to_path(l:location['uri'])
-                let l:line = l:location['range']['start']['line'] + 1
-                let l:char = l:location['range']['start']['character']
-                let l:col = lsp#utils#to_col(l:path, l:line, l:char)
-                let l:index = l:line - 1
+        if has_key(l:locations[0],'uri') " server returns Locations
+            for l:location in l:locations
+                if s:is_file_uri(l:location['uri'])
+                    let l:path = lsp#utils#uri_to_path(l:location['uri'])
+                    let l:line = l:location['range']['start']['line'] + 1
+                    let l:char = l:location['range']['start']['character']
+                    let l:col = lsp#utils#to_col(l:path, l:line, l:char)
+                    let l:index = l:line - 1
 
-                if has_key(l:cache, l:path)
-                    let l:text = l:cache[l:path][l:index]
-                else
-                    let l:contents = getbufline(l:path, 1, '$')
-                    if !empty(l:contents)
-                        let l:text = l:contents[l:index]
+                    if has_key(l:cache, l:path)
+                        let l:text = l:cache[l:path][l:index]
                     else
-                        let l:contents = readfile(l:path)
-                        let l:cache[l:path] = l:contents
-                        let l:text = l:contents[l:index]
+                        let l:contents = getbufline(l:path, 1, '$')
+                        if !empty(l:contents)
+                            let l:text = l:contents[l:index]
+                        else
+                            let l:contents = readfile(l:path)
+                            let l:cache[l:path] = l:contents
+                            let l:text = l:contents[l:index]
+                        endif
                     endif
+                    call add(l:list, {
+                                \ 'filename': l:path,
+                                \ 'lnum': l:line,
+                                \ 'col': l:col,
+                                \ 'text': l:text,
+                                \ })
                 endif
-                call add(l:list, {
-                    \ 'filename': l:path,
-                    \ 'lnum': l:line,
-                    \ 'col': l:col,
-                    \ 'text': l:text,
-                    \ })
-            endif
-        endfor
+            endfor
+        elseif has_key(l:locations[0],'targetUri') " server returns LocationLinks
+            for l:location in l:locations
+                if s:is_file_uri(l:location['targetUri'])
+                    let l:path = lsp#utils#uri_to_path(l:location['targetUri'])
+                    let l:line = l:location['targetSelectionRange']['start']['line'] + 1
+                    let l:char = l:location['targetSelectionRange']['start']['character']
+                    let l:col = lsp#utils#to_col(l:path, l:line, l:char)
+                    let l:index = l:line - 1
+                    let l:viewstart = l:location['targetRange']['start']['line'] 
+                    let l:viewend = l:location['targetRange']['end']['line']
+
+                    if has_key(l:cache, l:path)
+                        let l:text = l:cache[l:path][l:index]
+                    else
+                        let l:contents = getbufline(l:path, 1, '$')
+                        if !empty(l:contents)
+                            let l:text = l:contents[l:index]
+                        else
+                            let l:contents = readfile(l:path)
+                            let l:cache[l:path] = l:contents
+                            let l:text = l:contents[l:index]
+                        endif
+                    endif
+                    call add(l:list, {
+                                \ 'filename': l:path,
+                                \ 'lnum': l:line,
+                                \ 'col': l:col,
+                                \ 'text': l:text,
+                                \ 'viewstart': l:viewstart,
+                                \ 'viewend': l:viewend
+                                \ })
+                endif
+            endfor
+        endif
     endif
 
     return l:list

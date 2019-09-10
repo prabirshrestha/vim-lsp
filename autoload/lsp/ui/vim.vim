@@ -487,12 +487,23 @@ function! s:handle_location(ctx, server, type, data) abort "ctx = {counter, list
                 echo 'Retrieved ' . a:type
                 botright copen
             else
-                let l:lines = readfile(fnameescape(l:loc['filename']))
-                call lsp#ui#vim#output#preview(a:server, l:lines, {
-                            \   'statusline': ' LSP Peek ' . a:type,
-                            \   'cursor': { 'line': l:loc['lnum'], 'col': l:loc['col'], 'align': g:lsp_peek_alignment },
-                            \   'filetype': &filetype
-                            \ })
+                if has_key(l:loc,'viewstart') " locationLink
+                    let viewstart = l:loc['viewstart']
+                    let viewend = l:loc['viewend']
+                    let l:lines = readfile(fnameescape(l:loc['filename']))
+                    call lsp#ui#vim#output#preview(a:server, l:lines[viewstart:viewend], {
+                                \   'statusline': ' LSP Peek ' . a:type,
+                                \   'cursor': { 'line': l:loc['lnum'], 'col': l:loc['col'], 'align': g:lsp_peek_alignment },
+                                \   'filetype': &filetype
+                                \ })
+                else
+                    let l:lines = readfile(fnameescape(l:loc['filename']))
+                    call lsp#ui#vim#output#preview(a:server, l:lines, {
+                                \   'statusline': ' LSP Peek ' . a:type,
+                                \   'cursor': { 'line': l:loc['lnum'], 'col': l:loc['col'], 'align': g:lsp_peek_alignment },
+                                \   'filetype': &filetype
+                                \ })
+                endif
             endif
         endif
     endif
