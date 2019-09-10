@@ -85,9 +85,12 @@ endfunction
 
 function! s:get_parameter_label(signature, parameter) abort
     if has_key(a:parameter, 'label')
-        if type(a:parameter) == v:t_list
+        if type(a:parameter['label']) == v:t_list
             let l:string_range = a:parameter['label']
-            return strcharpart(a:signature['label'], l:string_range[0], l:string_range[1])
+            return strcharpart(
+                        \ a:signature['label'],
+                        \ l:string_range[0],
+                        \ l:string_range[1] - l:string_range[0])
         endif
         return a:parameter['label']
     endif
