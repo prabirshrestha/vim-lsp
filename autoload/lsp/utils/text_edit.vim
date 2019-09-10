@@ -225,11 +225,6 @@ function! s:generate_move_end_cmd(line_pos, character_pos) abort
     return l:result
 endfunction
 
-function! s:parse(text) abort
-    " https://stackoverflow.com/questions/71417/why-is-r-a-newline-for-vim
-    return substitute(a:text, '\(^\n|\n$\|\r\n\)', '\r', 'g')
-endfunction
-
 function! s:preprocess_cmd(range) abort
     " preprocess by opening the folds, this is needed because the line you are
     " going might have a folding
