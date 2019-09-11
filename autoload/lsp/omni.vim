@@ -35,6 +35,7 @@ let s:completion_status_pending = 'pending'
 let s:is_user_data_support = has('patch-8.0.1493')
 let s:user_data_key = 'vim-lsp/textEdit'
 let s:user_data_additional_edits_key = 'vim-lsp/additionalTextEdits'
+let s:user_data_insert_start_key = 'vim-lsp/insertStart'
 let s:user_data_filtertext_key = 'vim-lsp/filterText'
 
 " }}}
@@ -68,16 +69,11 @@ function! lsp#omni#complete(findstart, base) abort
             " TODO: Allow multiple servers
             let l:server_name = l:info['server_names'][0]
             let l:server_info = lsp#get_server_info(l:server_name)
-            let l:trigger_chars = lsp#capabilities#get_completion_trigger_characters(l:server_name)
 
             let l:typed_pattern = has_key(l:server_info, 'config') && has_key(l:server_info['config'], 'typed_pattern') ? l:server_info['config']['typed_pattern'] : ''
             let l:current_line = strpart(getline('.'), 0, col('.') - 1)
 
-            if !empty(l:typed_pattern)
-                let s:start_pos = match(l:current_line, l:typed_pattern)
-            else
-                let s:start_pos = max(map(copy(l:trigger_chars), {_, c -> strridx(l:current_line, c)})) + 1
-            endif
+            let s:start_pos = min(map(copy(s:completion['matches']), {_, item -> s:get_insertion_point(item, l:current_line, l:typed_pattern) }))
 
             let l:filter = has_key(l:server_info, 'config') && has_key(l:server_info['config'], 'filter') ? l:server_info['config']['filter'] : { 'name': 'none' }
             let l:last_typed_word = strpart(l:current_line, s:start_pos)
@@ -94,6 +90,20 @@ function! lsp#omni#complete(findstart, base) abort
 
             return exists('v:none') ? v:none : []
         endif
+    endif
+endfunction
+
+function! s:get_insertion_point(item, current_line, typed_pattern) abort
+    if !has_key(a:item, 'user_data')
+        let l:insert_start = -1
+    else
+        let l:insert_start = get(json_decode(a:item['user_data']), s:user_data_insert_start_key, -1)
+    endif
+
+    if l:insert_start >= 0
+        return l:insert_start
+    else
+        return match(a:current_line, a:typed_pattern)
     endif
 endfunction
 
@@ -240,6 +250,9 @@ function! lsp#omni#default_get_vim_completion_item(item) abort
 
     let l:user_data = {}
 
+    " Use '-1' to signal "no specific insertion point" set.
+    let l:user_data[s:user_data_insert_start_key] = -1
+
     " add user_data in completion item, when
     "     1. provided user_data
     "     2. provided textEdit or additionalTextEdits
@@ -251,6 +264,7 @@ function! lsp#omni#default_get_vim_completion_item(item) abort
         " type check
         if type(l:text_edit) == type({})
             let l:user_data[s:user_data_key] = l:text_edit
+            let l:user_data[s:user_data_insert_start_key] = l:text_edit['range']['start']['character']
         endif
 
         if type(l:additional_text_edits) == type([]) && !empty(l:additional_text_edits)
