@@ -606,16 +606,23 @@ endfunction
 "   server - string
 "   comand_or_code_action - Command | CodeAction
 function! s:execute_command_or_code_action(server, command_or_code_action) abort
-    if has_key(a:command_or_code_action, 'command') && type(a:command_or_code_action['command']) == type('')
-        let l:command = a:command_or_code_action
-        call s:execute_command(a:server, l:command)
+    let l:code_action = a:command_or_code_action
+
+    if has_key(l:code_action, 'arguments') && type(l:code_action['arguments']) == type([])
+        for l:action in l:code_action['arguments']
+            if has_key(l:action, 'edit')
+                call lsp#utils#workspace_edit#apply_workspace_edit(l:action['edit'])
+            endif
+            if has_key(l:action, 'changes')
+                call lsp#utils#workspace_edit#apply_workspace_edit(l:action)
+            endif
+        endfor
     else
-        let l:code_action = a:command_or_code_action
         if has_key(l:code_action, 'edit')
-            call lsp#utils#workspace_edit#apply_workspace_edit(a:command_or_code_action['edit'])
+            call lsp#utils#workspace_edit#apply_workspace_edit(l:code_action['edit'])
         endif
         if has_key(l:code_action, 'command')
-            call s:execute_command(a:server, l:code_action['command'])
+            call s:execute_command(a:server, l:code_action)
         endif
     endif
 endfunction
