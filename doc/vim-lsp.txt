@@ -727,6 +727,10 @@ determined by |g:lsp_ignorecase|.
 	- `contains`
 	  Only allow completion items that contain the already typed word.
 
+Note: This filtering only applies immediately after you press
+|i_CTRL-X_CTRL-O|. In other words, you cannot narrow down matches by
+continuing to type. You will have to press CTRL-X CTRL-O again.
+
 lsp#stop_server                                        *vim-lsp-stop_server*
 
 Used to stop the server.
