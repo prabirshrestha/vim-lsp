@@ -23,6 +23,10 @@ function! s:set_textprops(buf) abort
     " sent. We will let Vim handle updating the line numbers when the user
     " inserts or deletes text.
 
+    " Skip if the buffer doesn't exist. This might happen when a buffer is
+    " opened and quickly deleted.
+    if !bufexists(a:buf) | return | endif
+
     " Create text property, if not already defined
     silent! call prop_type_add(s:textprop_name, {'bufnr': a:buf})
 

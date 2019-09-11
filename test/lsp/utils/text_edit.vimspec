@@ -390,6 +390,59 @@ Describe lsp#utils#text_edit
             Assert Equals(l:buffer_text, ['x', 'y', 'z', ''])
         End
 
+        It multiple textEdit with inserting \r.
+            " Add some text to buffer
+            call s:set_text(['class ABC {', '  private:', '  ', 'int a;};', ])
+
+            " Format
+            call lsp#utils#text_edit#apply_text_edits(
+                    \ expand('%'),
+                    \ [
+                    \   {
+                    \     "range": {
+                    \       "end": {
+                    \         "character": 2,
+                    \         "line": 1
+                    \       },
+                    \       "start": {
+                    \         "character": 11,
+                    \         "line": 0
+                    \       }
+                    \     },
+                    \     "newText": "\n"
+                    \   },
+                    \   {
+                    \     "range": {
+                    \       "end": {
+                    \         "character": 0,
+                    \         "line": 3
+                    \       },
+                    \       "start": {
+                    \         "character": 10,
+                    \         "line": 1
+                    \       }
+                    \     },
+                    \     "newText": "\n  "
+                    \   },
+                    \   {
+                    \     "range": {
+                    \       "end": {
+                    \         "character": 6,
+                    \         "line": 3
+                    \       },
+                    \       "start": {
+                    \         "character": 6,
+                    \         "line": 3
+                    \       }
+                    \     },
+                    \     "newText": "\n"
+                    \   }
+                    \ ])
+
+            let l:buffer_text = s:get_text()
+            Assert Equals(l:buffer_text, ['class ABC {', 'private:', '  int a;', '};', ''])
+        End
+
         It preserves v:completed_item
             " Add some text to buffer
             call s:set_text(['foo', 'bar'])
