@@ -696,6 +696,8 @@ function! s:handle_initialize(server_name, data) abort
         call lsp#ui#vim#signature_help#setup()
     endif
 
+    call lsp#ui#vim#documentation#setup()
+
     doautocmd User lsp_server_init
 endfunction
 
