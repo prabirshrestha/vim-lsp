@@ -680,9 +680,9 @@ hover_conceal                                          *vim-lsp_hover_conceal*
 
 typed_pattern                                        *vim-lsp-typed_pattern*
     Type: |String| (|pattern|)
-    Default: `''` (i.e. the empty |String|)
+    Default: `'\k*$'`
 
-Vim-lsp will automatically detect the text you have typed so for when invoking
+Vim-lsp will automatically detect the text you have typed so far when invoking
 completion. It does this by checking the textEdit's range of each completion
 item.
 
