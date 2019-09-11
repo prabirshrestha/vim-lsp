@@ -103,7 +103,7 @@ function! s:place_highlights(server_name, path, diagnostics) abort
 
             let l:name = get(s:severity_sign_names_mapping, l:item['severity'], 'LspError')
             let l:hl_name = l:name . 'Highlight'
-            call nvim_buf_add_highlight(l:bufnr, l:ns, l:hl_name, l:line, l:start_col, l:end_col)
+            call nvim_buf_add_highlight(l:bufnr, l:ns, l:hl_name, l:line - 1, l:start_col - 1, l:end_col - 1)
         endfor
     endif
 endfunction
