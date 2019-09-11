@@ -70,7 +70,7 @@ function! lsp#omni#complete(findstart, base) abort
             let l:server_name = l:info['server_names'][0]
             let l:server_info = lsp#get_server_info(l:server_name)
 
-            let l:typed_pattern = has_key(l:server_info, 'config') && has_key(l:server_info['config'], 'typed_pattern') ? l:server_info['config']['typed_pattern'] : ''
+            let l:typed_pattern = has_key(l:server_info, 'config') && has_key(l:server_info['config'], 'typed_pattern') ? l:server_info['config']['typed_pattern'] : '\k*$'
             let l:current_line = strpart(getline('.'), 0, col('.') - 1)
 
             let s:start_pos = min(map(copy(s:completion['matches']), {_, item -> s:get_insertion_point(item, l:current_line, l:typed_pattern) }))
