@@ -1,6 +1,6 @@
 let s:last_popup_id = -1
 
-function! s:complete_changed() abort
+function! s:show_documentation() abort
     if s:last_popup_id >= 0 | call popup_close(s:last_popup_id) | endif
 
     let l:right = wincol() < winwidth(0) / 2
@@ -30,10 +30,16 @@ function! s:complete_changed() abort
     call lsp#ui#vim#output#setcontent(s:last_popup_id, l:lines, l:ft)
 endfunction
 
+function! s:close_popup() abort
+    if s:last_popup_id >= 0
+        call popup_close(s:last_popup_id)
+    endif
+endfunction
+
 function! lsp#ui#vim#documentation#setup() abort
     augroup lsp_documentation_popup
         autocmd!
-        autocmd CompleteChanged * call timer_start(0, {-> s:complete_changed()})
-        autocmd CompleteDone * if s:last_popup_id >= 0 | call popup_close(s:last_popup_id) | endif
+        autocmd CompleteChanged * call timer_start(0, {-> s:show_documentation()})
+        autocmd CompleteDone * call s:close_popup()
     augroup end
 endfunction
