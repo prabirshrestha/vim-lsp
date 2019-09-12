@@ -167,7 +167,7 @@ function! lsp#ui#vim#output#setcontent(winid, lines, ft) abort
   endif
 endfunction
 
-function! s:adjust_float_placement(bufferlines, maxwidth) abort
+function! lsp#ui#vim#output#adjust_float_placement(bufferlines, maxwidth) abort
     if s:use_nvim_float
       let l:win_config = {}
       let l:height = min([winheight(s:winid), a:bufferlines])
@@ -359,7 +359,7 @@ function! lsp#ui#vim#output#preview(server, data, options) abort
     if s:winid && (s:use_vim_popup || s:use_nvim_float)
       if s:use_nvim_float
         " Neovim floats
-        call s:adjust_float_placement(l:bufferlines, l:maxwidth)
+        call lsp#ui#vim#output#adjust_float_placement(l:bufferlines, l:maxwidth)
         call s:set_cursor(l:current_window_id, a:options)
         call s:add_float_closing_hooks()
       elseif s:use_vim_popup

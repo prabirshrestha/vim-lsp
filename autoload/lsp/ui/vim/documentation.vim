@@ -45,8 +45,13 @@ function! s:show_documentation(event) abort
     call setbufvar(winbufnr(s:last_popup_id), 'lsp_syntax_highlights', l:syntax_lines)
     call setbufvar(winbufnr(s:last_popup_id), 'lsp_do_conceal', 1)
     call lsp#ui#vim#output#setcontent(s:last_popup_id, l:lines, l:ft)
+    let [l:bufferlines, l:maxwidth] = lsp#ui#vim#output#get_size_info()
 
     call win_gotoid(l:current_win_id)
+
+    if s:use_nvim_float
+        call lsp#ui#vim#output#adjust_float_placement(l:bufferlines, l:maxwidth)
+    endif
 endfunction
 
 function! s:close_popup() abort
