@@ -24,9 +24,9 @@ function! lsp#ui#vim#output#closepreview() abort
   endif
   let s:winid = v:false
   let s:preview_data = v:false
-  augroup lsp_float_preview_close
+  augroup lsp_preview_close
+      autocmd!
   augroup end
-  autocmd! lsp_float_preview_close CursorMoved,CursorMovedI,VimResized *
   doautocmd User lsp_float_closed
 endfunction
 
@@ -37,11 +37,14 @@ function! lsp#ui#vim#output#focuspreview() abort
       let s:prevwin = win_getid()
       call win_gotoid(s:winid)
     elseif s:prevwin
-      " Temporarily disable hooks
-      " TODO: remove this when closing logic is able to distinguish different move directions
-      autocmd! lsp_float_preview_close CursorMoved,CursorMovedI,VimResized *
+      " Disable hooks on prev buffer.
+      augroup lsp_preview_close
+          autocmd!
+      augroup end
       call win_gotoid(s:prevwin)
-      call s:add_float_closing_hooks()
+
+      " Add hooks on next buffer.
+      call s:add_closing_hooks({ 'closing_hooks': ['WinLeave'] })
       let s:prevwin = v:false
     endif
   endif
@@ -125,7 +128,10 @@ function! lsp#ui#vim#output#floatingpreview(data) abort
     nmap <buffer><silent> <esc> :pclose<cr>
   elseif s:use_vim_popup
     let l:options = {
-                \ 'moved': 'any',
+                \ 'pos': 'botleft',
+                \ 'line': 'cursor-1',
+                \ 'col': 'cursor',
+                \ 'moved': [0, 100000],
                 \ 'border': [1, 1, 1, 1],
                 \ 'callback': function('s:vim_popup_closed')
                 \ }
@@ -138,7 +144,7 @@ function! lsp#ui#vim#output#floatingpreview(data) abort
         let l:options['maxheight'] = g:lsp_preview_max_height
     endif
 
-    let s:winid = popup_atcursor('...', l:options)
+    let s:winid = popup_create('...', l:options)
   endif
   return s:winid
 endfunction
@@ -177,11 +183,14 @@ function! s:adjust_float_placement(bufferlines, maxwidth) abort
     endif
 endfunction
 
-function! s:add_float_closing_hooks() abort
+function! s:add_closing_hooks(options) abort
+    let l:closing_hooks = get(a:options, 'closing_hooks', ['CursorMoved', 'CursorMovedI', 'VimResized'])
     if g:lsp_preview_autoclose
-      augroup lsp_float_preview_close
-        autocmd! lsp_float_preview_close CursorMoved,CursorMovedI,VimResized *
-        autocmd CursorMoved,CursorMovedI,VimResized * call lsp#ui#vim#output#closepreview()
+      augroup lsp_preview_close
+        autocmd!
+        for l:hook in l:closing_hooks
+            execute printf('autocmd! %s * call lsp#ui#vim#output#closepreview()', l:hook)
+        endfor
       augroup END
     endif
 endfunction
@@ -291,7 +300,9 @@ function! lsp#ui#vim#output#preview(server, data, options) abort
        \ && len(g:lsp_preview_doubletap) >= 1
        \ && type(g:lsp_preview_doubletap[0]) == 2
         echo ''
-        return call(g:lsp_preview_doubletap[0], [])
+        if !get(a:options, 'disable_double_tap', v:false)
+            return call(g:lsp_preview_doubletap[0], [])
+        endif
     endif
     " Close any previously opened preview window
     pclose
@@ -355,11 +366,11 @@ function! lsp#ui#vim#output#preview(server, data, options) abort
         " Neovim floats
         call s:adjust_float_placement(l:bufferlines, l:maxwidth)
         call s:set_cursor(l:current_window_id, a:options)
-        call s:add_float_closing_hooks()
       elseif s:use_vim_popup
         " Vim popups
         call s:set_cursor(l:current_window_id, a:options)
       endif
+      call s:add_closing_hooks(a:options)
 
       doautocmd User lsp_float_opened
     endif

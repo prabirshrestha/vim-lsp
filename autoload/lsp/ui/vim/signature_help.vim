@@ -1,3 +1,8 @@
+let s:last_help = {
+            \   'line': -1,
+            \   'trigger_text': '',
+            \ }
+
 function! s:not_supported(what) abort
     return lsp#utils#error(a:what.' not supported for '.&filetype)
 endfunction
@@ -11,7 +16,6 @@ function! lsp#ui#vim#signature_help#get_signature_help_under_cursor() abort
     endif
 
     let l:position = lsp#get_position()
-    let l:position.character += 1
     for l:server in l:servers
         call lsp#send_request(l:server, {
             \ 'method': 'textDocument/signatureHelp',
@@ -75,7 +79,12 @@ function! s:handle_signature_help(server, data) abort
             call add(l:contents, l:signature['documentation'])
         endif
 
-        call lsp#ui#vim#output#preview(a:server, l:contents, {'statusline': ' LSP SignatureHelp'})
+        let l:options = { 'statusline': ' LSP SignatureHelp' }
+        if index(['i', 'ic', 'ix'], mode()) >= 0
+            let l:options['closing_hooks'] = ['InsertLeave']
+            let l:options['disable_double_tap'] = v:true
+        endif
+        call lsp#ui#vim#output#preview(a:server, l:contents, l:options)
         return
     else
         " signature help is used while inserting. So this must be graceful.
@@ -110,21 +119,62 @@ function! s:get_parameter_doc(parameter) abort
     return printf('***%s*** - %s', a:parameter['label'], l:doc)
 endfunction
 
-function! s:insert_char_pre() abort
-    let l:buf = bufnr('%')
-    for l:server_name in lsp#get_whitelisted_servers(l:buf)
-        let l:keys = lsp#capabilities#get_signature_help_trigger_characters(l:server_name)
-        for l:key in l:keys
-            if l:key ==# v:char
-                call timer_start(0, {_-> lsp#ui#vim#signature_help#get_signature_help_under_cursor() })
+function! s:trigger_if_need() abort
+    let l:server_names = filter(lsp#get_whitelisted_servers(), 'lsp#capabilities#has_signature_help_provider(v:val)')
+    if len(l:server_names) == 0
+        return
+    endif
+
+    let l:line = line('.')
+
+    " To support wrapping function arguments.
+    let l:text = ''
+    if l:line > 2 | let l:text .= getline(l:line - 2) . "\n" | endif
+    if l:line > 1 | let l:text .= getline(l:line  - 1) . "\n" | endif
+    let l:text .= getline(l:line)[0 : col('.') - 2]
+
+    for l:server_name in l:server_names
+        let l:special_chars = [')']
+        let l:trigger_chars = lsp#capabilities#get_signature_help_trigger_characters(l:server_name)
+
+        " Remove until the last trigger character.
+        let l:trigger_text = s:remove_until_chars(l:text, l:special_chars + l:trigger_chars)
+
+        let l:char = strgetchar(l:trigger_text, strchars(l:trigger_text) - 1)
+        if l:char != -1
+            if index(l:trigger_chars, nr2char(l:char)) >= 0
+                if s:last_help['line'] != l:line || s:last_help['trigger_text'] !=# l:trigger_text
+                    call lsp#ui#vim#signature_help#get_signature_help_under_cursor()
+                    let s:last_help['line'] = l:line
+                    let s:last_help['trigger_text'] = l:trigger_text
+                endif
+            else
+                call lsp#ui#vim#output#closepreview()
             endif
-        endfor
+        endif
     endfor
+endfunction
+
+function! s:remove_until_chars(text, chars) abort
+    let l:text_len = strchars(a:text)
+    let l:i = -1
+    while v:true
+        let l:nr = strgetchar(a:text, l:text_len + l:i)
+        if l:nr == -1 || index(a:chars, nr2char(l:nr)) >= 0
+            break
+        endif
+        let l:i -= 1
+    endwhile
+   return strcharpart(a:text, 0, l:text_len + l:i + 1)
 endfunction
 
 function! lsp#ui#vim#signature_help#setup() abort
     augroup _lsp_signature_help_
         autocmd!
-        autocmd InsertCharPre <buffer> call s:insert_char_pre()
+        autocmd TextChangedI * call s:trigger_if_need()
+        autocmd TextChangedP * call s:trigger_if_need()
+        autocmd InsertEnter * let s:last_help = { 'line': -1, 'trigger_text': '' }
+        autocmd InsertLeave * let s:last_help = { 'line': -1, 'trigger_text': '' }
     augroup END
 endfunction
+
