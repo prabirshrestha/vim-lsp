@@ -10,7 +10,6 @@ function! s:complete_done() abort
 endfunction
 
 function! s:show_documentation(event) abort
-    call lsp#log('event', a:event)
     call s:close_popup()
 
     if !has_key(a:event['completed_item'], 'info') | return | endif
