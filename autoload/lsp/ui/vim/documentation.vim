@@ -51,6 +51,7 @@ function! s:show_documentation(event) abort
 
     if s:use_nvim_float
         call lsp#ui#vim#output#adjust_float_placement(l:bufferlines, l:maxwidth)
+        call nvim_win_set_config(s:last_popup_id, {'relative': 'win', 'row': l:line - 1, 'col': l:col - 1})
     endif
 endfunction
 
