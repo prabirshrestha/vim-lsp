@@ -20,11 +20,9 @@ function! s:show_documentation(event) abort
     if l:right
         let l:line = a:event['row'] + 1
         let l:col = a:event['col'] + a:event['width'] + 1 + (a:event['scrollbar'] ? 1 : 0)
-        let l:pos = 'topleft'
     else
         let l:line = a:event['row'] + 1
         let l:col = a:event['col'] - 1
-        let l:pos = 'topright'
     endif
 
     " TODO: Support markdown
@@ -34,7 +32,7 @@ function! s:show_documentation(event) abort
     let l:ft = lsp#ui#vim#output#append(l:data, l:lines, l:syntax_lines)
 
     if s:use_vim_popup
-        let s:last_popup_id = popup_create('(no documentation available)', {'line': l:line, 'col': l:col, 'pos': l:pos, 'padding': [0, 1, 0, 1]})
+        let s:last_popup_id = popup_create('(no documentation available)', {'line': l:line, 'col': l:col, 'pos': l:right ? 'topleft' : 'topright', 'padding': [0, 1, 0, 1]})
     elseif s:use_nvim_float
         " TODO
     endif
