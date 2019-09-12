@@ -143,10 +143,10 @@ function! lsp#ui#vim#output#floatingpreview(data) abort
   return s:winid
 endfunction
 
-function! s:setcontent(lines, ft) abort
+function! lsp#ui#vim#output#setcontent(winid, lines, ft) abort
   if s:use_vim_popup
     " vim popup
-    call setbufline(winbufnr(s:winid), 1, a:lines)
+    call setbufline(winbufnr(a:winid), 1, a:lines)
     let l:lightline_toggle = v:false
     if exists('#lightline') && !has('nvim')
       " Lightline does not work in popups but does not recognize it yet.
@@ -154,7 +154,7 @@ function! s:setcontent(lines, ft) abort
       let l:lightline_toggle = v:true
       call lightline#disable()
     endif
-    call win_execute(s:winid, 'setlocal filetype=' . a:ft . '.lsp-hover')
+    call win_execute(a:winid, 'setlocal filetype=' . a:ft . '.lsp-hover')
     if l:lightline_toggle
       call lightline#enable()
     endif
@@ -303,7 +303,7 @@ function! lsp#ui#vim#output#preview(server, data, options) abort
     let s:preview_data = a:data
     let l:lines = []
     let l:syntax_lines = []
-    let l:ft = s:append(a:data, l:lines, l:syntax_lines)
+    let l:ft = lsp#ui#vim#output#append(a:data, l:lines, l:syntax_lines)
 
     if has_key(a:options, 'filetype')
         let l:ft = a:options['filetype']
@@ -318,7 +318,7 @@ function! lsp#ui#vim#output#preview(server, data, options) abort
 
     call setbufvar(winbufnr(s:winid), 'lsp_syntax_highlights', l:syntax_lines)
     call setbufvar(winbufnr(s:winid), 'lsp_do_conceal', l:do_conceal)
-    call s:setcontent(l:lines, l:ft)
+    call lsp#ui#vim#output#setcontent(s:winid, l:lines, l:ft)
 
     " Get size information while still having the buffer active
     let l:maxwidth = max(map(getline(1, '$'), 'strdisplaywidth(v:val)'))
@@ -371,10 +371,10 @@ function! lsp#ui#vim#output#preview(server, data, options) abort
     return ''
 endfunction
 
-function! s:append(data, lines, syntax_lines) abort
+function! lsp#ui#vim#output#append(data, lines, syntax_lines) abort
     if type(a:data) == type([])
         for l:entry in a:data
-            call s:append(entry, a:lines, a:syntax_lines)
+            call lsp#ui#vim#output#append(entry, a:lines, a:syntax_lines)
         endfor
 
         return 'markdown'

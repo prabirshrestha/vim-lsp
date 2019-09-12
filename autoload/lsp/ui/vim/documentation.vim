@@ -18,7 +18,16 @@ function! s:complete_changed() abort
         let l:pos = 'topright'
     endif
 
-    let s:last_popup_id = popup_create(split(v:completed_item['info'], '\n'), {'line': l:line, 'col': l:col, 'pos': l:pos, 'padding': [0, 1, 0, 1]})
+    let l:data = split(v:completed_item['info'], '\n')
+    let l:lines = []
+    let l:syntax_lines = []
+    let l:ft = lsp#ui#vim#output#append(l:data, l:lines, l:syntax_lines)
+
+    let s:last_popup_id = popup_create('...', {'line': l:line, 'col': l:col, 'pos': l:pos, 'padding': [0, 1, 0, 1]})
+
+    call setbufvar(winbufnr(s:last_popup_id), 'lsp_syntax_highlights', l:syntax_lines)
+    call setbufvar(winbufnr(s:last_popup_id), 'lsp_do_conceal', 1)
+    call lsp#ui#vim#output#setcontent(s:last_popup_id, l:lines, l:ft)
 endfunction
 
 function! lsp#ui#vim#documentation#setup() abort
