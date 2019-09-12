@@ -12,7 +12,9 @@ endfunction
 function! s:show_documentation(event) abort
     call s:close_popup()
 
-    if !has_key(a:event['completed_item'], 'info') | return | endif
+    if !has_key(a:event['completed_item'], 'info') || a:event['completed_item']['info']==''
+        return
+    endif                                                                                  
 
     let l:right = wincol() < winwidth(0) / 2
 
