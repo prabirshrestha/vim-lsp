@@ -1,13 +1,17 @@
+let s:use_vim_popup = has('patch-8.1.1517') && !has('nvim')
+let s:use_nvim_float = exists('*nvim_open_win') && has('nvim')
+
 let s:last_popup_id = -1
 
 function! s:show_documentation() abort
-    if s:last_popup_id >= 0 | call popup_close(s:last_popup_id) | endif
+    call s:close_popup()
 
-    let l:right = wincol() < winwidth(0) / 2
     if !has_key(v:completed_item, 'info') | return | endif
 
     let l:pum_pos = pum_getpos()
+    let l:right = wincol() < winwidth(0) / 2
 
+    " TODO: Neovim
     if l:right
         let l:line = l:pum_pos['row'] + 1
         let l:col = l:pum_pos['col'] + l:pum_pos['width'] + 1 + (l:pum_pos['scrollbar'] ? 1 : 0)
@@ -18,12 +22,17 @@ function! s:show_documentation() abort
         let l:pos = 'topright'
     endif
 
+    " TODO: Support markdown
     let l:data = split(v:completed_item['info'], '\n')
     let l:lines = []
     let l:syntax_lines = []
     let l:ft = lsp#ui#vim#output#append(l:data, l:lines, l:syntax_lines)
 
-    let s:last_popup_id = popup_create('(no documentation available)', {'line': l:line, 'col': l:col, 'pos': l:pos, 'padding': [0, 1, 0, 1]})
+    if s:use_vim_popup
+        let s:last_popup_id = popup_create('(no documentation available)', {'line': l:line, 'col': l:col, 'pos': l:pos, 'padding': [0, 1, 0, 1]})
+    elseif s:use_nvim_float
+        " TODO
+    endif
 
     call setbufvar(winbufnr(s:last_popup_id), 'lsp_syntax_highlights', l:syntax_lines)
     call setbufvar(winbufnr(s:last_popup_id), 'lsp_do_conceal', 1)
@@ -32,7 +41,10 @@ endfunction
 
 function! s:close_popup() abort
     if s:last_popup_id >= 0
-        call popup_close(s:last_popup_id)
+        if s:use_vim_popup | call popup_close(s:last_popup_id) | endif
+        if s:use_nvim_float | call nvim_win_close(s:last_popup_id, 1) | endif
+
+        let s:last_popup_id = -1
     endif
 endfunction
 
