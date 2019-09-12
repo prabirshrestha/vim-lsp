@@ -4,6 +4,7 @@ let s:use_nvim_float = exists('*nvim_open_win') && has('nvim')
 let s:last_popup_id = -1
 
 function! s:complete_done() abort
+    " Use a timer to avoid textlock (see :h textlock).
     let l:event = deepcopy(v:event)
     call timer_start(0, {-> s:show_documentation(l:event)})
 endfunction
