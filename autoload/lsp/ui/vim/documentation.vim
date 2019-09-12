@@ -23,7 +23,7 @@ function! s:complete_changed() abort
     let l:syntax_lines = []
     let l:ft = lsp#ui#vim#output#append(l:data, l:lines, l:syntax_lines)
 
-    let s:last_popup_id = popup_create('...', {'line': l:line, 'col': l:col, 'pos': l:pos, 'padding': [0, 1, 0, 1]})
+    let s:last_popup_id = popup_create('(no documentation available)', {'line': l:line, 'col': l:col, 'pos': l:pos, 'padding': [0, 1, 0, 1]})
 
     call setbufvar(winbufnr(s:last_popup_id), 'lsp_syntax_highlights', l:syntax_lines)
     call setbufvar(winbufnr(s:last_popup_id), 'lsp_do_conceal', 1)
