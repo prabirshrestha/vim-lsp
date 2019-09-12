@@ -87,12 +87,14 @@ endfunction
 " Handle response from server.
 function! s:handle_references(ctx, data) abort
     " Sanity checks
-    if lsp#client#is_error(a:data['response']) ||
-    \  !has_key(s:pending, a:ctx['filetype']) ||
+    if !has_key(s:pending, a:ctx['filetype']) ||
     \  !s:pending[a:ctx['filetype']]
         return
     endif
     let s:pending[a:ctx['filetype']] = v:false
+    if lsp#client#is_error(a:data['response'])
+        return
+    end
 
     " More sanity checks
     if  a:ctx['bufnr'] != bufnr('%') || a:ctx['last_req_id'] != s:last_req_id
