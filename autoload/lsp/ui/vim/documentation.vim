@@ -36,8 +36,8 @@ function! s:show_documentation(event) abort
     if s:use_vim_popup
         let s:last_popup_id = popup_create('(no documentation available)', {'line': l:line, 'col': l:col, 'pos': l:right ? 'topleft' : 'topright', 'padding': [0, 1, 0, 1]})
     elseif s:use_nvim_float
-        let l:buf = nvim_create_buf(v:false, v:true)
-        let s:last_popup_id = nvim_open_win(l:buf, v:true, {'relative': 'win', 'anchor': l:right ? 'NW' : 'NE', 'row': l:line - 1, 'col': l:col - 1, 'height': 10, 'width': 10})
+        let s:last_popup_id = lsp#ui#vim#output#floatingpreview([])
+        call nvim_win_set_config(s:last_popup_id, {'relative': 'win', 'anchor': l:right ? 'NW' : 'NE', 'row': l:line - 1, 'col': l:col - 1, 'height': 10, 'width': 10})
     endif
 
     call setbufvar(winbufnr(s:last_popup_id), 'lsp_syntax_highlights', l:syntax_lines)
