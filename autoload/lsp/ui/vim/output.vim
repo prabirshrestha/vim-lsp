@@ -112,15 +112,8 @@ function! lsp#ui#vim#output#floatingpreview(data) abort
     endif
 
     let l:opts = s:get_float_positioning(l:height, l:width)
-
-    let s:winid = nvim_open_win(buf, v:true, l:opts)
-    call nvim_win_set_option(s:winid, 'winhl', 'Normal:Pmenu,NormalNC:Pmenu')
-    call nvim_win_set_option(s:winid, 'foldenable', v:false)
-    call nvim_win_set_option(s:winid, 'wrap', v:true)
-    call nvim_win_set_option(s:winid, 'statusline', '')
-    call nvim_win_set_option(s:winid, 'number', v:false)
-    call nvim_win_set_option(s:winid, 'relativenumber', v:false)
-    call nvim_win_set_option(s:winid, 'cursorline', v:false)
+    let l:opts['style'] = 'minimal'
+    let s:winid = nvim_open_win(buf, v:false, l:opts)
     " Enable closing the preview with esc, but map only in the scratch buffer
     nmap <buffer><silent> <esc> :pclose<cr>
   elseif s:use_vim_popup
@@ -144,9 +137,9 @@ function! lsp#ui#vim#output#floatingpreview(data) abort
 endfunction
 
 function! lsp#ui#vim#output#setcontent(winid, lines, ft) abort
-  if s:use_vim_popup
-    " vim popup
-    call setbufline(winbufnr(a:winid), 1, a:lines)
+  if s:use_vim_popup || s:use_nvim_float
+    let l:buf = winbufnr(a:winid)
+    call setbufline(l:buf, 1, a:lines)
     let l:lightline_toggle = v:false
     if exists('#lightline') && !has('nvim')
       " Lightline does not work in popups but does not recognize it yet.
@@ -154,12 +147,23 @@ function! lsp#ui#vim#output#setcontent(winid, lines, ft) abort
       let l:lightline_toggle = v:true
       call lightline#disable()
     endif
-    call win_execute(a:winid, 'setlocal filetype=' . a:ft . '.lsp-hover')
+    
+    let l:filetype = a:ft . '.lsp-hover'
+    if s:use_vim_popup
+      call win_execute(a:winid, 'setlocal filetype=' . l:filetype)
+    elseif s:use_nvim_float
+      let l:height = len(a:lines)
+      let l:width = max(map(a:lines, 'strdisplaywidth(v:val)'))
+      let l:opts = s:get_float_positioning(l:height, l:width)
+      call nvim_win_set_config(a:winid, l:opts)
+      call nvim_buf_set_option(l:buf, 'filetype', l:filetype)
+    endif
+
     if l:lightline_toggle
       call lightline#enable()
     endif
   else
-    " nvim floating or preview
+    " preview
     call setline(1, a:lines)
 
     setlocal readonly nomodifiable
