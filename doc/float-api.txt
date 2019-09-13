@@ -41,6 +41,8 @@ All the following functions take the same initial arguments:
       the popup.
     - {syn-ranges}: A |list| of |dict|s, each representing a syntax highlight
       to be applied to the popup. See parse_lsp_response for more info.
+      You can pass an empty |list| `[]` if you don't want any additional
+      syntax highlighting (of course, the syntax of {filetype} still applies).
     - {filetype}: The |'filetype'| of the popup buffer. This determines the
       syntax highlighting of the entire buffer, which ftplugin is used, and so
       on.
