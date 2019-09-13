@@ -1,0 +1,123 @@
+==============================================================================
+LSP-SPECIFIC API                                            *lsp-specific-api*
+
+parse_lsp_response({data})
+
+    Parses a LSP response (be it a String, MarkedString, Markdown segment,
+    MarkupContent, ...; from hereon just {data}) to:
+
+        - A |list| of |String|s that represent the "stripped" content. E.g.
+          markdown `*bold*` strings will be converted to just `bold`, code
+          blocks will have the markers removed, etc. It's the "plain-text, no
+          colour" version of the {data}.
+
+        - A |list| of |Dicts| that add colour to the plaintext. Each entry
+          essentially says: highlight this character range using this Vim
+          syntax group. Can be used for displaying stripped `*bold*` in a bold
+          font, or to apply syntax highlighting to a region.
+
+          Example of an entry:
+            {
+                'range': {
+                    'start': {
+                        'line': 5,
+                        'character': 10
+                    },
+                    'end': {
+                        'line': 5,
+                        'character': 15
+                    }
+                },
+                'group': 'markdownBold'
+            }
+
+
+==============================================================================
+TOP-LEVEL API                                                  *top-level-api*
+
+All the following functions take the same initial arguments:
+
+    - {lines}: A |list| of |String|s that represents the plain-text content of
+      the popup.
+    - {syn-ranges}: A |list| of |dict|s, each representing a syntax highlight
+      to be applied to the popup. See parse_lsp_response for more info.
+    - {filetype}: The |'filetype'| of the popup buffer. This determines the
+      syntax highlighting of the entire buffer, which ftplugin is used, and so
+      on.
+
+
+show_cursor_tooltip({lines}, {syn-ranges}, {filetype}, {options})
+
+    Shows a tooltip at the current cursor position, either above or below,
+    depending on where there is enough space.
+
+    The preview's content is set depending on {lines}, {syn-ranges} and
+    {filetype}, see above.
+
+    Returns the window ID of the created popup.
+
+    {options} is a |dict| that can contain the following keys:
+    TODO
+
+
+show_pum_tooltip({lines}, {syn-ranges}, {filetype}, {options})
+
+    Shows a tooltip associated with the currently selected item in the popup
+    menu. It can be either to the left/right of the item, depending on where
+    there is enough space. Settings from |'completepopup'| is taken into
+    account.
+
+    The preview's content is set depending on {lines}, {syn-ranges} and
+    {filetype}, see above.
+
+    Returns the window ID of the created popup.
+
+    {options} is a |dict| that can contain the following keys:
+    TODO
+
+
+update_pum_tooltip({winid}, {lines}, {syn-ranges}, {filetype}, {options})
+
+    Changes the content of the tooltip associated with the currently selected
+    item in the popup menu. {winid} must be the value returned by
+    `show_pum_tooltip`.
+
+    For the meaning of {options}, see `show_pum_tooltip`.
+
+==============================================================================
+INTERMEDIATE-LEVEL API                                *intermediate-level-api*
+
+These functions will be backend specific (Vim popup/Nvim float).
+
+create_tooltip()
+
+    Creates a hidden floating window, with undefined position, and an empty
+    buffer associated with it.
+
+    Returns the created window ID.
+
+
+set_tooltip_contents({winid}, {lines})
+
+    Updates the contents of a given floating window, and unhides it. Also
+    retriggers size calculation.
+
+
+set_tooltip_position({winid}, {options})
+
+    Sets the position of the given floating window, be it cursor-relative,
+    pum-relative, etc. Also retriggers size calculation.
+
+    TODO: Which {options}?
+
+
+close_tooltip({winid})
+
+    Closes the tooltip with the ID {winid}.
+
+==============================================================================
+LOW-LEVEL API                                                  *low-level-api*
+
+To be determined.
+
+vim:tw=78:ts=4:ft=help:et
