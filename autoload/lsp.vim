@@ -386,6 +386,9 @@ function! lsp#default_get_supported_capabilities(server_info) abort
     \   },
     \   'textDocument': {
     \       'completion': {
+    \           'completionItem': {
+    \              'documentationFormat': ['plaintext']
+    \           },
     \           'completionItemKind': {
     \              'valueSet': lsp#omni#get_completion_item_kinds()
     \           }
@@ -695,6 +698,8 @@ function! s:handle_initialize(server_name, data) abort
     if g:lsp_signature_help_enabled
         call lsp#ui#vim#signature_help#setup()
     endif
+
+    call lsp#ui#vim#documentation#setup()
 
     doautocmd User lsp_server_init
 endfunction
