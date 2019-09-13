@@ -74,7 +74,8 @@ show_pum_tooltip({lines}, {syn-ranges}, {filetype}, {options})
     Returns the window ID of the created popup.
 
     {options} is a |dict| that can contain the following keys:
-    TODO
+    TODO: might not make sense to have options here, because everything is in
+    'completepopup' already?
 
 
 update_pum_tooltip({winid}, {lines}, {syn-ranges}, {filetype}, {options})
