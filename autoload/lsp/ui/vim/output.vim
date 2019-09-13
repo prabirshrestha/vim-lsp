@@ -344,7 +344,7 @@ function! lsp#ui#vim#output#preview(server, data, options) abort
     call setbufvar(winbufnr(s:winid), 'lsp_do_conceal', l:do_conceal)
     call lsp#ui#vim#output#setcontent(s:winid, l:lines, l:ft)
 
-    let [l:bufferlines, l:maxwidth] = lsp#ui#vim#output#get_size_info(getlines(1, '$'))
+    let [l:bufferlines, l:maxwidth] = lsp#ui#vim#output#get_size_info(getline(1, '$'))
 
     if s:use_preview
         " Set statusline
