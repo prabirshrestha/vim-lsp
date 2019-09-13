@@ -57,7 +57,8 @@ show_cursor_tooltip({lines}, {syn-ranges}, {filetype}, {options})
     Returns the window ID of the created popup.
 
     {options} is a |dict| that can contain the following keys:
-    TODO
+    TODO: possibly add some options or maxwidth, close_on_cursor_move,
+    firstline, cursor_pos, cursor_alignment
 
 
 show_pum_tooltip({lines}, {syn-ranges}, {filetype}, {options})
