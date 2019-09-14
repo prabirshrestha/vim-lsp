@@ -64,7 +64,8 @@ All the following functions take the same initial arguments:
       - 'firstline': ???
       - 'cursor': {'align': , 'pos': } ???
 
-      TODO: add more options, bike-shed names, decide on defaults
+      TODO: add more options, bike-shed names, decide on defaults,
+      TODO: 'pos' in characters or bytes? 0- or 1-indexed?
 
       Options not relevant to a function or a backend are ignored.
 
@@ -149,7 +150,7 @@ set_tooltip_position({winid}, {options})
     Sets the position of the given floating window, be it cursor-relative,
     pum-relative, etc. Also retriggers size calculation.
 
-    TODO: Which {options}? width in characters or bytes? 0- or 1-indexed?
+    TODO: Which {options}?
 
 
 close_tooltip({winid})
@@ -166,7 +167,7 @@ get_size_info({lines})
 
      Returns a tuple of |[lines,width]| 
 
-     TODO: in characters or bytes? 0- or 1-indexed?
+     TODO: in characters or bytes?
 
 
 vim:tw=78:ts=4:ft=help:et
