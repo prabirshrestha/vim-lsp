@@ -88,7 +88,7 @@ show_pum_tooltip({lines}, {syn-ranges}, {filetype}, {options})
 
     Returns the window ID of the created popup.
 
-updaggte_pum_tooltip({winid}, {lines}, {syn-ranges}, {filetype}, {options})
+update_pum_tooltip({winid}, {lines}, {syn-ranges}, {filetype}, {options})
 
     Changes the content of the tooltip associated with the currently selected
     item in the popup menu. {winid} must be the value returned by
