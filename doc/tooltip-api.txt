@@ -1,0 +1,171 @@
+*tooltip-api.txt*   generic API for handling tooltips
+
+Vim-lsp offers a generic API that allows overlaying information on the main
+buffer, e.g., for `hover` or `PeekDefinition`, here referred to as "tooltip" to
+distinguish from vim's popups or neovim's floating windows (which this API is
+meant to abstract).
+
+The API is separated into 
+1. a `top-level API` for opening and updating tooltips to be called from
+functions handling language server responses,
+2. an `intermediate-level API` that is implemented separately for each backend
+using the specific backend's low-level API.
+
+Calling the intermediate-level API should be avoided since it is subject to
+change in order to adapt to changes in low-level API or to add new backends.
+
+==============================================================================
+TOP-LEVEL API                                                  *top-level-api*
+
+The top-level API offers generic functions for creating and updating tooltip
+windows. It distinguishes two types of windows that behave differently:
+
+1. `cursor tooltips` open near or relative to the cursor (e.g., for `hover`)
+and are typically closed quickly,
+2. `pum tooltips` open near or relative to the popup menu (e.g., for showing
+documentation) and are typically updated rather than closed.
+
+All the following functions take the same initial arguments:
+
+    - {lines}: A |list| of |String|s that represents the plain-text content of
+      the popup.
+    - {filetype}: The |'filetype'| of the popup buffer. This determines the
+      syntax highlighting of the entire buffer, which ftplugin is used, and so
+      on.
+    - {syn-ranges}: A |list| of |dict|s, each representing a highlight group
+      to be applied to the popup. 
+
+      Example of an entry: >
+      {
+          'range': {
+              'start': {
+                  'line': 5,
+                  'character': 10
+              },
+              'end': {
+                  'line': 5,
+                  'character': 15
+              }
+          },
+          'group': 'markdownBold'
+      }
+<
+      Pass an empty |list| `[]` for no additional highlighting (apart from 
+      the syntax highlighting applied for the {filetype}).
+    - {options}: A |dict| controlling the behavior of the tooltip that can
+      contain the following keys:
+      - 'close': conditions when the tooltip should be closed. Possible
+        values: 'move', 'insert'.
+      - 'maxwidth': maximal width of the tooltip 
+      - 'border': draw border around tooltip; default: |v:false|
+      - 'focus': focus tooltip; default: |v:false|
+      - 'firstline': ???
+      - 'cursor': {'align': , 'pos': } ???
+
+      TODO: add more options, bike-shed names, decide on defaults
+
+      Options not relevant to a function or a backend are ignored.
+
+show_cursor_tooltip({lines}, {filetype}, {syn-ranges}, {options})
+
+    Shows a tooltip at the current cursor position, either above or below,
+    depending on where there is enough space.
+
+    The preview's content is set depending on {lines}, {syn-ranges} and
+    {filetype}, see above.
+
+    Returns the window ID of the created popup.
+
+show_pum_tooltip({lines}, {syn-ranges}, {filetype}, {options})
+
+    Shows a tooltip associated with the currently selected item in the popup
+    menu. It can be either to the left/right of the item, depending on where
+    there is enough space. Settings from |'completepopup'| is taken into
+    account.
+
+    The preview's content is set depending on {lines}, {syn-ranges} and
+    {filetype}, see above.
+
+    Returns the window ID of the created popup.
+
+updaggte_pum_tooltip({winid}, {lines}, {syn-ranges}, {filetype}, {options})
+
+    Changes the content of the tooltip associated with the currently selected
+    item in the popup menu. {winid} must be the value returned by
+    `show_pum_tooltip`.
+
+
+In addition, there are utility functions useful for interacting with floats:
+
+parse_lsp_response({data})
+
+    Parses a LSP response (be it a String, MarkedString, Markdown segment,
+    MarkupContent, ...; from hereon just {data}) to:
+
+        - A |list| of |String|s that represent the "stripped" content. E.g.
+          markdown `*bold*` strings will be converted to just `bold`, code
+          blocks will have the markers removed, etc. It's the "plain-text, no
+          colour" version of the {data}.
+
+        - A |list| of |Dicts| that add colour to the plaintext. Each entry
+          essentially says: highlight this character range using this Vim
+          syntax group. Can be used for displaying stripped `*bold*` in a bold
+          font, or to apply syntax highlighting to a region.
+
+
+TODO: move to `util.vim`?
+
+
+==============================================================================
+INTERMEDIATE-LEVEL API                                *intermediate-level-api*
+
+These functions abstract the low-level backend-specific API for interacting
+with tooltip-type windows. They have a common signature but are implemented
+separately for each backend.
+
+Currently, the following backends are implemented:
+
+1. `popup` windows for vim 8.1.1517+
+2. `floating windows` for neovim 0.4.0+
+3. TODO `preview` buffers as a fallback D*Todo
+
+create_tooltip()
+
+    Creates a hidden floating window, with undefined position, and an empty
+    buffer associated with it.
+
+    Returns the created window ID.
+
+
+set_tooltip_contents({winid}, {lines})
+
+    Updates the contents of a given floating window, and unhides it. Also
+    retriggers size calculation.
+
+
+set_tooltip_position({winid}, {options})
+
+    Sets the position of the given floating window, be it cursor-relative,
+    pum-relative, etc. Also retriggers size calculation.
+
+    TODO: Which {options}? width in characters or bytes? 0- or 1-indexed?
+
+
+close_tooltip({winid})
+
+    Closes the tooltip with the ID {winid}.
+
+
+In addition, there are common utility functions:
+
+get_size_info({lines})
+     
+     Get width and height needed to show the line-wrapped contents of a list
+     of strings.
+
+     Returns a tuple of |[lines,width]| 
+
+     TODO: in characters or bytes? 0- or 1-indexed?
+
+
+vim:tw=78:ts=4:ft=help:et
