@@ -35,6 +35,8 @@ All the following functions take the same initial arguments:
     - {syn-ranges}: A |list| of |dict|s, each representing a highlight group
       to be applied to the popup. 
 
+      Can be used for displaying stripped `*bold*` in a bold font, or to apply 
+      syntax highlighting to a region.
       Example of an entry: >
       {
           'range': {
@@ -76,7 +78,7 @@ show_cursor_tooltip({lines}, {filetype}, {syn-ranges}, {options})
 
     Returns the window ID of the created popup.
 
-show_pum_tooltip({lines}, {syn-ranges}, {filetype}, {options})
+show_pum_tooltip({lines}, {filetype}, {syn-ranges}, {options})
 
     Shows a tooltip associated with the currently selected item in the popup
     menu. It can be either to the left/right of the item, depending on where
@@ -88,7 +90,7 @@ show_pum_tooltip({lines}, {syn-ranges}, {filetype}, {options})
 
     Returns the window ID of the created popup.
 
-update_pum_tooltip({winid}, {lines}, {syn-ranges}, {filetype}, {options})
+update_pum_tooltip({winid}, {lines}, {filetype}, {syn-ranges}, {options})
 
     Changes the content of the tooltip associated with the currently selected
     item in the popup menu. {winid} must be the value returned by
@@ -100,18 +102,17 @@ In addition, there are utility functions useful for interacting with floats:
 parse_lsp_response({data})
 
     Parses a LSP response (be it a String, MarkedString, Markdown segment,
-    MarkupContent, ...; from hereon just {data}) to:
-
-        - A |list| of |String|s that represent the "stripped" content. E.g.
+    MarkupContent, ...; from hereon just {data}) to 
+        
+        - a |list| of |String|s that represent the "stripped" content, e.g.
           markdown `*bold*` strings will be converted to just `bold`, code
           blocks will have the markers removed, etc. It's the "plain-text, no
-          colour" version of the {data}.
+          colour" version of the {data};
 
-        - A |list| of |Dicts| that add colour to the plaintext. Each entry
-          essentially says: highlight this character range using this Vim
-          syntax group. Can be used for displaying stripped `*bold*` in a bold
-          font, or to apply syntax highlighting to a region.
+        - a |list| of |Dicts| that specifies the |syn-ranges|, i.e., of 
+          character ranges and Vim syntax groups to apply to them. 
 
+    Returns a tuple |[lines,syn-ranges]| .
 
 TODO: move to `util.vim`?
 
