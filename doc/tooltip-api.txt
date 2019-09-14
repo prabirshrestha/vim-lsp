@@ -127,7 +127,7 @@ Currently, the following backends are implemented:
 
 1. `popup` windows for vim 8.1.1517+
 2. `floating windows` for neovim 0.4.0+
-3. TODO `preview` buffers as a fallback D*Todo
+3. TODO: `preview` buffers as a fallback 
 
 create_tooltip()
 
