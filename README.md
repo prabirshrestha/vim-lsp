@@ -86,6 +86,7 @@ Also see `:h vim-lsp-folding`.
 |`:LspDocumentFormat`| Format entire document |
 |`:LspDocumentRangeFormat`| Format document selection |
 |`:LspDocumentSymbol`| Show document symbols |
+|`:LspDocumentSymbolSync`| Show document symbols synchronously |
 |`:LspHover`| Show hover information |
 |`:LspImplementation` | Show implementation of interface in the current window |
 |`:LspNextError`| jump to next error |
@@ -101,6 +102,7 @@ Also see `:h vim-lsp-folding`.
 |`:LspStatus` | Show the status of the language server |
 |`:LspTypeDefinition`| Go to the type definition of the word under the cursor, and open in the current window |
 |`:LspWorkspaceSymbol`| Search/Show workspace symbol |
+|`:LspWorkspaceSymbolSync`| Search/Show workspace symbol synchronously |
 
 ### Diagnostics
 

@@ -55,6 +55,7 @@ CONTENTS                                                  *vim-lsp-contents*
       LspDocumentFormatSync                 |LspDocumentFormatSync|
       LspDocumentRangeFormat                |LspDocumentRangeFormat|
       LspDocumentSymbol                     |LspDocumentSymbol|
+      LspDocumentSymbolSync                 |LspDocumentSymbolSync|
       LspHover                              |LspHover|
       LspNextError                          |LspNextError|
       LspNextReference                      |LspNextReference|
@@ -69,6 +70,7 @@ CONTENTS                                                  *vim-lsp-contents*
       LspRename                             |LspRename|
       LspTypeDefinition                     |LspTypeDefinition|
       LspWorkspaceSymbol                    |LspWorkspaceSymbol|
+      LspWorkspaceSymbolSync                |LspWorkspaceSymbolSync|
     Autocommands                          |vim-lsp-autocommands|
       lsp_complete_done                     |lsp_complete_done|
     Mappings                              |vim-lsp-mappings|
@@ -786,6 +788,12 @@ LspDocumentSymbol				         *LspDocumentSymbol*
 
 Gets the symbols for the current document.
 
+LspDocumentSymbolSync				     *LspDocumentSymbolSync*
+
+Same as |LspDocumentSymbol| but synchronously. Useful when chaining commands.
+
+Note that this may slow down vim.
+
 LspHover							  *LspHover*
 
 Gets the hover information and displays it in the |preview-window|.
@@ -865,6 +873,12 @@ Also see |LspPeekTypeDefinition|.
 LspWorkspaceSymbol					*LspWorkspaceSymbol*
 
 Search and show workspace symbols.
+
+LspWorkspaceSymbolSync				     *LspWorkspaceSymbolSync*
+
+Same as |LspWorkspaceSymbol| but synchronously. Useful when chaining commands.
+
+Note that this may slow down vim.
 
 LspStatus                                                        *LspStatus*
 

@@ -281,7 +281,7 @@ function! lsp#ui#vim#document_range_format() abort
     return s:document_format_range(0)
 endfunction
 
-function! lsp#ui#vim#workspace_symbol() abort
+function! lsp#ui#vim#workspace_symbol(sync) abort
     let l:servers = filter(lsp#get_whitelisted_servers(), 'lsp#capabilities#has_workspace_symbol_provider(v:val)')
     let s:last_req_id = s:last_req_id + 1
 
@@ -300,6 +300,7 @@ function! lsp#ui#vim#workspace_symbol() abort
             \ 'params': {
             \   'query': l:query,
             \ },
+            \ 'sync': a:sync,
             \ 'on_notification': function('s:handle_symbol', [l:server, s:last_req_id, 'workspaceSymbol']),
             \ })
     endfor
@@ -307,7 +308,7 @@ function! lsp#ui#vim#workspace_symbol() abort
     echo 'Retrieving workspace symbols ...'
 endfunction
 
-function! lsp#ui#vim#document_symbol() abort
+function! lsp#ui#vim#document_symbol(sync) abort
     let l:servers = filter(lsp#get_whitelisted_servers(), 'lsp#capabilities#has_document_symbol_provider(v:val)')
     let s:last_req_id = s:last_req_id + 1
 
@@ -324,6 +325,7 @@ function! lsp#ui#vim#document_symbol() abort
             \ 'params': {
             \   'textDocument': lsp#get_text_document_identifier(),
             \ },
+            \ 'sync': a:sync,
             \ 'on_notification': function('s:handle_symbol', [l:server, s:last_req_id, 'documentSymbol']),
             \ })
     endfor
