@@ -85,7 +85,7 @@ endfunction
 
 function! s:get_parameter_label(signature, parameter) abort
     if has_key(a:parameter, 'label')
-        if type(a:parameter['label']) == v:t_list
+        if type(a:parameter['label']) == type([])
             let l:string_range = a:parameter['label']
             return strcharpart(
                         \ a:signature['label'],
@@ -102,8 +102,8 @@ function! s:get_parameter_doc(parameter) abort
         return ''
     endif
 
-    if type(a:parameter['documentation']) == v:t_dict
-        let l:doc = copy(a:parameter['documentation'])
+    let l:doc = copy(a:parameter['documentation'])
+    if type(l:doc) == type({})
         let l:doc['value'] = printf('***%s*** - %s', a:parameter['label'], l:doc['value'])
         return l:doc
     endif
