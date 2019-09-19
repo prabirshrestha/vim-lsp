@@ -474,7 +474,9 @@ function! s:handle_location(ctx, server, type, data) abort "ctx = {counter, list
             if len(a:ctx['list']) == 1 && a:ctx['jump_if_one'] && !a:ctx['in_preview']
                 normal! m'
                 let l:buffer = bufnr(l:loc['filename'])
-                if &modified && !&hidden
+                if exists('g:lsp_location_goto_fn')
+                    let l:cmd = 'call '. g:lsp_location_goto_fn.'("' . fnameescape(l:loc['filename']).'")'
+                elseif &modified && !&hidden
                     let l:cmd = l:buffer !=# -1 ? 'sb ' . l:buffer : 'split ' . fnameescape(l:loc['filename'])
                 else
                     let l:cmd = l:buffer !=# -1 ? 'b ' . l:buffer : 'edit ' . fnameescape(l:loc['filename'])
@@ -634,5 +636,3 @@ function! s:execute_command(server, command) abort
         \ 'params': l:params,
         \ })
 endfunction
-
-

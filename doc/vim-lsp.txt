@@ -505,6 +505,21 @@ g:lsp_hover_conceal                                   *g:lsp_hover_conceal*
 
     To override this setting per server, see |vim-lsp-hover_conceal|.
 
+g:lsp_location_goto_fn				*g:lsp_hover_conceal*
+    Type: |String|
+    Default: `""`
+
+    Name of the customizable function to jump to a location (e.g. in use of
+    |LspDefinition|, |LspImplementation|, etc.).
+
+    Example:
+	function! LspGoTo(filename)
+	    let l:cmd = 'tabedit '.a:filename
+	    execute l:cmd
+	endfunction
+>
+	let g:lsp_location_goto_fn = "LspGoTo"
+
 ===============================================================================
 FUNCTIONS	                                        *vim-lsp-functions*
 
