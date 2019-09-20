@@ -505,7 +505,7 @@ g:lsp_hover_conceal                                   *g:lsp_hover_conceal*
 
     To override this setting per server, see |vim-lsp-hover_conceal|.
 
-g:lsp_location_goto_fn				*g:lsp_hover_conceal*
+g:lsp_location_goto_fn				*g:lsp_location_goto_fn*
     Type: |String|
     Default: `""`
 
