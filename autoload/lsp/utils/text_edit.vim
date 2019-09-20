@@ -217,9 +217,9 @@ endfunction
 
 function! s:generate_move_end_cmd(line_pos, character_pos) abort
     let l:result = printf('%dG0', a:line_pos) " move the line and set to the cursor at the beginning
-    if a:character_pos > 0
+    if a:character_pos > 1
         let l:result .= printf('%dl', a:character_pos) " move right until the character
-    else
+    elseif a:character_pos == 0
         let l:result = printf('%dG$', a:line_pos - 1) " move most right
     endif
     return l:result
