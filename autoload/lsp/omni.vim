@@ -110,16 +110,20 @@ function! s:handle_omnicompletion(server_name, complete_counter, data) abort
 endfunction
 
 function! lsp#omni#get_completion_item_kind_text(server, completion_item) abort
-    if !has_key(s:completion_item_kinds, a:server)
-        let l:server_info = lsp#get_server_info(a:server)
-        if has_key (l:server_info, 'config') && has_key(l:server_info['config'], 'completion_item_kinds')
-            let s:completion_item_kinds[a:server] = 
-                        \ extend(s:default_completion_item_kinds, l:server_info['config']['completion_item_kinds'])
-        else
-            let s:completion_item_kinds[a:server] = s:default_completion_item_kinds
+    if empty(a:server) 
+        let l:completion_item_kinds = s:default_completion_item_kinds
+    else
+        if !has_key(s:completion_item_kinds, a:server)
+            let l:server_info = lsp#get_server_info(a:server)
+            if has_key (l:server_info, 'config') && has_key(l:server_info['config'], 'completion_item_kinds')
+                let s:completion_item_kinds[a:server] = 
+                            \ extend(s:default_completion_item_kinds, l:server_info['config']['completion_item_kinds'])
+            else
+                let s:completion_item_kinds[a:server] = s:default_completion_item_kinds
+            endif
         endif
+        let l:completion_item_kinds = s:completion_item_kinds[a:server]
     endif
-    let l:completion_item_kinds = s:completion_item_kinds[a:server]
 
     return has_key(a:completion_item, 'kind') && has_key(l:completion_item_kinds, a:completion_item['kind']) 
                 \ ? l:completion_item_kinds[a:completion_item['kind']] : ''
@@ -195,8 +199,9 @@ function! s:remove_typed_part(word) abort
     return strpart(a:word, l:overlap_length)
 endfunction
 
-function! lsp#omni#default_get_vim_completion_item(item, server_name, ...) abort
-    let l:do_remove_typed_part = get(a:, 1, 0)
+function! lsp#omni#default_get_vim_completion_item(item, ...) abort
+    let l:server_name = get(a:, 1, '')
+    let l:do_remove_typed_part = get(a:, 2, 0)
 
     if g:lsp_insert_text_enabled && has_key(a:item, 'insertText') && !empty(a:item['insertText'])
         if has_key(a:item, 'insertTextFormat') && a:item['insertTextFormat'] != 1
@@ -214,7 +219,7 @@ function! lsp#omni#default_get_vim_completion_item(item, server_name, ...) abort
         let l:word = s:remove_typed_part(l:word)
     endif
 
-    let l:kind = lsp#omni#get_completion_item_kind_text(a:server_name, a:item)
+    let l:kind = lsp#omni#get_completion_item_kind_text(l:server_name, a:item)
 
     let l:completion = {
                 \ 'word': l:word,
