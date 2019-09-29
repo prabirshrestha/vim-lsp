@@ -627,7 +627,8 @@ The vim |dict| containing information about the server.
 
   * config:
     optional vim |dict|
-    Used to pass additional custom config.
+    Used to pass additional custom config. See |vim-lsp_hover_conceal|,
+    |vim-lsp_symbol_kinds|, and |vim-lsp_completion_item_kinds|.
 
     For example:
 	'config': { 'prefer_local': 1 }
@@ -664,6 +665,28 @@ hover_conceal                                          *vim-lsp_hover_conceal*
 
     Example:
         'config': { 'hover_conceal': 1 }
+
+symbol_kinds                                            *vim-lsp_symbol_kinds*
+    Type: |Dict|
+    Default: |{}|
+
+    This allows overriding the default text mappings for symbol kinds
+    (e.g., 'module', 'method') per server. Useful for abbreviating or removing
+    the kind text.
+
+    Example:
+        'config': { 'symbol_kinds': {'26': 'type' } }
+
+completion_item_kinds                         *vim-lsp_completion_item_kinds*
+    Type: |Dict|
+    Default: |{}|
+
+    This allows overriding the default text mappings for completion item kinds
+    (e.g., 'module', 'method') per server. Useful for abbreviating or removing
+    the kind text.
+
+    Example:
+        'config': { 'completion_item_kinds': {'26': 'type' } }
 
 lsp#stop_server                                        *vim-lsp-stop_server*
 

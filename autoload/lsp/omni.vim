@@ -98,7 +98,7 @@ function! s:handle_omnicompletion(server_name, complete_counter, data) abort
         return
     endif
 
-    let l:result = s:get_completion_result(a:server_name,a:data)
+    let l:result = s:get_completion_result(a:server_name, a:data)
     let l:matches = l:result['matches']
 
     if g:lsp_async_completion
@@ -109,20 +109,21 @@ function! s:handle_omnicompletion(server_name, complete_counter, data) abort
     endif
 endfunction
 
-function! lsp#omni#get_completion_item_kind_text(server, completion_item) abort
-    if empty(a:server) 
+function! lsp#omni#get_kind_text(completion_item, ...) abort
+    let l:server = get(a:, 1, '')
+    if empty(l:server) " server name 
         let l:completion_item_kinds = s:default_completion_item_kinds
     else
-        if !has_key(s:completion_item_kinds, a:server)
-            let l:server_info = lsp#get_server_info(a:server)
+        if !has_key(s:completion_item_kinds, l:server)
+            let l:server_info = lsp#get_server_info(l:server)
             if has_key (l:server_info, 'config') && has_key(l:server_info['config'], 'completion_item_kinds')
-                let s:completion_item_kinds[a:server] = 
-                            \ extend(s:default_completion_item_kinds, l:server_info['config']['completion_item_kinds'])
+                let s:completion_item_kinds[l:server] = s:default_completion_item_kinds
+                call extend(s:completion_item_kinds[l:server] , l:server_info['config']['completion_item_kinds'])
             else
-                let s:completion_item_kinds[a:server] = s:default_completion_item_kinds
+                let s:completion_item_kinds[l:server] = s:default_completion_item_kinds
             endif
         endif
-        let l:completion_item_kinds = s:completion_item_kinds[a:server]
+        let l:completion_item_kinds = s:completion_item_kinds[l:server]
     endif
 
     return has_key(a:completion_item, 'kind') && has_key(l:completion_item_kinds, a:completion_item['kind']) 
@@ -219,7 +220,7 @@ function! lsp#omni#default_get_vim_completion_item(item, ...) abort
         let l:word = s:remove_typed_part(l:word)
     endif
 
-    let l:kind = lsp#omni#get_completion_item_kind_text(l:server_name, a:item)
+    let l:kind = lsp#omni#get_kind_text(a:item, l:server_name)
 
     let l:completion = {
                 \ 'word': l:word,
