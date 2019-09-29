@@ -1,6 +1,6 @@
 let s:fixendofline_exists = exists('+fixendofline')
 
-function! s:get_fixendofline(buf) abort
+function! lsp#utils#buffer#get_fixendofline(buf) abort
     let l:eol = getbufvar(a:buf, '&endofline')
     let l:binary = getbufvar(a:buf, '&binary')
 
@@ -28,7 +28,7 @@ endfunction
 
 function! lsp#utils#buffer#_get_lines(buf) abort
     let l:lines = getbufline(a:buf, 1, '$')
-    if s:get_fixendofline(a:buf)
+    if lsp#utils#buffer#get_fixendofline(a:buf)
         let l:lines += ['']
     endif
     return l:lines
