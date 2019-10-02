@@ -913,6 +913,8 @@ Available plug mappings are following:
   (lsp-workspace-symbol)
   (lsp-document-format)
   (lsp-document-format)
+  (lsp-document-range-format)
+  (lsp-document-range-format)
   (lsp-implementation)
   (lsp-peek-implementation)
   (lsp-type-definition)
