@@ -625,6 +625,15 @@ The vim |dict| containing information about the server.
 	'whitelist': ['*']
 	'blacklist': ['javascript', 'typescript']
 
+  * workspace_config:
+    optional vim |dict|
+    Used to pass workspace configuration to the server after
+    initialization. Configuration settings are language-server specific.
+
+    Example:
+	'workspace_config': {'pyls': {'plugins': \
+		{'pydocstyle': {'enabled': v:true}}}}
+
   * config:
     optional vim |dict|
     Used to pass additional custom config.
@@ -646,24 +655,39 @@ The vim |dict| containing information about the server.
 
 	    'cmd': function('s:myserver_cmd')
 
-  * workspace_config:
-    optional vim |dict|
-    Used to pass workspace configuration to the server after
-    initialization. Configuration settings are language-server specific.
+    The following per-server configuration options are supported by vim-lsp.
 
-    Example:
-	'workspace_config': {'pyls': {'plugins': \
-		{'pydocstyle': {'enabled': v:true}}}}
+	* hover_conceal
+	    Type: |Boolean|
+	    Default: |g:lsp_hover_conceal|
 
-hover_conceal                                          *vim-lsp_hover_conceal*
-    Type: |Boolean|
-    Default: |g:lsp_hover_conceal|
+	    This takes precendence over the value of |g:lsp_hover_conceal|, to
+	    allow overriding this setting per server.
 
-    This takes precendence over the value of |g:lsp_hover_conceal|, to allow
-    overriding this setting per server.
+	    Example:
+		'config': { 'hover_conceal': 1 }
 
-    Example:
-        'config': { 'hover_conceal': 1 }
+	* symbol_kinds
+	    Type: |Dict|
+	    Default: |{}|
+
+	    This allows overriding the default text mappings for symbol kinds
+	    (e.g., 'module', 'method') per server. Useful for abbreviating or
+	    removing the kind text.
+
+	    Example:
+		'config': { 'symbol_kinds': {'26': 'type' } }
+
+	* completion_item_kinds
+	    Type: |Dict|
+	    Default: |{}|
+
+	    This allows overriding the default text mappings for completion item
+	    kinds (e.g., 'module', 'method') per server. Useful for abbreviating
+	    or removing the kind text.
+
+	    Example:
+		'config': { 'completion_item_kinds': {'26': 'type' } }
 
 lsp#stop_server                                        *vim-lsp-stop_server*
 

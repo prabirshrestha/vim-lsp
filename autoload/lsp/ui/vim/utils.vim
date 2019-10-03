@@ -65,7 +65,7 @@ function! lsp#ui#vim#utils#locations_to_loc_list(result) abort
     return l:list
 endfunction
 
-let s:symbol_kinds = {
+let s:default_symbol_kinds = {
     \ '1': 'file',
     \ '2': 'module',
     \ '3': 'namespace',
@@ -94,6 +94,8 @@ let s:symbol_kinds = {
     \ '26': 'type parameter',    
     \ }
 
+let s:symbol_kinds = {}
+
 let s:diagnostic_severity = {
     \ 1: 'Error',
     \ 2: 'Warning',
@@ -101,7 +103,7 @@ let s:diagnostic_severity = {
     \ 4: 'Hint',
     \ }
 
-function! lsp#ui#vim#utils#symbols_to_loc_list(result) abort
+function! lsp#ui#vim#utils#symbols_to_loc_list(server, result) abort
     if !has_key(a:result['response'], 'result')
         return []
     endif
@@ -123,7 +125,7 @@ function! lsp#ui#vim#utils#symbols_to_loc_list(result) abort
                     \ 'filename': l:path,
                     \ 'lnum': l:line,
                     \ 'col': l:col,
-                    \ 'text': s:get_symbol_text_from_kind(l:symbol['kind']) . ' : ' . l:symbol['name'],
+                    \ 'text': s:get_symbol_text_from_kind(a:server, l:symbol['kind']) . ' : ' . l:symbol['name'],
                     \ })
             endif
         endfor
@@ -176,12 +178,22 @@ function! s:is_file_uri(uri) abort
     return stridx(a:uri, 'file:///') == 0
 endfunction
 
-function! s:get_symbol_text_from_kind(kind) abort
-    return has_key(s:symbol_kinds, a:kind) ? s:symbol_kinds[a:kind] : 'unknown symbol ' . a:kind
+function! s:get_symbol_text_from_kind(server, kind) abort
+    if !has_key(s:symbol_kinds, a:server)
+        let l:server_info = lsp#get_server_info(a:server)
+        if has_key (l:server_info, 'config') && has_key(l:server_info['config'], 'symbol_kinds')
+            let s:symbol_kinds[a:server] = s:default_symbol_kinds
+            call extend(s:symbol_kinds[a:server], l:server_info['config']['symbol_kinds'])
+        else
+            let s:symbol_kinds[a:server] = s:default_symbol_kinds
+        endif
+    endif
+    let l:symbol_kinds = s:symbol_kinds[a:server]
+    return has_key(l:symbol_kinds, a:kind) ? l:symbol_kinds[a:kind] : 'unknown symbol ' . a:kind
 endfunction
 
 function! lsp#ui#vim#utils#get_symbol_kinds() abort
-    return map(keys(s:symbol_kinds), {idx, key -> str2nr(key)})
+    return map(keys(s:default_symbol_kinds), {idx, key -> str2nr(key)})
 endfunction
 
 function! s:get_diagnostic_severity_text(severity) abort
