@@ -117,8 +117,7 @@ function! lsp#omni#get_kind_text(completion_item, ...) abort
         if !has_key(s:completion_item_kinds, l:server)
             let l:server_info = lsp#get_server_info(l:server)
             if has_key (l:server_info, 'config') && has_key(l:server_info['config'], 'completion_item_kinds')
-                let s:completion_item_kinds[l:server] = s:default_completion_item_kinds
-                call extend(s:completion_item_kinds[l:server] , l:server_info['config']['completion_item_kinds'])
+                let s:completion_item_kinds[l:server] = extend(copy(s:default_completion_item_kinds), l:server_info['config']['completion_item_kinds'])
             else
                 let s:completion_item_kinds[l:server] = s:default_completion_item_kinds
             endif

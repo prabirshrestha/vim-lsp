@@ -182,8 +182,7 @@ function! s:get_symbol_text_from_kind(server, kind) abort
     if !has_key(s:symbol_kinds, a:server)
         let l:server_info = lsp#get_server_info(a:server)
         if has_key (l:server_info, 'config') && has_key(l:server_info['config'], 'symbol_kinds')
-            let s:symbol_kinds[a:server] = s:default_symbol_kinds
-            call extend(s:symbol_kinds[a:server], l:server_info['config']['symbol_kinds'])
+            let s:symbol_kinds[a:server] = extend(copy(s:default_symbol_kinds), l:server_info['config']['symbol_kinds'])
         else
             let s:symbol_kinds[a:server] = s:default_symbol_kinds
         endif
