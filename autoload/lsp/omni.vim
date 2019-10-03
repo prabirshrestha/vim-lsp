@@ -268,8 +268,12 @@ function! lsp#omni#default_get_vim_completion_item(item, ...) abort
     endif
 
     if has_key(a:item, 'documentation')
-        if type(a:item['documentation']) == type('')
+        if type(a:item['documentation']) == type('') " field is string
             let l:completion['info'] .= a:item['documentation']
+        elseif type(a:item['documentation']) == type({}) && 
+                    \ has_key(a:item['documentation'], 'value')
+            " field is MarkupContent (hopefully 'plaintext')
+            let l:completion['info'] .= a:item['documentation']['value']
         endif
     endif
 
