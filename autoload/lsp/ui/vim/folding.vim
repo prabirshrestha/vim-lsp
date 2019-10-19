@@ -31,7 +31,7 @@ function! s:set_textprops(buf) abort
     silent! call prop_type_add(s:textprop_name, {'bufnr': a:buf})
 
     " First, clear all markers from the previous run
-    call prop_remove({'type': s:textprop_name, 'bufnr': a:buf})
+    call prop_remove({'type': s:textprop_name, 'bufnr': a:buf}, 1, line('$'))
 
     " Add markers to each line
     let l:i = 1
