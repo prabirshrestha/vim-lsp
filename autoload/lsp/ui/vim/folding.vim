@@ -181,7 +181,7 @@ function! s:handle_fold_request(server, data) abort
     " Set 'foldmethod' back to 'expr', which forces a re-evaluation of
     " 'foldexpr'. Only do this if the user hasn't changed 'foldmethod',
     " and this is the correct buffer.
-    let l:current_window = winnr()
+    let l:current_window = bufwinnr()
     windo if &l:foldmethod ==# 'expr' && bufnr('%') == l:bufnr | let &l:foldmethod = 'expr' | endif
     execute l:current_window . 'wincmd w'
 endfunction
