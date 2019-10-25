@@ -87,6 +87,7 @@ function! s:get_float_positioning(height, width) abort
       endif
     endif
     let l:col = col('.')
+    let l:style = 'minimal'
     " Positioning is not window but screen relative
     let l:opts = {
           \ 'relative': 'win',
@@ -94,6 +95,7 @@ function! s:get_float_positioning(height, width) abort
           \ 'col': l:col,
           \ 'width': l:width,
           \ 'height': l:height,
+          \ 'style': l:style,
           \ }
     return l:opts
 endfunction
