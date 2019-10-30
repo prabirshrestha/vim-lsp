@@ -11,18 +11,18 @@ function! lsp#ui#vim#utils#locations_to_loc_list(result) abort
         return []
     endif
 
-    if has_key(l:locations[0],'targetUri') " server returns locationLinks
-        let l:use_link = 1
-        let l:uri = 'targetUri'
-        let l:range = 'targetSelectionRange'
-    else
-        let l:use_link = 0
-        let l:uri = 'uri'
-        let l:range = 'range'
-    endif
-
     let l:cache={}
     for l:location in l:locations
+        if has_key(l:locations[0],'targetUri') " server returns locationLinks
+            let l:use_link = 1
+            let l:uri = 'targetUri'
+            let l:range = 'targetSelectionRange'
+        else
+            let l:use_link = 0
+            let l:uri = 'uri'
+            let l:range = 'range'
+        endif
+
         if s:is_file_uri(l:location[l:uri])
             let l:path = lsp#utils#uri_to_path(l:location[l:uri])
             let l:line = l:location[l:range]['start']['line'] + 1
@@ -88,12 +88,12 @@ let s:default_symbol_kinds = {
     \ '18': 'array',
     \ '19': 'object',
     \ '20': 'key',
-    \ '21': 'null',    
-    \ '22': 'enum member',    
-    \ '23': 'struct',    
-    \ '24': 'event',    
-    \ '25': 'operator',    
-    \ '26': 'type parameter',    
+    \ '21': 'null',
+    \ '22': 'enum member',
+    \ '23': 'struct',
+    \ '24': 'event',
+    \ '25': 'operator',
+    \ '26': 'type parameter',
     \ }
 
 let s:symbol_kinds = {}
