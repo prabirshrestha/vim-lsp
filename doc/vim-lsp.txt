@@ -668,11 +668,6 @@ The vim |dict| containing information about the server.
     pattern', or a custom filter for completion items, see
     |vim-lsp-typed_pattern| and |vim-lsp-completion-filter|.
 
-  * workspace_config:
-    optional vim |dict|
-    Used to pass workspace configuration to the server after
-    initialization. Configuration settings are language-server specific.
-
     The following per-server configuration options are supported by vim-lsp.
 
 	* hover_conceal
