@@ -408,7 +408,7 @@ function! s:handle_symbol(server, last_req_id, type, data) abort
         return
     endif
 
-    let l:list = lsp#ui#vim#utils#symbols_to_loc_list(a:data)
+    let l:list = lsp#ui#vim#utils#symbols_to_loc_list(a:server, a:data)
 
     call setqflist(l:list)
 

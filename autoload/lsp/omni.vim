@@ -1,6 +1,6 @@
 " constants {{{
 
-let s:kind_text_mappings = {
+let s:default_completion_item_kinds = {
             \ '1': 'text',
             \ '2': 'method',
             \ '3': 'function',
@@ -27,6 +27,8 @@ let s:kind_text_mappings = {
             \ '24': 'operator',
             \ '25': 'type parameter',
             \ }
+
+let s:completion_item_kinds = {}
 
 let s:completion_status_success = 'success'
 let s:completion_status_failed = 'failed'
@@ -151,7 +153,7 @@ function! s:handle_omnicompletion(server_name, complete_counter, data) abort
         return
     endif
 
-    let l:result = s:get_completion_result(a:data)
+    let l:result = s:get_completion_result(a:server_name, a:data)
     let l:matches = l:result['matches']
 
     if g:lsp_async_completion
@@ -162,8 +164,24 @@ function! s:handle_omnicompletion(server_name, complete_counter, data) abort
     endif
 endfunction
 
-function! lsp#omni#get_kind_text(completion_item) abort
-    return has_key(a:completion_item, 'kind') && has_key(s:kind_text_mappings, a:completion_item['kind']) ? s:kind_text_mappings[a:completion_item['kind']] : ''
+function! lsp#omni#get_kind_text(completion_item, ...) abort
+    let l:server = get(a:, 1, '')
+    if empty(l:server) " server name
+        let l:completion_item_kinds = s:default_completion_item_kinds
+    else
+        if !has_key(s:completion_item_kinds, l:server)
+            let l:server_info = lsp#get_server_info(l:server)
+            if has_key (l:server_info, 'config') && has_key(l:server_info['config'], 'completion_item_kinds')
+                let s:completion_item_kinds[l:server] = extend(copy(s:default_completion_item_kinds), l:server_info['config']['completion_item_kinds'])
+            else
+                let s:completion_item_kinds[l:server] = s:default_completion_item_kinds
+            endif
+        endif
+        let l:completion_item_kinds = s:completion_item_kinds[l:server]
+    endif
+
+    return has_key(a:completion_item, 'kind') && has_key(l:completion_item_kinds, a:completion_item['kind'])
+                \ ? l:completion_item_kinds[a:completion_item['kind']] : ''
 endfunction
 
 " auxiliary functions {{{
@@ -195,7 +213,7 @@ function! s:send_completion_request(info) abort
                 \ })
 endfunction
 
-function! s:get_completion_result(data) abort
+function! s:get_completion_result(server_name, data) abort
     let l:result = a:data['response']['result']
 
     if type(l:result) == type([])
@@ -209,12 +227,14 @@ function! s:get_completion_result(data) abort
         let l:incomplete = 0
     endif
 
-    let l:matches = type(l:items) == type([]) ? map(l:items, {_, item -> lsp#omni#get_vim_completion_item(item) }) : []
+    let l:matches = type(l:items) == type([]) ? map(l:items, {_, item -> lsp#omni#get_vim_completion_item(item, a:server_name) }) : []
 
     return {'matches': l:matches, 'incomplete': l:incomplete}
 endfunction
 
-function! lsp#omni#default_get_vim_completion_item(item) abort
+function! lsp#omni#default_get_vim_completion_item(item, ...) abort
+    let l:server_name = get(a:, 1, '')
+
     if g:lsp_insert_text_enabled && has_key(a:item, 'insertText') && !empty(a:item['insertText'])
         if has_key(a:item, 'insertTextFormat') && a:item['insertTextFormat'] != 1
             let l:word = a:item['label']
@@ -227,7 +247,7 @@ function! lsp#omni#default_get_vim_completion_item(item) abort
         let l:abbr = a:item['label']
     endif
 
-    let l:kind = lsp#omni#get_kind_text(a:item)
+    let l:kind = lsp#omni#get_kind_text(a:item, l:server_name)
 
     let l:completion = {
                 \ 'word': l:word,
@@ -286,8 +306,12 @@ function! lsp#omni#default_get_vim_completion_item(item) abort
     endif
 
     if has_key(a:item, 'documentation')
-        if type(a:item['documentation']) == type('')
+        if type(a:item['documentation']) == type('') " field is string
             let l:completion['info'] .= a:item['documentation']
+        elseif type(a:item['documentation']) == type({}) &&
+                    \ has_key(a:item['documentation'], 'value')
+            " field is MarkupContent (hopefully 'plaintext')
+            let l:completion['info'] .= a:item['documentation']['value']
         endif
     endif
 
@@ -408,7 +432,7 @@ function! s:get_cursor_pos_and_edit_length(text_edit) abort
 endfunction
 
 function! lsp#omni#get_completion_item_kinds() abort
-    return map(keys(s:kind_text_mappings), {idx, key -> str2nr(key)})
+    return map(keys(s:default_completion_item_kinds), {idx, key -> str2nr(key)})
 endfunction
 
 " }}}

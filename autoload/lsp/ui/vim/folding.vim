@@ -31,7 +31,7 @@ function! s:set_textprops(buf) abort
     silent! call prop_type_add(s:textprop_name, {'bufnr': a:buf})
 
     " First, clear all markers from the previous run
-    call prop_remove({'type': s:textprop_name, 'bufnr': a:buf})
+    call prop_remove({'type': s:textprop_name, 'bufnr': a:buf}, 1, line('$'))
 
     " Add markers to each line
     let l:i = 1
@@ -177,6 +177,11 @@ function! s:handle_fold_request(server, data) abort
         let s:folding_ranges[a:server] = {}
     endif
     let s:folding_ranges[a:server][l:bufnr] = l:result
+
+    " Don't do the 'windo' in Insert mode, it puts Vim back in Normal mode.
+    if mode()[0] ==# 'i'
+        return
+    endif
 
     " Set 'foldmethod' back to 'expr', which forces a re-evaluation of
     " 'foldexpr'. Only do this if the user hasn't changed 'foldmethod',
