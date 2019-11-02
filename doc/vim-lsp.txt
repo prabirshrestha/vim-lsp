@@ -349,6 +349,19 @@ g:lsp_virtual_text_enabled                            *g:lsp_virtual_text_enable
 	let g:lsp_virtual_text_enabled = 0
 <
 
+g:lsp_virtual_text_prefix                            *g:lsp_virtual_text_prefix*
+    Type: |String|
+    Default: `""` for neovim 0.3+
+
+    Adds the prefix to the diagnostics to be shown as virtual text. Requires
+    NeoVim with version 0.3 or newer.
+
+    Example:
+>
+	let g:lsp_virtual_text_prefix = "> "
+	let g:lsp_virtual_text_prefix = " ‣ "
+<
+
 g:lsp_highlights_enabled                         *g:lsp_highlights_enabled*
     Type: |Number|
     Default: `1` for neovim 0.3+
