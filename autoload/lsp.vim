@@ -194,7 +194,7 @@ function! s:on_text_document_did_save() abort
         " We delay the callback by one loop iteration as calls to ensure_flush
         " can introduce mmap'd file locks that linger on Windows and collide
         " with the second lang server call preventing saves (see #455)
-        call s:ensure_flush(l:buf, l:server_name, {result->timer_start(0, {result->s:call_did_save(l:buf, l:server_name, result, function('s:Noop'))})})
+        call s:ensure_flush(l:buf, l:server_name, {result->timer_start(0, {timer->s:call_did_save(l:buf, l:server_name, result, function('s:Noop'))})})
     endfor
 endfunction
 
