@@ -25,7 +25,7 @@ function! s:set_textprops(buf) abort
 
     " Skip if the buffer doesn't exist. This might happen when a buffer is
     " opened and quickly deleted.
-    if !bufexists(a:buf) | return | endif
+    if !bufloaded(a:buf) | return | endif
 
     " Create text property, if not already defined
     silent! call prop_type_add(s:textprop_name, {'bufnr': a:buf})
