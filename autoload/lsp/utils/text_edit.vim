@@ -199,7 +199,7 @@ function! s:generate_sub_cmd_replace(text_edit) abort
     if len(l:new_text) == 0
         let l:sub_cmd .= 'x'
     elseif l:start_character == 0 && l:end_character == 0
-        let l:sub_cmd .= "\"=l:merged_text_edit['merged']['newText']\<CR>p"
+        let l:sub_cmd .= "\"=l:merged_text_edit['merged']['newText']\<CR>P"
     else
         let l:sub_cmd .= "\"=l:merged_text_edit['merged']['newText'].'?'\<CR>gph\"_x"
     endif
