@@ -1,4 +1,4 @@
-function! lsp#utils#text_edit#apply_text_edits(uri, text_edits) abort
+function! lsp#utils#text_edit#apply_text_edits(uri, text_edits, options) abort
     " https://microsoft.github.io/language-server-protocol/specification#textedit
     " The order in the array defines the order in which the inserted string
     " appear in the resulting text.
@@ -45,6 +45,7 @@ function! lsp#utils#text_edit#apply_text_edits(uri, text_edits) abort
     " ((0, 2), (0, 3), "") - remove third character 'c'
     let l:text_edits = sort(deepcopy(a:text_edits), '<SID>sort_text_edit_desc')
     let l:i = 0
+    let l:loc_list = []
 
     while l:i < len(l:text_edits)
         let l:merged_text_edit = s:merge_same_range(l:i, l:text_edits)
@@ -71,6 +72,9 @@ function! lsp#utils#text_edit#apply_text_edits(uri, text_edits) abort
             set virtualedit=onemore
 
             silent execute l:cmd
+            if a:options['show_edits']
+                call add(l:loc_list, s:build_loclist_item(a:uri, l:merged_text_edit['merged']))
+            endif
         finally
             let &paste = l:was_paste
             let &selection = l:was_selection
@@ -80,6 +84,24 @@ function! lsp#utils#text_edit#apply_text_edits(uri, text_edits) abort
 
         let l:i = l:merged_text_edit['end_index']
     endwhile
+
+    if a:options['show_edits']
+        call setloclist(0, reverse(l:loc_list), 'a')
+    endif
+endfunction
+
+function! s:build_loclist_item(uri, text_edit) abort
+    let l:path = lsp#utils#uri_to_path(a:uri)
+    let l:bufnr = bufnr(l:path)
+    let l:lnum = a:text_edit['range']['start']['line'] + 1
+    let l:col = a:text_edit['range']['start']['character'] + 1
+    let l:text = a:text_edit['newText']
+
+    let l:loclist_item = {'bufnr': l:bufnr, 'lnum': l:lnum, 'col': l:col, 'text': l:text}
+
+    call lsp#log('s:build_loclist_item', l:loclist_item)
+
+    return l:loclist_item
 endfunction
 
 " Merge the edits on the same range so we do not have to reverse the

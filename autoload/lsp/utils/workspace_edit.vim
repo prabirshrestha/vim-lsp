@@ -1,10 +1,11 @@
 " Applies WorkspaceEdit changes.
 function! lsp#utils#workspace_edit#apply_workspace_edit(workspace_edit) abort
+    call setloclist(0, [], 'r')
     if has_key(a:workspace_edit, 'documentChanges')
         let l:cur_buffer = bufnr('%')
         let l:view = winsaveview()
         for l:text_document_edit in a:workspace_edit['documentChanges']
-            call lsp#utils#text_edit#apply_text_edits(l:text_document_edit['textDocument']['uri'], l:text_document_edit['edits'])
+            call lsp#utils#text_edit#apply_text_edits(l:text_document_edit['textDocument']['uri'], l:text_document_edit['edits'], {'show_edits': 1})
         endfor
         if l:cur_buffer !=# bufnr('%')
             execute 'keepjumps keepalt b ' . l:cur_buffer
@@ -14,11 +15,12 @@ function! lsp#utils#workspace_edit#apply_workspace_edit(workspace_edit) abort
         let l:cur_buffer = bufnr('%')
         let l:view = winsaveview()
         for [l:uri, l:text_edits] in items(a:workspace_edit['changes'])
-            call lsp#utils#text_edit#apply_text_edits(l:uri, l:text_edits)
+            call lsp#utils#text_edit#apply_text_edits(l:uri, l:text_edits, {'show_edits': 1})
         endfor
         if l:cur_buffer !=# bufnr('%')
             execute 'keepjumps keepalt b ' . l:cur_buffer
         endif
         call winrestview(l:view)
     endif
+    execute 'lopen'
 endfunction

@@ -417,7 +417,7 @@ function! s:apply_text_edits() abort
 
     " apply textEdits
     if !empty(l:all_text_edits)
-        call lsp#utils#text_edit#apply_text_edits(lsp#utils#get_buffer_uri(), l:all_text_edits)
+        call lsp#utils#text_edit#apply_text_edits(lsp#utils#get_buffer_uri(), l:all_text_edits, {'show_edits': 0})
         " When user typed something character while popup menu is shwon, vim
         " insert typed-character after CompleteDone occured. but the character
         " should not be duplicated since the textEdit include the character.
