@@ -178,15 +178,13 @@ function! s:handle_fold_request(server, data) abort
     endif
     let s:folding_ranges[a:server][l:bufnr] = l:result
 
-    " Don't do the 'windo' in Insert mode, it puts Vim back in Normal mode.
-    if mode()[0] ==# 'i'
-        return
-    endif
-
     " Set 'foldmethod' back to 'expr', which forces a re-evaluation of
     " 'foldexpr'. Only do this if the user hasn't changed 'foldmethod',
     " and this is the correct buffer.
-    let l:current_window = winnr()
-    windo if &l:foldmethod ==# 'expr' && bufnr('%') == l:bufnr | let &l:foldmethod = 'expr' | endif
-    execute l:current_window . 'wincmd w'
+    for l:winid in win_findbuf(l:bufnr)
+        if getwinvar(l:winid, '&foldmethod') ==# 'expr'
+            call setwinvar(l:winid, '&foldmethod', 'expr')
+        endif
+    endfor
 endfunction
+
