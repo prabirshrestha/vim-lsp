@@ -42,6 +42,7 @@ addons:
 
 before_install:
     - mkdir -p "$DOWNLOADS_DIR"
+    - export
     - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
         export PATH="$HOME/Library/Python/3.6/bin:$PATH";
         pip3 install --user setuptools --upgrade;
