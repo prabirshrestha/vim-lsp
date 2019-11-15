@@ -87,10 +87,10 @@ before_install:
 before_script:
     - uname -a
     - which -a python
-    - if [[ "$VIM_TYPE" == "vim" ]]; then vim --version; fi;
-    - if [[ "$VIM_TYPE" == "neovim" ]]; then nvim --version; fi;
 
 script:
+    - if [[ "$VIM_TYPE" == "vim" ]]; then vim --version; fi;
+    - if [[ "$VIM_TYPE" == "neovim" ]]; then nvim --version; fi;
     - if [[ "$VIM_TYPE" == "vim" ]]; then vint autoload ftplugin plugin; fi;
     - if [[ "$VIM_TYPE" == "neovim" ]]; then vint --enable-neovim autoload ftplugin plugin; fi;
     - if [[ "$TRAVIS_OS_NAME" == "windows" && "$VIM_TYPE" == "neovim" ]]; then
