@@ -35,6 +35,7 @@ CONTENTS                                                  *vim-lsp-contents*
       g:lsp_signature_help_enabled          |g:lsp_signature_help_enabled|
       g:lsp_fold_enabled                    |g:lsp_fold_enabled|
       g:lsp_hover_conceal                   |g:lsp_hover_conceal|
+      g:lsp_ignorecase                      |g:lsp_ignorecase|
     Functions                             |vim-lsp-functions|
       enable                                |vim-lsp-enable|
       disable                               |vim-lsp-disable|
@@ -518,6 +519,14 @@ g:lsp_hover_conceal                                   *g:lsp_hover_conceal*
 
     To override this setting per server, see |vim-lsp-hover_conceal|.
 
+g:lsp_ignorecase                                         *g:lsp_ignorecase*
+    Type: |Boolean|
+    Default: the value of |'ignorecase'|
+
+    Determines whether or not case should be ignored when filtering completion
+    items. See |vim-lsp-completion-filter|. By default, the value of
+    |'ignorecase'| is used.
+
 ===============================================================================
 FUNCTIONS	                                        *vim-lsp-functions*
 
@@ -668,6 +677,10 @@ The vim |dict| containing information about the server.
 
 	    'cmd': function('s:myserver_cmd')
 
+    Using the `config` key, you can also specify a custom 'typed word
+    pattern', or a custom filter for completion items, see
+    |vim-lsp-typed_pattern| and |vim-lsp-completion-filter|.
+
     The following per-server configuration options are supported by vim-lsp.
 
 	* hover_conceal
@@ -701,6 +714,60 @@ The vim |dict| containing information about the server.
 
 	    Example:
 		'config': { 'completion_item_kinds': {'26': 'type' } }
+
+typed_pattern                                        *vim-lsp-typed_pattern*
+    Type: |String| (|pattern|)
+    Default: `'\k*$'`
+
+Vim-lsp will automatically detect the text you have typed so far when invoking
+completion. It does this by checking the textEdit's range of each completion
+item.
+
+If the language server doesn't use textEdits, you can use a |regexp| to
+determine what you have typed so far. The pattern is matched against the
+current line, from column 0 up until the cursor's position. Thus, |/$| means
+"current cursor position" in this context.
+
+For example:
+	'config': { 'typed_pattern': '\k*$' }
+
+This uses all characters in `'iskeyword'` in front of the cursor as typed
+word.
+
+This key is also used to align the completion menu: the completion menu is
+placed so its left border is at the column that matches the start of the
+`typed_pattern`.
+
+filter                                           *vim-lsp-completion-filter*
+
+You can filter the completion items returned from the server by specifying a
+completion filter using the `filter` key in the server info's `config` |dict|.
+The value of the `filter` key is itself a |dict| containing at least a key
+`name`, which specifies which filter to use.
+
+For the meaning of "already typed text" in the remainder of this section, see
+|vim-lsp-typed_pattern|. The case (in)sensitivity of the matching is
+determined by |g:lsp_ignorecase|.
+
+    Example:
+        'config': { 'filter': { 'name': 'none' } }
+
+    Available filters are:
+        - `none` (default)
+          Do not filter completion items, use all items returned from the
+          language server.
+
+        - `prefix`
+          Only allow completion items that are a prefix of the already typed
+          word.
+
+	- `contains`
+	  Only allow completion items that contain the already typed word.
+
+Note: After triggering completion with |i_CTRL-X_CTRL-O|, further filtering is
+only possible by adding to the already typed prefix (even if you're using the
+`contains` filter). If you'd like to retrigger the filtering, you will have to
+press CTRL-X CTRL-O again.
 
 lsp#stop_server                                        *vim-lsp-stop_server*
 
