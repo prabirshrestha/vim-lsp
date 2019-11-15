@@ -20,7 +20,7 @@ matrix:
           env: VIM_TYPE=neovim VIM_VERSION=nightly
     include:
         - os: osx
-          env: VIM_TYPE=neovim VIM_VERSION=0.3.1
+          env: VIM_TYPE=neovim VIM_VERSION=0.4.3
         - os: osx
           env: VIM_TYPE=vim VIM_VERSION=default
         - os: linux
