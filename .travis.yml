@@ -42,7 +42,6 @@ addons:
 
 before_install:
     - mkdir -p "$DOWNLOADS_DIR"
-    - export
     - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
         export PATH="$HOME/Library/Python/3.6/bin:$PATH";
         pip3 install --user setuptools --upgrade;
@@ -70,7 +69,7 @@ before_install:
         powershell -Command "Set-ExecutionPolicy RemoteSigned -scope CurrentUser";
         powershell -Command "iex (new-object net.webclient).downloadstring('https://get.scoop.sh')";
         export PATH="$HOME/scoop/shims:$PATH;"; 
-        export PATH="$APPDATA/Python/Python37/Scripts:$PATH;";
+        export PATH="$APPDATA/Python/Python38/Scripts:$PATH;";
         powershell -Command "scoop install python";
         python3 -m pip install --user vim-vint typing;
         if [[ "$VIM_TYPE" == "neovim" ]]; then
@@ -87,6 +86,7 @@ before_install:
 
 before_script:
     - uname -a
+    - export
     - which -a python
 
 script:
