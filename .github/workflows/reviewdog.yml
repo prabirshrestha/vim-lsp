@@ -1,0 +1,13 @@
+name: reviewdog
+on: [pull_request, push]
+jobs:
+  vimlint:
+    name: runner / vimlint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - name: vimlint
+        uses: tsuyoshicho/action-vimlint@v1
+        with:
+          github_token: ${{ secrets.github_token }}
+          reporter: github-pr-review # Change reporter.
