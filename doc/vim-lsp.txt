@@ -36,6 +36,7 @@ CONTENTS                                                  *vim-lsp-contents*
       g:lsp_fold_enabled                    |g:lsp_fold_enabled|
       g:lsp_hover_conceal                   |g:lsp_hover_conceal|
       g:lsp_ignorecase                      |g:lsp_ignorecase|
+      g:lsp_log_file                        |g:lsp_log_file|
     Functions                             |vim-lsp-functions|
       enable                                |vim-lsp-enable|
       disable                               |vim-lsp-disable|
@@ -526,6 +527,18 @@ g:lsp_ignorecase                                         *g:lsp_ignorecase*
     Determines whether or not case should be ignored when filtering completion
     items. See |vim-lsp-completion-filter|. By default, the value of
     |'ignorecase'| is used.
+
+g:lsp_log_file                                           *g:lsp_log_file*
+    Type: |String|
+    Default: `''`
+
+    Determines whether or not logging should be written to a file.
+    Empty string is equivalent to disable logging.
+
+    Example:
+>
+	let g:lsp_log_file = ''
+	let g:lsp_log_file = expand('~/vim-lsp.log')
 
 ===============================================================================
 FUNCTIONS	                                        *vim-lsp-functions*
