@@ -20,16 +20,16 @@ matrix:
           env: VIM_TYPE=neovim VIM_VERSION=nightly
     include:
         - os: osx
-          env: VIM_TYPE=neovim VIM_VERSION=0.3.1
+          env: VIM_TYPE=neovim VIM_VERSION=0.4.3
         - os: osx
           env: VIM_TYPE=vim VIM_VERSION=default
         - os: linux
           dist: trusty
           python: "3.6"
-          env: VIM_TYPE=neovim VIM_VERSION=0.3.1
+          env: VIM_TYPE=neovim VIM_VERSION=0.4.3
         - os: windows
           language: shell
-          env: VIM_TYPE=neovim VIM_VERSION=0.3.1
+          env: VIM_TYPE=neovim VIM_VERSION=0.4.3
         - os: windows
           language: shell
           env: VIM_TYPE=vim VIM_VERSION=default
@@ -69,7 +69,7 @@ before_install:
         powershell -Command "Set-ExecutionPolicy RemoteSigned -scope CurrentUser";
         powershell -Command "iex (new-object net.webclient).downloadstring('https://get.scoop.sh')";
         export PATH="$HOME/scoop/shims:$PATH;"; 
-        export PATH="$APPDATA/Python/Python37/Scripts:$PATH;";
+        export PATH="$APPDATA/Python/Python38/Scripts:$PATH;";
         powershell -Command "scoop install python";
         python3 -m pip install --user vim-vint typing;
         if [[ "$VIM_TYPE" == "neovim" ]]; then
@@ -79,13 +79,14 @@ before_install:
             unzip "$DOWNLOADS_DIR/neovim-win64.zip" -d "$DOWNLOADS_DIR";
             export PATH="$DOWNLOADS_DIR/Neovim/bin:$PATH";
         fi;
-      fi
+      fi;
     - git clone --depth 1 --branch v1.5.4 --single-branch https://github.com/thinca/vim-themis /tmp/vim-themis
     - export PATH="/tmp/vim-themis/bin:$PATH";
     - if [[ "$VIM_TYPE" == "neovim" ]]; then export THEMIS_VIM=nvim; fi;
 
 before_script:
     - uname -a
+    - export
     - which -a python
 
 script:
