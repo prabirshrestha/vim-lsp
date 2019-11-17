@@ -533,7 +533,7 @@ g:lsp_log_file                                           *g:lsp_log_file*
     Default: `''`
 
     Determines whether or not logging should be written to a file.
-    Empty string is equivalent to disable logging.
+    To disable log use empty string.
 
     Example:
 >
