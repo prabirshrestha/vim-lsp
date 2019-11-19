@@ -61,7 +61,8 @@ function! lsp#ui#vim#folding#send_request(server_name, buf, sync) abort
                 \   'textDocument': lsp#get_text_document_identifier(a:buf)
                 \ },
                 \ 'on_notification': function('s:handle_fold_request', [a:server_name]),
-                \ 'sync': a:sync
+                \ 'sync': a:sync,
+                \ 'bufnr': a:buf
                 \ })
 endfunction
 
