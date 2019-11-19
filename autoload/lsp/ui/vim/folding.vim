@@ -30,15 +30,24 @@ function! s:set_textprops(buf) abort
     " Create text property, if not already defined
     silent! call prop_type_add(s:textprop_name, {'bufnr': a:buf})
 
+    let l:line_count = s:get_line_count_buf(a:buf)
+
     " First, clear all markers from the previous run
-    call prop_remove({'type': s:textprop_name, 'bufnr': a:buf}, 1, line('$'))
+    call prop_remove({'type': s:textprop_name, 'bufnr': a:buf}, 1, l:line_count)
 
     " Add markers to each line
     let l:i = 1
-    while l:i <= line('$')
+    while l:i <= l:line_count
         call prop_add(l:i, 1, {'bufnr': a:buf, 'type': s:textprop_name, 'id': l:i})
         let l:i += 1
     endwhile
+endfunction
+
+function! s:get_line_count_buf(buf) abort
+    if !has('patch-8.1.1967')
+        return line('$')
+    endif
+    return line('$', bufwinid(a:buf))
 endfunction
 
 function! lsp#ui#vim#folding#send_request(server_name, buf, sync) abort
