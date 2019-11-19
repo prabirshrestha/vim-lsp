@@ -186,6 +186,80 @@ function! lsp#utils#echo_with_truncation(msg) abort
     exec 'echo l:msg'
 endfunction
 
+"
+" Safe windo.
+"
+function! lsp#utils#windo(winid, fn) abort
+  if !empty(getcmdwintype())
+    return
+  endif
+
+  let l:current_winid = win_getid()
+  if l:current_winid == a:winid
+    call a:fn()
+    return
+  endif
+
+  let l:mode = mode()
+  try
+    execute printf('noautocmd keepalt keepjumps %swindo call a:fn()', win_id2win(a:winid))
+  catch /.*/
+    call lsp#log('lsp#utils#windo', { 'e': v:exception, 't': v:throwpoint })
+  endtry
+  execute printf('noautocmd keepalt keepjumps %swincmd w', win_id2win(l:current_winid))
+
+  if index(['v', 'V', "\<C-v>"], l:mode) >= 0
+    normal! gv
+  endif
+  if index(['s', 'S', "\<C-S>"], l:mode) >= 0
+    normal! gv
+    call feedkeys("\<C-g>", 'n')
+  endif
+endfunction
+
+"
+" Normalize `MarkupContent`, `MarkedString` or `string` to v:t_string.
+"
+function! lsp#utils#normalize_markup_content(markup_content) abort
+    let l:normalized = []
+    for l:markup_content in type(a:markup_content) == type([]) ? a:markup_content : [a:markup_content]
+        " string
+        if type(l:markup_content) == type('')
+            call add(l:normalized, s:fix_markup_content_string(l:markup_content))
+
+        " MarkupContent or MarkedString
+        elseif type(l:markup_content) == type({})
+            let l:string = l:markup_content.value
+            if has_key(l:markup_content, 'language') && l:string !~# '^\(\s\|\n\)*$'
+                let l:string = printf('``` %s %s ```', l:markup_content.language, l:string)
+            endif
+            call add(l:normalized, s:fix_markup_content_string(l:string))
+        endif
+    endfor
+    return l:normalized
+endfunction
+
+function! s:fix_markup_content_string(string) abort
+  let l:string = a:string
+
+  " remove \r.
+  let l:string = substitute(l:string, "\\(\r\n\\|\r\\)", "\n", 'g')
+
+  " compact fenced code block satrting.
+  let l:string = substitute(l:string, '\%(^\|\n\)\s*\zs\(```\s*\w\+\)\%(\s\|\n\)*', '\1 ', 'g')
+
+  " compact fenced code block ending.
+  let l:string = substitute(l:string, '\%(\s\|\n\)*```\s*' . '\ze\s*\%($\|\n\)', ' ```', 'g')
+
+  " trim first/last whitespace.
+  let l:string = substitute(l:string, '^\s*\|\s*$', '', 'g')
+
+  " remove trailing whitspae.
+  let l:string = substitute(l:string, '\s*\(\s*\%($\|\n\)\)', '\1', 'g')
+
+  return split(l:string, "\n", v:true)
+endfunction
+
 " Convert a character-index (0-based) to byte-index (1-based)
 " This function requires a buffer specifier (expr, see :help bufname()),
 " a line number (lnum, 1-based), and a character-index (char, 0-based).

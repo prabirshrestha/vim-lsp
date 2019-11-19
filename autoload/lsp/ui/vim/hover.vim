@@ -1,3 +1,8 @@
+let s:Floatwin = lsp#ui#vim#floatwin#import()
+let s:floatwin = s:Floatwin.new({
+            \   'close_on': ['CursorMoved', 'InsertEnter']
+            \ })
+
 function! s:not_supported(what) abort
     return lsp#utils#error(a:what.' not supported for '.&filetype)
 endfunction
@@ -35,7 +40,8 @@ function! s:handle_hover(server, data) abort
     endif
 
     if !empty(a:data['response']['result']) && !empty(a:data['response']['result']['contents'])
-        call lsp#ui#vim#output#preview(a:server, a:data['response']['result']['contents'], {'statusline': ' LSP Hover'})
+        let l:screenpos = lsp#ui#vim#floatwin#screenpos(line('.'), col('.'))
+        call s:floatwin.show_tooltip(l:screenpos, lsp#utils#normalize_markup_content(a:data['response']['result']['contents']))
         return
     else
         call lsp#utils#error('No hover information found')

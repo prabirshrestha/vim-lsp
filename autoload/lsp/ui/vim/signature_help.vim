@@ -1,3 +1,6 @@
+let s:Floatwin = lsp#ui#vim#floatwin#import()
+let s:floatwin = s:Floatwin.new({})
+
 function! s:not_supported(what) abort
     return lsp#utils#error(a:what.' not supported for '.&filetype)
 endfunction
@@ -75,7 +78,14 @@ function! s:handle_signature_help(server, data) abort
             call add(l:contents, l:signature['documentation'])
         endif
 
-        call lsp#ui#vim#output#preview(a:server, l:contents, {'statusline': ' LSP SignatureHelp'})
+        let l:screenpos = lsp#ui#vim#floatwin#screenpos(line('.'), col('.'))
+        let l:contents = lsp#utils#normalize_markup_content(l:contents)
+        if mode()[0] == 'i'
+            let s:floatwin.close_on = ['InsertLeave', 'CursorMovedI', 'CursorMovedP']
+        else
+            let s:floatwin.close_on = ['InsertEnter', 'CursorMoved']
+        endif
+        call s:floatwin.show(l:screenpos, l:contents)
         return
     else
         " signature help is used while inserting. So this must be graceful.

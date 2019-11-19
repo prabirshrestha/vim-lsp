@@ -1,3 +1,7 @@
+let s:Floatwin = lsp#ui#vim#floatwin#import()
+let s:floatwin = s:Floatwin.new({
+            \   'close_on': ['InsertEnter', 'CursorMoved']
+            \ })
 let s:last_req_id = 0
 
 function! s:not_supported(what) abort
@@ -506,16 +510,17 @@ function! s:handle_location(ctx, server, type, data) abort "ctx = {counter, list
                 let l:lines = readfile(fnameescape(l:loc['filename']))
                 if has_key(l:loc,'viewstart') " showing a locationLink
                     let l:view = l:lines[l:loc['viewstart'] : l:loc['viewend']]
-                    call lsp#ui#vim#output#preview(a:server, l:view, {
-                                \   'statusline': ' LSP Peek ' . a:type,
-                                \   'filetype': &filetype
-                                \ })
+                    let l:screenpos = lsp#ui#vim#floatwin#screenpos(line('.'), col('.'))
+                    call s:floatwin.show(l:screenpos, lsp#utils#normalize_markup_content({
+                                \   'language': &filetype,
+                                \   'value': join(l:view, "\n")
+                                \ }))
                 else " showing a location
-                    call lsp#ui#vim#output#preview(a:server, l:lines, {
-                                \   'statusline': ' LSP Peek ' . a:type,
-                                \   'cursor': { 'line': l:loc['lnum'], 'col': l:loc['col'], 'align': g:lsp_peek_alignment },
-                                \   'filetype': &filetype
-                                \ })
+                    let l:screenpos = lsp#ui#vim#floatwin#screenpos(line('.'), col('.'))
+                    call s:floatwin.show(l:screenpos, lsp#utils#normalize_markup_content({
+                                \   'language': &filetype,
+                                \   'value': join(l:lines, "\n")
+                                \ }))
                 endif
             endif
         endif
