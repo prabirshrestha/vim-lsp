@@ -82,10 +82,15 @@ function! s:handle_signature_help(server, data) abort
         let l:contents = lsp#utils#normalize_markup_content(l:contents)
         if mode()[0] == 'i'
             let s:floatwin.close_on = ['InsertLeave', 'CursorMovedI', 'CursorMovedP']
+            call s:floatwin.show_tooltip(l:screenpos, l:contents)
         else
             let s:floatwin.close_on = ['InsertEnter', 'CursorMoved']
+            if s:floatwin.is_showing()
+                call s:floatwin.enter()
+            else
+                call s:floatwin.show_tooltip(l:screenpos, l:contents)
+            endif
         endif
-        call s:floatwin.show(l:screenpos, l:contents)
         return
     else
         " signature help is used while inserting. So this must be graceful.

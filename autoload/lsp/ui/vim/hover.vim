@@ -40,8 +40,12 @@ function! s:handle_hover(server, data) abort
     endif
 
     if !empty(a:data['response']['result']) && !empty(a:data['response']['result']['contents'])
-        let l:screenpos = lsp#ui#vim#floatwin#screenpos(line('.'), col('.'))
-        call s:floatwin.show_tooltip(l:screenpos, lsp#utils#normalize_markup_content(a:data['response']['result']['contents']))
+        if s:floatwin.is_showing()
+            call s:floatwin.enter()
+        else
+            let l:screenpos = lsp#ui#vim#floatwin#screenpos(line('.'), col('.'))
+            call s:floatwin.show_tooltip(l:screenpos, lsp#utils#normalize_markup_content(a:data['response']['result']['contents']))
+        endif
         return
     else
         call lsp#utils#error('No hover information found')

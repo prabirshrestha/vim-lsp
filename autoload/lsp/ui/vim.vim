@@ -509,14 +509,12 @@ function! s:handle_location(ctx, server, type, data) abort "ctx = {counter, list
             else
                 let l:lines = readfile(fnameescape(l:loc['filename']))
                 if has_key(l:loc,'viewstart') " showing a locationLink
-                    let l:view = l:lines[l:loc['viewstart'] : l:loc['viewend']]
-                    let l:screenpos = lsp#ui#vim#floatwin#screenpos(line('.'), col('.'))
-                    call s:floatwin.show(l:screenpos, lsp#utils#normalize_markup_content({
-                                \   'language': &filetype,
-                                \   'value': join(l:view, "\n")
-                                \ }))
-                else " showing a location
-                    let l:screenpos = lsp#ui#vim#floatwin#screenpos(line('.'), col('.'))
+                    let l:lines = l:lines[l:loc['viewstart'] : l:loc['viewend']]
+                endif
+                let l:screenpos = lsp#ui#vim#floatwin#screenpos(line('.'), col('.'))
+                if s:floatwin.is_showing()
+                    call s:floatwin.enter()
+                else
                     call s:floatwin.show(l:screenpos, lsp#utils#normalize_markup_content({
                                 \   'language': &filetype,
                                 \   'value': join(l:lines, "\n")

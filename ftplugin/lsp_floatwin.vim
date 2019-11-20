@@ -14,8 +14,8 @@ function! LspFloatwinSyntaxShouldUpdate(bufnr) abort
     return v:true
   endif
 
-  for [l:mark, l:language] in items(s:get_language_map(s:find_marks(a:bufnr)))
-    if !has_key(b:lsp_floatwin_state.fenced_language_syntaxes, l:language) ||
+  for [l:mark, l:filetype] in items(s:get_filetype_map(s:find_marks(a:bufnr)))
+    if !has_key(b:lsp_floatwin_state.fenced_filetype_syntaxes, l:filetype) ||
           \ !has_key(b:lsp_floatwin_state.fenced_mark_syntaxes, l:mark)
       return v:true
     endif
@@ -39,7 +39,7 @@ function! s:update()
   " initialize state.
   let b:lsp_floatwin_state = get(b:, 'lsp_floatwin_state', {
         \   'markdown_syntax': v:false,
-        \   'fenced_language_syntaxes': {},
+        \   'fenced_filetype_syntaxes': {},
         \   'fenced_mark_syntaxes': {},
         \ })
 
@@ -52,17 +52,17 @@ function! s:update()
     syntax include @Markdown syntax/markdown.vim
   endif
 
-  for [l:mark, l:language] in items(s:get_language_map(s:find_marks(bufnr('%'))))
-    let l:language_group = printf('@LspMarkdownFenced_%s', s:escape(l:language))
+  for [l:mark, l:filetype] in items(s:get_filetype_map(s:find_marks(bufnr('%'))))
+    let l:filetype_group = printf('@LspMarkdownFenced_%s', s:escape(l:filetype))
 
-    " include syntax for language.
-    if !has_key(b:lsp_floatwin_state.fenced_language_syntaxes, l:language)
-      let b:lsp_floatwin_state.fenced_language_syntaxes[l:language] = v:true
+    " include syntax for filetype.
+    if !has_key(b:lsp_floatwin_state.fenced_filetype_syntaxes, l:filetype)
+      let b:lsp_floatwin_state.fenced_filetype_syntaxes[l:filetype] = v:true
 
       try
-        for l:syntax_path in s:find_syntax_path(l:language)
+        for l:syntax_path in s:find_syntax_path(l:filetype)
           call s:clear()
-          execute printf('syntax include %s %s', l:language_group, l:syntax_path)
+          execute printf('syntax include %s %s', l:filetype_group, l:syntax_path)
         endfor
       catch /.*/
         continue
@@ -86,7 +86,7 @@ function! s:update()
             \   l:start_mark,
             \   l:mark_end_group,
             \   l:end_mark,
-            \   l:language_group
+            \   l:filetype_group
             \ )
     endif
   endfor
@@ -115,10 +115,10 @@ function! s:find_marks(bufnr) abort
 endfunction
 
 "
-" get_syntax_map
+" get_filetype_map
 "
-function! s:get_language_map(marks) abort
-  let l:language_map = {}
+function! s:get_filetype_map(marks) abort
+  let l:filetype_map = {}
 
   for l:mark in a:marks
 
@@ -127,7 +127,7 @@ function! s:get_language_map(marks) abort
       " Supports `let g:markdown_fenced_languages = ['sh']`
       if l:config !~# '='
         if l:config ==# l:mark
-          let l:language_map[l:mark] = l:mark
+          let l:filetype_map[l:mark] = l:mark
           break
         endif
 
@@ -135,19 +135,19 @@ function! s:get_language_map(marks) abort
       else
         let l:config = split(l:config, '=')
         if l:config[1] ==# l:mark
-          let l:language_map[l:config[1]] = l:config[0]
+          let l:filetype_map[l:config[1]] = l:config[0]
           break
         endif
       endif
     endfor
 
     " add as-is if can't resolved.
-    if !has_key(l:language_map, l:mark)
-      let l:language_map[l:mark] = l:mark
+    if !has_key(l:filetype_map, l:mark)
+      let l:filetype_map[l:mark] = l:mark
     endif
   endfor
 
-  return l:language_map
+  return l:filetype_map
 endfunction
 
 "

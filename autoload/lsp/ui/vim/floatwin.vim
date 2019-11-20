@@ -35,8 +35,8 @@ function! s:Floatwin.new(option) abort
   return extend(deepcopy(s:Floatwin), {
         \   'id': s:floatwin_id,
         \   'bufnr': l:bufnr,
-        \   'max_width': get(a:option, 'max_width', &columns / 3),
-        \   'max_height': get(a:option, 'max_height', &lines / 2),
+        \   'max_width': get(a:option, 'max_width', g:lsp_preview_max_width),
+        \   'max_height': get(a:option, 'max_height', g:lsp_preview_max_height),
         \   'close_on': get(a:option, 'close_on', []),
         \   'screenpos': [0, 0],
         \   'contents': []
@@ -88,7 +88,9 @@ function! s:Floatwin.show(screenpos, contents) abort
   " show or move
   call lsp#ui#vim#floatwin#{s:namespace}#show(self)
   call setwinvar(self.winid(), '&wrap', 1)
-  call setwinvar(self.winid(), '&conceallevel', 3)
+  if g:lsp_hover_conceal
+    call setwinvar(self.winid(), '&conceallevel', 3)
+  endif
 
   " write lines
   call lsp#ui#vim#floatwin#{s:namespace}#write(self, l:lines)
@@ -115,7 +117,9 @@ endfunction
 " enter
 "
 function! s:Floatwin.enter() abort
-  call lsp#ui#vim#floatwin#{s:namespace}#enter(self)
+  if g:lsp_preview_doubletap
+    call lsp#ui#vim#floatwin#{s:namespace}#enter(self)
+  endif
 endfunction
 
 "
@@ -139,12 +143,14 @@ function! s:Floatwin.set_close_events() abort
   let l:close_fn = printf('lsp_floatwin_close_%s', self.id)
   let b:[l:close_fn] = { -> self.hide() }
 
-  augroup printf('lsp#ui#vim#floatwin#hide_%s', self.id)
-    autocmd!
-    for l:event in self.close_on
-      execute printf('autocmd %s <buffer> call b:%s()', l:event, l:close_fn)
-    endfor
-  augroup END
+  if g:lsp_preview_autoclose
+    augroup printf('lsp#ui#vim#floatwin#hide_%s', self.id)
+      autocmd!
+      for l:event in self.close_on
+        execute printf('autocmd %s <buffer> call b:%s()', l:event, l:close_fn)
+      endfor
+    augroup END
+  endif
 endfunction
 
 "
