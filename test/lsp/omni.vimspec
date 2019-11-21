@@ -76,7 +76,8 @@ Describe lsp#omni
             \ 'empty': 1,
             \ 'kind': 'function',
             \ 'menu': 'my-detail',
-            \ 'user_data': l:want_user_data_string
+            \ 'user_data': l:want_user_data_string,
+            \ 'vim-lsp/insertFormat': 0
             \}
             let got = lsp#omni#get_vim_completion_item(item)
 
