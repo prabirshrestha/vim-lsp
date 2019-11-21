@@ -38,6 +38,7 @@ let s:is_user_data_support = has('patch-8.0.1493')
 let s:user_data_key = 'vim-lsp/textEdit'
 let s:user_data_additional_edits_key = 'vim-lsp/additionalTextEdits'
 let s:user_data_insert_start_key = 'vim-lsp/insertStart'
+let s:user_data_insert_format_key = 'vim-lsp/insertFormat'
 let s:user_data_filtertext_key = 'vim-lsp/filterText'
 
 " }}}
@@ -285,6 +286,7 @@ function! lsp#omni#default_get_vim_completion_item(item, ...) abort
         if type(l:text_edit) == type({})
             let l:user_data[s:user_data_key] = l:text_edit
             let l:user_data[s:user_data_insert_start_key] = l:text_edit['range']['start']['character']
+            let l:user_data[s:user_data_insert_format_key] = get(a:item, 'insertTextFormat', 0)
         endif
 
         if type(l:additional_text_edits) == type([]) && !empty(l:additional_text_edits)
@@ -382,12 +384,16 @@ function! s:apply_text_edits() abort
 
     " expand textEdit range, for omni complet inserted text.
     let l:text_edit = get(l:user_data, s:user_data_key, {})
+	let g:hoge = l:user_data
     if !empty(l:text_edit)
         let l:expanded_text_edit = s:expand_range(l:text_edit, strchars(v:completed_item['word']))
-        let l:new_text = l:expanded_text_edit['newText']
-        let l:marker_pattern = '\<\$[0-9]\+\>'
-        let l:snippet_marker_pos = matchstrpos(l:new_text, l:marker_pattern)[1] - 1
-        let l:expanded_text_edit['newText'] = substitute(l:new_text, l:marker_pattern, '', 'g')
+        " InsertTextFormat:Snippet
+        if get(l:user_data, s:user_data_insert_format_key, 0) == 2
+            let l:new_text = l:expanded_text_edit['newText']
+            let l:marker_pattern = '\<\$[0-9]\+\>'
+            let l:snippet_marker_pos = matchstrpos(l:new_text, l:marker_pattern)[1] - 1
+            let l:expanded_text_edit['newText'] = substitute(l:new_text, l:marker_pattern, '', 'g')
+        endif
         call add(l:all_text_edits, l:expanded_text_edit)
     endif
 
