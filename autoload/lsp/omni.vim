@@ -377,10 +377,17 @@ function! s:apply_text_edits() abort
 
     let l:all_text_edits = []
 
+    " if newText contains snippet markers, remove all them.
+    let l:snippet_marker_pos = -1
+
     " expand textEdit range, for omni complet inserted text.
     let l:text_edit = get(l:user_data, s:user_data_key, {})
     if !empty(l:text_edit)
         let l:expanded_text_edit = s:expand_range(l:text_edit, strchars(v:completed_item['word']))
+        let l:new_text = l:expanded_text_edit['newText']
+        let l:marker_pattern = '\<\$[0-9]\+\>'
+        let l:snippet_marker_pos = matchstrpos(l:new_text, l:marker_pattern)[1] - 1
+        let l:expanded_text_edit['newText'] = substitute(l:new_text, l:marker_pattern, '', 'g')
         call add(l:all_text_edits, l:expanded_text_edit)
     endif
 
@@ -398,10 +405,20 @@ function! s:apply_text_edits() abort
     " apply textEdits
     if !empty(l:all_text_edits)
         call lsp#utils#text_edit#apply_text_edits(lsp#utils#get_buffer_uri(), l:all_text_edits)
+		" when user typed something character while popup menu is shwon, vim
+		" insert typed-character after CompleteDone occured. but the character
+		" should not be duplicated since the textEdit include the character.
+		" this remove the following character.
+        let oldline = getline('.')
+        call timer_start(0, {_-> [setline('.', oldline), execute('redraw', 1)] })
     endif
 
     let l:pos = getpos("'a")
-    let l:pos[2] += l:col_offset
+    if l:snippet_marker_pos >= 0
+        let l:pos[2] += l:snippet_marker_pos
+    else
+        let l:pos[2] += l:col_offset
+    endif
     call setpos("'a", l:saved_mark)
     call setpos('.', l:pos)
 
