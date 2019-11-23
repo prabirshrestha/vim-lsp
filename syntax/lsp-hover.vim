@@ -34,3 +34,6 @@ function! s:do_highlight() abort
 endfunction
 
 call s:do_highlight()
+
+" Do not use syntax for the first line of hover data
+syn region lsp_hover_heading start=+\%1l+ end=+$+
