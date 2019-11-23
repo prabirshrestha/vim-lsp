@@ -387,7 +387,8 @@ function! lsp#default_get_supported_capabilities(server_info) abort
     \   'textDocument': {
     \       'completion': {
     \           'completionItem': {
-    \              'documentationFormat': ['plaintext']
+    \              'documentationFormat': ['plaintext'],
+    \              'snippetSupport': v:false
     \           },
     \           'completionItemKind': {
     \              'valueSet': lsp#omni#get_completion_item_kinds()
