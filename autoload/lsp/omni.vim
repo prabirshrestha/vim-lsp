@@ -139,7 +139,10 @@ function! s:contains_filter(item, last_typed_word) abort
 endfunction
 
 function! s:display_completions(timer) abort
-    call complete(s:start_pos + 1, s:completion['matches'])
+	try
+       call complete(s:start_pos + 1, s:completion['matches'])
+	catch /^Vim(call):E785: complete() can only be used in Insert mode/
+	endtry
 endfunction
 
 function! s:handle_omnicompletion(server_name, complete_counter, data) abort
