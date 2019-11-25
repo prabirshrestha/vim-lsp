@@ -33,4 +33,20 @@ function! s:do_highlight() abort
     endif
 endfunction
 
+function! s:cleanup_markdown() abort
+    " Don't highlight _ in words
+    syn match markdownError "\w\@<=\w\@="
+
+    " Conceal escaped characters
+    if has('conceal')
+        for l:escaped_char in ['`', '*', '_', '{', '}', '(', ')', '<', '>', '#', '+', '.', '!', '-']
+            execute printf('syntax match markdownEscape "\\[][%s]" conceal cchar=%s', l:escaped_char, l:escaped_char)
+        endfor
+    end
+
+    " Don't highlight concealed chars
+    hi clear Conceal
+endfunction
+
 call s:do_highlight()
+call s:cleanup_markdown()
