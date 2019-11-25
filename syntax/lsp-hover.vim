@@ -35,7 +35,7 @@ endfunction
 
 function! s:cleanup_markdown() abort
     " Don't highlight _ in words
-    syn match markdownError "\w\@<=\w\@="
+    syntax match markdownError "\w\@<=\w\@="
 
     " Conceal escaped characters
     if has('conceal')
@@ -45,7 +45,7 @@ function! s:cleanup_markdown() abort
     end
 
     " Don't highlight concealed chars
-    hi clear Conceal
+    highlight clear Conceal
 endfunction
 
 call s:do_highlight()
