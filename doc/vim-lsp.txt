@@ -36,6 +36,7 @@ CONTENTS                                                  *vim-lsp-contents*
       g:lsp_fold_enabled                    |g:lsp_fold_enabled|
       g:lsp_hover_conceal                   |g:lsp_hover_conceal|
       g:lsp_ignorecase                      |g:lsp_ignorecase|
+      g:lsp_code_action_selector            |g:lsp_code_action_selector|
       g:lsp_log_file                        |g:lsp_log_file|
     Functions                             |vim-lsp-functions|
       enable                                |vim-lsp-enable|
@@ -527,6 +528,40 @@ g:lsp_ignorecase                                         *g:lsp_ignorecase*
     Determines whether or not case should be ignored when filtering completion
     items. See |vim-lsp-completion-filter|. By default, the value of
     |'ignorecase'| is used.
+
+g:lsp_code_action_selector                     *g:lsp_code_action_selector*
+    Type: |List|
+    Default: `[function(lsp#ui#vim#select_code_action)]`
+
+    A |List| containing one element of type |Funcref|. This element is a
+    reference to the function that vim-lsp uses to show choices of code
+    actions that provided by server and get user selection.
+    Changing this variable allows customizing how choices are displayed
+    in the completion menu, and selector method.
+
+    Example for use `fzf.vim` as selector interface:
+>
+	function! s:select_code_action(code_actions, callback) abort
+	    let l:choices = []
+	    let l:index = 0
+	    while l:index < len(a:code_actions)
+		let l:line = string(l:index) . ' ' . a:code_actions[l:index]['title']
+		call add(l:choices, l:line)
+
+		let l:index += 1
+	    endwhile
+
+	    call fzf#run({
+		\ 'source': l:choices,
+		\ 'sink': function('<SID>kick_code_action', [a:code_actions, a:callback]),
+		\ })
+	endfunction
+	let g:lsp_code_action_selector = [function('<SID>select_code_action')]
+
+	function! s:kick_code_action(code_actions, callback, line)
+	  let [l:choice; _] = split(a:line)
+	  call a:callback(a:code_actions[l:choice])
+	endfunction
 
 g:lsp_log_file                                           *g:lsp_log_file*
     Type: |String|
