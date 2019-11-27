@@ -593,28 +593,34 @@ function! s:handle_code_action(server, last_req_id, type, data) abort
         return
     endif
 
-    let l:codeActions = a:data['response']['result']
+    let l:code_actions = a:data['response']['result']
 
-    let l:index = 0
-    let l:choices = []
+    call lsp#log('s:handle_code_action', l:code_actions)
 
-    call lsp#log('s:handle_code_action', l:codeActions)
-
-    if len(l:codeActions) == 0
+    if len(l:code_actions) == 0
         echo 'No code actions found'
         return
     endif
 
-    while l:index < len(l:codeActions)
-        call add(l:choices, string(l:index + 1) . ' - ' . l:codeActions[index]['title'])
+    call g:lsp_code_action_selector[0](
+          \ l:code_actions,
+          \ function('<SID>execute_command_or_code_action', [a:server])
+          \ )
+endfunction
+
+function! lsp#ui#vim#select_code_action(code_actions, callback) abort
+    let l:index = 0
+    let l:choices = []
+
+    while l:index < len(a:code_actions)
+        call add(l:choices, string(l:index + 1) . ' - ' . a:code_actions[index]['title'])
 
         let l:index += 1
     endwhile
 
     let l:choice = inputlist(l:choices)
-
     if l:choice > 0 && l:choice <= l:index
-        call s:execute_command_or_code_action(a:server, l:codeActions[l:choice - 1])
+        call callback(l:code_actions[l:choice - 1])
     endif
 endfunction
 

@@ -39,6 +39,7 @@ let g:lsp_signature_help_enabled = get(g:, 'lsp_signature_help_enabled', 1)
 let g:lsp_fold_enabled = get(g:, 'lsp_fold_enabled', 1)
 let g:lsp_hover_conceal = get(g:, 'lsp_hover_conceal', 1)
 let g:lsp_ignorecase = get(g:, 'lsp_ignorecase', &ignorecase)
+let g:lsp_code_action_selector = get(g:, 'lsp_code_action_selector', [function('lsp#ui#vim#select_code_action')])
 
 let g:lsp_get_vim_completion_item = get(g:, 'lsp_get_vim_completion_item', [function('lsp#omni#default_get_vim_completion_item')])
 let g:lsp_get_supported_capabilities = get(g:, 'lsp_get_supported_capabilities', [function('lsp#default_get_supported_capabilities')])
