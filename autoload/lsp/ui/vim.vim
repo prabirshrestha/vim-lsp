@@ -671,7 +671,7 @@ function! s:execute_command(server, command) abort
 endfunction
 
 function! s:after_failure(type) abort
-  execute "doautocmd User " . s:event_name_on_failure(a:type)
+  execute 'doautocmd User ' . s:event_name_on_failure(a:type)
 endfunction
 
 function! s:event_name_on_failure(type) abort
