@@ -993,6 +993,57 @@ expansion, or custom post processing of completed items. Just like
 the completed item. It is guaranteed that vim-lsp does not change the content
 of this variable during its |CompleteDone| autocommands.
 
+lsp_implementation_failed                        *lsp_implementation_failed*
+
+This autocommand is run after |LspImplementation| and |LspPeekImplementation|
+failed.
+
+lsp_type_definition_failed                      *lsp_type_definition_failed*
+
+This autocommand is run after |LspTypeDefinition| and |LspPeekTypeDefinition|
+failed.
+
+lsp_declaration_failed                              *lsp_declaration_failed*
+
+This autocommand is run after |LspDeclaration| and |LspPeekDeclaration|
+failed.
+
+lsp_definition_failed                                *lsp_definition_failed*
+
+This autocommand is run after |LspDefinition| and |LspPeekDefinition|
+failed.
+
+lsp_references_failed                                *lsp_references_failed*
+
+This autocommand is run after |LspReferences|, |LspNextReference| and
+|LspPreviousReference| failed.
+
+lsp_rename_failed                                        *lsp_rename_failed*
+
+This autocommand is run after |LspRename| failed.
+
+lsp_document_format_failed                      *lsp_document_format_failed*
+
+This autocommand is run after |LspDocumentFormat| and |LspDocumentFormatSync|
+failed.
+
+lsp_range_format_failed                            *lsp_range_format_failed*
+
+This autocommand is run after |LspDocumentRangeFormat| and
+|LspDocumentRangeFormatSync| failed.
+
+lsp_workspace_symbol_failed                    *lsp_workspace_symbol_failed*
+
+This autocommand is run after |LspWorkspaceSymbol| failed.
+
+lsp_document_symbol_failed                      *lsp_document_symbol_failed*
+
+This autocommand is run after |LspDocumentSymbol| failed.
+
+lsp_code_action_failed                              *lsp_code_action_failed*
+
+This autocommand is run after |LspCodeAction| failed.
+
 
 ==============================================================================
 Mappings                                                  *vim-lsp-mappings*

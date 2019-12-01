@@ -11,6 +11,7 @@ function! lsp#ui#vim#implementation(in_preview) abort
 
     if len(l:servers) == 0
         call s:not_supported('Retrieving implementation')
+        call s:after_failure('implementation')
         return
     endif
     let l:ctx = { 'counter': len(l:servers), 'list':[], 'last_req_id': s:last_req_id, 'jump_if_one': 1, 'in_preview': a:in_preview }
@@ -35,6 +36,7 @@ function! lsp#ui#vim#type_definition(in_preview) abort
 
     if len(l:servers) == 0
         call s:not_supported('Retrieving type definition')
+        call s:after_failure('type definition')
         return
     endif
     let l:ctx = { 'counter': len(l:servers), 'list':[], 'last_req_id': s:last_req_id, 'jump_if_one': 1, 'in_preview': a:in_preview }
@@ -59,6 +61,7 @@ function! lsp#ui#vim#declaration(in_preview) abort
 
     if len(l:servers) == 0
         call s:not_supported('Retrieving declaration')
+        call s:after_failure('declaration')
         return
     endif
 
@@ -84,6 +87,7 @@ function! lsp#ui#vim#definition(in_preview) abort
 
     if len(l:servers) == 0
         call s:not_supported('Retrieving definition')
+        call s:after_failure('definition')
         return
     endif
 
@@ -111,6 +115,7 @@ function! lsp#ui#vim#references() abort
     let l:ctx = { 'counter': len(l:servers), 'list':[], 'last_req_id': s:last_req_id, 'jump_if_one': 0, 'in_preview': 0 }
     if len(l:servers) == 0
         call s:not_supported('Retrieving references')
+        call s:after_failure('references')
         return
     endif
 
@@ -161,6 +166,7 @@ function! lsp#ui#vim#rename() abort
 
     if len(l:servers) == 0
         call s:not_supported('Renaming')
+        call s:after_failure('rename')
         return
     endif
 
@@ -188,6 +194,7 @@ function! s:document_format(sync) abort
 
     if len(l:servers) == 0
         call s:not_supported('Document formatting')
+        call s:after_failure('document format')
         return
     endif
 
@@ -257,6 +264,7 @@ function! s:document_format_range(sync, type) abort
 
     if len(l:servers) == 0
         call s:not_supported('Document range formatting')
+        call s:after_failure('range format')
         return
     endif
 
@@ -305,6 +313,7 @@ function! lsp#ui#vim#workspace_symbol() abort
 
     if len(l:servers) == 0
         call s:not_supported('Retrieving workspace symbols')
+        call s:after_failure('workspaceSymbol')
         return
     endif
 
@@ -331,6 +340,7 @@ function! lsp#ui#vim#document_symbol() abort
 
     if len(l:servers) == 0
         call s:not_supported('Retrieving symbols')
+        call s:after_failure('documentSymbol')
         return
     endif
 
@@ -381,6 +391,7 @@ function! lsp#ui#vim#code_action() abort
 
     if len(l:servers) == 0
         call s:not_supported('Code action')
+        call s:after_failure('codeAction')
         return
     endif
 
@@ -421,6 +432,7 @@ function! s:handle_symbol(server, last_req_id, type, data) abort
 
     if lsp#client#is_error(a:data['response'])
         call lsp#utils#error('Failed to retrieve '. a:type . ' for ' . a:server . ': ' . lsp#client#error_message(a:data['response']))
+        call s:after_failure(a:type)
         return
     endif
 
@@ -430,6 +442,7 @@ function! s:handle_symbol(server, last_req_id, type, data) abort
 
     if empty(l:list)
         call lsp#utils#error('No ' . a:type .' found')
+        call s:after_failure(a:type)
     else
         echo 'Retrieved ' . a:type
         botright copen
@@ -473,6 +486,7 @@ function! s:handle_location(ctx, server, type, data) abort "ctx = {counter, list
 
     if lsp#client#is_error(a:data['response'])
         call lsp#utils#error('Failed to retrieve '. a:type . ' for ' . a:server . ': ' . lsp#client#error_message(a:data['response']))
+        call s:after_failure(a:type)
     else
         let a:ctx['list'] = a:ctx['list'] + lsp#ui#vim#utils#locations_to_loc_list(a:data)
     endif
@@ -480,6 +494,7 @@ function! s:handle_location(ctx, server, type, data) abort "ctx = {counter, list
     if a:ctx['counter'] == 0
         if empty(a:ctx['list'])
             call lsp#utils#error('No ' . a:type .' found')
+            call s:after_failure(a:type)
         else
             if exists('*gettagstack') && exists('*settagstack')
                 call s:update_tagstack()
@@ -529,6 +544,7 @@ function! s:handle_rename_prepare(server, last_req_id, type, data) abort
 
     if lsp#client#is_error(a:data['response'])
         call lsp#utils#error('Failed to retrieve '. a:type . ' for ' . a:server . ': ' . lsp#client#error_message(a:data['response']))
+        call s:after_failure('rename')
         return
     endif
 
@@ -564,6 +580,7 @@ function! s:handle_workspace_edit(server, last_req_id, type, data) abort
 
     if lsp#client#is_error(a:data['response'])
         call lsp#utils#error('Failed to retrieve '. a:type . ' for ' . a:server . ': ' . lsp#client#error_message(a:data['response']))
+        call s:after_failure(a:type)
         return
     endif
 
@@ -579,6 +596,7 @@ function! s:handle_text_edit(server, last_req_id, type, data) abort
 
     if lsp#client#is_error(a:data['response'])
         call lsp#utils#error('Failed to '. a:type . ' for ' . a:server . ': ' . lsp#client#error_message(a:data['response']))
+        call s:after_failure(a:type)
         return
     endif
 
@@ -590,6 +608,7 @@ endfunction
 function! s:handle_code_action(server, last_req_id, type, data) abort
     if lsp#client#is_error(a:data['response'])
         call lsp#utils#error('Failed to '. a:type . ' for ' . a:server . ': ' . lsp#client#error_message(a:data['response']))
+        call s:after_failure(a:type)
         return
     endif
 
@@ -651,4 +670,11 @@ function! s:execute_command(server, command) abort
         \ })
 endfunction
 
+function! s:after_failure(type) abort
+  execute "doautocmd User " . s:event_name_on_failure(a:type)
+endfunction
+
+function! s:event_name_on_failure(type) abort
+  return 'lsp_' . substitute(substitute(a:type, '\s', '_', 'g'), '\C[A-Z]', '\="_" . tolower(submatch(0))', 'g') . '_failed'
+endfunction
 
