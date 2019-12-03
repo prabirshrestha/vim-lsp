@@ -97,7 +97,7 @@ function! lsp#omni#complete(findstart, base) abort
 endfunction
 
 function! s:should_skip()
-	   if mode() isnot# 'i'
+    if mode() isnot# 'i'
         return 1
     else
         return 0
