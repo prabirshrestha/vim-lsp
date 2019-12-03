@@ -38,14 +38,14 @@ CONTENTS                                                  *vim-lsp-contents*
       g:lsp_ignorecase                      |g:lsp_ignorecase|
       g:lsp_log_file                        |g:lsp_log_file|
     Functions                             |vim-lsp-functions|
-      enable                                |vim-lsp-enable|
-      disable                               |vim-lsp-disable|
-      register_server                       |vim-lsp-register_server|
-      stop_server                           |vim-lsp-stop_server|
-      utils#find_nearest_parent_file_directory
-                              |vim-lsp-utils-find_nearest_parent_file_directory|
-      vim-lsp-get_buffer_diagnostics_counts |vim-lsp-get_buffer_diagnostics_counts|
-      vim-lsp-get_buffer_first_error_line   |vim-lsp-get_buffer_first_error_line|
+      lsp#enable                            |lsp#enable()|
+      lsp#disable                           |lsp#disable()|
+      lsp#register_server                   |lsp#register_server()|
+      lsp#stop_server                       |lsp#stop_server()|
+      lsp#utils#find_nearest_parent_file_directory()
+                              |lsp#utils#find_nearest_parent_file_directory()|
+      lsp#get_buffer_diagnostics_counts() |lsp#get_buffer_diagnostics_counts()|
+      lsp#get_buffer_first_error_line()   |lsp#get_buffer_first_error_line()|
     Commands                              |vim-lsp-commands|
       LspCodeAction                         |:LspCodeAction|
       LspDocumentDiagnostics                |:LspDocumentDiagnostics|
@@ -129,7 +129,7 @@ on pyls (https://github.com/palantir/python-language-server)
 		\ })
 	endif
 
-    For more details refer to |vim-lsp-register_server|.
+    For more details refer to |lsp#register_server()|.
 
 WIKI                                               *vim-lsp-configure-wiki*
 For documentation on how to configure other language servers refer
@@ -544,21 +544,21 @@ g:lsp_log_file                                           *g:lsp_log_file*
 ===============================================================================
 FUNCTIONS	                                        *vim-lsp-functions*
 
-lsp#enable                                                 *vim-lsp-enable*
+lsp#enable()                                                 *lsp#enable()*
 
 Enables vim-lsp plugin.
 
     Example:
 	:call lsp#enable()
 
-lsp#disable                                               *vim-lsp-disable*
+lsp#disable()                                               *lsp#disable()*
 
 Disables vim-lsp plugin.
 
     Example:
 	:call lsp#disable()
 
-lsp#register_server                               *vim-lsp-register_server*
+lsp#register_server({server-info})                  *lsp#register_server()*
 
 Used to register the language server with vim-lsp. This method takes
 one parameter which is a vim |dict| and is refered to as |vim-lsp-server-info|
@@ -783,7 +783,7 @@ only possible by adding to the already typed prefix (even if you're using the
 `contains` filter). If you'd like to retrigger the filtering, you will have to
 press CTRL-X CTRL-O again.
 
-lsp#stop_server                                        *vim-lsp-stop_server*
+lsp#stop_server({name-of-server})                        *lsp#stop_server()*
 
 Used to stop the server.
 
@@ -794,7 +794,7 @@ Used to stop the server.
 	* If the server is not running or is not registered it is a noop.
 	* The server is forcefully stopped without sending shutdown request.
 
-lsp#get_server_status                                  *vim-lsp-get_server_status*
+lsp#get_server_status({name-of-server})            *lsp#get_server_status()*
 
 Get the status of a server.
 
@@ -805,8 +805,8 @@ Get the status of a server.
     Returns one of "unknown server", " "exited", "starting", "failed",
     "running", "not running".
 
-			 *vim-lsp-utils-find_nearest_parent_file_directory*
-utils#find_nearest_parent_file_directory
+                            *lsp#utils#find_nearest_parent_file_directory()*
+lsp#utils#find_nearest_parent_file_directory({path}, {filename})
 
 Find the nearest parent directory which contains the specific files or
 diretories. The method has two parameters. The first is the path where
@@ -836,14 +836,14 @@ This method is mainly used to generate 'root_uri' when registering server.
 	* If there is not directory with the specific files or diretories
 	  found, the method will return an empty string.
 
-lsp#get_buffer_diagnostics_counts    *vim-lsp-get_buffer_diagnostics_counts*
+lsp#get_buffer_diagnostics_counts()    *lsp#get_buffer_diagnostics_counts()*
 
 Get dict with diagnostic counts for current buffer. Useful e.g. for display
 in status line.
 
     Returns dictionary with keys "error", "warning", "information", "hint".
 
-lsp#get_buffer_first_error_line        *vim-lsp-get_buffer_first_error_line*
+lsp#get_buffer_first_error_line()        *lsp#get_buffer_first_error_line()*
 
 Get line number of first error in current buffer.
 
