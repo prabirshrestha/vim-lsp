@@ -60,6 +60,10 @@ command! LspDocumentDiagnostics call lsp#ui#vim#diagnostics#document_diagnostics
 command! -nargs=? -complete=customlist,lsp#utils#empty_complete LspHover call lsp#ui#vim#hover#get_hover_under_cursor()
 command! LspNextError call lsp#ui#vim#diagnostics#next_error()
 command! LspPreviousError call lsp#ui#vim#diagnostics#previous_error()
+command! LspNextWarning call lsp#ui#vim#diagnostics#next_warning()
+command! LspPreviousWarning call lsp#ui#vim#diagnostics#previous_warning()
+command! LspNextDiagnostic call lsp#ui#vim#diagnostics#next_diagnostic()
+command! LspPreviousDiagnostic call lsp#ui#vim#diagnostics#previous_diagnostic()
 command! LspReferences call lsp#ui#vim#references()
 command! LspRename call lsp#ui#vim#rename()
 command! LspTypeDefinition call lsp#ui#vim#type_definition(0)
@@ -90,6 +94,10 @@ nnoremap <plug>(lsp-preview-close) :<c-u>call lsp#ui#vim#output#closepreview()<c
 nnoremap <plug>(lsp-preview-focus) :<c-u>call lsp#ui#vim#output#focuspreview()<cr>
 nnoremap <plug>(lsp-next-error) :<c-u>call lsp#ui#vim#diagnostics#next_error()<cr>
 nnoremap <plug>(lsp-previous-error) :<c-u>call lsp#ui#vim#diagnostics#previous_error()<cr>
+nnoremap <plug>(lsp-next-warning) :<c-u>call lsp#ui#vim#diagnostics#next_warning()<cr>
+nnoremap <plug>(lsp-previous-warning) :<c-u>call lsp#ui#vim#diagnostics#previous_warning()<cr>
+nnoremap <plug>(lsp-next-diagnostic) :<c-u>call lsp#ui#vim#diagnostics#next_diagnostic()<cr>
+nnoremap <plug>(lsp-previous-diagnostic) :<c-u>call lsp#ui#vim#diagnostics#previous_diagnostic()<cr>
 nnoremap <plug>(lsp-references) :<c-u>call lsp#ui#vim#references()<cr>
 nnoremap <plug>(lsp-rename) :<c-u>call lsp#ui#vim#rename()<cr>
 nnoremap <plug>(lsp-type-definition) :<c-u>call lsp#ui#vim#type_definition(0)<cr>

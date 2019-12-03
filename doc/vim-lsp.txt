@@ -58,14 +58,18 @@ CONTENTS                                                  *vim-lsp-contents*
       LspDocumentRangeFormat                |LspDocumentRangeFormat|
       LspDocumentSymbol                     |LspDocumentSymbol|
       LspHover                              |LspHover|
+      LspNextDiagnostic                     |LspNextDiagnostic|
       LspNextError                          |LspNextError|
       LspNextReference                      |LspNextReference|
+      LspNextWarning                        |LspNextWarning|
       LspPeekDeclaration                    |LspPeekDeclaration|
       LspPeekDefinition                     |LspPeekDefinition|
       LspPeekImplementation                 |LspPeekImplementation|
       LspPeekTypeDefinition                 |LspPeekTypeDefinition|
+      LspPreviousDiagnostic                 |LspPreviousDiagnostic|
       LspPreviousError                      |LspPreviousError|
       LspPreviousReference                  |LspPreviousReference|
+      LspPreviousWarning                    |LspPreviousWarning|
       LspImplementation                     |LspImplementation|
       LspReferences                         |LspReferences|
       LspRename                             |LspRename|
@@ -914,6 +918,9 @@ Gets the hover information and displays it in the |preview-window|.
    set to enable a floating preview at the cursor which is closed automatically
    on cursormove if not focused and can be closed with <esc> if focused.
 
+LspNextDiagnostic					*LspNextDiagnostic*
+
+Jump to Next diagnostics including error, warning, information, hint.
 
 LspNextError						     *LspNextError*
 
@@ -922,6 +929,10 @@ Jump to Next err diagnostics
 LspNextReference                                          *LspNextReference*
 
 Jump to the next reference of the symbol under cursor.
+
+LspNextWarning						    *LspNextWarning*
+
+Jump to Next warning diagnostics
 
 LspPeekDeclaration                                      *LspPeekDeclaration*
 
@@ -951,6 +962,10 @@ Like |LspTypeDefinition|, but opens the type definition in the
 
 Also see |g:lsp_peek_alignment| and |g:lsp_preview_float|.
 
+LspPreviousDiagnostic				    *LspPreviousDiagnostic*
+
+Jump to Previous diagnostics including error, warning, information, hint.
+
 LspPreviousError					 *LspPreviousError*
 
 Jump to Previous err diagnostics
@@ -958,6 +973,10 @@ Jump to Previous err diagnostics
 LspPreviousReference                                  *LspPreviousReference*
 
 Jump to the previous reference of the symbol under cursor.
+
+LspPreviousWarning					*LspPreviousWarning*
+
+Jump to Previous warning diagnostics
 
 LspImplementation                                        *LspImplementation*
 
@@ -1019,12 +1038,16 @@ Available plug mappings are following:
   nnoremap <plug>(lsp-document-symbol)
   nnoremap <plug>(lsp-document-diagnostics)
   nnoremap <plug>(lsp-hover)
+  nnoremap <plug>(lsp-next-diagnostic)
   nnoremap <plug>(lsp-next-error)
   nnoremap <plug>(lsp-next-reference)
+  nnoremap <plug>(lsp-next-warning)
   nnoremap <plug>(lsp-preview-close)
   nnoremap <plug>(lsp-preview-focus)
+  nnoremap <plug>(lsp-previous-diagnostic)
   nnoremap <plug>(lsp-previous-error)
   nnoremap <plug>(lsp-previous-reference)
+  nnoremap <plug>(lsp-previous-warning)
   nnoremap <plug>(lsp-references)
   nnoremap <plug>(lsp-rename)
   nnoremap <plug>(lsp-workspace-symbol)
