@@ -47,30 +47,30 @@ CONTENTS                                                  *vim-lsp-contents*
       vim-lsp-get_buffer_diagnostics_counts |vim-lsp-get_buffer_diagnostics_counts|
       vim-lsp-get_buffer_first_error_line   |vim-lsp-get_buffer_first_error_line|
     Commands                              |vim-lsp-commands|
-      LspCodeAction                         |LspCodeAction|
-      LspDocumentDiagnostics                |LspDocumentDiagnostics|
-      LspDeclaration                        |LspDeclaration|
-      LspDefinition                         |LspDefinition|
-      LspDocumentFold                       |LspDocumentFold|
-      LspDocumentFoldSync                   |LspDocumentFoldSync|
-      LspDocumentFormat                     |LspDocumentFormat|
-      LspDocumentFormatSync                 |LspDocumentFormatSync|
-      LspDocumentRangeFormat                |LspDocumentRangeFormat|
-      LspDocumentSymbol                     |LspDocumentSymbol|
-      LspHover                              |LspHover|
-      LspNextError                          |LspNextError|
-      LspNextReference                      |LspNextReference|
-      LspPeekDeclaration                    |LspPeekDeclaration|
-      LspPeekDefinition                     |LspPeekDefinition|
-      LspPeekImplementation                 |LspPeekImplementation|
-      LspPeekTypeDefinition                 |LspPeekTypeDefinition|
-      LspPreviousError                      |LspPreviousError|
-      LspPreviousReference                  |LspPreviousReference|
-      LspImplementation                     |LspImplementation|
-      LspReferences                         |LspReferences|
-      LspRename                             |LspRename|
-      LspTypeDefinition                     |LspTypeDefinition|
-      LspWorkspaceSymbol                    |LspWorkspaceSymbol|
+      LspCodeAction                         |:LspCodeAction|
+      LspDocumentDiagnostics                |:LspDocumentDiagnostics|
+      LspDeclaration                        |:LspDeclaration|
+      LspDefinition                         |:LspDefinition|
+      LspDocumentFold                       |:LspDocumentFold|
+      LspDocumentFoldSync                   |:LspDocumentFoldSync|
+      LspDocumentFormat                     |:LspDocumentFormat|
+      LspDocumentFormatSync                 |:LspDocumentFormatSync|
+      LspDocumentRangeFormat                |:LspDocumentRangeFormat|
+      LspDocumentSymbol                     |:LspDocumentSymbol|
+      LspHover                              |:LspHover|
+      LspNextError                          |:LspNextError|
+      LspNextReference                      |:LspNextReference|
+      LspPeekDeclaration                    |:LspPeekDeclaration|
+      LspPeekDefinition                     |:LspPeekDefinition|
+      LspPeekImplementation                 |:LspPeekImplementation|
+      LspPeekTypeDefinition                 |:LspPeekTypeDefinition|
+      LspPreviousError                      |:LspPreviousError|
+      LspPreviousReference                  |:LspPreviousReference|
+      LspImplementation                     |:LspImplementation|
+      LspReferences                         |:LspReferences|
+      LspRename                             |:LspRename|
+      LspTypeDefinition                     |:LspTypeDefinition|
+      LspWorkspaceSymbol                    |:LspWorkspaceSymbol|
     Autocommands                          |vim-lsp-autocommands|
       lsp_complete_done                     |lsp_complete_done|
     Mappings                              |vim-lsp-mappings|
@@ -167,7 +167,8 @@ g:lsp_preview_keep_focus                         *g:lsp_preview_keep_focus*
 
     Indicates whether to keep the focus on current window or move the focus
     to the |preview-window| when a |preview-window| is opened by vim-lsp.
-    Certain commands such as |LspHover| opens the result in a |preview-window|.
+    Certain commands such as |:LspHover| opens the result in a
+    |preview-window|.
 
     Example:
 	" Keep the focus in current window
@@ -470,7 +471,7 @@ g:lsp_peek_alignment                                 *g:lsp_peek_alignment*
     Default: `"center"`
 
     Determines how to align the location of interest for e.g.
-    |LspPeekDefinition|. Three values are possible: `"top"`, `"center"` and
+    |:LspPeekDefinition|. Three values are possible: `"top"`, `"center"` and
     `"bottom"`, which place the location of interest at the first, middle and
     last lines of the preview/popup/floating window, respectively.
 
@@ -851,43 +852,43 @@ Get line number of first error in current buffer.
 ===============================================================================
 Commands	                                          *vim-lsp-commands*
 
-LspCodeAction                                                *LspCodeAction*
+LspCodeAction                                               *:LspCodeAction*
 
 Gets a list of possible commands that can be applied to a file so it can be
 fixed (quick fix).
 
-LspDocumentDiagnostics                              *LspDocumentDiagnostics*
+LspDocumentDiagnostics                             *:LspDocumentDiagnostics*
 
 Gets the current document diagnostics.
 
-LspDeclaration						    *LspDeclaration*
+LspDeclaration                                             *:LspDeclaration*
 
 Go to declaration. Useful for languages such as C/C++ where there is a clear
 distinction between declaration and definition.
 
-Also see |LspPeekDeclaration|.
+Also see |:LspPeekDeclaration|.
 
-LspDefinition						     *LspDefinition*
+LspDefinition                                               *:LspDefinition*
 
 Go to definition.
 
-Also see |LspPeekDefinition|.
+Also see |:LspPeekDefinition|.
 
-LspDocumentFold                                          *LspDocumentFold*
+LspDocumentFold                                           *:LspDocumentFold*
 
 Recalculate folds for the current buffer.
 
-LspDocumentFoldSync                                      *LspDocumentFoldSync*
+LspDocumentFoldSync                                   *:LspDocumentFoldSync*
 
-Same as |LspDocumentFold|, but synchronous.
+Same as |:LspDocumentFold|, but synchronous.
 
-LspDocumentFormat					 *LspDocumentFormat*
+LspDocumentFormat                                       *:LspDocumentFormat*
 
 Format the entire document.
 
-LspDocumentFormatSync				     *LspDocumentFormatSync*
+LspDocumentFormatSync                               *:LspDocumentFormatSync*
 
-Same as |LspDocumentFormat| but synchronous. Useful when running |autocmd|
+Same as |:LspDocumentFormat| but synchronous. Useful when running |autocmd|
 commands such as formatting before save.
 
     Example:
@@ -895,95 +896,95 @@ commands such as formatting before save.
 
 Note that this may slow down vim.
 
-LspDocumentRangeFormat				    *LspDocumentRangeFormat*
+LspDocumentRangeFormat                             *:LspDocumentRangeFormat*
 
 Format the current document selection.
 
-LspDocumentSymbol				         *LspDocumentSymbol*
+LspDocumentSymbol                                       *:LspDocumentSymbol*
 
 Gets the symbols for the current document.
 
-LspHover							  *LspHover*
+LspHover                                                         *:LspHover*
 
 Gets the hover information and displays it in the |preview-window|.
 
  * |preview-window| can be closed using the default vim mapping - `<c-w><c-z>`.
- * To control the default focus of |preview-window| for |LspHover|
+ * To control the default focus of |preview-window| for |:LspHover|
    configure |g:lsp_preview_keep_focus|.
  * If using neovim with nvim_win_open() available, |g:lsp_preview_float| can be
    set to enable a floating preview at the cursor which is closed automatically
    on cursormove if not focused and can be closed with <esc> if focused.
 
 
-LspNextError						     *LspNextError*
+LspNextError                                                 *:LspNextError*
 
 Jump to Next err diagnostics
 
-LspNextReference                                          *LspNextReference*
+LspNextReference                                         *:LspNextReference*
 
 Jump to the next reference of the symbol under cursor.
 
-LspPeekDeclaration                                      *LspPeekDeclaration*
+LspPeekDeclaration                                     *:LspPeekDeclaration*
 
-Like |LspDeclaration|, but opens the declaration in the |preview-window|
+Like |:LspDeclaration|, but opens the declaration in the |preview-window|
 instead of the current window.
 
 Also see |g:lsp_peek_alignment| and |g:lsp_preview_float|.
 
-LspPeekDefinition                                        *LspPeekDefinition*
+LspPeekDefinition                                       *:LspPeekDefinition*
 
-Like |LspDefinition|, but opens the definition in the |preview-window| instead
+Like |:LspDefinition|, but opens the definition in the |preview-window| instead
 of the current window.
 
 Also see |g:lsp_peek_alignment| and |g:lsp_preview_float|.
 
-LspPeekImplementation                               *LspPeekImplementation*
+LspPeekImplementation                               *:LspPeekImplementation*
 
-Like |LspImplementation|, but opens the implementation in the |preview-window|
+Like |:LspImplementation|, but opens the implementation in the |preview-window|
 instead of the current window.
 
 Also see |g:lsp_peek_alignment| and |g:lsp_preview_float|.
 
-LspPeekTypeDefinition                               *LspPeekTypeDefinition*
+LspPeekTypeDefinition                               *:LspPeekTypeDefinition*
 
-Like |LspTypeDefinition|, but opens the type definition in the
+Like |:LspTypeDefinition|, but opens the type definition in the
 |preview-window| instead of the current window.
 
 Also see |g:lsp_peek_alignment| and |g:lsp_preview_float|.
 
-LspPreviousError					 *LspPreviousError*
+LspPreviousError                                         *:LspPreviousError*
 
 Jump to Previous err diagnostics
 
-LspPreviousReference                                  *LspPreviousReference*
+LspPreviousReference                                 *:LspPreviousReference*
 
 Jump to the previous reference of the symbol under cursor.
 
-LspImplementation                                        *LspImplementation*
+LspImplementation                                       *:LspImplementation*
 
 Find all implementation of interface.
 
-Also see |LspPeekImplementation|.
+Also see |:LspPeekImplementation|.
 
-LspReferences						     *LspReferences*
+LspReferences                                               *:LspReferences*
 
 Find all references.
 
-LspRename						         *LspRename*
+LspRename                                                       *:LspRename*
 
 Rename the symbol.
 
-LspTypeDefinition				  	 *LspTypeDefinition*
+LspTypeDefinition                                       *:LspTypeDefinition*
 
 Go to the type definition.
 
-Also see |LspPeekTypeDefinition|.
+Also see |:LspPeekTypeDefinition|.
 
-LspWorkspaceSymbol					*LspWorkspaceSymbol*
+LspWorkspaceSymbol                                     *:LspWorkspaceSymbol*
 
 Search and show workspace symbols.
 
-LspStatus                                                        *LspStatus*
+LspStatus                                                       *:LspStatus*
 
 Prints the status of all registered servers.
 
