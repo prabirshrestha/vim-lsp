@@ -13,9 +13,9 @@ CONTENTS                                                  *vim-lsp-contents*
       g:lsp_diagnostics_enabled             |g:lsp_diagnostics_enabled|
       g:lsp_auto_enable                     |g:lsp_auto_enable|
       g:lsp_preview_keep_focus              |g:lsp_preview_keep_focus|
-      g:lsp_preview_float		    |g:lsp_preview_float|
-      g:lsp_preview_autoclose		    |g:lsp_preview_autoclose|
-      g:lsp_preview_doubletap		    |g:lsp_preview_doubletap|
+      g:lsp_preview_float                   |g:lsp_preview_float|
+      g:lsp_preview_autoclose               |g:lsp_preview_autoclose|
+      g:lsp_preview_doubletap               |g:lsp_preview_doubletap|
       g:lsp_insert_text_enabled             |g:lsp_insert_text_enabled|
       g:lsp_text_edit_enabled               |g:lsp_text_edit_enabled|
       g:lsp_diagnostics_echo_cursor         |g:lsp_diagnostics_echo_cursor|
@@ -31,7 +31,7 @@ CONTENTS                                                  *vim-lsp-contents*
       g:lsp_get_supported_capabilities      |g:lsp_get_supported_capabilities|
       g:lsp_peek_alignment                  |g:lsp_peek_alignment|
       g:lsp_preview_max_width               |g:lsp_preview_max_width|
-      g:lsp_preview_max_height		    |g:lsp_preview_max_height|
+      g:lsp_preview_max_height              |g:lsp_preview_max_height|
       g:lsp_signature_help_enabled          |g:lsp_signature_help_enabled|
       g:lsp_fold_enabled                    |g:lsp_fold_enabled|
       g:lsp_hover_conceal                   |g:lsp_hover_conceal|
@@ -531,7 +531,7 @@ g:lsp_log_file                                           *g:lsp_log_file*
 
 
 ==============================================================================
-FUNCTIONS	                                        *vim-lsp-functions*
+FUNCTIONS                                               *vim-lsp-functions*
 
 lsp#enable()                                                 *lsp#enable()*
 
@@ -571,7 +571,7 @@ one parameter which is a vim |dict| and is refered to as |vim-lsp-server_info|
 	  language server after .vimrc has been loaded. It is recommended
 	  to use it if possible.
 
-server_info			                      *vim-lsp-server_info*
+server_info                                           *vim-lsp-server_info*
 The vim |dict| containing information about the server.
 >
     {
@@ -840,7 +840,7 @@ Get line number of first error in current buffer.
     Returns |Number| or |v:null| if there are no errors.
 
 ==============================================================================
-Commands	                                          *vim-lsp-commands*
+Commands                                                  *vim-lsp-commands*
 
 LspCodeAction                                               *:LspCodeAction*
 
@@ -995,7 +995,7 @@ of this variable during its |CompleteDone| autocommands.
 
 
 ==============================================================================
-Mappings	                                          *vim-lsp-mappings*
+Mappings                                                  *vim-lsp-mappings*
 
 To map keys to the feature of vim-lsp, use <plug> mappings:
 >
@@ -1046,7 +1046,7 @@ focus is already on the preview window.
 ==============================================================================
 Autocomplete                                          *vim-lsp-autocomplete*
 
-omnifunc				                  *vim-lsp-omnifunc*
+omnifunc                                                  *vim-lsp-omnifunc*
 
 vim-lsp by default only provides basic omnifunc support for autocomplete.
 
