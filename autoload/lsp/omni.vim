@@ -88,10 +88,19 @@ function! lsp#omni#complete(findstart, base) abort
 
             let s:completion['status'] = ''
 
+    		if s:should_skip() | return | endif
             call timer_start(0, function('s:display_completions'))
 
             return exists('v:none') ? v:none : []
         endif
+    endif
+endfunction
+
+function! s:should_skip()
+	   if mode() isnot# 'i'
+        return 1
+    else
+        return 0
     endif
 endfunction
 
