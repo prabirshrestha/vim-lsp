@@ -97,7 +97,7 @@ https://microsoft.github.io/language-server-protocol/
 INSTALL                                                    *vim-lsp-install*
 
 Install the async.vim and vim-lsp plugins. Below is a sample using plug.vim
-
+>
     Plug 'prabirshrestha/async.vim'
     Plug 'prabirshrestha/vim-lsp'
 
@@ -116,11 +116,11 @@ on pyls (https://github.com/palantir/python-language-server)
 
 1. Make sure the language server is available locally in the machine.
    For python, pip package manager can be used to install the language server.
-
+>
 	pip install python-language-server
 
 2. Register the language server in your .vimrc
-
+>
 	if (executable('pyls'))
 	    au User lsp_setup call lsp#register_server({
 		\ 'name': 'pyls',
@@ -128,7 +128,7 @@ on pyls (https://github.com/palantir/python-language-server)
 		\ 'whitelist': ['python']
 		\ })
 	endif
-
+<
     For more details refer to |lsp#register_server()|.
 
 WIKI                                               *vim-lsp-configure-wiki*
@@ -146,7 +146,7 @@ g:lsp_diagnostics_enabled                       *g:lsp_diagnostics_enabled*
     enabling vim-lsp during startup. Refer to |g:lsp_signs_enabled| to enable
     signs column.
 
-    Example:
+    Example: >
 	let g:lsp_diagnostics_enabled = 1
 	let g:lsp_diagnostics_enabled = 0
 
@@ -157,7 +157,7 @@ g:lsp_auto_enable                                       *g:lsp_auto_enable*
     Auto enable vim-lsp plugin during startup. Set to `0` to disable auto
     enabling vim-lsp during startup.
 
-    Example:
+    Example: >
 	let g:lsp_auto_enable = 1
 	let g:lsp_auto_enable = 0
 
@@ -170,14 +170,14 @@ g:lsp_preview_keep_focus                         *g:lsp_preview_keep_focus*
     Certain commands such as |:LspHover| opens the result in a
     |preview-window|.
 
-    Example:
+    Example: >
 	" Keep the focus in current window
 	let g:lsp_preview_keep_focus = 1
 
 	" Do not keep the focus in current window.
 	" Move the focus to |preview-window|.
 	let g:lsp_preview_keep_focus = 0
-
+<
     * |preview-window| can be closed using the default vim mapping - `<c-w><c-z>`.
 
 g:lsp_preview_float                         *g:lsp_preview_float*
@@ -192,31 +192,27 @@ g:lsp_preview_float                         *g:lsp_preview_float*
     This feature requires neovim 0.4.0 (current master) or
     Vim8.1 with has('patch-8.1.1517').
 
-    Example:
-    >
+    Example: >
 	" Opens preview windows as floating
 	let g:lsp_preview_float = 1
 
 	" Opens preview windows as normal windows
 	let g:lsp_preview_float = 0
-    <
-
+<
     After opening an autocmd User event lsp_float_opened is issued, as well as
     and lsp_float_closed upon closing. This can be used to alter the preview
     window (using lsp#ui#vim#output#getpreviewwinid() to get the window id),
     setup custom bindings while a preview is open, or change the highlighting
     of the window.
 
-    Example of custom keybindings:
-    >
+    Example of custom keybindings: >
 	" Close preview window with <esc>
 	autocmd User lsp_float_opened nmap <buffer> <silent> <esc>
 		      \ <Plug>(lsp-preview-close)
 	autocmd User lsp_float_closed nunmap <buffer> <esc>
-    <
+<
 
-    Example of customising the highlighting:
-    >
+    Example of customising the highlighting: >
 	highlight PopupWindow ctermbg=lightblue guibg=lightblue
 
 	augroup lsp_float_colours
@@ -231,7 +227,7 @@ g:lsp_preview_float                         *g:lsp_preview_float*
 		    \			       'winhighlight', 'Normal:PopupWindow')
 	    endif
 	augroup end
-    <
+<
 
 g:lsp_preview_autoclose                         *g:lsp_preview_autoclose*
     Type: |Number|
@@ -243,7 +239,7 @@ g:lsp_preview_autoclose                         *g:lsp_preview_autoclose*
     remain open until explicitly closed (e.g. with <plug>(lsp-preview-close),
     or <ESC> when focused).
 
-    Example:
+    Example: >
 	" Preview closes on cursor move
 	let g:lsp_preview_autoclose = 1
 
@@ -258,7 +254,7 @@ g:lsp_preview_doubletap                         *g:lsp_preview_doubletap*
     open, the function in `lsp_preview_doubletap` is called instead. To disable
     this and just "refresh" the preview, set to ´0´.
 
-    Example:
+    Example: >
 	" Focus preview on repeated preview (does not work for vim8.1 popups)
 	let g:lsp_preview_doubletap = [function('lsp#ui#vim#output#focuspreview')]
 
@@ -275,7 +271,7 @@ g:lsp_insert_text_enabled                       *g:lsp_insert_text_enabled*
     Enable support for completion insertText property. Set to `0` to disable
     using insertText.
 
-    Example:
+    Example: >
 	let g:lsp_insert_text_enabled = 1
 	let g:lsp_insert_text_enabled = 0
 
@@ -286,7 +282,7 @@ g:lsp_text_edit_enabled                              *g:lsp_text_edit_enabled*
     Enable support for completion textEdit property. Set to `0` to disable
     using textEdit.
 
-    Example:
+    Example: >
 	let g:lsp_text_edit_enabled = 1
 	let g:lsp_text_edit_enabled = 0
 
@@ -297,7 +293,7 @@ g:lsp_diagnostics_echo_cursor                         *g:lsp_diagnostics_echo_cu
     Enables echo of diagnostic error for the current line to status. Requires
     |lsp_diagnostics_enabled| set to 1.
 
-    Example:
+    Example: >
 	let g:lsp_diagnostics_echo_cursor = 1
 	let g:lsp_diagnostics_echo_cursor = 0
 
@@ -308,7 +304,7 @@ g:lsp_signs_enabled                                   *g:lsp_signs_enabled*
     Enables signs for diagnostics. Requires patch 8.1.0772 and
     |lsp_diagnostics_enabled| set to 1.
 
-    Example:
+    Example: >
 	let g:lsp_signs_enabled = 1
 	let g:lsp_signs_enabled = 0
 
@@ -320,7 +316,7 @@ g:lsp_signs_priority                                  *g:lsp_signs_priority*
     plugins have a priority of 10 by default. Requires |lsp_signs_enabled|
     set to 1.
 
-    Example:
+    Example: >
 	let g:lsp_signs_priority = 11
 	let g:lsp_signs_priority = 9
 
@@ -331,7 +327,7 @@ g:lsp_signs_priority_map                              *g:lsp_signs_priority_map*
     Overrides |g:lsp_signs_priority| per severity level or per server name
     and severity level. Requires |lsp_signs_enabled| set to 1.
 
-    Example:
+    Example: >
         let g:lsp_signs_priority_map = {
                 \'LspError': 11,
                 \'LspWarning': 7,
@@ -346,11 +342,10 @@ g:lsp_virtual_text_enabled                            *g:lsp_virtual_text_enable
     Enables virtual text to be shown next to diagnostic errors. Requires
     NeoVim with version 0.3 or newer.
 
-    Example:
->
+    Example: >
 	let g:lsp_virtual_text_enabled = 1
 	let g:lsp_virtual_text_enabled = 0
-<
+
 
 g:lsp_virtual_text_prefix                            *g:lsp_virtual_text_prefix*
     Type: |String|
@@ -359,11 +354,10 @@ g:lsp_virtual_text_prefix                            *g:lsp_virtual_text_prefix*
     Adds the prefix to the diagnostics to be shown as virtual text. Requires
     NeoVim with version 0.3 or newer.
 
-    Example:
->
+    Example: >
 	let g:lsp_virtual_text_prefix = "> "
 	let g:lsp_virtual_text_prefix = " ‣ "
-<
+
 
 g:lsp_highlights_enabled                         *g:lsp_highlights_enabled*
     Type: |Number|
@@ -372,8 +366,7 @@ g:lsp_highlights_enabled                         *g:lsp_highlights_enabled*
     Enables highlighting of diagnostics. Requires NeoVim with version 0.3 or
     newer.
 
-    Example:
->
+    Example: >
 	let g:lsp_highlights_enabled = 1
 	let g:lsp_highlights_enabled = 0
 <
@@ -382,10 +375,9 @@ g:lsp_highlights_enabled                         *g:lsp_highlights_enabled*
     `LspErrorHighlight`, `LspWarningHighlight`, `LspInformationHighlight` and
     `LspHintHighlight` highlight groups.
 
-    Example:
->
+    Example: >
 	highlight link LspErrorHighlight Error
-<
+
 
 g:lsp_textprop_enabled                             *g:lsp_textprop_enabled*
     Type: |Number|
@@ -394,8 +386,7 @@ g:lsp_textprop_enabled                             *g:lsp_textprop_enabled*
     Enables highlighting of diagnostics. Requires vim with +textprop
     (patch 8.1.0579).
 
-    Example:
->
+    Example: >
 	let g:lsp_textprop_enabled = 1
 	let g:lsp_textprop_enabled = 0
 <
@@ -404,10 +395,9 @@ g:lsp_textprop_enabled                             *g:lsp_textprop_enabled*
     `LspErrorHighlight`, `LspWarningHighlight`, `LspInformationHighlight` and
     `LspHintHighlight` highlight groups.
 
-    Example:
->
+    Example: >
 	highlight LspErrorHighlight term=underline cterm=underline gui=underline
-<
+
 
 g:lsp_use_event_queue                               *g:lsp_use_event_queue*
     Type: |Number|
@@ -416,7 +406,7 @@ g:lsp_use_event_queue                               *g:lsp_use_event_queue*
     Enable event queue which improves performance by reducing the communication
     between client and server.
 
-    Example:
+    Example: >
 	let g:lsp_use_event_queue = 1
 	let g:lsp_use_event_queue = 0
 
@@ -426,8 +416,7 @@ g:lsp_highlight_references_enabled         *g:lsp_highlight_references_enabled*
 
     Enable highlighting of the references to the symbol under the cursor.
 
-    Example:
->
+    Example: >
     let g:lsp_highlight_references_enabled = 1
     let g:lsp_highlight_references_enabled = 0
 <
@@ -435,10 +424,9 @@ g:lsp_highlight_references_enabled         *g:lsp_highlight_references_enabled*
     To change the style of the highlighting, you can set or link the `lspReference`
     highlight group.
 
-    Example:
->
+    Example: >
     highlight lspReference ctermfg=red guifg=red ctermbg=green guibg=green
-<
+
 
 g:lsp_get_vim_completion_item               *g:lsp_get_vim_completion_item*
     Type: |List|
@@ -497,8 +485,7 @@ g:lsp_signature_help_enabled                *g:lsp_signature_help_enabled*
 
     Enable support for signature help. Set to `0` to disable.
 
-    Example:
->
+    Example: >
 	let g:lsp_signature_help_enabled = 1
 	let g:lsp_signature_help_enabled = 0
 
@@ -536,10 +523,10 @@ g:lsp_log_file                                           *g:lsp_log_file*
     Determines whether or not logging should be written to a file.
     To disable log use empty string.
 
-    Example:
->
+    Example: >
 	let g:lsp_log_file = ''
 	let g:lsp_log_file = expand('~/vim-lsp.log')
+
 
 ===============================================================================
 FUNCTIONS	                                        *vim-lsp-functions*
@@ -548,14 +535,14 @@ lsp#enable()                                                 *lsp#enable()*
 
 Enables vim-lsp plugin.
 
-    Example:
+    Example: >
 	:call lsp#enable()
 
 lsp#disable()                                               *lsp#disable()*
 
 Disables vim-lsp plugin.
 
-    Example:
+    Example: >
 	:call lsp#disable()
 
 lsp#register_server({server-info})                  *lsp#register_server()*
@@ -563,7 +550,7 @@ lsp#register_server({server-info})                  *lsp#register_server()*
 Used to register the language server with vim-lsp. This method takes
 one parameter which is a vim |dict| and is refered to as |vim-lsp-server-info|
 
-    Example:
+    Example: >
 	if (executable('pyls'))
 	    au User lsp_setup call lsp#register_server({
 		\ 'name': 'name-of-server',
@@ -574,7 +561,7 @@ one parameter which is a vim |dict| and is refered to as |vim-lsp-server-info|
 		\ 'workspace_config': {'param': {'enabled': v:true}},
 		\ })
 	endif
-
+<
     Note:
 	* checking for executable is optional but can be used to avoid
 	  unnecessary server registration.
@@ -584,7 +571,7 @@ one parameter which is a vim |dict| and is refered to as |vim-lsp-server-info|
 
 server_info			                      *vim-lsp-server_info*
 The vim |dict| containing information about the server.
-
+>
     {
 	'name': 'name of the server',
 	'cmd': {server_info->['server_executable']},
@@ -593,7 +580,7 @@ The vim |dict| containing information about the server.
 	'config': {},
 	'workspace_config': {},
     }
-
+<
  * name:
     required
     Name of the language server. Needs to be unique.
@@ -613,9 +600,9 @@ The vim |dict| containing information about the server.
     the rest are the appropriate arguments. It is useful when the command line
     can be determined statically and |vim-lsp-server_info| is not necessary.
 
-    Example:
+    Example: >
 	'cmd': ['pyls']
-
+<
     Function can be complex based on custom requirements.
     For example:
 	- Use binary from local node_modules folder instead of a global
@@ -632,53 +619,53 @@ The vim |dict| containing information about the server.
     files cannot be started without running the shell first. This is common
     for exectuables installed by npm for nodejs.
 
-    Example:
+    Example: >
 	'cmd': {server_info->
 	    \ [&shell, &shellcmdflag, 'typescript-language-server --stdio']}
-
+<
  * whitelist:
     optional
     String array of filetypes to run the language server.
 
-    Example:
+    Example: >
 	'whitelist': ['javascript', 'typescript']
-
+<
     '*' is treated as any filetype.
 
  * blacklist:
     optional
     String array of filetypes to run the language server.
 
-    Example:
+    Example: >
 	'blacklist': ['javascript', 'typescript']
-
+<
     '*' is treated as any filetype.
 
     whitelist and blacklist can be used together. The following example
     says to run the language server for all filetypes except javascript
     and typescript. blacklist always takes higher priority over whitelist.
-
+>
 	'whitelist': ['*']
 	'blacklist': ['javascript', 'typescript']
-
+<
   * workspace_config:
     optional vim |dict|
     Used to pass workspace configuration to the server after
     initialization. Configuration settings are language-server specific.
 
-    Example:
+    Example: >
 	'workspace_config': {'pyls': {'plugins': \
 		{'pydocstyle': {'enabled': v:true}}}}
-
+<
   * config:
     optional vim |dict|
     Used to pass additional custom config.
 
-    For example:
+    For example: >
 	'config': { 'prefer_local': 1 }
-
+<
 	This can then be used by cmd function.
-
+>
 	    function! s:myserver_cmd(server_info) abort
 		let l:config = get(a:server_info, 'config', {})
 		let l:prefer_local = get(l:config, 'prefer_local', 1)
@@ -690,7 +677,7 @@ The vim |dict| containing information about the server.
 	    endfunction
 
 	    'cmd': function('s:myserver_cmd')
-
+<
     Using the `config` key, you can also specify a custom 'typed word
     pattern', or a custom filter for completion items, see
     |vim-lsp-typed_pattern| and |vim-lsp-completion-filter|.
@@ -704,9 +691,9 @@ The vim |dict| containing information about the server.
 	    This takes precendence over the value of |g:lsp_hover_conceal|, to
 	    allow overriding this setting per server.
 
-	    Example:
+	    Example: >
 		'config': { 'hover_conceal': 1 }
-
+<
 	* symbol_kinds
 	    Type: |Dict|
 	    Default: |{}|
@@ -715,9 +702,9 @@ The vim |dict| containing information about the server.
 	    (e.g., 'module', 'method') per server. Useful for abbreviating or
 	    removing the kind text.
 
-	    Example:
+	    Example: >
 		'config': { 'symbol_kinds': {'26': 'type' } }
-
+<
 	* completion_item_kinds
 	    Type: |Dict|
 	    Default: |{}|
@@ -726,9 +713,9 @@ The vim |dict| containing information about the server.
 	    kinds (e.g., 'module', 'method') per server. Useful for abbreviating
 	    or removing the kind text.
 
-	    Example:
+	    Example: >
 		'config': { 'completion_item_kinds': {'26': 'type' } }
-
+<
 typed_pattern                                        *vim-lsp-typed_pattern*
     Type: |String| (|pattern|)
     Default: `'\k*$'`
@@ -742,9 +729,9 @@ determine what you have typed so far. The pattern is matched against the
 current line, from column 0 up until the cursor's position. Thus, |/$| means
 "current cursor position" in this context.
 
-For example:
+For example: >
 	'config': { 'typed_pattern': '\k*$' }
-
+<
 This uses all characters in `'iskeyword'` in front of the cursor as typed
 word.
 
@@ -763,9 +750,9 @@ For the meaning of "already typed text" in the remainder of this section, see
 |vim-lsp-typed_pattern|. The case (in)sensitivity of the matching is
 determined by |g:lsp_ignorecase|.
 
-    Example:
+    Example: >
         'config': { 'filter': { 'name': 'none' } }
-
+<
     Available filters are:
         - `none` (default)
           Do not filter completion items, use all items returned from the
@@ -787,9 +774,9 @@ lsp#stop_server({name-of-server})                        *lsp#stop_server()*
 
 Used to stop the server.
 
-    Example:
+    Example: >
 	call lsp#stop_server('name-of-server')
-
+<
     Note:
 	* If the server is not running or is not registered it is a noop.
 	* The server is forcefully stopped without sending shutdown request.
@@ -799,9 +786,9 @@ lsp#get_server_status({name-of-server})            *lsp#get_server_status()*
 Get the status of a server.
 
 
-    Example:
+    Example: >
   call lsp#get_server_status('name-of-server')
-
+<
     Returns one of "unknown server", " "exited", "starting", "failed",
     "running", "not running".
 
@@ -815,7 +802,7 @@ you want to find. The return value is the directory path which is found
 the most times.
 This method is mainly used to generate 'root_uri' when registering server.
 
-    Example:
+    Example: >
 	if executable('ccls')
 	    au User lsp_setup call lsp#register_server({
 		\ 'name': 'ccls',
@@ -829,6 +816,7 @@ This method is mainly used to generate 'root_uri' when registering server.
 		\ 'whitelist': ['c', 'cpp', 'objc', 'objcpp', 'cc'],
 		\ })
 	endif
+<
     Note:
 	* The second parameter can be a |String| or a string |List|.
 	* For the second parameter, the string ends with '/' or '\' will
@@ -891,7 +879,7 @@ LspDocumentFormatSync                               *:LspDocumentFormatSync*
 Same as |:LspDocumentFormat| but synchronous. Useful when running |autocmd|
 commands such as formatting before save.
 
-    Example:
+    Example: >
         autocmd BufWritePre <buffer> LspDocumentFormatSync
 
 Note that this may slow down vim.
@@ -1065,7 +1053,7 @@ Note that this may cause unexpected behavior in some plugins such as MUcomplete.
 If you would like to have more advanced features please use asyncomplete.vim as
 described below.
 
-    Example:
+    Example: >
 	autocmd FileType typescript setlocal omnifunc=lsp#complete
 
 asyncomplete.vim                                      *vim-lsp-asyncomplete*
@@ -1073,7 +1061,7 @@ asyncomplete.vim                                      *vim-lsp-asyncomplete*
 asyncomplete.vim is a async auto complete plugin for vim8 and neovim written
 in pure vim script. https://github.com/prabirshrestha/asyncomplete.vim
 
-Example:
+Example: >
     Plug 'prabirshrestha/async.vim'
     Plug 'prabirshrestha/vim-lsp'
     Plug 'prabirshrestha/asyncomplete.vim'
@@ -1105,7 +1093,7 @@ Folding                                                    *vim-lsp-folding*
 You can also let the language server handle folding for you. To enable this
 feature, you will have to set |'foldmethod'|, |'foldexpr'| and |'foldtext'| (the
 latter is optional) correctly:
-
+>
     set foldmethod=expr
       \ foldexpr=lsp#ui#vim#folding#foldexpr()
       \ foldtext=lsp#ui#vim#folding#foldtext()
@@ -1115,7 +1103,7 @@ Also, make sure you have not disabled folding globally, see
 
 You may want to enable this only for certain filetypes, e.g. for Javascript
 only:
-
+>
     augroup lsp_folding
 	autocmd!
 	autocmd FileType javascript setlocal
