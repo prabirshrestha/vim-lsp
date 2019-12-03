@@ -7,7 +7,7 @@ CONTENTS                                                  *vim-lsp-contents*
     Introduction                          |vim-lsp-introduction|
     Install                               |vim-lsp-install|
     Language Servers                      |vim-lsp-language-servers|
-      Configure                             |vim-lsp-configure-source|
+      Configure                             |vim-lsp-configure|
       Wiki                                  |vim-lsp-configure-wiki|
     Options                               |vim-lsp-options|
       g:lsp_diagnostics_enabled             |g:lsp_diagnostics_enabled|
@@ -291,7 +291,7 @@ g:lsp_diagnostics_echo_cursor                         *g:lsp_diagnostics_echo_cu
     Default: `0`
 
     Enables echo of diagnostic error for the current line to status. Requires
-    |lsp_diagnostics_enabled| set to 1.
+    |g:lsp_diagnostics_enabled| set to 1.
 
     Example: >
 	let g:lsp_diagnostics_echo_cursor = 1
@@ -302,7 +302,7 @@ g:lsp_signs_enabled                                   *g:lsp_signs_enabled*
     Default: `1` for vim/neovim with patch 8.1.0772
 
     Enables signs for diagnostics. Requires patch 8.1.0772 and
-    |lsp_diagnostics_enabled| set to 1.
+    |g:lsp_diagnostics_enabled| set to 1.
 
     Example: >
 	let g:lsp_signs_enabled = 1
@@ -313,7 +313,7 @@ g:lsp_signs_priority                                  *g:lsp_signs_priority*
     Default: `10` for vim/neovim with patch 8.1.0772
 
     Configures the |sign-priority| for placed signs. Signs placed by other
-    plugins have a priority of 10 by default. Requires |lsp_signs_enabled|
+    plugins have a priority of 10 by default. Requires |g:lsp_signs_enabled|
     set to 1.
 
     Example: >
@@ -321,11 +321,11 @@ g:lsp_signs_priority                                  *g:lsp_signs_priority*
 	let g:lsp_signs_priority = 9
 
 g:lsp_signs_priority_map                              *g:lsp_signs_priority_map*
-    Type: |Map|
+    Type: |Dict|
     Default: `{}` for vim/neovim with patch 8.1.0772
 
     Overrides |g:lsp_signs_priority| per severity level or per server name
-    and severity level. Requires |lsp_signs_enabled| set to 1.
+    and severity level. Requires |g:lsp_signs_enabled| set to 1.
 
     Example: >
         let g:lsp_signs_priority_map = {
@@ -500,13 +500,14 @@ g:lsp_hover_conceal                                   *g:lsp_hover_conceal*
     Type: |Boolean|
     Default: `1`
 
-    If `true` (`1`), |conceallevel| is set to `2` for hover windows. This
+    If `true` (`1`), 'conceallevel' is set to `2` for hover windows. This
     means that, for example, asterisks in markdown hovers are hidden, but the
     text is still displayed bold. You may want to disable this if the filetype
     of the popup has custom conceals which you don't want to use, or if
     you're using Vim in a terminal.
 
-    To override this setting per server, see |vim-lsp-hover_conceal|.
+    To override this setting per server, see
+    |vim-lsp-server_info-hover_conceal|.
 
 g:lsp_ignorecase                                         *g:lsp_ignorecase*
     Type: |Boolean|
@@ -548,7 +549,7 @@ Disables vim-lsp plugin.
 lsp#register_server({server-info})                  *lsp#register_server()*
 
 Used to register the language server with vim-lsp. This method takes
-one parameter which is a vim |dict| and is refered to as |vim-lsp-server-info|
+one parameter which is a vim |dict| and is refered to as |vim-lsp-server_info|
 
     Example: >
 	if (executable('pyls'))
@@ -684,7 +685,7 @@ The vim |dict| containing information about the server.
 
     The following per-server configuration options are supported by vim-lsp.
 
-	* hover_conceal
+	* hover_conceal                 *vim-lsp-server_info-hover_conceal*
 	    Type: |Boolean|
 	    Default: |g:lsp_hover_conceal|
 
@@ -699,7 +700,7 @@ The vim |dict| containing information about the server.
 	    Default: |{}|
 
 	    This allows overriding the default text mappings for symbol kinds
-	    (e.g., 'module', 'method') per server. Useful for abbreviating or
+	    (e.g., "module", "method") per server. Useful for abbreviating or
 	    removing the kind text.
 
 	    Example: >
@@ -710,7 +711,7 @@ The vim |dict| containing information about the server.
 	    Default: |{}|
 
 	    This allows overriding the default text mappings for completion item
-	    kinds (e.g., 'module', 'method') per server. Useful for abbreviating
+	    kinds (e.g., "module", "method") per server. Useful for abbreviating
 	    or removing the kind text.
 
 	    Example: >
@@ -876,7 +877,7 @@ Format the entire document.
 
 LspDocumentFormatSync                               *:LspDocumentFormatSync*
 
-Same as |:LspDocumentFormat| but synchronous. Useful when running |autocmd|
+Same as |:LspDocumentFormat| but synchronous. Useful when running |:autocmd|
 commands such as formatting before save.
 
     Example: >
