@@ -511,11 +511,11 @@ g:lsp_hover_conceal                                   *g:lsp_hover_conceal*
 
 g:lsp_ignorecase                                         *g:lsp_ignorecase*
     Type: |Boolean|
-    Default: the value of |'ignorecase'|
+    Default: the value of 'ignorecase'
 
     Determines whether or not case should be ignored when filtering completion
     items. See |vim-lsp-completion-filter|. By default, the value of
-    |'ignorecase'| is used.
+    'ignorecase' is used.
 
 g:lsp_log_file                                           *g:lsp_log_file*
     Type: |String|
@@ -1092,7 +1092,7 @@ more information and configuration options.
 Folding                                                    *vim-lsp-folding*
 
 You can also let the language server handle folding for you. To enable this
-feature, you will have to set |'foldmethod'|, |'foldexpr'| and |'foldtext'| (the
+feature, you will have to set 'foldmethod', 'foldexpr' and 'foldtext' (the
 latter is optional) correctly:
 >
     set foldmethod=expr
@@ -1114,9 +1114,9 @@ only:
     augroup end
 
 To display open and closed folds at the side of the window, see
-|'foldcolumn'|.
+'foldcolumn'.
 If you want to remove the dashes at the end of the folds, you can change
-the fold item of |'fillchars'|.
+the fold item of 'fillchars'.
 
 ===============================================================================
 License                                                    *vim-lsp-license*
