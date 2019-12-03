@@ -1,7 +1,7 @@
 *vim-lsp.txt*  Async Language Server Protocol (LSP) for Vim 8 and Neovim.
 *vim-lsp*
 
-================================================================================
+==============================================================================
 CONTENTS                                                  *vim-lsp-contents*
 
     Introduction                          |vim-lsp-introduction|
@@ -85,7 +85,7 @@ CONTENTS                                                  *vim-lsp-contents*
     License                               |vim-lsp-license|
 
 
-================================================================================
+==============================================================================
 INTRODUCTION                                          *vim-lsp-introduction*
 
 Async Language Server Protocol (LSP) for Vim 8 and Neovim.
@@ -93,7 +93,7 @@ Async Language Server Protocol (LSP) for Vim 8 and Neovim.
 For more information on LSP refer to the official website at
 https://microsoft.github.io/language-server-protocol/
 
-================================================================================
+==============================================================================
 INSTALL                                                    *vim-lsp-install*
 
 Install the async.vim and vim-lsp plugins. Below is a sample using plug.vim
@@ -104,7 +104,7 @@ Install the async.vim and vim-lsp plugins. Below is a sample using plug.vim
 Note:  async.vim (https://github.com/prabirshrestha/async.vim) is required to
 use vim-lsp. It is used to normalize the jobs api between Vim 8 and Neovim.
 
-===============================================================================
+==============================================================================
 LANGUAGE SERVERS                                 *vim-lsp-language-servers*
 
 CONFIGURE                                               *vim-lsp-configure*
@@ -135,7 +135,7 @@ WIKI                                               *vim-lsp-configure-wiki*
 For documentation on how to configure other language servers refer
 to https://github.com/prabirshrestha/vim-lsp/wiki/Servers
 
-===============================================================================
+==============================================================================
 Options                                                   *vim-lsp-options*
 
 g:lsp_diagnostics_enabled                       *g:lsp_diagnostics_enabled*
@@ -223,8 +223,9 @@ g:lsp_preview_float                         *g:lsp_preview_float*
 		    \		       'setlocal wincolor=PopupWindow')
 	    else
 		autocmd User lsp_float_opened
-		    \ call nvim_win_set_option(lsp#ui#vim#output#getpreviewwinid(),
-		    \			       'winhighlight', 'Normal:PopupWindow')
+		    \ call nvim_win_set_option(
+		    \   lsp#ui#vim#output#getpreviewwinid(),
+		    \   'winhighlight', 'Normal:PopupWindow')
 	    endif
 	augroup end
 <
@@ -234,10 +235,10 @@ g:lsp_preview_autoclose                         *g:lsp_preview_autoclose*
     Default: `1`
 
     Indicates if an opened floating preview shall be automatically closed upon
-    movement of the cursor. If set to 1, the window will close automatically if
-    the cursor is moved and the preview is not focused. If set to 0, it will
-    remain open until explicitly closed (e.g. with <plug>(lsp-preview-close),
-    or <ESC> when focused).
+    movement of the cursor. If set to 1, the window will close automatically
+    if the cursor is moved and the preview is not focused. If set to 0, it
+    will remain open until explicitly closed (e.g. with
+    <plug>(lsp-preview-close), or <ESC> when focused).
 
     Example: >
 	" Preview closes on cursor move
@@ -251,8 +252,8 @@ g:lsp_preview_doubletap                         *g:lsp_preview_doubletap*
     Default: `[function('lsp#ui#vim#output#focuspreview')]`
 
     When preview is called twice with the same data while the preview is still
-    open, the function in `lsp_preview_doubletap` is called instead. To disable
-    this and just "refresh" the preview, set to ´0´.
+    open, the function in `lsp_preview_doubletap` is called instead. To
+    disable this and just "refresh" the preview, set to ´0´.
 
     Example: >
 	" Focus preview on repeated preview (does not work for vim8.1 popups)
@@ -275,7 +276,7 @@ g:lsp_insert_text_enabled                       *g:lsp_insert_text_enabled*
 	let g:lsp_insert_text_enabled = 1
 	let g:lsp_insert_text_enabled = 0
 
-g:lsp_text_edit_enabled                              *g:lsp_text_edit_enabled*
+g:lsp_text_edit_enabled                           *g:lsp_text_edit_enabled*
     Type: |Number|
     Default: `1`
 
@@ -286,7 +287,7 @@ g:lsp_text_edit_enabled                              *g:lsp_text_edit_enabled*
 	let g:lsp_text_edit_enabled = 1
 	let g:lsp_text_edit_enabled = 0
 
-g:lsp_diagnostics_echo_cursor                         *g:lsp_diagnostics_echo_cursor*
+g:lsp_diagnostics_echo_cursor                *g:lsp_diagnostics_echo_cursor*
     Type: |Number|
     Default: `0`
 
@@ -320,7 +321,7 @@ g:lsp_signs_priority                                  *g:lsp_signs_priority*
 	let g:lsp_signs_priority = 11
 	let g:lsp_signs_priority = 9
 
-g:lsp_signs_priority_map                              *g:lsp_signs_priority_map*
+g:lsp_signs_priority_map                          *g:lsp_signs_priority_map*
     Type: |Dict|
     Default: `{}` for vim/neovim with patch 8.1.0772
 
@@ -335,7 +336,7 @@ g:lsp_signs_priority_map                              *g:lsp_signs_priority_map*
                 \'clangd_LspInformation': 11
                 \}
 
-g:lsp_virtual_text_enabled                            *g:lsp_virtual_text_enabled*
+g:lsp_virtual_text_enabled                      *g:lsp_virtual_text_enabled*
     Type: |Number|
     Default: `1` for neovim 0.3+
 
@@ -347,7 +348,7 @@ g:lsp_virtual_text_enabled                            *g:lsp_virtual_text_enable
 	let g:lsp_virtual_text_enabled = 0
 
 
-g:lsp_virtual_text_prefix                            *g:lsp_virtual_text_prefix*
+g:lsp_virtual_text_prefix                        *g:lsp_virtual_text_prefix*
     Type: |String|
     Default: `""` for neovim 0.3+
 
@@ -403,14 +404,14 @@ g:lsp_use_event_queue                               *g:lsp_use_event_queue*
     Type: |Number|
     Default: `1` for neovim or vim with patch-8.1.0889
 
-    Enable event queue which improves performance by reducing the communication
-    between client and server.
+    Enable event queue which improves performance by reducing the
+    communication between client and server.
 
     Example: >
 	let g:lsp_use_event_queue = 1
 	let g:lsp_use_event_queue = 0
 
-g:lsp_highlight_references_enabled         *g:lsp_highlight_references_enabled*
+g:lsp_highlight_references_enabled      *g:lsp_highlight_references_enabled*
     Type: |Number|
     Default: `0`
 
@@ -421,8 +422,8 @@ g:lsp_highlight_references_enabled         *g:lsp_highlight_references_enabled*
     let g:lsp_highlight_references_enabled = 0
 <
 
-    To change the style of the highlighting, you can set or link the `lspReference`
-    highlight group.
+    To change the style of the highlighting, you can set or link the
+   `lspReference` highlight group.
 
     Example: >
     highlight lspReference ctermfg=red guifg=red ctermbg=green guibg=green
@@ -529,7 +530,7 @@ g:lsp_log_file                                           *g:lsp_log_file*
 	let g:lsp_log_file = expand('~/vim-lsp.log')
 
 
-===============================================================================
+==============================================================================
 FUNCTIONS	                                        *vim-lsp-functions*
 
 lsp#enable()                                                 *lsp#enable()*
@@ -710,9 +711,9 @@ The vim |dict| containing information about the server.
 	    Type: |Dict|
 	    Default: |{}|
 
-	    This allows overriding the default text mappings for completion item
-	    kinds (e.g., "module", "method") per server. Useful for abbreviating
-	    or removing the kind text.
+	    This allows overriding the default text mappings for completion
+	    item kinds (e.g., "module", "method") per server. Useful for
+	    abbreviating or removing the kind text.
 
 	    Example: >
 		'config': { 'completion_item_kinds': {'26': 'type' } }
@@ -838,7 +839,7 @@ Get line number of first error in current buffer.
 
     Returns |Number| or |v:null| if there are no errors.
 
-===============================================================================
+==============================================================================
 Commands	                                          *vim-lsp-commands*
 
 LspCodeAction                                               *:LspCodeAction*
@@ -900,9 +901,10 @@ Gets the hover information and displays it in the |preview-window|.
  * |preview-window| can be closed using the default vim mapping - `<c-w><c-z>`.
  * To control the default focus of |preview-window| for |:LspHover|
    configure |g:lsp_preview_keep_focus|.
- * If using neovim with nvim_win_open() available, |g:lsp_preview_float| can be
-   set to enable a floating preview at the cursor which is closed automatically
-   on cursormove if not focused and can be closed with <esc> if focused.
+ * If using neovim with nvim_win_open() available, |g:lsp_preview_float| can
+   be set to enable a floating preview at the cursor which is closed
+   automatically on cursormove if not focused and can be closed with <esc> if
+   focused.
 
 
 LspNextError                                                 *:LspNextError*
@@ -922,15 +924,15 @@ Also see |g:lsp_peek_alignment| and |g:lsp_preview_float|.
 
 LspPeekDefinition                                       *:LspPeekDefinition*
 
-Like |:LspDefinition|, but opens the definition in the |preview-window| instead
-of the current window.
+Like |:LspDefinition|, but opens the definition in the |preview-window|
+instead of the current window.
 
 Also see |g:lsp_peek_alignment| and |g:lsp_preview_float|.
 
 LspPeekImplementation                               *:LspPeekImplementation*
 
-Like |:LspImplementation|, but opens the implementation in the |preview-window|
-instead of the current window.
+Like |:LspImplementation|, but opens the implementation in the
+|preview-window| instead of the current window.
 
 Also see |g:lsp_peek_alignment| and |g:lsp_preview_float|.
 
@@ -977,7 +979,7 @@ LspStatus                                                       *:LspStatus*
 
 Prints the status of all registered servers.
 
-===============================================================================
+==============================================================================
 Autocommands                                          *vim-lsp-autocommands*
 
 lsp_complete_done                                        *lsp_complete_done*
@@ -992,7 +994,7 @@ the completed item. It is guaranteed that vim-lsp does not change the content
 of this variable during its |CompleteDone| autocommands.
 
 
-===============================================================================
+==============================================================================
 Mappings	                                          *vim-lsp-mappings*
 
 To map keys to the feature of vim-lsp, use <plug> mappings:
@@ -1031,17 +1033,17 @@ Available plug mappings are following:
 
 See also |vim-lsp-commands|
 
-<plug>(lsp-preview-close)	         	     *<plug>(lsp-preview-close)*
+<plug>(lsp-preview-close)                        *<plug>(lsp-preview-close)*
 
 Closes an opened preview window
 
-<plug>(lsp-preview-focus)	         	     *<plug>(lsp-preview-focus)*
+<plug>(lsp-preview-focus)                        *<plug>(lsp-preview-focus)*
 
 Transfers focus to an opened preview window or back to the previous window if
 focus is already on the preview window.
 
 
-===============================================================================
+==============================================================================
 Autocomplete                                          *vim-lsp-autocomplete*
 
 omnifunc				                  *vim-lsp-omnifunc*
@@ -1049,10 +1051,11 @@ omnifunc				                  *vim-lsp-omnifunc*
 vim-lsp by default only provides basic omnifunc support for autocomplete.
 
 Completion can be made asynchronous by setting g:lsp_async_completion.
-Note that this may cause unexpected behavior in some plugins such as MUcomplete.
+Note that this may cause unexpected behavior in some plugins such as
+MUcomplete.
 
-If you would like to have more advanced features please use asyncomplete.vim as
-described below.
+If you would like to have more advanced features please use asyncomplete.vim
+as described below.
 
     Example: >
 	autocmd FileType typescript setlocal omnifunc=lsp#complete
@@ -1070,7 +1073,7 @@ Example: >
 
 For additional configuration refer to asyncomplete.vim docs.
 
-===============================================================================
+==============================================================================
 Snippets                                                  *vim-lsp-snippets*
 
 To integrate snippets in vim-lsp, you will first have to install a third-party
@@ -1088,7 +1091,7 @@ https://github.com/thomasfaingnaert/vim-lsp-neosnippet
 Refer to the readme and docs of vim-lsp-ultisnips and vim-lsp-neosnippet for
 more information and configuration options.
 
-===============================================================================
+==============================================================================
 Folding                                                    *vim-lsp-folding*
 
 You can also let the language server handle folding for you. To enable this
@@ -1118,7 +1121,7 @@ To display open and closed folds at the side of the window, see
 If you want to remove the dashes at the end of the folds, you can change
 the fold item of 'fillchars'.
 
-===============================================================================
+==============================================================================
 License                                                    *vim-lsp-license*
 
 The MIT License (MIT)
