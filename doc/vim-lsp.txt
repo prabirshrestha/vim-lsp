@@ -238,7 +238,7 @@ g:lsp_preview_autoclose                         *g:lsp_preview_autoclose*
     movement of the cursor. If set to 1, the window will close automatically
     if the cursor is moved and the preview is not focused. If set to 0, it
     will remain open until explicitly closed (e.g. with
-    <plug>(lsp-preview-close), or <ESC> when focused).
+    |<plug>(lsp-preview-close)|, or <ESC> when focused).
 
     Example: >
 	" Preview closes on cursor move
