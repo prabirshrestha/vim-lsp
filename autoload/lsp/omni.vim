@@ -141,8 +141,6 @@ endfunction
 function! s:display_completions(timer) abort
     if mode() is# 'i'
 		call complete(s:start_pos + 1, s:completion['matches'])
-    else
-        return 1
     endif
 endfunction
 
