@@ -88,19 +88,10 @@ function! lsp#omni#complete(findstart, base) abort
 
             let s:completion['status'] = ''
 
-    		if s:should_skip() | return | endif
             call timer_start(0, function('s:display_completions'))
 
             return exists('v:none') ? v:none : []
         endif
-    endif
-endfunction
-
-function! s:should_skip()
-    if mode() isnot# 'i'
-        return 1
-    else
-        return 0
     endif
 endfunction
 
@@ -148,10 +139,11 @@ function! s:contains_filter(item, last_typed_word) abort
 endfunction
 
 function! s:display_completions(timer) abort
-	try
-        call complete(s:start_pos + 1, s:completion['matches'])
-    catch /^Vim(call):E785: complete() can only be used in Insert mode/
-    endtry
+    if mode() is# 'i'
+		call complete(s:start_pos + 1, s:completion['matches'])
+    else
+        return 1
+    endif
 endfunction
 
 function! s:handle_omnicompletion(server_name, complete_counter, data) abort
