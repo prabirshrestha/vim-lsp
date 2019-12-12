@@ -139,7 +139,9 @@ function! s:contains_filter(item, last_typed_word) abort
 endfunction
 
 function! s:display_completions(timer) abort
-    call complete(s:start_pos + 1, s:completion['matches'])
+    if mode() is# 'i'
+        call complete(s:start_pos + 1, s:completion['matches'])
+    endif
 endfunction
 
 function! s:handle_omnicompletion(server_name, complete_counter, data) abort
