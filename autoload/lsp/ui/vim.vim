@@ -225,6 +225,13 @@ function! lsp#ui#vim#document_format() abort
     return s:document_format(0)
 endfunction
 
+function! lsp#ui#vim#stop_server() abort
+  for server in lsp#get_whitelisted_servers()
+    echo 'Stopping' server 'server ...'
+    call lsp#stop_server(server)
+  endfor
+endfunction
+
 function! s:get_visual_selection_pos() abort
     " https://groups.google.com/d/msg/vim_dev/oCUQzO3y8XE/vfIMJiHCHtEJ
     " https://stackoverflow.com/a/6271254
