@@ -61,6 +61,7 @@ CONTENTS                                                  *vim-lsp-contents*
       LspRename                             |LspRename|
       LspTypeDefinition                     |LspTypeDefinition|
       LspWorkspaceSymbol                    |LspWorkspaceSymbol|
+      LspStatus                             |LspStatus|
     Autocommands                          |vim-lsp-autocommands|
       lsp_complete_done                     |lsp_complete_done|
     Mappings                              |vim-lsp-mappings|
