@@ -72,7 +72,15 @@ CONTENTS                                                  *vim-lsp-contents*
       LspTypeDefinition                     |:LspTypeDefinition|
       LspWorkspaceSymbol                    |:LspWorkspaceSymbol|
     Autocommands                          |vim-lsp-autocommands|
+      lsp_setup                             |lsp_setup|
       lsp_complete_done                     |lsp_complete_done|
+      lsp_float_opened                      |lsp_float_opened|
+      lsp_float_closed                      |lsp_float_closed|
+      lsp_register_server                   |lsp_register_server|
+      lsp_unregister_server                 |lsp_unregister_server|
+      lsp_server_init                       |lsp_server_init|
+      lsp_server_exit                       |lsp_server_exit|
+      lsp_buffer_enabled                    |lsp_buffer_enabled|
     Mappings                              |vim-lsp-mappings|
        <plug>(lsp-preview-close)            |<plug>(lsp-preview-close)|
        <plug>(lsp-preview-focus)            |<plug>(lsp-preview-focus)|
@@ -130,6 +138,22 @@ on pyls (https://github.com/palantir/python-language-server)
 	endif
 <
     For more details refer to |lsp#register_server()|.
+
+3. Configure your settings for the buffer
+   Use |lsp_buffer_enabled| autocommand to configure the buffer.
+>
+        function! s:lsp_install() abort
+            setlocal omnifunc=lsp#complete
+            setlocal signcolumn=yes
+            nmap <buffer> gd <plug>(lsp-definition)
+            nmap <buffer> <f2> <plug>(lsp-rename)
+       endfunction
+
+       augroup lsp_install
+            au!
+            autocmd User lsp_enabled call s:lsp_install()
+       augroup END
+<
 
 WIKI                                               *vim-lsp-configure-wiki*
 For documentation on how to configure other language servers refer
@@ -982,6 +1006,11 @@ Prints the status of all registered servers.
 ==============================================================================
 Autocommands                                          *vim-lsp-autocommands*
 
+lsp_setup                                                        *lsp_setup*
+
+This autocommand is run once after vim-lsp is enabled. The server should be
+registered when this event is triggered.
+
 lsp_complete_done                                        *lsp_complete_done*
 
 This autocommand is run after Insert mode completion is done, similar to
@@ -992,6 +1021,38 @@ expansion, or custom post processing of completed items. Just like
 |CompleteDone|, the Vim variable |v:completed_item| contains information about
 the completed item. It is guaranteed that vim-lsp does not change the content
 of this variable during its |CompleteDone| autocommands.
+
+lsp_float_opened                                          *lsp_float_opened*
+
+This autocommand is run after the floating window is shown for preview.
+See also |preview-window|
+
+lsp_float_closed                                          *lsp_float_closed*
+
+This autocommand is run after the floating window is closed.
+See also |preview-window|
+
+lsp_register_server                                    *lsp_register_server*
+
+This autocommand is run after the server is registered.
+
+lsp_unregister_server                                *lsp_unregister_server*
+
+This autocommand is run after the server is unregistered.
+
+lsp_server_init                                            *lsp_server_init*
+
+This autocommand is run after the server is initialized.
+
+lsp_server_exit                                            *lsp_server_exit*
+
+This autocommand is run after the server is exited.
+
+lsp_buffer_enabled                                      *lsp_buffer_enabled*
+
+This autocommand is run after vim-lsp is enabled for the buffer. This event is
+triggered imediately when the buffer is currently active. If the buffer is not
+current active, the event will be triggered when the buffer will be active.
 
 
 ==============================================================================
