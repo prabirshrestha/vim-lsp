@@ -28,6 +28,7 @@ augroup _lsp_silent_
     autocmd User lsp_complete_done silent
     autocmd User lsp_float_opened silent
     autocmd User lsp_float_closed silent
+    autocmd User lsp_enabled silent
 augroup END
 
 function! lsp#log_verbose(...) abort
@@ -182,7 +183,7 @@ function! s:on_text_document_did_open() abort
     if getbufvar(l:buf, '&buftype') ==# 'terminal' | return | endif
     call lsp#log('s:on_text_document_did_open()', l:buf, &filetype, getcwd(), lsp#utils#get_buffer_uri(l:buf))
     for l:server_name in lsp#get_whitelisted_servers(l:buf)
-        call s:ensure_flush(l:buf, l:server_name, function('s:Noop'))
+        call s:ensure_flush(l:buf, l:server_name, function('s:fire_lsp_enabled', [l:server_name, l:buf]))
     endfor
 endfunction
 
@@ -280,6 +281,14 @@ function! s:ensure_flush_all(buf, server_names) abort
     for l:server_name in a:server_names
         call s:ensure_flush(a:buf, l:server_name, function('s:Noop'))
     endfor
+endfunction
+
+function! s:fire_lsp_enabled(server_name, buf, ...) abort
+    if a:buf == bufnr('%')
+        doautocmd User lsp_enabled
+    else
+        exec printf('autocmd BufEnter <buffer=%d> ++once doautocmd User lsp_enabled', a:buf)
+    endif
 endfunction
 
 function! s:Noop(...) abort
