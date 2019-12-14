@@ -155,6 +155,7 @@ endfunction
 function! s:register_events() abort
     augroup lsp
         autocmd!
+        autocmd BufNewFile * call s:on_text_document_did_open()
         autocmd BufReadPost * call s:on_text_document_did_open()
         autocmd BufWritePost * call s:on_text_document_did_save()
         autocmd BufWinLeave * call s:on_text_document_did_close()
