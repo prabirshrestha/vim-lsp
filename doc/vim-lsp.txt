@@ -142,7 +142,7 @@ on pyls (https://github.com/palantir/python-language-server)
 3. Configure your settings for the buffer
    Use |lsp_buffer_enabled| autocommand to configure the buffer.
 >
-        function! s:lsp_install() abort
+        function! s:on_lsp_buffer_enabled() abort
             setlocal omnifunc=lsp#complete
             setlocal signcolumn=yes
             nmap <buffer> gd <plug>(lsp-definition)
@@ -151,7 +151,7 @@ on pyls (https://github.com/palantir/python-language-server)
 
        augroup lsp_install
             au!
-            autocmd User lsp_enabled call s:lsp_install()
+            autocmd User lsp_enabled call s:on_lsp_buffer_enabled()
        augroup END
 <
 
