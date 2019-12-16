@@ -118,6 +118,26 @@ function! lsp#get_server_status(...) abort
     endif
 endfunction
 
+let s:color_map = {
+\ 'exited': 'Error',
+\ 'starting': 'MoreMsg',
+\ 'failed': 'WarningMsg',
+\ 'running': 'Keyword',
+\ 'not running': 'NonText'
+\}
+
+" Print the current status of all servers (if called with no arguments)
+function! lsp#print_server_status() abort
+    for l:k in sort(keys(s:servers))
+        let l:status = s:server_status(l:k)
+        echon l:k . ": "
+        exec 'echohl' s:color_map[l:status]
+        echon l:status
+        echohl None
+        echo ''
+    endfor
+endfunction
+
 " @params {server_info} = {
 "   'name': 'go-langserver',        " requried, must be unique
 "   'whitelist': ['go'],            " optional, array of filetypes to whitelist, * for all filetypes
