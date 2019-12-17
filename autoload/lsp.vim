@@ -130,7 +130,7 @@ let s:color_map = {
 function! lsp#print_server_status() abort
     for l:k in sort(keys(s:servers))
         let l:status = s:server_status(l:k)
-        echon l:k . ": "
+        echon l:k . ': '
         exec 'echohl' s:color_map[l:status]
         echon l:status
         echohl None
