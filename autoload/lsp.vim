@@ -711,6 +711,10 @@ function! s:handle_initialize(server_name, data) abort
     let l:response = a:data['response']
     let l:server = s:servers[a:server_name]
 
+    if has_key(l:server, 'exited')
+        unlet l:server['exited']
+    endif
+
     let l:init_callbacks = l:server['init_callbacks']
     unlet l:server['init_callbacks']
 
@@ -894,4 +898,8 @@ function! lsp#update_workspace_config(server_name, workspace_config) abort
         let l:server_info['workspace_config'] = a:workspace_config
     endif
     call s:ensure_conf(bufnr('%'), a:server_name, function('s:Noop'))
+endfunction
+
+function! lsp#server_complete(lead, line, pos) abort
+    return filter(sort(keys(s:servers)), 'stridx(v:val, a:lead)==0 && has_key(s:servers[v:val], "init_result")')
 endfunction

@@ -224,9 +224,13 @@ function! lsp#ui#vim#document_format() abort
     return s:document_format(0)
 endfunction
 
-function! lsp#ui#vim#stop_server() abort
-  for server in lsp#get_whitelisted_servers()
-    echo 'Stopping' server 'server ...'
+function! lsp#ui#vim#stop_server(...) abort
+  let l:name = get(a:000, 0, '')
+  for l:server in lsp#get_whitelisted_servers()
+    if !empty(l:name) && l:server != l:name
+        continue
+    endif
+    echo 'Stopping' l:server 'server ...'
     call lsp#stop_server(server)
   endfor
 endfunction
