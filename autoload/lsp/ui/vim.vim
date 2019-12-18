@@ -224,6 +224,13 @@ function! lsp#ui#vim#document_format() abort
     return s:document_format(0)
 endfunction
 
+function! lsp#ui#vim#stop_server() abort
+  for server in lsp#get_whitelisted_servers()
+    echo 'Stopping' server 'server ...'
+    call lsp#stop_server(server)
+  endfor
+endfunction
+
 function! s:get_selection_pos(type) abort
     if a:type ==? 'v'
         let l:start_pos = getpos("'<")[1:2]

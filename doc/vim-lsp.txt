@@ -75,6 +75,8 @@ CONTENTS                                                  *vim-lsp-contents*
       LspRename                             |:LspRename|
       LspTypeDefinition                     |:LspTypeDefinition|
       LspWorkspaceSymbol                    |:LspWorkspaceSymbol|
+      LspStatus                             |:LspStatus|
+      LspStopServer                         |:LspStopServer|
     Autocommands                          |vim-lsp-autocommands|
       lsp_setup                             |lsp_setup|
       lsp_complete_done                     |lsp_complete_done|
@@ -1021,6 +1023,10 @@ Search and show workspace symbols.
 LspStatus                                                       *:LspStatus*
 
 Prints the status of all registered servers.
+
+LspStopServer                                                *:LspStopServer*
+
+Stop all active servers.
 
 ==============================================================================
 Autocommands                                          *vim-lsp-autocommands*
