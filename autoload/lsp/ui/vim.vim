@@ -193,6 +193,7 @@ function! s:document_format(sync) abort
 
     " TODO: ask user to select server for formatting
     let l:server = l:servers[0]
+    redraw | echo 'Formatting document ...'
     call lsp#send_request(l:server, {
         \ 'method': 'textDocument/formatting',
         \ 'params': {
@@ -205,8 +206,6 @@ function! s:document_format(sync) abort
         \ 'sync': a:sync,
         \ 'on_notification': function('s:handle_text_edit', [l:server, s:last_req_id, 'document format']),
         \ })
-
-    echo 'Formatting document ...'
 endfunction
 
 function! lsp#ui#vim#document_format_sync() abort
@@ -232,22 +231,34 @@ function! lsp#ui#vim#stop_server() abort
   endfor
 endfunction
 
-function! s:get_visual_selection_pos() abort
-    " https://groups.google.com/d/msg/vim_dev/oCUQzO3y8XE/vfIMJiHCHtEJ
-    " https://stackoverflow.com/a/6271254
-    " getpos("'>'") doesn't give the right column so need to do extra processing
-    let [line_start, column_start] = getpos("'<")[1:2]
-    let [line_end, column_end] = getpos("'>")[1:2]
-    let lines = getline(line_start, line_end)
-    if len(lines) == 0
-        return [0, 0, 0, 0]
+function! s:get_selection_pos(type) abort
+    if a:type ==? 'v'
+        let l:start_pos = getpos("'<")[1:2]
+        let l:end_pos = getpos("'>")[1:2]
+        " fix end_pos column (see :h getpos() and :h 'selection')
+        let l:end_line = getline(l:end_pos[0])
+        let l:offset = (&selection ==# 'inclusive' ? 1 : 2)
+        let l:end_pos[1] = len(l:end_line[:l:end_pos[1]-l:offset])
+        " edge case: single character selected with selection=exclusive
+        if l:start_pos[0] == l:end_pos[0] && l:start_pos[1] > l:end_pos[1]
+            let l:end_pos[1] = l:start_pos[1]
+        endif
+    elseif a:type ==? 'line'
+        let l:start_pos = [line("'["), 1]
+        let l:end_lnum = line("']")
+        let l:end_pos = [line("']"), len(getline(l:end_lnum))]
+    elseif a:type ==? 'char'
+        let l:start_pos = getpos("'[")[1:2]
+        let l:end_pos = getpos("']")[1:2]
+    else
+        let l:start_pos = [0, 0]
+        let l:end_pos = [0, 0]
     endif
-    let lines[-1] = lines[-1][: column_end - (&selection ==# 'inclusive' ? 1 : 2)]
-    let lines[0] = lines[0][column_start - 1:]
-    return [line_start, column_start, line_end, len(lines[-1])]
+
+    return l:start_pos + l:end_pos
 endfunction
 
-function! s:document_format_range(sync) abort
+function! s:document_format_range(sync, type) abort
     let l:servers = filter(lsp#get_whitelisted_servers(), 'lsp#capabilities#has_document_range_formatting_provider(v:val)')
     let s:last_req_id = s:last_req_id + 1
 
@@ -259,14 +270,17 @@ function! s:document_format_range(sync) abort
     " TODO: ask user to select server for formatting
     let l:server = l:servers[0]
 
-    let [l:start_lnum, l:start_col, l:end_lnum, l:end_col] = s:get_visual_selection_pos()
+    let [l:start_lnum, l:start_col, l:end_lnum, l:end_col] = s:get_selection_pos(a:type)
+    let l:start_char = lsp#utils#to_char('%', l:start_lnum, l:start_col)
+    let l:end_char = lsp#utils#to_char('%', l:end_lnum, l:end_col)
+    redraw | echo 'Formatting document range ...'
     call lsp#send_request(l:server, {
         \ 'method': 'textDocument/rangeFormatting',
         \ 'params': {
         \   'textDocument': lsp#get_text_document_identifier(),
         \   'range': {
-        \       'start': { 'line': l:start_lnum - 1, 'character': l:start_col - 1 },
-        \       'end': { 'line': l:end_lnum - 1, 'character': l:end_col - 1 },
+        \       'start': { 'line': l:start_lnum - 1, 'character': l:start_char },
+        \       'end': { 'line': l:end_lnum - 1, 'character': l:end_char },
         \   },
         \   'options': {
         \       'tabSize': getbufvar(bufnr('%'), '&shiftwidth'),
@@ -276,16 +290,18 @@ function! s:document_format_range(sync) abort
         \ 'sync': a:sync,
         \ 'on_notification': function('s:handle_text_edit', [l:server, s:last_req_id, 'range format']),
         \ })
-
-    echo 'Formatting document range ...'
 endfunction
 
 function! lsp#ui#vim#document_range_format_sync() abort
-    return s:document_format_range(1)
+    return s:document_format_range(1, visualmode())
 endfunction
 
 function! lsp#ui#vim#document_range_format() abort
-    return s:document_format_range(0)
+    return s:document_format_range(0, visualmode())
+endfunction
+
+function! lsp#ui#vim#document_range_format_opfunc(type) abort
+    return s:document_format_range(1, a:type)
 endfunction
 
 function! lsp#ui#vim#workspace_symbol() abort
@@ -356,9 +372,11 @@ function! s:get_visual_selection_range() abort
     if l:column_end - 1 > len(getline(l:line_end))
       let l:column_end = len(getline(l:line_end)) + 1
     endif
+    let l:char_start = lsp#utils#to_char('%', l:line_start, l:column_start)
+    let l:char_end = lsp#utils#to_char('%', l:line_end, l:column_end)
     return {
-          \ 'start': { 'line': l:line_start - 1, 'character': l:column_start - 1 },
-          \ 'end': { 'line': l:line_end - 1, 'character': l:column_end - 1 },
+          \ 'start': { 'line': l:line_start - 1, 'character': l:char_start },
+          \ 'end': { 'line': l:line_end - 1, 'character': l:char_end },
           \}
 endfunction
 
@@ -413,7 +431,7 @@ function! s:handle_symbol(server, last_req_id, type, data) abort
         return
     endif
 
-    let l:list = lsp#ui#vim#utils#symbols_to_loc_list(a:data)
+    let l:list = lsp#ui#vim#utils#symbols_to_loc_list(a:server, a:data)
 
     call setqflist(l:list)
 
@@ -423,6 +441,34 @@ function! s:handle_symbol(server, last_req_id, type, data) abort
         echo 'Retrieved ' . a:type
         botright copen
     endif
+endfunction
+
+function! s:update_tagstack() abort
+    let l:bufnr = bufnr('%')
+    let l:item = {'bufnr': l:bufnr, 'from': [l:bufnr, line('.'), col('.'), 0], 'tagname': expand('<cword>')}
+    let l:winid = win_getid()
+
+    let l:stack = gettagstack(l:winid)
+    if l:stack['length'] == l:stack['curidx']
+        " Replace the last items with item.
+        let l:action = 'r'
+        let l:stack['items'][l:stack['curidx']-1] = l:item
+    elseif l:stack['length'] > l:stack['curidx']
+        " Replace items after used items with item.
+        let l:action = 'r'
+        if l:stack['curidx'] > 1
+            let l:stack['items'] = add(l:stack['items'][:l:stack['curidx']-2], l:item)
+        else
+            let l:stack['items'] = [l:item]
+        endif
+    else
+        " Append item.
+        let l:action = 'a'
+        let l:stack['items'] = [l:item]
+    endif
+    let l:stack['curidx'] += 1
+
+    call settagstack(l:winid, l:stack, l:action)
 endfunction
 
 function! s:handle_location(ctx, server, type, data) abort "ctx = {counter, list, jump_if_one, last_req_id, in_preview}
@@ -443,11 +489,7 @@ function! s:handle_location(ctx, server, type, data) abort "ctx = {counter, list
             call lsp#utils#error('No ' . a:type .' found')
         else
             if exists('*gettagstack') && exists('*settagstack')
-                let from = [bufnr('%'), line('.'), col('.'), 0]
-                let tagname = expand('<cword>')
-                let winid = win_getid()
-                call settagstack(winid, {'items': [{'from': from, 'tagname': tagname}]}, 'a')
-                call settagstack(winid, {'curidx': len(gettagstack(winid)['items']) + 1})
+                call s:update_tagstack()
             endif
 
             let l:loc = a:ctx['list'][0]
@@ -469,11 +511,19 @@ function! s:handle_location(ctx, server, type, data) abort "ctx = {counter, list
                 botright copen
             else
                 let l:lines = readfile(fnameescape(l:loc['filename']))
-                call lsp#ui#vim#output#preview(l:lines, {
-                            \   'statusline': ' LSP Peek ' . a:type,
-                            \   'cursor': { 'line': l:loc['lnum'], 'col': l:loc['col'], 'align': g:lsp_peek_alignment },
-                            \   'filetype': &filetype
-                            \ })
+                if has_key(l:loc,'viewstart') " showing a locationLink
+                    let l:view = l:lines[l:loc['viewstart'] : l:loc['viewend']]
+                    call lsp#ui#vim#output#preview(a:server, l:view, {
+                                \   'statusline': ' LSP Peek ' . a:type,
+                                \   'filetype': &filetype
+                                \ })
+                else " showing a location
+                    call lsp#ui#vim#output#preview(a:server, l:lines, {
+                                \   'statusline': ' LSP Peek ' . a:type,
+                                \   'cursor': { 'line': l:loc['lnum'], 'col': l:loc['col'], 'align': g:lsp_peek_alignment },
+                                \   'filetype': &filetype
+                                \ })
+                endif
             endif
         endif
     endif
@@ -491,14 +541,24 @@ function! s:handle_rename_prepare(server, last_req_id, type, data) abort
 
     let l:range = a:data['response']['result']
     let l:lines = getline(1, '$')
-    if l:range['start']['line'] ==# l:range['end']['line']
-        let l:name = l:lines[l:range['start']['line']][l:range['start']['character'] : l:range['end']['character']-1]
+    let l:start_line = l:range['start']['line'] + 1
+    let l:start_char = l:range['start']['character']
+    let l:start_col = lsp#utils#to_col('%', l:start_line, l:start_char)
+    let l:end_line = l:range['end']['line'] + 1
+    let l:end_char = l:range['end']['character']
+    let l:end_col = lsp#utils#to_col('%', l:end_line, l:end_char)
+    if l:start_line ==# l:end_line
+        let l:name = l:lines[l:start_line - 1][l:start_col - 1 : l:end_col - 2]
     else
-        let l:name = l:lines[l:range['start']['line']][l:range['start']['character'] :]
-        for l:i in range(l:range['start']['line']+1, l:range['end']['line']-1)
+        let l:name = l:lines[l:start_line - 1][l:start_col - 1 :]
+        for l:i in range(l:start_line, l:end_line - 2)
             let l:name .= "\n" . l:lines[l:i]
         endfor
-        let l:name .= l:lines[l:range['end']['line']][: l:range['end']['character']-1]
+        if l:end_col - 2 < 0
+            let l:name .= "\n"
+        else
+            let l:name .= l:lines[l:end_line - 1][: l:end_col - 2]
+        endif
     endif
 
     call timer_start(1, {x->s:rename(a:server, input('new name: ', l:name), l:range['start'])})
@@ -531,7 +591,7 @@ function! s:handle_text_edit(server, last_req_id, type, data) abort
 
     call lsp#utils#text_edit#apply_text_edits(a:data['request']['params']['textDocument']['uri'], a:data['response']['result'])
 
-    echo 'Document formatted'
+    redraw | echo 'Document formatted'
 endfunction
 
 function! s:handle_code_action(server, last_req_id, type, data) abort

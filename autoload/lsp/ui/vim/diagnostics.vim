@@ -51,6 +51,10 @@ function! lsp#ui#vim#diagnostics#document_diagnostics() abort
     endif
 endfunction
 
+" Returns a diagnostic object, or empty dictionary if no diagnostics are available.
+"
+" Note: Consider renaming this method (s/diagnostics/diagnostic) to make
+" it clear that it returns just one diagnostic, not a list.
 function! lsp#ui#vim#diagnostics#get_diagnostics_under_cursor() abort
     let l:diagnostics = s:get_all_buffer_diagnostics()
     if !len(l:diagnostics)
@@ -60,42 +64,56 @@ function! lsp#ui#vim#diagnostics#get_diagnostics_under_cursor() abort
     let l:line = line('.')
     let l:col = col('.')
 
-    let l:closest_diagnostics = {}
+    let l:closest_diagnostic = {}
     let l:closest_distance = -1
 
     for l:diagnostic in l:diagnostics
         let l:range = l:diagnostic['range']
         let l:start_line = l:range['start']['line'] + 1
-        let l:start_col = l:range['start']['character'] + 1
-        let l:end_line = l:range['end']['line'] + 1
-        let l:end_character = l:range['end']['character'] + 1
+        let l:start_char = l:range['start']['character']
+        let l:start_col = lsp#utils#to_col('%', l:start_line, l:start_char)
 
         if l:line == l:start_line
             let l:distance = abs(l:start_col - l:col)
             if l:closest_distance < 0 || l:distance < l:closest_distance
-                let l:closest_diagnostics = l:diagnostic
+                let l:closest_diagnostic = l:diagnostic
                 let l:closest_distance = l:distance
             endif
         endif
     endfor
 
-    return l:closest_diagnostics
+    return l:closest_diagnostic
 endfunction
 
 function! lsp#ui#vim#diagnostics#next_error() abort
     let l:diagnostics = filter(s:get_all_buffer_diagnostics(),
         \ {_, diagnostic -> diagnostic['severity'] ==# 1 })
-    if !len(l:diagnostics)
+    call s:next_diagnostic(l:diagnostics)
+endfunction
+
+function! lsp#ui#vim#diagnostics#next_warning() abort
+    let l:diagnostics = filter(s:get_all_buffer_diagnostics(),
+        \ {_, diagnostic -> diagnostic['severity'] ==# 2 })
+    call s:next_diagnostic(l:diagnostics)
+endfunction
+
+function! lsp#ui#vim#diagnostics#next_diagnostic() abort
+    call s:next_diagnostic(s:get_all_buffer_diagnostics())
+endfunction
+
+function! s:next_diagnostic(diagnostics) abort
+    if !len(a:diagnostics)
         return
     endif
-    call sort(l:diagnostics, 's:compare_diagnostics')
+    call sort(a:diagnostics, 's:compare_diagnostics')
 
     let l:view = winsaveview()
     let l:next_line = 0
     let l:next_col = 0
-    for l:diagnostic in l:diagnostics
+    for l:diagnostic in a:diagnostics
         let l:line = l:diagnostic['range']['start']['line'] + 1
-        let l:col = l:diagnostic['range']['start']['character'] + 1
+        let l:char = l:diagnostic['range']['start']['character']
+        let l:col = lsp#utils#to_col('%', l:line, l:char)
         if l:line > l:view['lnum']
             \ || (l:line == l:view['lnum'] && l:col > l:view['col'] + 1)
             let l:next_line = l:line
@@ -106,8 +124,9 @@ function! lsp#ui#vim#diagnostics#next_error() abort
 
     if l:next_line == 0
         " Wrap to start
-        let l:next_line = l:diagnostics[0]['range']['start']['line'] + 1
-        let l:next_col = l:diagnostics[0]['range']['start']['character']
+        let l:next_line = a:diagnostics[0]['range']['start']['line'] + 1
+        let l:next_char = a:diagnostics[0]['range']['start']['character']
+        let l:next_col = lsp#utils#to_col('%', l:next_line, l:next_char) - 1
     endif
 
     let l:view['lnum'] = l:next_line
@@ -129,18 +148,33 @@ endfunction
 function! lsp#ui#vim#diagnostics#previous_error() abort
     let l:diagnostics = filter(s:get_all_buffer_diagnostics(),
         \ {_, diagnostic -> diagnostic['severity'] ==# 1 })
-    if !len(l:diagnostics)
+    call s:previous_diagnostic(l:diagnostics)
+endfunction
+
+function! lsp#ui#vim#diagnostics#previous_warning() abort
+    let l:diagnostics = filter(s:get_all_buffer_diagnostics(),
+        \ {_, diagnostic -> diagnostic['severity'] ==# 2 })
+    call s:previous_diagnostic(l:diagnostics)
+endfunction
+
+function! lsp#ui#vim#diagnostics#previous_diagnostic() abort
+    call s:previous_diagnostic(s:get_all_buffer_diagnostics())
+endfunction
+
+function! s:previous_diagnostic(diagnostics) abort
+    if !len(a:diagnostics)
         return
     endif
-    call sort(l:diagnostics, 's:compare_diagnostics')
+    call sort(a:diagnostics, 's:compare_diagnostics')
 
     let l:view = winsaveview()
     let l:next_line = 0
     let l:next_col = 0
-    let l:index = len(l:diagnostics) - 1
+    let l:index = len(a:diagnostics) - 1
     while l:index >= 0
-        let l:line = l:diagnostics[l:index]['range']['start']['line'] + 1
-        let l:col = l:diagnostics[l:index]['range']['start']['character'] + 1
+        let l:line = a:diagnostics[l:index]['range']['start']['line'] + 1
+        let l:char = a:diagnostics[l:index]['range']['start']['character']
+        let l:col = lsp#utils#to_col('%', l:line, l:char)
         if l:line < l:view['lnum']
             \ || (l:line == l:view['lnum'] && l:col < l:view['col'])
             let l:next_line = l:line
@@ -152,8 +186,9 @@ function! lsp#ui#vim#diagnostics#previous_error() abort
 
     if l:next_line == 0
         " Wrap to end
-        let l:next_line = l:diagnostics[-1]['range']['start']['line'] + 1
-        let l:next_col = l:diagnostics[-1]['range']['start']['character']
+        let l:next_line = a:diagnostics[-1]['range']['start']['line'] + 1
+        let l:next_char = a:diagnostics[-1]['range']['start']['character']
+        let l:next_col = lsp#utils#to_col('%', l:next_line, l:next_char) - 1
     endif
 
     let l:view['lnum'] = l:next_line

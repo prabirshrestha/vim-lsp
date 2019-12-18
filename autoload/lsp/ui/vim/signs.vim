@@ -124,12 +124,15 @@ function! s:place_signs(server_name, path, diagnostics) abort
     if !empty(a:diagnostics) && bufnr(a:path) >= 0
         for l:item in a:diagnostics
             let l:line = l:item['range']['start']['line'] + 1
-            let l:character = l:item['range']['start']['character'] + 1
 
             if has_key(l:item, 'severity') && !empty(l:item['severity'])
                 let l:sign_name = get(s:severity_sign_names_mapping, l:item['severity'], 'LspError')
+                let l:sign_priority = get(g:lsp_signs_priority_map, l:sign_name, g:lsp_signs_priority)
+                let l:sign_priority = get(g:lsp_signs_priority_map,
+                                          \a:server_name . '_' . l:sign_name, l:sign_priority)
                 " pass 0 and let vim generate sign id
-                let l:sign_id = sign_place(0, l:sign_group, l:sign_name, a:path, { 'lnum': l:line })
+                let l:sign_id = sign_place(0, l:sign_group, l:sign_name, a:path,
+                                           \{ 'lnum': l:line, 'priority': l:sign_priority })
                 call lsp#log('add signs', l:sign_id)
             endif
         endfor

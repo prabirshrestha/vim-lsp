@@ -1,4 +1,4 @@
-# vim-lsp
+# vim-lsp [![Gitter](https://badges.gitter.im/vimlsp/community.svg)](https://gitter.im/vimlsp/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 
 Async [Language Server Protocol](https://github.com/Microsoft/language-server-protocol) plugin for vim8 and neovim.
 
@@ -53,6 +53,24 @@ At the moment, you have two options:
 
 For more information, refer to the readme and documentation of the respective plugins.
 
+## Folding
+
+You can let the language server automatically handle folding for you. To enable this, you have to set `'foldmethod'`, `'foldexpr'` and (optionally) `'foldtext'`:
+
+```vim
+set foldmethod=expr
+  \ foldexpr=lsp#ui#vim#folding#foldexpr()
+  \ foldtext=lsp#ui#vim#folding#foldtext()
+```
+
+If you would like to disable folding globally, you can add this to your configuration:
+
+```vim
+let g:lsp_fold_enabled = 0
+```
+
+Also see `:h vim-lsp-folding`.
+
 ## Supported commands
 
 **Note:**
@@ -70,14 +88,18 @@ For more information, refer to the readme and documentation of the respective pl
 |`:LspDocumentSymbol`| Show document symbols |
 |`:LspHover`| Show hover information |
 |`:LspImplementation` | Show implementation of interface in the current window |
+|`:LspNextDiagnostic`| jump to next diagnostic (all of error, warning, information, hint) |
 |`:LspNextError`| jump to next error |
 |`:LspNextReference`| jump to next reference to the symbol under cursor |
+|`:LspNextWarning`| jump to next warning |
 |`:LspPeekDeclaration`| Go to the declaration of the word under the cursor, but open in preview window |
 |`:LspPeekDefinition`| Go to the definition of the word under the cursor, but open in preview window |
 |`:LspPeekImplementation`| Go to the implementation of an interface, but open in preview window |
 |`:LspPeekTypeDefinition`| Go to the type definition of the word under the cursor, but open in preview window |
+|`:LspPreviousDiagnostic`| jump to previous diagnostic (all of error, warning, information, hint) |
 |`:LspPreviousError`| jump to previous error |
 |`:LspPreviousReference`| jump to previous reference to the symbol under cursor |
+|`:LspPreviousWarning`| jump to previous warning |
 |`:LspReferences`| Find references |
 |`:LspRename`| Rename symbol |
 |`:LspStatus` | Show the status of the language server |
@@ -146,11 +168,11 @@ Virtual text will use the same highlight groups as signs feature.
 
 ### Highlight references
 
-References to the symbol under the cursor are highlighted by default. To
-disable, set in your configuration:
+Highlight references to the symbol under the cursor. To enable, set in your
+configuration:
 
 ```viml
-let g:lsp_highlight_references_enabled = 0
+let g:lsp_highlight_references_enabled = 1
 ```
 
 To change the style of the highlighting, you can set or link the `lspReference`

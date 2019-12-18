@@ -162,15 +162,14 @@ endfunction
 function! s:generate_sub_cmd_insert(text_edit) abort
     let l:start_line = a:text_edit['range']['start']['line']
     let l:start_character = a:text_edit['range']['start']['character']
-    let l:new_text = s:parse(a:text_edit['newText'])
 
     let l:sub_cmd = s:preprocess_cmd(a:text_edit['range'])
     let l:sub_cmd .= s:generate_move_start_cmd(l:start_line, l:start_character)
 
-    if l:start_character >= len(getline(l:start_line))
-        let l:sub_cmd .= "\"=l:merged_text_edit['merged']['newText']\<CR>p"
-    else
+    if l:start_character >= strchars(getline(l:start_line))
         let l:sub_cmd .= "\"=l:merged_text_edit['merged']['newText']\<CR>P"
+    else
+        let l:sub_cmd .= "\"=l:merged_text_edit['merged']['newText'].'?'\<CR>gPh\"_x"
     endif
 
     return l:sub_cmd
@@ -181,7 +180,7 @@ function! s:generate_sub_cmd_replace(text_edit) abort
     let l:start_character = a:text_edit['range']['start']['character']
     let l:end_line = a:text_edit['range']['end']['line']
     let l:end_character = a:text_edit['range']['end']['character']
-    let l:new_text = substitute(a:text_edit['newText'], '\n$', '', '')
+    let l:new_text = a:text_edit['newText']
 
     let l:sub_cmd = s:preprocess_cmd(a:text_edit['range'])
     let l:sub_cmd .= s:generate_move_start_cmd(l:start_line, l:start_character) " move to the first position
@@ -199,8 +198,10 @@ function! s:generate_sub_cmd_replace(text_edit) abort
 
     if len(l:new_text) == 0
         let l:sub_cmd .= 'x'
+    elseif l:start_character == 0 && l:end_character == 0
+        let l:sub_cmd .= "\"=l:merged_text_edit['merged']['newText']\<CR>P"
     else
-        let l:sub_cmd .= "\"=l:merged_text_edit['merged']['newText']\<CR>p"
+        let l:sub_cmd .= "\"=l:merged_text_edit['merged']['newText'].'?'\<CR>gph\"_x"
     endif
 
     return l:sub_cmd
@@ -216,17 +217,12 @@ endfunction
 
 function! s:generate_move_end_cmd(line_pos, character_pos) abort
     let l:result = printf('%dG0', a:line_pos) " move the line and set to the cursor at the beginning
-    if a:character_pos > 0
+    if a:character_pos > 1
         let l:result .= printf('%dl', a:character_pos) " move right until the character
-    else
+    elseif a:character_pos == 0
         let l:result = printf('%dG$', a:line_pos - 1) " move most right
     endif
     return l:result
-endfunction
-
-function! s:parse(text) abort
-    " https://stackoverflow.com/questions/71417/why-is-r-a-newline-for-vim
-    return substitute(a:text, '\(^\n|\n$\|\r\n\)', '\r', 'g')
 endfunction
 
 function! s:preprocess_cmd(range) abort

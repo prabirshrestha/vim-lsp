@@ -6,6 +6,10 @@ let s:winid = v:false
 let s:prevwin = v:false
 let s:preview_data = v:false
 
+function! s:vim_popup_closed(...) abort
+    let s:preview_data = v:false
+endfunction
+
 function! lsp#ui#vim#output#closepreview() abort
   if win_getid() == s:winid
     " Don't close if window got focus
@@ -70,9 +74,9 @@ function! s:get_float_positioning(height, width) abort
     let l:y = winline()
     if l:y + l:height >= winheight(0)
       " Float does not fit
-      if l:y - 2 > l:height
+      if l:y > l:height
         " Fits above
-        let l:y = winline() - l:height -1
+        let l:y = winline() - l:height - 1
       elseif l:y - 2 > winheight(0) - l:y
         " Take space above cursor
         let l:y = 1
@@ -83,6 +87,7 @@ function! s:get_float_positioning(height, width) abort
       endif
     endif
     let l:col = col('.')
+    let l:style = 'minimal'
     " Positioning is not window but screen relative
     let l:opts = {
           \ 'relative': 'win',
@@ -90,6 +95,7 @@ function! s:get_float_positioning(height, width) abort
           \ 'col': l:col,
           \ 'width': l:width,
           \ 'height': l:height,
+          \ 'style': l:style,
           \ }
     return l:opts
 endfunction
@@ -99,9 +105,13 @@ function! lsp#ui#vim#output#floatingpreview(data) abort
     let l:buf = nvim_create_buf(v:false, v:true)
     call setbufvar(l:buf, '&signcolumn', 'no')
 
-    " Try to get as much pace right-bolow the cursor, but at least 10x10
+    " Try to get as much space around the cursor, but at least 10x10
     let l:width = max([s:bufwidth(), 10])
-    let l:height = max([&lines - winline() + 1, 10])
+    let l:height = max([&lines - winline() + 1, winline() - 1, 10])
+
+    if g:lsp_preview_max_height > 0
+        let l:height = min([g:lsp_preview_max_height, l:height])
+    endif
 
     let l:opts = s:get_float_positioning(l:height, l:width)
 
@@ -119,10 +129,15 @@ function! lsp#ui#vim#output#floatingpreview(data) abort
     let l:options = {
                 \ 'moved': 'any',
                 \ 'border': [1, 1, 1, 1],
+                \ 'callback': function('s:vim_popup_closed')
                 \ }
 
     if g:lsp_preview_max_width > 0
         let l:options['maxwidth'] = g:lsp_preview_max_width
+    endif
+
+    if g:lsp_preview_max_height > 0
+        let l:options['maxheight'] = g:lsp_preview_max_height
     endif
 
     let s:winid = popup_atcursor('...', l:options)
@@ -271,12 +286,13 @@ function! s:align_preview(options) abort
     endif
 endfunction
 
-function! lsp#ui#vim#output#preview(data, options) abort
+function! lsp#ui#vim#output#preview(server, data, options) abort
     if s:winid && type(s:preview_data) == type(a:data)
        \ && s:preview_data == a:data
        \ && type(g:lsp_preview_doubletap) == 3
        \ && len(g:lsp_preview_doubletap) >= 1
        \ && type(g:lsp_preview_doubletap[0]) == 2
+       \ && mode()[0] !=# 'i'
         echo ''
         return call(g:lsp_preview_doubletap[0], [])
     endif
@@ -285,16 +301,32 @@ function! lsp#ui#vim#output#preview(data, options) abort
 
     let l:current_window_id = win_getid()
 
-    let s:winid = s:open_preview(a:data)
-
     let s:preview_data = a:data
     let l:lines = []
-    let l:ft = s:append(a:data, l:lines)
+    let l:syntax_lines = []
+    let l:ft = s:append(a:data, l:lines, l:syntax_lines)
+
+    " If the server response is empty content, we don't display anything.
+    if empty(l:lines) && empty(l:syntax_lines)
+      echo ''
+      return
+    endif
+
+    let s:winid = s:open_preview(a:data)
 
     if has_key(a:options, 'filetype')
         let l:ft = a:options['filetype']
     endif
 
+    let l:server_info = lsp#get_server_info(a:server)
+    try
+        let l:do_conceal = l:server_info['config']['hover_conceal']
+    catch
+        let l:do_conceal = g:lsp_hover_conceal
+    endtry
+
+    call setbufvar(winbufnr(s:winid), 'lsp_syntax_highlights', l:syntax_lines)
+    call setbufvar(winbufnr(s:winid), 'lsp_do_conceal', l:do_conceal)
     call s:setcontent(l:lines, l:ft)
 
     " Get size information while still having the buffer active
@@ -348,25 +380,37 @@ function! lsp#ui#vim#output#preview(data, options) abort
     return ''
 endfunction
 
-function! s:append(data, lines) abort
+function! s:append(data, lines, syntax_lines) abort
     if type(a:data) == type([])
         for l:entry in a:data
-            call s:append(entry, a:lines)
+            call s:append(entry, a:lines, a:syntax_lines)
         endfor
 
         return 'markdown'
     elseif type(a:data) == type('')
-        call extend(a:lines, split(a:data, "\n", v:true))
+        if !empty(a:data)
+            call extend(a:lines, split(a:data, "\n", v:true))
+        endif
 
         return 'markdown'
     elseif type(a:data) == type({}) && has_key(a:data, 'language')
-        call add(a:lines, '```'.a:data.language)
-        call extend(a:lines, split(a:data.value, '\n'))
-        call add(a:lines, '```')
+        if !empty(a:data.value)
+            let l:new_lines = split(a:data.value, '\n')
+
+            let l:i = 1
+            while l:i <= len(l:new_lines)
+                call add(a:syntax_lines, { 'line': len(a:lines) + l:i, 'language': a:data.language })
+                let l:i += 1
+            endwhile
+
+            call extend(a:lines, l:new_lines)
+        endif
 
         return 'markdown'
     elseif type(a:data) == type({}) && has_key(a:data, 'kind')
-        call extend(a:lines, split(a:data.value, '\n', v:true))
+        if !empty(a:data.value)
+              call extend(a:lines, split(a:data.value, '\n', v:true))
+        endif
 
         return a:data.kind ==? 'plaintext' ? 'text' : a:data.kind
     endif

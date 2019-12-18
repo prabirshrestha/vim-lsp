@@ -11,35 +11,41 @@ endif
 " If the range spans over multiple lines, break it down to multiple
 " positions, one for each line.
 " Return a list of positions.
-function! s:range_to_position(range) abort
+function! s:range_to_position(bufnr, range) abort
     let l:start = a:range['start']
     let l:end = a:range['end']
     let l:position = []
 
-    if l:end['line'] == l:start['line']
+    let l:start_line = l:start['line'] + 1
+    let l:start_char = l:start['character']
+    let l:start_col = lsp#utils#to_col(a:bufnr, l:start_line, l:start_char)
+    let l:end_line = l:end['line'] + 1
+    let l:end_char = l:end['character']
+    let l:end_col = lsp#utils#to_col(a:bufnr, l:end_line, l:end_char)
+    if l:end_line == l:start_line
         let l:position = [[
-        \ l:start['line'] + 1,
-        \ l:start['character'] + 1,
-        \ l:end['character'] - l:start['character']
+        \ l:start_line,
+        \ l:start_col,
+        \ l:end_col - l:start_col
         \ ]]
     else
         " First line
         let l:position = [[
-        \ l:start['line'] + 1,
-        \ l:start['character'] + 1,
+        \ l:start_line,
+        \ l:start_col,
         \ 999
         \ ]]
 
         " Last line
         call add(l:position, [
-        \ l:end['line'] + 1,
+        \ l:end_line,
         \ 1,
-        \ l:end['character']
+        \ l:end_col
         \ ])
 
         " Lines in the middle
         let l:middle_lines = map(
-        \ range(l:start['line'] + 2, end['line']),
+        \ range(l:start_line + 1, l:end_line - 1),
         \ {_, l -> [l, 0, 999]}
         \ )
 
@@ -105,7 +111,7 @@ function! s:handle_references(ctx, data) abort
     " Convert references to vim positions
     let l:position_list = []
     for l:reference in l:reference_list
-        call extend(l:position_list, s:range_to_position(l:reference['range']))
+        call extend(l:position_list, s:range_to_position(a:ctx['bufnr'], l:reference['range']))
     endfor
     call sort(l:position_list, function('s:compare_positions'))
 
