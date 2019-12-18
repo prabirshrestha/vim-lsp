@@ -899,3 +899,7 @@ function! lsp#update_workspace_config(server_name, workspace_config) abort
     endif
     call s:ensure_conf(bufnr('%'), a:server_name, function('s:Noop'))
 endfunction
+
+function! lsp#server_complete(lead, line, pos) abort
+    return filter(sort(keys(s:servers)), 'stridx(v:val, a:lead)==0 && has_key(s:servers[v:val], "init_result")')
+endfunction
