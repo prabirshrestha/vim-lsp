@@ -711,6 +711,10 @@ function! s:handle_initialize(server_name, data) abort
     let l:response = a:data['response']
     let l:server = s:servers[a:server_name]
 
+    if has_key(l:server, 'exited')
+        unlet l:server['exited']
+    endif
+
     let l:init_callbacks = l:server['init_callbacks']
     unlet l:server['init_callbacks']
 
