@@ -38,7 +38,6 @@ let s:is_user_data_support = has('patch-8.0.1493')
 let s:user_data_key = 'vim-lsp/textEdit'
 let s:user_data_additional_edits_key = 'vim-lsp/additionalTextEdits'
 let s:user_data_insert_start_key = 'vim-lsp/insertStart'
-let s:user_data_insert_format_key = 'vim-lsp/insertFormat'
 let s:user_data_filtertext_key = 'vim-lsp/filterText'
 
 " }}}
@@ -239,15 +238,15 @@ function! lsp#omni#default_get_vim_completion_item(item, ...) abort
     let l:server_name = get(a:, 1, '')
 
     if g:lsp_insert_text_enabled && has_key(a:item, 'insertText') && !empty(a:item['insertText'])
-        let l:word = a:item['insertText']
+        if has_key(a:item, 'insertTextFormat') && a:item['insertTextFormat'] != 1
+            let l:word = a:item['label']
+        else
+            let l:word = a:item['insertText']
+        endif
         let l:abbr = a:item['label']
     else
         let l:word = a:item['label']
         let l:abbr = a:item['label']
-    endif
-
-    if has_key(a:item, 'insertTextFormat') && a:item['insertTextFormat'] == 2
-        let l:word = substitute(l:word, '\<\$[0-9]\+\|\${[^}]\+}\>', '', 'g')
     endif
 
     let l:kind = lsp#omni#get_kind_text(a:item, l:server_name)
@@ -288,7 +287,6 @@ function! lsp#omni#default_get_vim_completion_item(item, ...) abort
         if type(l:text_edit) == type({})
             let l:user_data[s:user_data_key] = l:text_edit
             let l:user_data[s:user_data_insert_start_key] = l:text_edit['range']['start']['character']
-            let l:user_data[s:user_data_insert_format_key] = get(a:item, 'insertTextFormat', 0)
         endif
 
         if type(l:additional_text_edits) == type([]) && !empty(l:additional_text_edits)
@@ -381,20 +379,10 @@ function! s:apply_text_edits() abort
 
     let l:all_text_edits = []
 
-    " if newText contains snippet markers, remove all them.
-    let l:snippet_marker_pos = -1
-
     " expand textEdit range, for omni complet inserted text.
     let l:text_edit = get(l:user_data, s:user_data_key, {})
     if !empty(l:text_edit)
         let l:expanded_text_edit = s:expand_range(l:text_edit, strchars(v:completed_item['word']))
-        " InsertTextFormat:Snippet
-        if get(l:user_data, s:user_data_insert_format_key, 0) == 2
-            let l:new_text = l:expanded_text_edit['newText']
-            let l:marker_pattern = '\<\$[0-9]\+\|\${[^}]\+}\>'
-            let l:snippet_marker_pos = matchstrpos(l:new_text, l:marker_pattern)[1] - 1
-            let l:expanded_text_edit['newText'] = substitute(l:new_text, l:marker_pattern, '', 'g')
-        endif
         call add(l:all_text_edits, l:expanded_text_edit)
     endif
 
@@ -412,25 +400,10 @@ function! s:apply_text_edits() abort
     " apply textEdits
     if !empty(l:all_text_edits)
         call lsp#utils#text_edit#apply_text_edits(lsp#utils#get_buffer_uri(), l:all_text_edits)
-		" when user typed something character while popup menu is shwon, vim
-		" insert typed-character after CompleteDone occured. but the character
-		" should not be duplicated since the textEdit include the character.
-		" this remove the following character.
-        let oldline = getline('.')
-        call timer_start(0, {_-> [
-		\    setline('.', oldline),
-		\    execute('redraw', 1),
-		\    execute('doautocmd User lsp_complete_done', 1),
-		\] })
-        return
     endif
 
     let l:pos = getpos("'a")
-    if l:snippet_marker_pos >= 0
-        let l:pos[2] += l:snippet_marker_pos
-    else
-        let l:pos[2] += l:col_offset
-    endif
+    let l:pos[2] += l:col_offset
     call setpos("'a", l:saved_mark)
     call setpos('.', l:pos)
 
