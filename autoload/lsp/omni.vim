@@ -417,7 +417,12 @@ function! s:apply_text_edits() abort
 		" should not be duplicated since the textEdit include the character.
 		" this remove the following character.
         let oldline = getline('.')
-        call timer_start(0, {_-> [setline('.', oldline), execute('redraw', 1)] })
+        call timer_start(0, {_-> [
+		\    setline('.', oldline),
+		\    execute('redraw', 1),
+		\    execute('doautocmd User lsp_complete_done', 1),
+		\] })
+        return
     endif
 
     let l:pos = getpos("'a")
