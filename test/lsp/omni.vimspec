@@ -62,7 +62,8 @@ Describe lsp#omni
             \}
 
             let l:want_user_data = {
-            \  'vim-lsp/textEdit': l:text_edit
+            \  'vim-lsp/textEdit': l:text_edit,
+            \  'vim-lsp/insertFormat': 0
             \}
 
             let l:want_user_data_string = json_encode(l:want_user_data)
