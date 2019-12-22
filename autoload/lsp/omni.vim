@@ -237,15 +237,15 @@ function! lsp#omni#default_get_vim_completion_item(item, ...) abort
     let l:server_name = get(a:, 1, '')
 
     if g:lsp_insert_text_enabled && has_key(a:item, 'insertText') && !empty(a:item['insertText'])
-        if has_key(a:item, 'insertTextFormat') && a:item['insertTextFormat'] != 1
-            let l:word = a:item['label']
-        else
-            let l:word = a:item['insertText']
-        endif
+        let l:word = a:item['insertText']
         let l:abbr = a:item['label']
     else
         let l:word = a:item['label']
         let l:abbr = a:item['label']
+    endif
+
+    if has_key(a:item, 'insertTextFormat') && a:item['insertTextFormat'] == 2
+        let l:word = substitute(l:word, '\<\$[0-9]\+\|\${[^}]\+}\>', '', 'g')
     endif
 
     let l:kind = lsp#omni#get_kind_text(a:item, l:server_name)
@@ -384,13 +384,12 @@ function! s:apply_text_edits() abort
 
     " expand textEdit range, for omni complet inserted text.
     let l:text_edit = get(l:user_data, s:user_data_key, {})
-	let g:hoge = l:user_data
     if !empty(l:text_edit)
         let l:expanded_text_edit = s:expand_range(l:text_edit, strchars(v:completed_item['word']))
         " InsertTextFormat:Snippet
         if get(l:user_data, s:user_data_insert_format_key, 0) == 2
             let l:new_text = l:expanded_text_edit['newText']
-            let l:marker_pattern = '\<\$[0-9]\+\>'
+            let l:marker_pattern = '\<\$[0-9]\+\|\${[^}]\+}\>'
             let l:snippet_marker_pos = matchstrpos(l:new_text, l:marker_pattern)[1] - 1
             let l:expanded_text_edit['newText'] = substitute(l:new_text, l:marker_pattern, '', 'g')
         endif
