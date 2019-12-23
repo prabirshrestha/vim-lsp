@@ -416,6 +416,7 @@ function! lsp#ui#vim#code_action() abort
             \   'range': l:range,
             \   'context': {
             \       'diagnostics' : l:diagnostics,
+            \       'only': ['', 'quickfix', 'refactor', 'refactor.extract', 'refactor.inline', 'refactor.rewrite', 'source', 'source.organizeImports'],
             \   },
             \ },
             \ 'on_notification': function('s:handle_code_action', [l:server, s:last_req_id, 'codeAction']),
