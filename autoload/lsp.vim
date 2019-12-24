@@ -33,7 +33,7 @@ augroup END
 
 function! lsp#log_verbose(...) abort
     if g:lsp_log_verbose
-        call call(function("lsp#log"), a:000)
+        call call(function('lsp#log'), a:000)
     endif
 endfunction
 
