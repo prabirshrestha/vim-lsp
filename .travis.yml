@@ -13,7 +13,6 @@ matrix:
           env: VIM_TYPE=neovim VIM_VERSION=nightly
         - os: linux
           dist: trusty
-          python: "3.6"
           env: VIM_TYPE=neovim VIM_VERSION=nightly
         - os: windows
           language: shell
@@ -25,7 +24,6 @@ matrix:
           env: VIM_TYPE=vim VIM_VERSION=default
         - os: linux
           dist: trusty
-          python: "3.6"
           env: VIM_TYPE=neovim VIM_VERSION=0.4.3
         - os: windows
           language: shell
@@ -33,19 +31,9 @@ matrix:
         - os: windows
           language: shell
           env: VIM_TYPE=vim VIM_VERSION=default
-
-addons:
-    apt:
-        packages:
-            - python3
-            - python3-pip
-
 before_install:
     - mkdir -p "$DOWNLOADS_DIR"
     - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
-        export PATH="$HOME/Library/Python/3.6/bin:$PATH";
-        pip3 install --user setuptools --upgrade;
-        pip3 install --user vim-vint typing;
         if [[ "$VIM_TYPE" == "neovim" ]]; then
             if [[ "$VIM_VERSION" == "nightly" ]]; then export VIM_URL="https://github.com/neovim/neovim/releases/download/nightly/nvim-macos.tar.gz"; fi;
             if [[ "$VIM_VERSION" != "nightly" ]]; then export VIM_URL="https://github.com/neovim/neovim/releases/download/v$VIM_VERSION/nvim-macos.tar.gz"; fi;
@@ -54,9 +42,6 @@ before_install:
             export PATH="$DOWNLOADS_DIR/nvim-osx64/bin:$PATH";
         fi;
       elif [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
-        sudo apt-get update && sudo apt-get install python3-dev;
-        pip3 install --user setuptools --upgrade;
-        pip3 install --user vim-vint typing;
         if [[ "$VIM_TYPE" == "neovim" ]]; then
             if [[ "$VIM_VERSION" == "nightly" ]]; then export VIM_URL="https://github.com/neovim/neovim/releases/download/nightly/nvim.appimage"; fi;
             if [[ "$VIM_VERSION" != "nightly" ]]; then export VIM_URL="https://github.com/neovim/neovim/releases/download/v$VIM_VERSION/nvim.appimage"; fi;
@@ -69,9 +54,6 @@ before_install:
         powershell -Command "Set-ExecutionPolicy RemoteSigned -scope CurrentUser";
         powershell -Command "iex (new-object net.webclient).downloadstring('https://get.scoop.sh')";
         export PATH="$HOME/scoop/shims:$PATH;"; 
-        export PATH="$APPDATA/Python/Python38/Scripts:$PATH;";
-        powershell -Command "scoop install python";
-        python3 -m pip install --user vim-vint typing;
         if [[ "$VIM_TYPE" == "neovim" ]]; then
             if [[ "$VIM_VERSION" == "nightly" ]]; then export VIM_URL="https://github.com/neovim/neovim/releases/download/nightly/nvim-win64.zip"; fi;
             if [[ "$VIM_VERSION" != "nightly" ]]; then export VIM_URL="https://github.com/neovim/neovim/releases/download/v$VIM_VERSION/nvim-win64.zip"; fi;
@@ -87,13 +69,10 @@ before_install:
 before_script:
     - uname -a
     - export
-    - which -a python
 
 script:
     - if [[ "$VIM_TYPE" == "vim" ]]; then vim --version; fi;
     - if [[ "$VIM_TYPE" == "neovim" ]]; then nvim --version; fi;
-    - if [[ "$VIM_TYPE" == "vim" ]]; then vint autoload ftplugin plugin; fi;
-    - if [[ "$VIM_TYPE" == "neovim" ]]; then vint --enable-neovim autoload ftplugin plugin; fi;
     - if [[ "$TRAVIS_OS_NAME" == "windows" && "$VIM_TYPE" == "neovim" ]]; then
         powershell -Command "themis --reporter spec";
       else
