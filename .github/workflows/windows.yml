@@ -25,7 +25,9 @@ jobs:
         run: Expand-Archive -Path vim.zip -DestinationPath $env:USERPROFILE
       - name: Download test runner
         shell: cmd
-        run: git clone --depth 1 --branch v1.5.4 --single-branch https://github.com/thinca/vim-themis %USERPROFILE%\themis
+        run: |
+          git config --global core.autocrlf true
+          git clone --depth 1 --branch v1.5.4 --single-branch https://github.com/thinca/vim-themis %USERPROFILE%\themis
       - name: Set PATH
         shell: cmd
         run: |
