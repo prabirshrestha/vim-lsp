@@ -32,6 +32,7 @@ augroup _lsp_silent_
 augroup END
 
 function! lsp#log_verbose(...) abort
+    let hello = 'test'
     if g:lsp_log_verbose
         call call(function('lsp#log'), a:000)
     endif

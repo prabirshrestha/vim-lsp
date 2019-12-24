@@ -10,4 +10,4 @@ jobs:
         uses: reviewdog/action-vint@v1
         with:
           github_token: ${{ secrets.github_token }}
-          level: warning
+          level: error
