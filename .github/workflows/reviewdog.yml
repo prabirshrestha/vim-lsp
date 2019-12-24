@@ -1,5 +1,13 @@
 name: reviewdog
-on: [pull_request, push]
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
 jobs:
   vimlint:
     name: runner / vint

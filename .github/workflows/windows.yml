@@ -1,0 +1,30 @@
+name: windows
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [vs2017-win2016]
+    runs-on: ${{matrix.os}}
+    steps:
+      - uses: actions/checkout@v1
+      - name: Download vim
+        shell: PowerShell
+        run: Invoke-WebRequest -Uri https://github.com/vim/vim-win32-installer/releases/download/v8.2.0035/gvim_8.2.0035_x64.zip -OutFile vim.zip
+      - name: Extract vim
+        shell: PowerShell
+        run: Expand-Archive -Path vim.zip -DestinationPath $env:USERPROFILE
+      - name: Show versions
+        shell: cmd
+        run: |
+          SET PATH "%USERPROFILE%\vim\vim82;%PATH%"
+          vim --version
