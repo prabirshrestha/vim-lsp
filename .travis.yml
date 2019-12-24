@@ -31,7 +31,8 @@ matrix:
         - os: windows
           language: shell
           env: VIM_TYPE=vim VIM_VERSION=default
-before_install:
+
+install:
     - mkdir -p "$DOWNLOADS_DIR"
     - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
         if [[ "$VIM_TYPE" == "neovim" ]]; then
@@ -68,11 +69,11 @@ before_install:
 
 before_script:
     - uname -a
+    - if [[ "$VIM_TYPE" == "vim" ]]; then vim --version; fi;
+    - if [[ "$VIM_TYPE" == "neovim" ]]; then nvim --version; fi;
     - export
 
 script:
-    - if [[ "$VIM_TYPE" == "vim" ]]; then vim --version; fi;
-    - if [[ "$VIM_TYPE" == "neovim" ]]; then nvim --version; fi;
     - if [[ "$TRAVIS_OS_NAME" == "windows" && "$VIM_TYPE" == "neovim" ]]; then
         powershell -Command "themis --reporter spec";
       else
