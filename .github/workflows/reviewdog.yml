@@ -6,9 +6,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v1
-      - name: vint
-        uses: tsuyoshicho/action-vimlint@v1
+      - name: Run vint with reviewdog
+        uses: reviewdog/action-vint@v1.0.1
         with:
           github_token: ${{ secrets.github_token }}
           reporter: github-pr-review
           target: .
+
+
