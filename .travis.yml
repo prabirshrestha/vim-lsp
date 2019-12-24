@@ -8,29 +8,32 @@ env:
         - DOWNLOADS_DIR=$HOME/downloads
 
 matrix:
-    allow_failures:
-        - os: osx
-          env: VIM_TYPE=neovim VIM_VERSION=nightly
-        - os: linux
-          dist: trusty
-          env: VIM_TYPE=neovim VIM_VERSION=nightly
-        - os: windows
-          language: shell
-          env: VIM_TYPE=neovim VIM_VERSION=nightly
     include:
         - os: osx
           env: VIM_TYPE=neovim VIM_VERSION=0.4.3
         - os: osx
           env: VIM_TYPE=vim VIM_VERSION=default
         - os: linux
-          dist: trusty
+          dist: bionic
           env: VIM_TYPE=neovim VIM_VERSION=0.4.3
+        - os: linux
+          dist: bionic
+          env: VIM_TYPE=vim VIM_VERSION=default
         - os: windows
           language: shell
           env: VIM_TYPE=neovim VIM_VERSION=0.4.3
         - os: windows
           language: shell
           env: VIM_TYPE=vim VIM_VERSION=default
+    allow_failures:
+        - os: osx
+          env: VIM_TYPE=neovim VIM_VERSION=nightly
+        - os: linux
+          dist: bionic
+          env: VIM_TYPE=neovim VIM_VERSION=nightly
+        - os: windows
+          language: shell
+          env: VIM_TYPE=neovim VIM_VERSION=nightly
 
 install:
     - mkdir -p "$DOWNLOADS_DIR"
