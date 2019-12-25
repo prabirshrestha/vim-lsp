@@ -28,11 +28,11 @@ jobs:
         run: git clone --depth 1 --branch v1.5.4 --single-branch https://github.com/thinca/vim-themis "%USERPROFILE%\themis"
       - name: Set PATH
         shell: cmd
-        run: SET PATH=%USERPROFILE%\vim\vim82;%USERPROFILE%\themis\bin;%PATH%
+        run: SET PATH=%USERPROFILE%\vim\vim82;%PATH%
       - name: Show versions
         shell: cmd
         run: vim --version
       - name: Run tests
         shell: cmd
-        run: powershell -Command "themis --reporter spec"
+        run: powershell -Command "%USERPROFILE%\themis\bin\themis.bat --reporter spec"
 
