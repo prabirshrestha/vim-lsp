@@ -14,16 +14,14 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
-        name: [vim-v81-x64, vim-v80-x64]
+        name: [vim-v82-x64, vim-v81-x64]
         include:
+          - name: vim-v82-x64
+            os: ubuntu-latest
+            vim_version: 8.2.0024
           - name: vim-v81-x64
             os: ubuntu-latest
-            vim_version: 8.1.2424
-            vim_ver_path: vim81
-          - name: vim-v80-x64
-            os: ubuntu-latest
-            vim_version: 8.0.1567
-            vim_ver_path: vim80
+            vim_version: 8.1.1729
     runs-on: ${{matrix.os}}
     steps:
       - uses: actions/checkout@v1
