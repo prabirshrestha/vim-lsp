@@ -43,4 +43,4 @@ jobs:
         run: vim --version
       - name: Run tests
         shell: cmd /C CALL "{0}"
-        run: call themis.bat --reporter spec
+        run: call "themis.bat --reporter spec"
