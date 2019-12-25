@@ -1,4 +1,4 @@
-name: windows_neovim
+name: mac_neovim
 
 on:
   push:
