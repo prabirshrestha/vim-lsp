@@ -1,0 +1,41 @@
+name: windows_vim
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        name: [vim-v81-x64, vim-v80-x64]
+        include:
+          - name: vim-v81-x64
+            os: ubuntu-latest
+            vim_version: 8.1.2424
+            vim_ver_path: vim81
+          - name: vim-v80-x64
+            os: ubuntu-latest
+            vim_version: 8.0.1567
+            vim_ver_path: vim80
+    runs-on: ${{matrix.os}}
+    steps:
+      - uses: actions/checkout@v1
+      - name: Install vim
+        run: sudo apt-get install vim=${{matrix.vim_version}}
+      - name: Download test runner
+        shell: PowerShell
+        run: git clone --depth 1 --branch v1.5.4 --single-branch https://github.com/thinca/vim-themis $env:USERPROFILE\themis
+      - name: Run tests
+        shell: cmd
+        run: |
+          export PATH=~/themis/bin:$PATH
+          export THEMIS_VIM=vim
+          vim --version
+          themis --reporter spec
