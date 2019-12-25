@@ -19,7 +19,7 @@ jobs:
           - name: neovim-v04-x64
             os: windows-latest
             neovim_version: 0.4.3
-            neovim_arch: x64
+            neovim_arch: win64
     runs-on: ${{matrix.os}}
     steps:
       - uses: actions/checkout@v1
