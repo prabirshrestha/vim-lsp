@@ -13,30 +13,36 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-18.04]
-        name: [vim-v82-x64, vim-v81-x64]
+        os: [ubuntu-latest]
+        name: [vim-v82-x64, vim-v81-x64, vim-v80-x64]
         include:
           - name: vim-v82-x64
-            os: ubuntu-18.04
-            vim_version: 2:8.2.0024-0york0~18.04
+            os: ubuntu-latest
+            vim_version: 8.2.0037
+            glibc_version: 2.15
           - name: vim-v81-x64
-            os: ubuntu-18.04
-            vim_version: 8.1.1729
+            os: ubuntu-latest
+            vim_version: 8.1.2424
+            glibc_version: 2.15
+          - name: vim-v80-x64
+            os: ubuntu-latest
+            vim_version: 8.0.1567
+            glibc_version: 2.15
     runs-on: ${{matrix.os}}
     steps:
       - uses: actions/checkout@v1
-      - name: Install vim
+      - name: Download neovim
+        shell: bash
         run: |
-         sudo add-apt-repository ppa:jonathonf/vim
-         sudo apt-get update
-         apt-cache show vim
-         sudo apt-get install vim=${{matrix.vim_version}}
+          mkdir -p ~/vim/bin
+          curl -L https://github.com/vim/vim-appimage/releases/download/v${{matrix.vim_version}}/GVim-v${{matrix.vim_version}}.glibc${{matrix.glibc_version}}-x86_64.AppImage -o ~/vim/bin/vim
       - name: Download test runner
-        shell: PowerShell
-        run: git clone --depth 1 --branch v1.5.4 --single-branch https://github.com/thinca/vim-themis $env:USERPROFILE\themis
+        shell: bash
+        run: git clone --depth 1 --branch v1.5.4 --single-branch https://github.com/thinca/vim-themis ~/themis
       - name: Run tests
-        shell: cmd
+        shell: bash
         run: |
+          export PATH=~/vim/bin:$PATH
           export PATH=~/themis/bin:$PATH
           export THEMIS_VIM=vim
           vim --version
