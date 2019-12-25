@@ -36,5 +36,6 @@ jobs:
         run: vim --version
       - name: Run tests
         shell: cmd
-        run: %USERPROFILE%\themis\bin\themis.bat --reporter spec
+        run: |
+          %USERPROFILE%\themis\bin\themis.bat --reporter spec
 
