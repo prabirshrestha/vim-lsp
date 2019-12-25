@@ -1,4 +1,4 @@
-name: windows_vim
+name: linux_vim
 
 on:
   push:
