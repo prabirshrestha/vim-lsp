@@ -13,14 +13,14 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest]
+        os: [ubuntu-18.04]
         name: [vim-v82-x64, vim-v81-x64]
         include:
           - name: vim-v82-x64
-            os: ubuntu-latest
-            vim_version: 8.2.0024
+            os: ubuntu-18.04
+            vim_version: 2:8.2.0024-0york0~18.04
           - name: vim-v81-x64
-            os: ubuntu-latest
+            os: ubuntu-18.04
             vim_version: 8.1.1729
     runs-on: ${{matrix.os}}
     steps:
