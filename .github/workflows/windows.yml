@@ -45,6 +45,7 @@ jobs:
         shell: cmd
         run: |
           pushd %USERPROFILE%\themis\bin
-          themis --reporter spec
+          dir
+          pwd
+          themis.bat --reporter spec
           popd
-
