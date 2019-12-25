@@ -13,7 +13,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-2019, windows-latest]
+        os: [windows-latest]
     runs-on: ${{matrix.os}}
     steps:
       - uses: actions/checkout@v1
@@ -31,8 +31,10 @@ jobs:
       - name: Set PATH
         shell: cmd
         run: |
-          SET PATH=%USERPROFILE%\vim\vim82;%USERPROFILE%\themis\bin;%PATH%
+          SET PATH=%USERPROFILE%\vim\vim82;%PATH%
+          SET PATH=%USERPROFILE%\themis\bin;%PATH%
           SET
+          dir %USERPROFILE%\themis\bin
       - name: Show versions
         shell: cmd
         run: vim --version
