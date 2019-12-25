@@ -21,7 +21,7 @@ jobs:
         run: choco install dos2unix
       - name: Download vim
         shell: PowerShell
-        run: Invoke-WebRequest -Uri https://github.com/vim/vim-win32-installer/releases/download/v8.2.0035/gvim_8.2.0035_x64.zip -OutFile vim.zip
+        run: Invoke-WebRequest -Uri https://github.com/vim/vim-win32-installer/releases/download/v8.2.0037/gvim_8.2.0037_x64.zip -OutFile vim.zip
       - name: Extract vim
         shell: PowerShell
         run: Expand-Archive -Path vim.zip -DestinationPath $env:USERPROFILE
@@ -43,4 +43,4 @@ jobs:
         run: vim --version
       - name: Run tests
         shell: cmd
-        run: call "C:\Users\runneradmin\themis\bin\themis.bat --reporter spec"
+        run: C:\Users\runneradmin\themis\bin\themis.bat
