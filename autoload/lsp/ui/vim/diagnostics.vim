@@ -39,7 +39,7 @@ function! lsp#ui#vim#diagnostics#document_diagnostics() abort
         let l:result += lsp#ui#vim#utils#diagnostics_to_loc_list(l:data)
     endfor
 
-    call setqflist(l:result)
+    call setloclist(0, l:result)
 
     " autocmd FileType qf setlocal wrap
 
@@ -47,7 +47,7 @@ function! lsp#ui#vim#diagnostics#document_diagnostics() abort
         call lsp#utils#error('No diagnostics results found')
     else
         echo 'Retrieved diagnostics results'
-        botright copen
+        botright lopen
     endif
 endfunction
 
