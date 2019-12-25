@@ -13,8 +13,6 @@ _Note: [async.vim](https://github.com/prabirshrestha/async.vim) is required and 
 
 ## Registering servers
 
-**For other languages please refer to the [wiki](https://github.com/prabirshrestha/vim-lsp/wiki/Servers).**
-
 ```viml
 if executable('pyls')
     " pip install python-language-server
@@ -26,20 +24,13 @@ if executable('pyls')
 endif
 ```
 
-While most of the time it is ok to just set the `name`, `cmd` and `whitelist` there are times when you need to get more control of the `root_uri`. By default `root_uri` for the buffer can be found using `lsp#utils#get_default_root_uri()` which internaly uses `getcwd()`. Here is an example that sets the `root_uri` to the directory where it contains `tsconfig.json` and traverses up the directories automatically, if it isn't found it returns empty string which tells `vim-lsp` to start the server but don't initialize the server. If you would like to avoid starting the server you can return empty array for `cmd`.
+Refer to [vim-lsp-settings](https://github.com/mattn/vim-lsp-settings) on how to easily setup language servers using vim-lsp automatically.
 
-```vim
-if executable('typescript-language-server')
-    au User lsp_setup call lsp#register_server({
-        \ 'name': 'typescript-language-server',
-        \ 'cmd': {server_info->[&shell, &shellcmdflag, 'typescript-language-server --stdio']},
-        \ 'root_uri':{server_info->lsp#utils#path_to_uri(lsp#utils#find_nearest_parent_file_directory(lsp#utils#get_buffer_path(), 'tsconfig.json'))},
-        \ 'whitelist': ['typescript'],
-        \ })
-endif
+```viml
+Plug 'prabirshrestha/async.vim'
+Plug 'prabirshrestha/vim-lsp'
+Plug 'mattn/vim-lsp-settings'
 ```
-
-vim-lsp supports incremental changes of Language Server Protocol.
 
 ## auto-complete
 

@@ -8,6 +8,7 @@ CONTENTS                                                  *vim-lsp-contents*
     Install                               |vim-lsp-install|
     Language Servers                      |vim-lsp-language-servers|
       Configure                             |vim-lsp-configure|
+      vim-lsp-settings                      |vim-lsp-settings|
       Wiki                                  |vim-lsp-configure-wiki|
     Options                               |vim-lsp-options|
       g:lsp_diagnostics_enabled             |g:lsp_diagnostics_enabled|
@@ -160,6 +161,13 @@ on pyls (https://github.com/palantir/python-language-server)
             autocmd User lsp_buffer_enabled call s:on_lsp_buffer_enabled()
        augroup END
 <
+VIM-LSP-SETTINGS                                         *vim-lsp-settings*
+Refer to [vim-lsp-settings](https://github.com/mattn/vim-lsp-settings) on how
+to automatically register various language servers.
+>
+	Plug 'prabirshrestha/async.vim'
+	Plug 'prabirshrestha/vim-lsp'
+	Plug 'mattn/vim-lsp-settings'
 
 WIKI                                               *vim-lsp-configure-wiki*
 For documentation on how to configure other language servers refer
