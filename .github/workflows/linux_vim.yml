@@ -14,7 +14,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
-        name: [vim-v82-x64, vim-v81-x64, vim-v80-x64]
+        name: [vim-v82-x64, vim-v81-x64]
         include:
           - name: vim-v82-x64
             os: ubuntu-latest
