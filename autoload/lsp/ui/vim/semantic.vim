@@ -94,8 +94,8 @@ function! s:get_hl_name(server, scope) abort
         let l:hl = l:info['semantic_highlight']
         let l:i = 0
 
-        while (l:i < len(a:scope)) && has_key(l:hl, a:scope[i])
-            let l:hl = l:hl[a:scope[i]]
+        while (l:i < len(a:scope)) && has_key(l:hl, a:scope[l:i])
+            let l:hl = l:hl[a:scope[l:i]]
             let l:i += 1
         endwhile
     catch
@@ -127,9 +127,9 @@ function! s:tokens_to_hl_info(token) abort
     let l:octets = lsp#utils#base64_decode(a:token)
 
     for l:i in range(0, len(l:octets) - 1, 8)
-        let l:char = s:octets_to_number(l:octets[i : i+3])
-        let l:length = s:octets_to_number(l:octets[i+4 : i+5])
-        let l:scope = s:octets_to_number(l:octets[i+6 : i+7])
+        let l:char = s:octets_to_number(l:octets[l:i : l:i+3])
+        let l:length = s:octets_to_number(l:octets[l:i+4 : l:i+5])
+        let l:scope = s:octets_to_number(l:octets[l:i+6 : l:i+7])
 
         call add(l:ret, { 'char': l:char, 'length': l:length, 'scope': l:scope })
     endfor
