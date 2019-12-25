@@ -1,0 +1,46 @@
+name: windows_neovim
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest]
+        name: [neovim-v04-x64,neovim-nightly-x64]
+        include:
+          - name: neovim-v04-x64
+            os: windows-latest
+            neovim_version: v0.4.3
+            neovim_arch: win64
+          - name: neovim-nightly-x64
+            os: windows-latest
+            neovim_version: nightly
+            neovim_arch: win64
+    runs-on: ${{matrix.os}}
+    steps:
+      - uses: actions/checkout@v1
+      - name: Download neovim
+        shell: PowerShell
+        run: Invoke-WebRequest -Uri https://github.com/neovim/neovim/releases/download/${{matrix.neovim_version}}/nvim-${{matrix.neovim_arch}}.zip -OutFile neovim.zip
+      - name: Extract neovim
+        shell: PowerShell
+        run: Expand-Archive -Path neovim.zip -DestinationPath $env:USERPROFILE
+      - name: Download test runner
+        shell: PowerShell
+        run: git clone --depth 1 --branch v1.5.4 --single-branch https://github.com/thinca/vim-themis $env:USERPROFILE\themis
+      - name: Run tests
+        shell: cmd
+        run: |
+          SET PATH=%USERPROFILE%\Neovim\bin;%PATH%;
+          SET PATH=%USERPROFILE%\themis\bin;%PATH%;
+          SET THEMIS_VIM=nvim
+          nvim --version
+          themis --reporter spec
