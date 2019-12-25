@@ -1,3 +1,5 @@
+" vint: -ProhibitUnusedVariable
+
 " constants {{{
 
 let s:default_completion_item_kinds = {
@@ -421,10 +423,10 @@ function! s:apply_text_edits() abort
         " should not be duplicated since the textEdit include the character.
         " this remove the following character.
         if l:snippet_marker_pos != -1
-            let oldpos = line('.')
-            let oldline = getline('.')
+            let l:oldpos = line('.')
+            let l:oldline = getline('.')
             call timer_start(1, {_-> [
-        \    setline(oldpos, oldline),
+        \    setline(l:oldpos, l:oldline),
         \    execute('redraw', 1),
         \    execute('doautocmd User lsp_complete_done', 1),
         \] })
