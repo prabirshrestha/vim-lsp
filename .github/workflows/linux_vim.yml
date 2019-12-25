@@ -29,6 +29,7 @@ jobs:
         run: |
          sudo add-apt-repository ppa:jonathonf/vim
          sudo apt-get update
+         apt-cache show vim
          sudo apt-get install vim=${{matrix.vim_version}}
       - name: Download test runner
         shell: PowerShell
