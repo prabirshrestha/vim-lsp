@@ -33,4 +33,21 @@ function! s:do_highlight() abort
     endif
 endfunction
 
+function! s:cleanup_markdown() abort
+    " Don't highlight _ in words
+    syntax match markdownError "\w\@<=\w\@="
+
+    " Conceal escaped characters
+    " Workaround for: https://github.com/palantir/python-language-server/issues/386
+    if has('conceal')
+        for l:escaped_char in ['`', '*', '_', '{', '}', '(', ')', '<', '>', '#', '+', '.', '!', '-']
+            execute printf('syntax match markdownEscape "\\[][%s]" conceal cchar=%s', l:escaped_char, l:escaped_char)
+        endfor
+    end
+
+    " Don't highlight concealed chars
+    highlight clear Conceal
+endfunction
+
 call s:do_highlight()
+call s:cleanup_markdown()
