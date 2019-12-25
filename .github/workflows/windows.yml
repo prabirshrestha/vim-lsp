@@ -37,5 +37,8 @@ jobs:
         run: vim --version
       - name: Run tests
         shell: cmd
-        run: themis --reporter spec
+        run: |
+          pushd %USERPROFILE%\themis\bin
+          themis --reporter spec
+          popd
 
