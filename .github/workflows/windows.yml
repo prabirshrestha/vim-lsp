@@ -13,13 +13,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        config:
-        - {
-            os: windows-latest,
+        name: [winlatestv82x64]
+        include:
+          - name: winlatest82x64
+            os: windows-latest
             vim_version: 8.2.0037
             vim_arch: x64
             vim_ver_path: vim82
-          }
     runs-on: ${{matrix.os}}
     steps:
       - uses: actions/checkout@v1
