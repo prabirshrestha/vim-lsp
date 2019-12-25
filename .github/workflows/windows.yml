@@ -42,10 +42,5 @@ jobs:
         shell: cmd
         run: vim --version
       - name: Run tests
-        shell: cmd
-        run: |
-          pushd %USERPROFILE%\themis\bin
-          dir
-          pwd
-          themis.bat --reporter spec
-          popd
+        shell: cmd /C CALL "{0}"
+        run: call themis.bat --reporter spec
