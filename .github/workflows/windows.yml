@@ -41,5 +41,8 @@ jobs:
           SET PATH=%USERPROFILE%\vim\vim82;%PATH%;
           vim --version
       - name: Run tests
-        shell: powershell -Command "{0}"
-        run: C:\Users\runneradmin\themis\bin\themis.bat
+        shell: cmd
+        run: |
+          set path "%USERPROFILE%\vim\vim82;%PATH"
+          set path "%USERPROFILE%\themis\bin;%PATH"
+          C:\Users\runneradmin\themis\bin\themis.bat
