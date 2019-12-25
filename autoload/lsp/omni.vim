@@ -62,34 +62,15 @@ function! lsp#omni#complete(findstart, base) abort
         call s:send_completion_request(l:info)
 
         if g:lsp_async_completion
+            " automatically call `s:display_completions` at `s:handle_omnicompletion` when retrieved textDocument/completion response.
             redraw
             return exists('v:none') ? v:none : []
         else
+            " wait for retrieve textDocument/completion response and then call `s:display_completions` explicitly.
             while s:completion['status'] is# s:completion_status_pending && !complete_check()
                 sleep 10m
             endwhile
-
-            " TODO: Allow multiple servers
-            let l:server_name = l:info['server_names'][0]
-            let l:server_info = lsp#get_server_info(l:server_name)
-
-            let l:typed_pattern = has_key(l:server_info, 'config') && has_key(l:server_info['config'], 'typed_pattern') ? l:server_info['config']['typed_pattern'] : '\k*$'
-            let l:current_line = strpart(getline('.'), 0, col('.') - 1)
-
-            let s:start_pos = min(map(copy(s:completion['matches']), {_, item -> s:get_insertion_point(item, l:current_line, l:typed_pattern) }))
-
-            let l:filter = has_key(l:server_info, 'config') && has_key(l:server_info['config'], 'filter') ? l:server_info['config']['filter'] : { 'name': 'none' }
-            let l:last_typed_word = strpart(l:current_line, s:start_pos)
-
-            if l:filter['name'] ==? 'prefix'
-                let s:completion['matches'] = filter(s:completion['matches'], {_, item -> s:prefix_filter(item, l:last_typed_word)})
-            elseif l:filter['name'] ==? 'contains'
-                let s:completion['matches'] = filter(s:completion['matches'], {_, item -> s:contains_filter(item, l:last_typed_word)})
-            endif
-
-            let s:completion['status'] = ''
-
-            call timer_start(0, function('s:display_completions'))
+            call timer_start(0, { timer -> s:display_completions(timer, l:info) })
 
             return exists('v:none') ? v:none : []
         endif
@@ -139,13 +120,33 @@ function! s:contains_filter(item, last_typed_word) abort
     endif
 endfunction
 
-function! s:display_completions(timer) abort
+function! s:display_completions(timer, info) abort
+    " TODO: Allow multiple servers
+    let l:server_name = a:info['server_names'][0]
+    let l:server_info = lsp#get_server_info(l:server_name)
+
+    let l:typed_pattern = has_key(l:server_info, 'config') && has_key(l:server_info['config'], 'typed_pattern') ? l:server_info['config']['typed_pattern'] : '\k*$'
+    let l:current_line = strpart(getline('.'), 0, col('.') - 1)
+
+    let s:start_pos = min(map(copy(s:completion['matches']), {_, item -> s:get_insertion_point(item, l:current_line, l:typed_pattern) }))
+
+    let l:filter = has_key(l:server_info, 'config') && has_key(l:server_info['config'], 'filter') ? l:server_info['config']['filter'] : { 'name': 'none' }
+    let l:last_typed_word = strpart(l:current_line, s:start_pos)
+
+    if l:filter['name'] ==? 'prefix'
+        let s:completion['matches'] = filter(s:completion['matches'], {_, item -> s:prefix_filter(item, l:last_typed_word)})
+    elseif l:filter['name'] ==? 'contains'
+        let s:completion['matches'] = filter(s:completion['matches'], {_, item -> s:contains_filter(item, l:last_typed_word)})
+    endif
+
+    let s:completion['status'] = ''
+
     if mode() is# 'i'
         call complete(s:start_pos + 1, s:completion['matches'])
     endif
 endfunction
 
-function! s:handle_omnicompletion(server_name, complete_counter, data) abort
+function! s:handle_omnicompletion(server_name, complete_counter, info, data) abort
     if s:completion['counter'] != a:complete_counter
         " ignore old completion results
         return
@@ -158,12 +159,11 @@ function! s:handle_omnicompletion(server_name, complete_counter, data) abort
 
     let l:result = s:get_completion_result(a:server_name, a:data)
     let l:matches = l:result['matches']
+    let s:completion['matches'] = l:matches
+    let s:completion['status'] = s:completion_status_success
 
     if g:lsp_async_completion
-        call complete(col('.'), l:matches)
-    else
-        let s:completion['matches'] = l:matches
-        let s:completion['status'] = s:completion_status_success
+        call s:display_completions(0, a:info)
     endif
 endfunction
 
@@ -212,7 +212,7 @@ function! s:send_completion_request(info) abort
                 \   'textDocument': lsp#get_text_document_identifier(),
                 \   'position': lsp#get_position(),
                 \ },
-                \ 'on_notification': function('s:handle_omnicompletion', [l:server_name, s:completion['counter']]),
+                \ 'on_notification': function('s:handle_omnicompletion', [l:server_name, s:completion['counter'], a:info]),
                 \ })
 endfunction
 
