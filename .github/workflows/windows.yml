@@ -38,7 +38,8 @@ jobs:
       - name: Set Path
         shell: cmd
         run: |
-          set path "%USERPROFILE%\vim\vim82;%USERPROFILE%\themis\bin;%PATH"
+          SET PATH=%USERPROFILE%\vim\vim82;%PATH%;
+          SET PATH=%USERPROFILE%\themis\bin;%PATH%;
           vim --version
       - name: Run tests
         shell: cmd
