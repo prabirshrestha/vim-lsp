@@ -390,6 +390,59 @@ Describe lsp#utils#text_edit
             Assert Equals(l:buffer_text, ['x', 'y', 'z', ''])
         End
 
+        It multiple textEdit with inserting \r.
+            " Add some text to buffer
+            call s:set_text(['class ABC {', '  private:', '  ', 'int a;};', ])
+
+            " Format
+            call lsp#utils#text_edit#apply_text_edits(
+                    \ expand('%'),
+                    \ [
+                    \   {
+                    \     "range": {
+                    \       "end": {
+                    \         "character": 2,
+                    \         "line": 1
+                    \       },
+                    \       "start": {
+                    \         "character": 11,
+                    \         "line": 0
+                    \       }
+                    \     },
+                    \     "newText": "\n"
+                    \   },
+                    \   {
+                    \     "range": {
+                    \       "end": {
+                    \         "character": 0,
+                    \         "line": 3
+                    \       },
+                    \       "start": {
+                    \         "character": 10,
+                    \         "line": 1
+                    \       }
+                    \     },
+                    \     "newText": "\n  "
+                    \   },
+                    \   {
+                    \     "range": {
+                    \       "end": {
+                    \         "character": 6,
+                    \         "line": 3
+                    \       },
+                    \       "start": {
+                    \         "character": 6,
+                    \         "line": 3
+                    \       }
+                    \     },
+                    \     "newText": "\n"
+                    \   }
+                    \ ])
+
+            let l:buffer_text = s:get_text()
+            Assert Equals(l:buffer_text, ['class ABC {', 'private:', '  int a;', '};', ''])
+        End
+
         It preserves v:completed_item
             " Add some text to buffer
             call s:set_text(['foo', 'bar'])
@@ -473,6 +526,66 @@ Describe lsp#utils#text_edit
 
             " Make sure v:completed_item is not changed
             Assert Equals(v:completed_item, l:old_completed_item)
+        End
+
+        It replaces entire buffer correctly when end column is 1
+            call s:set_text(['foo', 'b'])
+
+            call lsp#utils#text_edit#apply_text_edits(
+                    \ expand('%'),
+                    \ [{
+                    \   'range': {
+                    \       'start': {
+                    \           'line': 0,
+                    \           'character': 0
+                    \       },
+                    \       'end': {
+                    \           'line': 1,
+                    \           'character': 1
+                    \       }
+                    \   },
+                    \   'newText': "x\ny\nz\n"
+                    \ }])
+
+            let l:buffer_text = s:get_text()
+            Assert Equals(l:buffer_text, ['x', 'y', 'z', 'b', ''])
+        End
+
+        It adds imports correctly
+            call s:set_text(['package main', '', 'import java.util.ArrayList;', '', 'public class Main {}'])
+
+            call lsp#utils#text_edit#apply_text_edits(
+                \ expand('%'),
+                \ [{
+                \     "range": {
+                \       "start": {
+                \         "character": 0,
+                \         "line": 2
+                \       },
+                \       "end": {
+                \         "character": 0,
+                \         "line": 3
+                \       }
+                \     },
+                \     "newText": ""
+                \   },
+                \   {
+                \     "range": {
+                \       "start": {
+                \         "character": 0,
+                \         "line": 2
+                \       },
+                \       "end": {
+                \         "character": 0,
+                \         "line": 2
+                \       }
+                \     },
+                \     "newText": "import java.util.ArrayList;\n"
+                \   }
+                \ ])
+
+            let l:buffer_text = s:get_text()
+            Assert Equals(l:buffer_text, ['package main', '', 'import java.util.ArrayList;', '', 'public class Main {}', ''])
         End
     End
 End

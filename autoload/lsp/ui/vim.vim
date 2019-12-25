@@ -224,22 +224,45 @@ function! lsp#ui#vim#document_format() abort
     return s:document_format(0)
 endfunction
 
-function! s:get_visual_selection_pos() abort
-    " https://groups.google.com/d/msg/vim_dev/oCUQzO3y8XE/vfIMJiHCHtEJ
-    " https://stackoverflow.com/a/6271254
-    " getpos("'>'") doesn't give the right column so need to do extra processing
-    let [line_start, column_start] = getpos("'<")[1:2]
-    let [line_end, column_end] = getpos("'>")[1:2]
-    let lines = getline(line_start, line_end)
-    if len(lines) == 0
-        return [0, 0, 0, 0]
+function! lsp#ui#vim#stop_server(...) abort
+  let l:name = get(a:000, 0, '')
+  for l:server in lsp#get_whitelisted_servers()
+    if !empty(l:name) && l:server != l:name
+        continue
     endif
-    let lines[-1] = lines[-1][: column_end - (&selection ==# 'inclusive' ? 1 : 2)]
-    let lines[0] = lines[0][column_start - 1:]
-    return [line_start, column_start, line_end, len(lines[-1])]
+    echo 'Stopping' l:server 'server ...'
+    call lsp#stop_server(server)
+  endfor
 endfunction
 
-function! s:document_format_range(sync) abort
+function! s:get_selection_pos(type) abort
+    if a:type ==? 'v'
+        let l:start_pos = getpos("'<")[1:2]
+        let l:end_pos = getpos("'>")[1:2]
+        " fix end_pos column (see :h getpos() and :h 'selection')
+        let l:end_line = getline(l:end_pos[0])
+        let l:offset = (&selection ==# 'inclusive' ? 1 : 2)
+        let l:end_pos[1] = len(l:end_line[:l:end_pos[1]-l:offset])
+        " edge case: single character selected with selection=exclusive
+        if l:start_pos[0] == l:end_pos[0] && l:start_pos[1] > l:end_pos[1]
+            let l:end_pos[1] = l:start_pos[1]
+        endif
+    elseif a:type ==? 'line'
+        let l:start_pos = [line("'["), 1]
+        let l:end_lnum = line("']")
+        let l:end_pos = [line("']"), len(getline(l:end_lnum))]
+    elseif a:type ==? 'char'
+        let l:start_pos = getpos("'[")[1:2]
+        let l:end_pos = getpos("']")[1:2]
+    else
+        let l:start_pos = [0, 0]
+        let l:end_pos = [0, 0]
+    endif
+
+    return l:start_pos + l:end_pos
+endfunction
+
+function! s:document_format_range(sync, type) abort
     let l:servers = filter(lsp#get_whitelisted_servers(), 'lsp#capabilities#has_document_range_formatting_provider(v:val)')
     let s:last_req_id = s:last_req_id + 1
 
@@ -251,7 +274,7 @@ function! s:document_format_range(sync) abort
     " TODO: ask user to select server for formatting
     let l:server = l:servers[0]
 
-    let [l:start_lnum, l:start_col, l:end_lnum, l:end_col] = s:get_visual_selection_pos()
+    let [l:start_lnum, l:start_col, l:end_lnum, l:end_col] = s:get_selection_pos(a:type)
     let l:start_char = lsp#utils#to_char('%', l:start_lnum, l:start_col)
     let l:end_char = lsp#utils#to_char('%', l:end_lnum, l:end_col)
     redraw | echo 'Formatting document range ...'
@@ -274,11 +297,15 @@ function! s:document_format_range(sync) abort
 endfunction
 
 function! lsp#ui#vim#document_range_format_sync() abort
-    return s:document_format_range(1)
+    return s:document_format_range(1, visualmode())
 endfunction
 
 function! lsp#ui#vim#document_range_format() abort
-    return s:document_format_range(0)
+    return s:document_format_range(0, visualmode())
+endfunction
+
+function! lsp#ui#vim#document_range_format_opfunc(type) abort
+    return s:document_format_range(1, a:type)
 endfunction
 
 function! lsp#ui#vim#workspace_symbol() abort
@@ -389,6 +416,7 @@ function! lsp#ui#vim#code_action() abort
             \   'range': l:range,
             \   'context': {
             \       'diagnostics' : l:diagnostics,
+            \       'only': ['', 'quickfix', 'refactor', 'refactor.extract', 'refactor.inline', 'refactor.rewrite', 'source', 'source.organizeImports'],
             \   },
             \ },
             \ 'on_notification': function('s:handle_code_action', [l:server, s:last_req_id, 'codeAction']),
@@ -408,7 +436,7 @@ function! s:handle_symbol(server, last_req_id, type, data) abort
         return
     endif
 
-    let l:list = lsp#ui#vim#utils#symbols_to_loc_list(a:data)
+    let l:list = lsp#ui#vim#utils#symbols_to_loc_list(a:server, a:data)
 
     call setqflist(l:list)
 
@@ -488,11 +516,19 @@ function! s:handle_location(ctx, server, type, data) abort "ctx = {counter, list
                 botright copen
             else
                 let l:lines = readfile(fnameescape(l:loc['filename']))
-                call lsp#ui#vim#output#preview(a:server, l:lines, {
-                            \   'statusline': ' LSP Peek ' . a:type,
-                            \   'cursor': { 'line': l:loc['lnum'], 'col': l:loc['col'], 'align': g:lsp_peek_alignment },
-                            \   'filetype': &filetype
-                            \ })
+                if has_key(l:loc,'viewstart') " showing a locationLink
+                    let l:view = l:lines[l:loc['viewstart'] : l:loc['viewend']]
+                    call lsp#ui#vim#output#preview(a:server, l:view, {
+                                \   'statusline': ' LSP Peek ' . a:type,
+                                \   'filetype': &filetype
+                                \ })
+                else " showing a location
+                    call lsp#ui#vim#output#preview(a:server, l:lines, {
+                                \   'statusline': ' LSP Peek ' . a:type,
+                                \   'cursor': { 'line': l:loc['lnum'], 'col': l:loc['col'], 'align': g:lsp_peek_alignment },
+                                \   'filetype': &filetype
+                                \ })
+                endif
             endif
         endif
     endif

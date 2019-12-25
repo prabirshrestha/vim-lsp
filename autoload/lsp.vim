@@ -28,6 +28,7 @@ augroup _lsp_silent_
     autocmd User lsp_complete_done silent
     autocmd User lsp_float_opened silent
     autocmd User lsp_float_closed silent
+    autocmd User lsp_buffer_enabled silent
 augroup END
 
 function! lsp#log_verbose(...) abort
@@ -117,6 +118,26 @@ function! lsp#get_server_status(...) abort
     endif
 endfunction
 
+let s:color_map = {
+\ 'exited': 'Error',
+\ 'starting': 'MoreMsg',
+\ 'failed': 'WarningMsg',
+\ 'running': 'Keyword',
+\ 'not running': 'NonText'
+\}
+
+" Print the current status of all servers (if called with no arguments)
+function! lsp#print_server_status() abort
+    for l:k in sort(keys(s:servers))
+        let l:status = s:server_status(l:k)
+        echon l:k . ': '
+        exec 'echohl' s:color_map[l:status]
+        echon l:status
+        echohl None
+        echo ''
+    endfor
+endfunction
+
 " @params {server_info} = {
 "   'name': 'go-langserver',        " requried, must be unique
 "   'whitelist': ['go'],            " optional, array of filetypes to whitelist, * for all filetypes
@@ -154,6 +175,7 @@ endfunction
 function! s:register_events() abort
     augroup lsp
         autocmd!
+        autocmd BufNewFile * call s:on_text_document_did_open()
         autocmd BufReadPost * call s:on_text_document_did_open()
         autocmd BufWritePost * call s:on_text_document_did_save()
         autocmd BufWinLeave * call s:on_text_document_did_close()
@@ -182,7 +204,7 @@ function! s:on_text_document_did_open() abort
     if getbufvar(l:buf, '&buftype') ==# 'terminal' | return | endif
     call lsp#log('s:on_text_document_did_open()', l:buf, &filetype, getcwd(), lsp#utils#get_buffer_uri(l:buf))
     for l:server_name in lsp#get_whitelisted_servers(l:buf)
-        call s:ensure_flush(l:buf, l:server_name, function('s:Noop'))
+        call s:ensure_flush(l:buf, l:server_name, function('s:fire_lsp_buffer_enabled', [l:server_name, l:buf]))
     endfor
 endfunction
 
@@ -194,7 +216,7 @@ function! s:on_text_document_did_save() abort
         " We delay the callback by one loop iteration as calls to ensure_flush
         " can introduce mmap'd file locks that linger on Windows and collide
         " with the second lang server call preventing saves (see #455)
-        call s:ensure_flush(l:buf, l:server_name, {result->timer_start(0, {result->s:call_did_save(l:buf, l:server_name, result, function('s:Noop'))})})
+        call s:ensure_flush(l:buf, l:server_name, {result->timer_start(0, {timer->s:call_did_save(l:buf, l:server_name, result, function('s:Noop'))})})
     endfor
 endfunction
 
@@ -280,6 +302,14 @@ function! s:ensure_flush_all(buf, server_names) abort
     for l:server_name in a:server_names
         call s:ensure_flush(a:buf, l:server_name, function('s:Noop'))
     endfor
+endfunction
+
+function! s:fire_lsp_buffer_enabled(server_name, buf, ...) abort
+    if a:buf == bufnr('%')
+        doautocmd User lsp_buffer_enabled
+    else
+        exec printf('autocmd BufEnter <buffer=%d> ++once doautocmd User lsp_buffer_enabled', a:buf)
+    endif
 endfunction
 
 function! s:Noop(...) abort
@@ -386,9 +416,25 @@ function! lsp#default_get_supported_capabilities(server_info) abort
     \   },
     \   'textDocument': {
     \       'completion': {
+    \           'completionItem': {
+    \              'documentationFormat': ['plaintext'],
+    \              'snippetSupport': v:false
+    \           },
     \           'completionItemKind': {
     \              'valueSet': lsp#omni#get_completion_item_kinds()
     \           }
+    \       },
+    \       'declaration': {
+    \           'linkSupport' : v:true
+    \       },
+    \       'definition': {
+    \           'linkSupport' : v:true
+    \       },
+    \       'typeDefinition': {
+    \           'linkSupport' : v:true
+    \       },
+    \       'implementation': {
+    \           'linkSupport' : v:true
     \       },
     \       'documentSymbol': {
     \           'symbolKind': {
@@ -670,6 +716,10 @@ function! s:handle_initialize(server_name, data) abort
     let l:response = a:data['response']
     let l:server = s:servers[a:server_name]
 
+    if has_key(l:server, 'exited')
+        unlet l:server['exited']
+    endif
+
     let l:init_callbacks = l:server['init_callbacks']
     unlet l:server['init_callbacks']
 
@@ -775,11 +825,12 @@ function! s:get_versioned_text_document_identifier(buf, buffer_info) abort
 endfunction
 
 function! lsp#send_request(server_name, request) abort
+    let l:bufnr = get(a:request, 'bufnr', bufnr('%'))
     let l:Cb = has_key(a:request, 'on_notification') ? a:request['on_notification'] : function('s:Noop')
     let l:request = copy(a:request)
     let l:request['on_notification'] = {id, data, event->l:Cb(data)}
     call lsp#utils#step#start([
-        \ {s->s:ensure_flush(bufnr('%'), a:server_name, s.callback)},
+        \ {s->s:ensure_flush(l:bufnr, a:server_name, s.callback)},
         \ {s->s:is_step_error(s) ? l:Cb(s.result[0]) : s:send_request(a:server_name, l:request) },
         \ ])
 endfunction
@@ -831,4 +882,29 @@ endfunction
 " Return first error line or v:null if there are no errors
 function! lsp#get_buffer_first_error_line() abort
     return lsp#ui#vim#diagnostics#get_buffer_first_error_line()
+endfunction
+
+function! s:merge_dict(dict_old, dict_new) abort
+    for l:key in keys(a:dict_new)
+        if has_key(a:dict_old, l:key) && type(a:dict_old[l:key]) == v:t_dict && type(a:dict_new[l:key]) == v:t_dict
+            call s:merge_dict(a:dict_old[l:key], a:dict_new[l:key])
+        else
+            let a:dict_old[l:key] = a:dict_new[l:key]
+        endif
+    endfor
+endfunction
+
+function! lsp#update_workspace_config(server_name, workspace_config) abort
+    let l:server = s:servers[a:server_name]
+    let l:server_info = l:server['server_info']
+    if has_key(l:server_info, 'workspace_config')
+        call s:merge_dict(l:server_info['workspace_config'], a:workspace_config)
+    else
+        let l:server_info['workspace_config'] = a:workspace_config
+    endif
+    call s:ensure_conf(bufnr('%'), a:server_name, function('s:Noop'))
+endfunction
+
+function! lsp#server_complete(lead, line, pos) abort
+    return filter(sort(keys(s:servers)), 'stridx(v:val, a:lead)==0 && has_key(s:servers[v:val], "init_result")')
 endfunction
