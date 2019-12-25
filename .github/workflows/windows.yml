@@ -13,13 +13,19 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-latest]
+        config:
+        - {
+            os: windows-latest,
+            vim_version: 8.2.0037
+            vim_arch: x64
+            vim_ver_path: vim82
+          }
     runs-on: ${{matrix.os}}
     steps:
       - uses: actions/checkout@v1
       - name: Download vim
         shell: PowerShell
-        run: Invoke-WebRequest -Uri https://github.com/vim/vim-win32-installer/releases/download/v8.2.0037/gvim_8.2.0037_x64.zip -OutFile vim.zip
+        run: Invoke-WebRequest -Uri https://github.com/vim/vim-win32-installer/releases/download/v{{matrix.vim_version}}/gvim_{{matrix.vim_version}}_{{matrix.vim_arch}}.zip -OutFile vim.zip
       - name: Extract vim
         shell: PowerShell
         run: Expand-Archive -Path vim.zip -DestinationPath $env:USERPROFILE
@@ -29,7 +35,7 @@ jobs:
       - name: Run tests
         shell: cmd
         run: |
-          SET PATH=%USERPROFILE%\vim\vim82;%PATH%;
+          SET PATH=%USERPROFILE%\vim\{{matrix.vim_ver_path}};%PATH%;
           SET PATH=%USERPROFILE%\themis\bin;%PATH%;
           vim --version
           themis --reporter spec
