@@ -39,5 +39,5 @@ jobs:
         shell: cmd
         run: vim --version
       - name: Run tests
-        shell: cmd
+        shell: powershell -Command "{0}"
         run: C:\Users\runneradmin\themis\bin\themis.bat
