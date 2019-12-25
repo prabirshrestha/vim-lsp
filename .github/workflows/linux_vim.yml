@@ -28,7 +28,10 @@ jobs:
     steps:
       - uses: actions/checkout@v1
       - name: Install vim
-        run: sudo apt-get install vim=${{matrix.vim_version}}
+        run: |
+         sudo add-apt-repository ppa:jonathonf/vim
+         sudo apt-get update
+         sudo apt-get install vim=${{matrix.vim_version}}
       - name: Download test runner
         shell: PowerShell
         run: git clone --depth 1 --branch v1.5.4 --single-branch https://github.com/thinca/vim-themis $env:USERPROFILE\themis
