@@ -18,7 +18,7 @@ jobs:
         include:
           - name: neovim-v04-x64
             os: windows-latest
-            neovim_version: 0.4.3
+            neovim_version: v0.4.3
             neovim_arch: win64
           - name: neovim-nightly-x64
             os: windows-latest
@@ -29,7 +29,7 @@ jobs:
       - uses: actions/checkout@v1
       - name: Download neovim
         shell: PowerShell
-        run: Invoke-WebRequest -Uri https://github.com/neovim/neovim/releases/download/v${{matrix.neovim_version}}/nvim-${{matrix.neovim_arch}}.zip -OutFile neovim.zip
+        run: Invoke-WebRequest -Uri https://github.com/neovim/neovim/releases/download/${{matrix.neovim_version}}/nvim-${{matrix.neovim_arch}}.zip -OutFile neovim.zip
       - name: Extract neovim
         shell: PowerShell
         run: Expand-Archive -Path neovim.zip -DestinationPath $env:USERPROFILE
