@@ -13,14 +13,14 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [mac-latest]
+        os: [macos-latest]
         name: [neovim-v04-x64,neovim-nightly-x64]
         include:
           - name: neovim-v04-x64
-            os: mac-latest
+            os: macos-latest
             neovim_version: v0.4.3
           - name: neovim-nightly-x64
-            os: mac-latest
+            os: macos-latest
             neovim_version: nightly
     runs-on: ${{matrix.os}}
     steps:
