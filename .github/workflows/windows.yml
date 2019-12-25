@@ -17,6 +17,8 @@ jobs:
     runs-on: ${{matrix.os}}
     steps:
       - uses: actions/checkout@v1
+      - name: Install dos2unix and unix2dos
+        run: choco install dos2unix
       - name: Download vim
         shell: PowerShell
         run: Invoke-WebRequest -Uri https://github.com/vim/vim-win32-installer/releases/download/v8.2.0035/gvim_8.2.0035_x64.zip -OutFile vim.zip
@@ -28,7 +30,7 @@ jobs:
         run: |
           pushd %USERPROFILE%
           git clone --depth 1 --branch v1.5.4 --config core.autocrlf=false --single-branch https://github.com/thinca/vim-themis themis
-          cd themis
+          cd themis\bin
           dir
           pwd
           popd
