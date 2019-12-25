@@ -24,10 +24,6 @@ jobs:
             os: ubuntu-latest
             vim_version: 8.1.2414
             glibc_version: 2.15
-          - name: vim-v80-x64
-            os: ubuntu-latest
-            vim_version: 8.0.1567
-            glibc_version: 2.15
     runs-on: ${{matrix.os}}
     steps:
       - uses: actions/checkout@v1
