@@ -33,6 +33,6 @@ jobs:
         shell: cmd
         run: vim --version
       - name: Run tests
-        shell: PowerShell
-        run: start-process "cmd.exe" "/c %USERPROFILE%\themis\bin\themis.bat --reporter spec"
+        shell: cmd
+        run: cmd.exe "/c %USERPROFILE%\themis\bin\themis.bat --reporter spec"
 
