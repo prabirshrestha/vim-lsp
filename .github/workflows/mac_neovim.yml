@@ -39,6 +39,6 @@ jobs:
         run: |
           export PATH=~/nvim-osx64/bin:$PATH
           export PATH=~/themis/bin:$PATH
-          SET THEMIS_VIM=nvim
+          export THEMIS_VIM=nvim
           nvim --version
           themis --reporter spec
