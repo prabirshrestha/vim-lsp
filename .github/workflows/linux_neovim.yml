@@ -1,0 +1,44 @@
+name: linux_neovim
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        name: [neovim-v04-x64,neovim-nightly-x64]
+        include:
+          - name: neovim-v04-x64
+            os: ubuntu-latest
+            neovim_version: v0.4.3
+          - name: neovim-nightly-x64
+            os: ubuntu-latest
+            neovim_version: nightly
+    runs-on: ${{matrix.os}}
+    steps:
+      - uses: actions/checkout@v1
+      - name: Download neovim
+        shell: bash
+        run: |
+          mkdir -p ~/nvim/bin
+          curl -L https://github.com/neovim/neovim/releases/download/${{matrix.neovim_version}}/nvim.appimage -o ~/nvim/bin/nvim
+          chmod u+x ~/nvim/bin/nvim
+      - name: Download test runner
+        shell: bash
+        run: git clone --depth 1 --branch v1.5.4 --single-branch https://github.com/thinca/vim-themis ~/themis
+      - name: Run tests
+        shell: bash
+        run: |
+          export PATH=~/nvim/bin:$PATH
+          export PATH=~/themis/bin:$PATH
+          export THEMIS_VIM=nvim
+          nvim --version
+          themis --reporter spec
