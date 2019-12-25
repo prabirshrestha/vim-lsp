@@ -20,6 +20,11 @@ jobs:
             vim_version: 8.2.0037
             vim_arch: x64
             vim_ver_path: vim82
+          - name: winlatest81x64
+            os: windows-latest
+            vim_version: 8.1.2424
+            vim_arch: x64
+            vim_ver_path: vim81
           - name: winlatest80x64
             os: windows-latest
             vim_version: 8.0.1567
