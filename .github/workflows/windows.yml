@@ -35,14 +35,10 @@ jobs:
           dir
           pwd
           popd
-      - name: Show versions
-        shell: cmd
-        run: |
-          SET PATH=%USERPROFILE%\vim\vim82;%PATH%;
-          vim --version
       - name: Run tests
         shell: cmd
         run: |
           set path "%USERPROFILE%\vim\vim82;%PATH"
           set path "%USERPROFILE%\themis\bin;%PATH"
+          vim --version
           C:\Users\runneradmin\themis\bin\themis.bat
