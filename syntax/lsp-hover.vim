@@ -38,6 +38,7 @@ function! s:cleanup_markdown() abort
     syntax match markdownError "\w\@<=\w\@="
 
     " Conceal escaped characters
+    " Workaround for: https://github.com/palantir/python-language-server/issues/386
     if has('conceal')
         for l:escaped_char in ['`', '*', '_', '{', '}', '(', ')', '<', '>', '#', '+', '.', '!', '-']
             execute printf('syntax match markdownEscape "\\[][%s]" conceal cchar=%s', l:escaped_char, l:escaped_char)
