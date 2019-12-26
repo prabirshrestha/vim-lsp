@@ -262,10 +262,12 @@ function! lsp#utils#base64_decode(data) abort
         " Split the number representing the 3 octets into the individual
         " octets
         let l:octets = []
-        for l:i in range(3)
+        let l:i = 0
+        while l:i < 3
             call add(l:octets, l:group_dec % 256)
             let l:group_dec = l:group_dec / 256
-        endfor
+            let l:i += 1
+        endwhile
 
         call extend(l:ret, reverse(l:octets))
     endfor
