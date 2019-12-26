@@ -213,10 +213,14 @@ function! s:on_text_document_did_save() abort
     if getbufvar(l:buf, '&buftype') ==# 'terminal' | return | endif
     call lsp#log('s:on_text_document_did_save()', l:buf)
     for l:server_name in lsp#get_whitelisted_servers(l:buf)
-        " We delay the callback by one loop iteration as calls to ensure_flush
-        " can introduce mmap'd file locks that linger on Windows and collide
-        " with the second lang server call preventing saves (see #455)
-        call s:ensure_flush(l:buf, l:server_name, {result->timer_start(0, {timer->s:call_did_save(l:buf, l:server_name, result, function('s:Noop'))})})
+        if g:lsp_text_document_did_save_delay >= 0
+            " We delay the callback by one loop iteration as calls to ensure_flush
+            " can introduce mmap'd file locks that linger on Windows and collide
+            " with the second lang server call preventing saves (see #455)
+            call s:ensure_flush(l:buf, l:server_name, {result->timer_start(g:lsp_text_document_did_save_delay, {timer->s:call_did_save(l:buf, l:server_name, result, function('s:Noop'))})})
+        else
+            call s:ensure_flush(l:buf, l:server_name, {result->s:call_did_save(l:buf, l:server_name, result, function('s:Noop'))})
+        endif
     endfor
 endfunction
 

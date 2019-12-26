@@ -39,6 +39,7 @@ CONTENTS                                                  *vim-lsp-contents*
       g:lsp_ignorecase                      |g:lsp_ignorecase|
       g:lsp_log_file                        |g:lsp_log_file|
       g:lsp_semantic_enabled                |g:lsp_semantic_enabled|
+      g:lsp_text_document_did_save_delay    |g:lsp_text_document_did_save_delay|
     Functions                             |vim-lsp-functions|
       lsp#enable                            |lsp#enable()|
       lsp#disable                           |lsp#disable()|
@@ -576,6 +577,14 @@ g:lsp_semantic_enabled                             *g:lsp_semantic_enabled*
 
     Determines whether or not semantic highlighting is enabled globally. Set
     to `0` to disable sending requests.
+
+g:lsp_text_document_did_save_delay   *g:lsp_text_document_did_save_delay*
+    Type: |Number|
+    Default: `-1`
+
+    The waiting time in milliseconds before sending textDocument/didSave to
+    LSP servers, -1 by default means no delay. If >= 0, will delay using
+    |timer_start()| with {time} is the number.
 
 
 ==============================================================================
