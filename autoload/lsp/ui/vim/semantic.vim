@@ -31,6 +31,14 @@ function! lsp#ui#vim#semantic#handle_semantic(server, data) abort
     let l:path = lsp#utils#uri_to_path(l:uri)
     let l:bufnr = bufnr(l:path)
 
+    if l:bufnr < 0
+        return
+    endif
+
+    " Skip if the buffer doesn't exist. This might happen when a buffer is
+    " opened and quickly deleted.
+    if !bufloaded(l:bufnr) | return | endif
+
     call s:init_highlight(a:server, l:bufnr)
 
     for l:info in a:data['response']['params']['lines']
@@ -60,10 +68,6 @@ function! s:init_highlight(server, buf) abort
 endfunction
 
 function! s:add_highlight(server, buf, line, highlights) abort
-    " Skip if the buffer doesn't exist. This might happen when a buffer is
-    " opened and quickly deleted.
-    if !bufexists(a:buf) | return | endif
-
     let l:scopes = lsp#ui#vim#semantic#get_scopes(a:server)
 
     if s:use_vim_textprops
