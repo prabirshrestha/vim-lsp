@@ -28,6 +28,7 @@ function! s:on_lsp_buffer_enabled() abort
     setlocal signcolumn=yes
     nmap <buffer> gd <plug>(lsp-definition)
     nmap <buffer> <f2> <plug>(lsp-rename)
+    " refer to doc to add more commands
 endfunction
 
 augroup lsp_install
