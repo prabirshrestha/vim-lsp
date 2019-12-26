@@ -105,7 +105,7 @@ let s:diagnostic_severity = {
     \ 4: 'Hint',
     \ }
 
-function s:symbols_to_loc_list_children(server, path, list, symbols, depth) abort
+function! s:symbols_to_loc_list_children(server, path, list, symbols, depth) abort
     for l:symbol in a:symbols
         let l:line = l:symbol['range']['start']['line'] + 1
         let l:char = l:symbol['range']['start']['character']
