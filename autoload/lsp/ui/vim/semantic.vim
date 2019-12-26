@@ -35,8 +35,6 @@ function! lsp#ui#vim#semantic#handle_semantic(server, data) abort
     let l:path = lsp#utils#uri_to_path(l:uri)
     let l:bufnr = bufnr(l:path)
 
-    if l:bufnr < 0 | return | endif
-
     " Skip if the buffer doesn't exist. This might happen when a buffer is
     " opened and quickly deleted.
     if !bufloaded(l:bufnr) | return | endif
