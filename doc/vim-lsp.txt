@@ -38,6 +38,7 @@ CONTENTS                                                  *vim-lsp-contents*
       g:lsp_hover_conceal                   |g:lsp_hover_conceal|
       g:lsp_ignorecase                      |g:lsp_ignorecase|
       g:lsp_log_file                        |g:lsp_log_file|
+      g:lsp_semantic_enabled                |g:lsp_semantic_enabled|
       g:lsp_text_document_did_save_delay    |g:lsp_text_document_did_save_delay|
     Functions                             |vim-lsp-functions|
       lsp#enable                            |lsp#enable()|
@@ -75,6 +76,7 @@ CONTENTS                                                  *vim-lsp-contents*
       LspImplementation                     |:LspImplementation|
       LspReferences                         |:LspReferences|
       LspRename                             |:LspRename|
+      LspSemanticScopes                     |:LspSemanticScopes|
       LspTypeDefinition                     |:LspTypeDefinition|
       LspWorkspaceSymbol                    |:LspWorkspaceSymbol|
       LspStatus                             |:LspStatus|
@@ -98,6 +100,7 @@ CONTENTS                                                  *vim-lsp-contents*
       asyncomplete.vim                      |vim-lsp-asyncomplete|
     Snippets                              |vim-lsp-snippets|
     Folding                               |vim-lsp-folding|
+    Semantic highlighting                 |vim-lsp-semantic|
     License                               |vim-lsp-license|
 
 
@@ -568,6 +571,13 @@ g:lsp_log_file                                           *g:lsp_log_file*
 	let g:lsp_log_file = ''
 	let g:lsp_log_file = expand('~/vim-lsp.log')
 
+g:lsp_semantic_enabled                             *g:lsp_semantic_enabled*
+    Type: |Boolean|
+    Default: `1`
+
+    Determines whether or not semantic highlighting is enabled globally. Set
+    to `0` to disable sending requests.
+
 g:lsp_text_document_did_save_delay   *g:lsp_text_document_did_save_delay*
     Type: |Number|
     Default: `-1`
@@ -1027,6 +1037,14 @@ LspRename                                                       *:LspRename*
 
 Rename the symbol.
 
+LspSemanticScopes                                       *:LspSemanticScopes*
+
+Prints the scope tree for the current buffer. Each scope is highlighted with
+the highlight group vim-lsp will use for this scope. An optional argument can
+be supplied to limit the maximum depth of the tree that will be printed.
+
+Also see |vim-lsp-semantic|.
+
 LspTypeDefinition                                       *:LspTypeDefinition*
 
 Go to the type definition.
@@ -1228,7 +1246,86 @@ To display open and closed folds at the side of the window, see
 If you want to remove the dashes at the end of the folds, you can change
 the fold item of 'fillchars'.
 
-==============================================================================
+===============================================================================
+Semantic highlighting                                      *vim-lsp-semantic*
+
+To use semantic highlighting, you need Neovim highlights, or Vim with the
+|textprop| feature enabled at compile time.
+
+You can check if semantic highlighting is enabled by running: >
+    echo lsp#ui#vim#semantic#is_enabled()
+<
+Before you can use the semantic highlighting feature, you will also need to
+link language server semantic scopes to Vim highlight groups. For example, you
+have to specify that function calls need to be highlighted using the
+|Identifier| Vim group.
+
+To find out the available scopes for your language server, you can open a
+buffer of the correct filetype and run :|LspSemanticScopes|. This will display
+a tree representation of the available scopes, along with their highlight
+group, if any.
+
+For example, consider this excerpt from the Eclipse Java language server: >
+    entity.name.function.java
+        meta.function-call.java
+            meta.method.body.java
+                meta.method.java
+                    meta.class.body.java
+                        meta.class.java
+                            source.java
+        meta.method.identifier.java
+            meta.function-call.java
+                meta.method.java
+                    meta.class.body.java
+                        meta.class.java
+                            source.java
+            meta.method.java
+                meta.class.body.java
+                    meta.class.java
+                        source.java
+    entity.name.type.class.java
+        meta.class.identifier.java
+            meta.class.java
+                source.java
+    ...
+<
+`entity.name.type.class.java` is a top-level scope.
+`entity.name.function.java` is also a top-level scope, which itself contains
+two subscopes `meta.function-call.java` and `meta.method.identifier.java`.
+
+The mapping from scopes to highlight groups is done in the server
+configuration options.
+
+Suppose we want to highlight classes using |Identifier| and functions using
+|Label|. The language server registration for Eclipse LS will look like: >
+    autocmd User lsp_setup call lsp#register_server({
+        \ 'name': 'eclipse.jdt.ls',
+        \ 'cmd': {server_info->[...]},
+        \ 'whitelist': ['java'],
+        \ 'semantic_highlight': {
+        \       'entity.name.type.class.java': 'Identifier',
+        \       'entity.name.function.java': 'Label'
+        \ }
+        \ })
+<
+You can also be more specific by replacing the highlight group string with
+another |Dict|, containing subkeys for the subscopes. For example, suppose we
+want function calls to still use the |Label| group, but use |Identifier| for
+`meta.method.identifier.java`. This can be accomplished as follows: >
+    autocmd User lsp_setup call lsp#register_server({
+        \ 'name': 'eclipse.jdt.ls',
+        \ 'cmd': {server_info->[...]},
+        \ 'whitelist': ['java'],
+        \ 'semantic_highlight': {
+        \       'entity.name.type.class.java': 'Identifier',
+        \       'entity.name.function.java': {
+        \           'meta.function-call.java': 'Label',
+        \           'meta.method.identifier.java': 'Identifier'
+        \       }
+        \ }
+        \ })
+<
+===============================================================================
 License                                                    *vim-lsp-license*
 
 The MIT License (MIT)
