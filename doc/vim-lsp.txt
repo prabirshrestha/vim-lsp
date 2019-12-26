@@ -1036,7 +1036,7 @@ be supplied to limit the maximum depth of the tree that will be printed.
 
 Also see |vim-lsp-semantic|.
 
-LspTypeDefinition				  	 *LspTypeDefinition*
+LspTypeDefinition                                       *:LspTypeDefinition*
 
 Go to the type definition.
 
