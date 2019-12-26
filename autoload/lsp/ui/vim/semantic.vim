@@ -5,6 +5,10 @@ if s:use_nvim_highlight
     let s:namespace_id = nvim_create_namespace('vim-lsp-semantic')
 endif
 
+if !hlexists('LspUnknownScope')
+    highlight LspUnknownScope gui=NONE cterm=NONE guifg=NONE ctermfg=NONE guibg=NONE ctermbg=NONE
+endif
+
 " Global functions {{{1
 function! lsp#ui#vim#semantic#is_enabled() abort
     return g:lsp_semantic_enabled && (s:use_vim_textprops || s:use_nvim_highlight) ? v:true : v:false
@@ -31,9 +35,7 @@ function! lsp#ui#vim#semantic#handle_semantic(server, data) abort
     let l:path = lsp#utils#uri_to_path(l:uri)
     let l:bufnr = bufnr(l:path)
 
-    if l:bufnr < 0
-        return
-    endif
+    if l:bufnr < 0 | return | endif
 
     " Skip if the buffer doesn't exist. This might happen when a buffer is
     " opened and quickly deleted.
@@ -91,7 +93,7 @@ function! s:add_highlight(server, buf, line, highlights) abort
 endfunction
 
 function! s:get_hl_name(server, scope) abort
-    let l:hl = 'Ignore'
+    let l:hl = 'LspUnknownScope'
 
     try
         let l:info = lsp#get_server_info(a:server)
@@ -105,7 +107,7 @@ function! s:get_hl_name(server, scope) abort
     catch
     endtry
 
-    return type(l:hl) == type('') ? l:hl : 'Ignore'
+    return type(l:hl) == type('') ? l:hl : 'LspUnknownScope'
 endfunction
 
 function! s:get_textprop_name(server, scope_index) abort
