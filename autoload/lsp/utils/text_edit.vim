@@ -46,6 +46,7 @@ function! lsp#utils#text_edit#apply_text_edits(uri, text_edits, options) abort
     let l:text_edits = sort(deepcopy(a:text_edits), '<SID>sort_text_edit_desc')
     let l:i = 0
     let l:loc_list = []
+    let l:show_edits = get(a:options, 'show_edits', 0)
 
     while l:i < len(l:text_edits)
         let l:merged_text_edit = s:merge_same_range(l:i, l:text_edits)
@@ -72,7 +73,7 @@ function! lsp#utils#text_edit#apply_text_edits(uri, text_edits, options) abort
             set virtualedit=onemore
 
             silent execute l:cmd
-            if a:options['show_edits']
+            if l:show_edits
                 call add(l:loc_list, s:build_loclist_item(a:uri, l:merged_text_edit['merged']))
             endif
         finally
@@ -85,7 +86,7 @@ function! lsp#utils#text_edit#apply_text_edits(uri, text_edits, options) abort
         let l:i = l:merged_text_edit['end_index']
     endwhile
 
-    if a:options['show_edits']
+    if l:show_edits
         call setloclist(0, reverse(l:loc_list), 'a')
     endif
 endfunction
