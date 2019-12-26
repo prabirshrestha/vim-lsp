@@ -92,6 +92,10 @@ endfunction
 function! s:get_hl_name(server, scope) abort
     let l:hl = 'LspUnknownScope'
 
+    " Iterate over scopes in the order most general to most specific,
+    " returning the last scope encountered. This is accomplished by a try
+    " catch which ensures we always return the last scope even if an error is
+    " encountered midway.
     try
         let l:info = lsp#get_server_info(a:server)
         let l:hl = l:info['semantic_highlight']
