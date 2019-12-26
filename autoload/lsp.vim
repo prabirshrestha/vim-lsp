@@ -443,7 +443,8 @@ function! lsp#default_get_supported_capabilities(server_info) abort
     \       'documentSymbol': {
     \           'symbolKind': {
     \              'valueSet': lsp#ui#vim#utils#get_symbol_kinds()
-    \           }
+    \           },
+    \           'hierarchicalDocumentSymbolSupport': v:false
     \       },
     \       'foldingRange': {
     \           'lineFoldingOnly': v:true
