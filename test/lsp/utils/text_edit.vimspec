@@ -645,10 +645,8 @@ Describe lsp#utils#text_edit
                 \ {'show_edits': 1})
 
             let l:loclist = getloclist(0)
-            Assert Equals(l:loclist, [
-                \ {'lnum': 3, 'bufnr': 21, 'col': 1, 'pattern': '', 'valid': 1, 'vcol': 0, 'nr': 0, 'type': '', 'module': '', 'text': 'import java.util.ArrayList;'},
-                \ {'lnum': 4, 'bufnr': 21, 'col': 1, 'pattern': '', 'valid': 1, 'vcol': 0, 'nr': 0, 'type': '', 'module': '', 'text': 'import java.util.LinkedList;'}
-                \ ])
+            Assert Equals(len(l:loclist), 2)
+            Assert Equals(map(l:loclist, {_, locitem -> locitem['text']}), ['import java.util.ArrayList;', 'import java.util.LinkedList;'])
         End
     End
 End
