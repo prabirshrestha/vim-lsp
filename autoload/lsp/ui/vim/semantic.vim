@@ -44,7 +44,7 @@ function! lsp#ui#vim#semantic#handle_semantic(server, data) abort
     for l:info in a:data['response']['params']['lines']
         let l:linenr = l:info['line']
         let l:tokens = has_key(l:info, 'tokens') ? l:info['tokens'] : ''
-        call s:add_highlight(a:server, l:bufnr, l:linenr, s:tokens_to_hl_info(l:tokens))
+        call s:add_highlight(a:server, l:bufnr, l:linenr, l:tokens)
     endfor
 endfunction
 
@@ -67,8 +67,9 @@ function! s:init_highlight(server, buf) abort
     call setbufvar(a:buf, 'lsp_did_semantic_setup', 1)
 endfunction
 
-function! s:add_highlight(server, buf, line, highlights) abort
+function! s:add_highlight(server, buf, line, tokens) abort
     let l:scopes = lsp#ui#vim#semantic#get_scopes(a:server)
+    let l:highlights = s:tokens_to_hl_info(a:tokens)
 
     if s:use_vim_textprops
         " Clear text properties from the previous run
@@ -76,14 +77,14 @@ function! s:add_highlight(server, buf, line, highlights) abort
             call prop_remove({'bufnr': a:buf, 'type': s:get_textprop_name(a:server, l:scope_idx), 'all': v:true}, a:line + 1)
         endfor
 
-        for l:highlight in a:highlights
+        for l:highlight in l:highlights
             call prop_add(a:line + 1, l:highlight['char'] + 1, { 'length': l:highlight['length'], 'bufnr': a:buf, 'type': s:get_textprop_name(a:server, l:highlight['scope'])})
         endfor
     elseif s:use_nvim_highlight
         " Clear text properties from the previous run
         call nvim_buf_clear_namespace(a:buf, s:namespace_id, a:line, a:line + 1)
 
-        for l:highlight in a:highlights
+        for l:highlight in l:highlights
             call nvim_buf_add_highlight(a:buf, s:namespace_id, s:get_hl_name(a:server, l:scopes[l:highlight['scope']]), a:line, l:highlight['char'], l:highlight['char'] + l:highlight['length'])
         endfor
     endif
