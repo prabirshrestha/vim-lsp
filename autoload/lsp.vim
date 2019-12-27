@@ -242,6 +242,11 @@ function! s:call_did_save(buf, server_name, result, cb) abort
         return
     endif
 
+    if index(s:didchange_queue, a:buf) != -1
+        call timer_stop(s:didchange_timer)
+        call s:send_didchange_queue()
+    endif
+
     let l:server = s:servers[a:server_name]
     let l:path = lsp#utils#get_buffer_uri(a:buf)
 
