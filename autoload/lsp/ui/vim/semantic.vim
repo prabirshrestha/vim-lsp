@@ -74,7 +74,7 @@ function! s:hash(str) abort
     let l:hash = 1
 
     for l:char in split(a:str, '\zs')
-        let l:hash = l:hash * 31 + char2nr(l:char)
+        let l:hash = (l:hash * 31 + char2nr(l:char)) % 2147483647
     endfor
 
     return l:hash
