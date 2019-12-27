@@ -123,8 +123,8 @@ function! lsp#utils#find_nearest_parent_file_directory(path, filename) abort
                 endif
             endif
         endfor
-        return empty(l:matched_paths) ? 
-                    \ '' : 
+        return empty(l:matched_paths) ?
+                    \ '' :
                     \ keys(l:matched_paths)[index(values(l:matched_paths), max(values(l:matched_paths)))]
 
     elseif type(a:filename) == 1
@@ -218,4 +218,68 @@ function! lsp#utils#to_char(expr, lnum, col) abort
     endif
     let l:linestr = l:lines[-1]
     return strchars(strpart(l:linestr, 0, a:col - 1))
+endfunction
+
+function! s:get_base64_alphabet() abort
+    let l:alphabet = []
+
+    " Uppercase letters
+    for l:c in range(char2nr('A'), char2nr('Z'))
+        call add(l:alphabet, nr2char(l:c))
+    endfor
+
+    " Lowercase letters
+    for l:c in range(char2nr('a'), char2nr('z'))
+        call add(l:alphabet, nr2char(l:c))
+    endfor
+
+    " Numbers
+    for l:c in range(char2nr('0'), char2nr('9'))
+        call add(l:alphabet, nr2char(l:c))
+    endfor
+
+    " Symbols
+    call add(l:alphabet, '+')
+    call add(l:alphabet, '/')
+
+    return l:alphabet
+endfunction
+
+function! lsp#utils#base64_decode(data) abort
+    let l:alphabet = s:get_base64_alphabet()
+    let l:ret = []
+
+    " Process base64 string in chunks of 4 chars
+    for l:group in split(a:data, '.\{4}\zs')
+        let l:group_dec = 0
+
+        " Convert 4 chars to 3 octets
+        for l:char in split(l:group, '\zs')
+            let l:group_dec = l:group_dec * 64
+            let l:group_dec += max([index(l:alphabet, l:char), 0])
+        endfor
+
+        " Split the number representing the 3 octets into the individual
+        " octets
+        let l:octets = []
+        let l:i = 0
+        while l:i < 3
+            call add(l:octets, l:group_dec % 256)
+            let l:group_dec = l:group_dec / 256
+            let l:i += 1
+        endwhile
+
+        call extend(l:ret, reverse(l:octets))
+    endfor
+
+    " Handle padding
+    if len(a:data) >= 2
+        if strpart(a:data, len(a:data) - 2) ==# '=='
+            call remove(l:ret, -2, -1)
+        elseif strpart(a:data, len(a:data) - 1) ==# '='
+            call remove(l:ret, -1, -1)
+        endif
+    endif
+
+    return l:ret
 endfunction

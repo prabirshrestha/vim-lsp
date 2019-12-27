@@ -87,6 +87,7 @@ function! s:get_float_positioning(height, width) abort
       endif
     endif
     let l:col = col('.')
+    let l:style = 'minimal'
     " Positioning is not window but screen relative
     let l:opts = {
           \ 'relative': 'win',
@@ -94,6 +95,7 @@ function! s:get_float_positioning(height, width) abort
           \ 'col': l:col,
           \ 'width': l:width,
           \ 'height': l:height,
+          \ 'style': l:style,
           \ }
     return l:opts
 endfunction
@@ -290,6 +292,7 @@ function! lsp#ui#vim#output#preview(server, data, options) abort
        \ && type(g:lsp_preview_doubletap) == 3
        \ && len(g:lsp_preview_doubletap) >= 1
        \ && type(g:lsp_preview_doubletap[0]) == 2
+       \ && mode()[0] !=# 'i'
         echo ''
         return call(g:lsp_preview_doubletap[0], [])
     endif
@@ -298,12 +301,18 @@ function! lsp#ui#vim#output#preview(server, data, options) abort
 
     let l:current_window_id = win_getid()
 
-    let s:winid = s:open_preview(a:data)
-
     let s:preview_data = a:data
     let l:lines = []
     let l:syntax_lines = []
     let l:ft = s:append(a:data, l:lines, l:syntax_lines)
+
+    " If the server response is empty content, we don't display anything.
+    if empty(l:lines) && empty(l:syntax_lines)
+      echo ''
+      return
+    endif
+
+    let s:winid = s:open_preview(a:data)
 
     if has_key(a:options, 'filetype')
         let l:ft = a:options['filetype']
@@ -371,6 +380,10 @@ function! lsp#ui#vim#output#preview(server, data, options) abort
     return ''
 endfunction
 
+function! s:escape_string_for_display(str) abort
+    return substitute(substitute(a:str, '\r\n', '\n', 'g'), '\r', '\n', 'g')
+endfunction
+
 function! s:append(data, lines, syntax_lines) abort
     if type(a:data) == type([])
         for l:entry in a:data
@@ -379,23 +392,29 @@ function! s:append(data, lines, syntax_lines) abort
 
         return 'markdown'
     elseif type(a:data) == type('')
-        call extend(a:lines, split(a:data, "\n", v:true))
+        if !empty(a:data)
+            call extend(a:lines, split(s:escape_string_for_display(a:data), "\n", v:true))
+        endif
 
         return 'markdown'
     elseif type(a:data) == type({}) && has_key(a:data, 'language')
-        let l:new_lines = split(a:data.value, '\n')
+        if !empty(a:data.value)
+            let l:new_lines = split(s:escape_string_for_display(a:data.value), '\n')
 
-        let l:i = 1
-        while l:i <= len(l:new_lines)
-            call add(a:syntax_lines, { 'line': len(a:lines) + l:i, 'language': a:data.language })
-            let l:i += 1
-        endwhile
+            let l:i = 1
+            while l:i <= len(l:new_lines)
+                call add(a:syntax_lines, { 'line': len(a:lines) + l:i, 'language': a:data.language })
+                let l:i += 1
+            endwhile
 
-        call extend(a:lines, l:new_lines)
+            call extend(a:lines, l:new_lines)
+        endif
 
         return 'markdown'
     elseif type(a:data) == type({}) && has_key(a:data, 'kind')
-        call extend(a:lines, split(a:data.value, '\n', v:true))
+        if !empty(a:data.value)
+              call extend(a:lines, split(s:escape_string_for_display(a:data.value), '\n', v:true))
+        endif
 
         return a:data.kind ==? 'plaintext' ? 'text' : a:data.kind
     endif

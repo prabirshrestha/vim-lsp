@@ -137,4 +137,26 @@ Describe lsp#utils
             Assert lsp#utils#to_char('./test/testfiles/multibyte.txt', 3, 1) == 0
         End
     End
+
+    Describe lsp#utils#base64_decode
+        It should decode basic string correctly
+            Assert Equals(lsp#utils#base64_decode('TWFu'), [77, 97, 110])
+        End
+
+        It should decode multiple groups correctly
+            Assert Equals(lsp#utils#base64_decode('TWFuIHRlc3R4'), [77, 97, 110, 32, 116, 101, 115, 116, 120])
+        End
+
+        It should handle padding (one octet)
+            Assert Equals(lsp#utils#base64_decode('TQ=='), [77])
+        End
+
+        It should handle padding (two octets)
+            Assert Equals(lsp#utils#base64_decode('TWE='), [77, 97])
+        End
+
+        It should handle more complex string
+            Assert Equals(lsp#utils#base64_decode('AAAAEgAJABYAAAAIAAQAFw=='), [0, 0, 0, 18, 0, 9, 0, 22, 0, 0, 0, 8, 0, 4, 0, 23])
+        End
+    End
 End
