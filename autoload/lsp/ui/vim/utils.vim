@@ -105,6 +105,24 @@ let s:diagnostic_severity = {
     \ 4: 'Hint',
     \ }
 
+function! s:symbols_to_loc_list_children(server, path, list, symbols, depth) abort
+    for l:symbol in a:symbols
+        let l:line = l:symbol['range']['start']['line'] + 1
+        let l:char = l:symbol['range']['start']['character']
+        let l:col = lsp#utils#to_col(a:path, l:line, l:char)
+
+        call add(a:list, {
+            \ 'filename': a:path,
+            \ 'lnum': l:line,
+            \ 'col': l:col,
+            \ 'text': s:get_symbol_text_from_kind(a:server, l:symbol['kind']) . ' : ' . printf('%' . a:depth. 's', '  ') . l:symbol['name'],
+            \ })
+        if has_key(l:symbol, 'children') && !empty(l:symbol['children'])
+            call s:symbols_to_loc_list_children(a:server, a:path, a:list, l:symbol['children'], a:depth + 1)
+        endif
+    endfor
+endfunction
+
 function! lsp#ui#vim#utils#symbols_to_loc_list(server, result) abort
     if !has_key(a:result['response'], 'result')
         return []
@@ -116,19 +134,37 @@ function! lsp#ui#vim#utils#symbols_to_loc_list(server, result) abort
 
     if !empty(l:locations) " some servers also return null so check to make sure it isn't empty
         for l:symbol in a:result['response']['result']
-            let l:location = l:symbol['location']
-            if s:is_file_uri(l:location['uri'])
-                let l:path = lsp#utils#uri_to_path(l:location['uri'])
-                let l:bufnr = bufnr(l:path)
-                let l:line = l:location['range']['start']['line'] + 1
-                let l:char = l:location['range']['start']['character']
-                let l:col = lsp#utils#to_col(l:path, l:line, l:char)
-                call add(l:list, {
-                    \ 'filename': l:path,
-                    \ 'lnum': l:line,
-                    \ 'col': l:col,
-                    \ 'text': s:get_symbol_text_from_kind(a:server, l:symbol['kind']) . ' : ' . l:symbol['name'],
-                    \ })
+            if has_key(l:symbol, 'location')
+                let l:location = l:symbol['location']
+                if s:is_file_uri(l:location['uri'])
+                    let l:path = lsp#utils#uri_to_path(l:location['uri'])
+                    let l:line = l:location['range']['start']['line'] + 1
+                    let l:char = l:location['range']['start']['character']
+                    let l:col = lsp#utils#to_col(l:path, l:line, l:char)
+                    call add(l:list, {
+                        \ 'filename': l:path,
+                        \ 'lnum': l:line,
+                        \ 'col': l:col,
+                        \ 'text': s:get_symbol_text_from_kind(a:server, l:symbol['kind']) . ' : ' . l:symbol['name'],
+                        \ })
+                endif
+            else
+                let l:location = a:result['request']['params']['textDocument']['uri']
+                if s:is_file_uri(l:location)
+                    let l:path = lsp#utils#uri_to_path(l:location)
+                    let l:line = l:symbol['range']['start']['line'] + 1
+                    let l:char = l:symbol['range']['start']['character']
+                    let l:col = lsp#utils#to_col(l:path, l:line, l:char)
+                    call add(l:list, {
+                        \ 'filename': l:path,
+                        \ 'lnum': l:line,
+                        \ 'col': l:col,
+                        \ 'text': s:get_symbol_text_from_kind(a:server, l:symbol['kind']) . ' : ' . l:symbol['name'],
+                        \ })
+                    if has_key(l:symbol, 'children') && !empty(l:symbol['children'])
+                        call s:symbols_to_loc_list_children(a:server, l:path, l:list, l:symbol['children'], 1)
+                    endif
+                endif
             endif
         endfor
     endif
@@ -148,7 +184,6 @@ function! lsp#ui#vim#utils#diagnostics_to_loc_list(result) abort
 
     if !empty(l:diagnostics) && s:is_file_uri(l:uri)
         let l:path = lsp#utils#uri_to_path(l:uri)
-        let l:bufnr = bufnr(l:path)
         for l:item in l:diagnostics
             let l:text = ''
             if has_key(l:item, 'source') && !empty(l:item['source'])
