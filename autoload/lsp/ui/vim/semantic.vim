@@ -1,5 +1,6 @@
 let s:use_vim_textprops = has('textprop') && !has('nvim')
 let s:use_nvim_highlight = exists('*nvim_buf_add_highlight') && has('nvim')
+let s:textprop_cache = 'vim-lsp-semantic-cache'
 
 if s:use_nvim_highlight
     let s:namespace_id = nvim_create_namespace('vim-lsp-semantic')
@@ -62,12 +63,38 @@ function! s:init_highlight(server, buf) abort
 
             silent! call prop_type_add(s:get_textprop_name(a:server, l:scope_idx), {'bufnr': a:buf, 'highlight': l:hl, 'combine': v:true})
         endfor
+
+        silent! call prop_type_add(s:textprop_cache, {'bufnr': a:buf})
     endif
 
     call setbufvar(a:buf, 'lsp_did_semantic_setup', 1)
 endfunction
 
+function! s:hash(str) abort
+    let l:hash = 1
+
+    for l:char in split(a:str, '\zs')
+        let l:hash = l:hash * 31 + char2nr(l:char)
+    endfor
+
+    return l:hash
+endfunction
+
 function! s:add_highlight(server, buf, line, tokens) abort
+    " Return quickly if the tokens for this line are already set correctly,
+    " according to the cached tokens.
+    " This only works for Vim at the moment, for Neovim, we need extended
+    " marks.
+    if s:use_vim_textprops
+        let l:props = filter(prop_list(a:line + 1, {'bufnr': a:buf}), {idx, prop -> prop['type'] ==# s:textprop_cache})
+        let l:hash = s:hash(a:tokens)
+
+        if !empty(l:props) && l:props[0]['id'] == l:hash
+            " No changes for this line, so just return.
+            return
+        endif
+    endif
+
     let l:scopes = lsp#ui#vim#semantic#get_scopes(a:server)
     let l:highlights = s:tokens_to_hl_info(a:tokens)
 
@@ -76,6 +103,12 @@ function! s:add_highlight(server, buf, line, tokens) abort
         for l:scope_idx in range(len(l:scopes))
             call prop_remove({'bufnr': a:buf, 'type': s:get_textprop_name(a:server, l:scope_idx), 'all': v:true}, a:line + 1)
         endfor
+
+        " Clear cache from previous run
+        call prop_remove({'bufnr': a:buf, 'type': s:textprop_cache, 'all': v:true}, a:line + 1)
+
+        " Add textprop for cache
+        call prop_add(a:line + 1, 1, {'bufnr': a:buf, 'type': s:textprop_cache, 'id': l:hash})
 
         for l:highlight in l:highlights
             call prop_add(a:line + 1, l:highlight['char'] + 1, { 'length': l:highlight['length'], 'bufnr': a:buf, 'type': s:get_textprop_name(a:server, l:highlight['scope'])})
