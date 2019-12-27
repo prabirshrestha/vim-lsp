@@ -245,8 +245,9 @@ function! s:get_base64_alphabet() abort
     return l:alphabet
 endfunction
 
+let s:alphabet = s:get_base64_alphabet()
+
 function! lsp#utils#base64_decode(data) abort
-    let l:alphabet = s:get_base64_alphabet()
     let l:ret = []
 
     " Process base64 string in chunks of 4 chars
@@ -256,7 +257,7 @@ function! lsp#utils#base64_decode(data) abort
         " Convert 4 chars to 3 octets
         for l:char in split(l:group, '\zs')
             let l:group_dec = l:group_dec * 64
-            let l:group_dec += max([index(l:alphabet, l:char), 0])
+            let l:group_dec += max([index(s:alphabet, l:char), 0])
         endfor
 
         " Split the number representing the 3 octets into the individual
