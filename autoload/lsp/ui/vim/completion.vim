@@ -1,3 +1,5 @@
+" vint: -ProhibitUnusedVariable
+"
 let s:context = {}
 
 function! lsp#ui#vim#completion#setup() abort
