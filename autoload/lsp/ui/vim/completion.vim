@@ -56,14 +56,24 @@ function! s:on_complete_done_after() abort
   let l:completion_item = s:resolve_completion_item(l:completion_item, l:server_name)
 
   " apply textEdit or insertText(snippet).
-  let l:expanding_text = s:get_expanding_text(l:completed_item, l:completion_item)
-  if strlen(l:expanding_text) > 0
+  let l:expand_text = s:get_expand_text(l:completed_item, l:completion_item)
+  if strlen(l:expand_text) > 0
     call s:clear_inserted_text(
           \   l:line,
           \   l:position,
           \   l:completed_item,
           \   l:completion_item
           \ )
+    if exists('g:lsp_snippets_expand_snippet') && len(g:lsp_snippets_expand_snippet) > 0
+      " vim-lsp-snippets expects commit characters removed.
+      call s:expand_text_simply(v:completed_item.word)
+    elseif exists('g:lsp_snippet_expand') && len(g:lsp_snippet_expand) > 0
+      " other snippet integartion point.
+      call g:lsp_snippet_expand[0](l:expand_text)
+    else
+      " expand text simply.
+      call s:expand_text_simply(l:expand_text)
+    endif
   endif
 
   " apply additionalTextEdits.
@@ -168,7 +178,7 @@ endfunction
 "
 " Get textEdit.newText or insertText when the text is not same to v:completed_item.word.
 "
-function! s:get_expanding_text(completed_item, completion_item) abort
+function! s:get_expand_text(completed_item, completion_item) abort
   let l:text = a:completed_item.word
   if has_key(a:completion_item, 'textEdit')
     let l:text = a:completion_item.textEdit.newText
@@ -179,9 +189,36 @@ function! s:get_expanding_text(completed_item, completion_item) abort
 endfunction
 
 "
+" Expand text
+"
+function! s:expand_text_simply(text) abort
+  let l:pos = {
+        \   'line': line('.') - 1,
+        \   'character': col('.') - 1
+        \ }
+
+  " Remove placeholders and get first placeholder position that use to cursor position.
+  " e.g. `#getbufline(${1:expr}, ${2:lnum})${0}` to getbufline(#,)
+  let l:text = substitute(a:text, '\$\%({[0-9]*[^}]*}\|[0-9]*\)', '', 'g')
+  let l:offset = match(a:text, '\$\%({[0-9]*[^}]*}\|[0-9]*\)')
+  if l:offset == -1
+    let l:offset = strlen(l:text)
+  endif
+
+  call lsp#utils#text_edit#apply_text_edits(lsp#utils#get_buffer_uri(bufnr('%')), [{
+        \   'range': {
+        \     'start': l:pos,
+        \     'end': l:pos
+        \   },
+        \   'newText': l:text
+        \ }])
+  call cursor(l:pos.line + 1, l:pos.character + l:offset + 1)
+endfunction
+
+"
 " Get script id that uses to call `s:` function in feedkeys.
 "
 function! s:SID() abort
   return matchstr(expand('<sfile>'), '<SNR>\zs\d\+\ze_SID$')
-endfun
+endfunction
 
