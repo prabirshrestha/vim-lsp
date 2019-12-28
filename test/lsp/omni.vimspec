@@ -33,14 +33,18 @@ Describe lsp#omni
             \ 'dup': 1,
             \ 'empty': 1,
             \ 'kind': 'function',
-            \ 'menu': 'my-detail'
+            \ 'menu': 'my-detail',
+            \ 'user_data': json_encode({
+            \   'vim-lsp/serverName': '',
+            \   'vim-lsp/completionItem': item
+            \ })
             \}
             let got = lsp#omni#get_vim_completion_item(item)
 
             Assert Equals(PreprocessItem(got), want)
         End
 
-        It should return result contained user_data['vim-lsp/textEdit'], if exist textEdit in item
+        It should return result contained user_data['vim-lsp/completionItem']
             if !has('patch-8.0.1493')
                 Skip This test requires 'patch-8.0.1493'
             endif
@@ -62,8 +66,8 @@ Describe lsp#omni
             \}
 
             let l:want_user_data = {
-            \  'vim-lsp/textEdit': l:text_edit,
-            \  'vim-lsp/insertFormat': 0
+            \  'vim-lsp/serverName': '',
+            \  'vim-lsp/completionItem': item,
             \}
 
             let l:want_user_data_string = json_encode(l:want_user_data)
@@ -78,34 +82,6 @@ Describe lsp#omni
             \ 'kind': 'function',
             \ 'menu': 'my-detail',
             \ 'user_data': l:want_user_data_string
-            \}
-            let got = lsp#omni#get_vim_completion_item(item)
-
-            Assert Equals(PreprocessItem(got), want)
-        End
-
-        It should not add user_data, if provide textEdit property and textEdit value is null
-            if !has('patch-8.0.1493')
-                Skip This test requires 'patch-8.0.1493'
-            endif
-
-            let item = {
-            \ 'label': 'my-label',
-            \ 'documentation': 'my documentation.',
-            \ 'detail': 'my-detail',
-            \ 'kind': '3',
-            \ 'textEdit': v:null
-            \}
-
-            let want = {
-            \ 'word': 'my-label',
-            \ 'abbr': 'my-label',
-            \ 'info': 'my documentation.',
-            \ 'icase': 1,
-            \ 'dup': 1,
-            \ 'empty': 1,
-            \ 'kind': 'function',
-            \ 'menu': 'my-detail',
             \}
             let got = lsp#omni#get_vim_completion_item(item)
 
@@ -128,7 +104,11 @@ Describe lsp#omni
             \ 'dup': 1,
             \ 'empty': 1,
             \ 'kind': 'function',
-            \ 'menu': 'my-detail more-detail'
+            \ 'menu': 'my-detail more-detail',
+            \ 'user_data': json_encode({
+            \   'vim-lsp/serverName': '',
+            \   'vim-lsp/completionItem': item
+            \ })
             \}
             let got = lsp#omni#get_vim_completion_item(item)
 
