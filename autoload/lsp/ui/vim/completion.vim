@@ -95,7 +95,7 @@ function! s:resolve_completion_item(completion_item, server_name) abort
   let l:ctx = {}
   let l:ctx.response = {}
   function! l:ctx.callback(data) abort
-    let self.response = a:data.response
+    let l:self.response = a:data.response
   endfunction
 
   call lsp#send_request(a:server_name, {
