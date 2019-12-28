@@ -300,7 +300,7 @@ endfunction
 "
 " create item's user_data.
 "
-function! s:create_user_data(item, server_name)
+function! s:create_user_data(item, server_name) abort
     let l:user_data = {}
 
     " InsertStartKey.
@@ -323,7 +323,7 @@ function! s:create_user_data(item, server_name)
     return l:user_data
 endfunction
 
-function! lsp#omni#extract_user_data_from_completed_item(completed_item)
+function! lsp#omni#extract_user_data_from_completed_item(completed_item) abort
     " the item has no user_data.
     if !has_key(a:completed_item, 'user_data')
         return {}

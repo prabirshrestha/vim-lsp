@@ -79,7 +79,7 @@ endfunction
 "
 " Try `completionItem/resolve` if it possible.
 "
-function! s:resolve_completion_item(completion_item, server_name)
+function! s:resolve_completion_item(completion_item, server_name) abort
   " server_name is not provided.
   if empty(a:server_name)
     return a:completion_item
