@@ -55,6 +55,7 @@ function! s:on_complete_done_after() abort
 
   " Do nothing if text_edit is disabled.
   if !g:lsp_text_edit_enabled
+    doautocmd User lsp_complete_done
     return ''
   endif
 
@@ -154,11 +155,11 @@ function! s:clear_inserted_text(line, position, completed_item, completion_item)
   let l:range = {
         \   'start': {
         \     'line': a:position[1] - 1,
-        \     'character': (a:position[2] + a:position[3]) - strlen(a:completed_item.word) - 1
+        \     'character': lsp#utils#to_char('%', a:position[1], a:position[2] + a:position[3]) - strchars(a:completed_item.word)
         \   },
         \   'end': {
         \     'line': a:position[1] - 1,
-        \     'character': (a:position[2] + a:position[3]) - 1
+        \     'character': lsp#utils#to_char('%', a:position[1], a:position[2] + a:position[3])
         \   }
         \ }
 
@@ -181,7 +182,10 @@ function! s:clear_inserted_text(line, position, completed_item, completion_item)
         \ }])
 
   " Move to complete start position.
-  call cursor([l:range.start.line + 1, l:range.start.character + 1])
+  call cursor(
+        \   l:range.start.line + 1,
+        \   lsp#utils#to_col('%', l:range.start.line + 1, l:range.start.character)
+        \ )
 endfunction
 
 "
@@ -203,7 +207,7 @@ endfunction
 function! s:expand_text_simply(text) abort
   let l:pos = {
         \   'line': line('.') - 1,
-        \   'character': col('.') - 1
+        \   'character': lsp#utils#to_char('%', line('.'), col('.'))
         \ }
 
   " Remove placeholders and get first placeholder position that use to cursor position.
@@ -211,7 +215,7 @@ function! s:expand_text_simply(text) abort
   let l:text = substitute(a:text, '\$\%({[0-9]*[^}]*}\|[0-9]*\)', '', 'g')
   let l:offset = match(a:text, '\$\%({[0-9]*[^}]*}\|[0-9]*\)')
   if l:offset == -1
-    let l:offset = strlen(l:text)
+    let l:offset = strchars(l:text)
   endif
 
   call lsp#utils#text_edit#apply_text_edits(lsp#utils#get_buffer_uri(bufnr('%')), [{
@@ -221,7 +225,10 @@ function! s:expand_text_simply(text) abort
         \   },
         \   'newText': l:text
         \ }])
-  call cursor(l:pos.line + 1, l:pos.character + l:offset + 1)
+  call cursor(
+        \   l:pos.line + 1,
+        \   lsp#utils#to_col('%', l:pos.line + 1, l:pos.character) + l:offset
+        \ )
 endfunction
 
 "
