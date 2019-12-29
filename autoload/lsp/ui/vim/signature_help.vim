@@ -1,3 +1,5 @@
+let s:debounce_timer_id = 0
+
 function! s:not_supported(what) abort
     return lsp#utils#error(a:what.' not supported for '.&filetype)
 endfunction
@@ -11,7 +13,6 @@ function! lsp#ui#vim#signature_help#get_signature_help_under_cursor() abort
     endif
 
     let l:position = lsp#get_position()
-    let l:position.character += 1
     for l:server in l:servers
         call lsp#send_request(l:server, {
             \ 'method': 'textDocument/signatureHelp',
@@ -110,21 +111,26 @@ function! s:get_parameter_doc(parameter) abort
     return printf('***%s*** - %s', a:parameter['label'], l:doc)
 endfunction
 
-function! s:insert_char_pre() abort
-    let l:buf = bufnr('%')
-    for l:server_name in lsp#get_whitelisted_servers(l:buf)
-        let l:keys = lsp#capabilities#get_signature_help_trigger_characters(l:server_name)
-        for l:key in l:keys
-            if l:key ==# v:char
-                call timer_start(0, {_-> lsp#ui#vim#signature_help#get_signature_help_under_cursor() })
-            endif
-        endfor
+function! s:on_text_changed() abort
+    let l:bufnr = bufnr('%')
+    call timer_stop(s:debounce_timer_id)
+    let s:debounce_timer_id = timer_start(500, { -> s:on_text_changed_after(l:bufnr) })
+endfunction
+
+function! s:on_text_changed_after(bufnr) abort
+    let l:chars = []
+    for l:server_name in lsp#get_whitelisted_servers(bufnr('%'))
+        let l:chars += lsp#capabilities#get_signature_help_trigger_characters(l:server_name)
     endfor
+
+    if index(l:chars, lsp#utils#get_before_char_skip_white()) >= 0
+        call lsp#ui#vim#signature_help#get_signature_help_under_cursor()
+    endif
 endfunction
 
 function! lsp#ui#vim#signature_help#setup() abort
     augroup _lsp_signature_help_
         autocmd!
-        autocmd InsertCharPre <buffer> call s:insert_char_pre()
+        autocmd TextChangedI,TextChangedP <buffer> call s:on_text_changed()
     augroup END
 endfunction
