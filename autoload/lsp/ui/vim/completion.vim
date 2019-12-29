@@ -136,6 +136,10 @@ function! s:resolve_completion_item(completion_item, server_name) abort
     return a:completion_item
   endif
 
+  if empty(l:ctx.response.result)
+    return a:completion_item
+  endif
+
   return l:ctx.response.result
 endfunction
 
