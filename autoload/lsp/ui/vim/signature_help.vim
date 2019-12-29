@@ -118,8 +118,12 @@ function! s:on_text_changed() abort
 endfunction
 
 function! s:on_text_changed_after(bufnr) abort
+    if bufnr('%') != a:bufnr
+        return
+    endif
+
     let l:chars = []
-    for l:server_name in lsp#get_whitelisted_servers(bufnr('%'))
+    for l:server_name in lsp#get_whitelisted_servers(a:bufnr)
         let l:chars += lsp#capabilities#get_signature_help_trigger_characters(l:server_name)
     endfor
 
