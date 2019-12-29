@@ -40,6 +40,7 @@ CONTENTS                                                  *vim-lsp-contents*
       g:lsp_log_file                        |g:lsp_log_file|
       g:lsp_semantic_enabled                |g:lsp_semantic_enabled|
       g:lsp_text_document_did_save_delay    |g:lsp_text_document_did_save_delay|
+      g:lsp_snippet_expand                  |g:lsp_snippet_expand|
     Functions                             |vim-lsp-functions|
       lsp#enable                            |lsp#enable()|
       lsp#disable                           |lsp#disable()|
@@ -586,6 +587,12 @@ g:lsp_text_document_did_save_delay   *g:lsp_text_document_did_save_delay*
     The waiting time in milliseconds before sending textDocument/didSave to
     LSP servers, -1 by default means no delay. If >= 0, will delay using
     |timer_start()| with {time} is the number.
+
+g:lsp_snippet_expand                                 *g:lsp_snippet_expand*
+    Type: |List|
+
+    The integration point to other snippet plugin.
+    vim-lsp may invoke the first item of this value when it needs snippet expansion.
 
 
 ==============================================================================
