@@ -53,6 +53,11 @@ function! s:on_complete_done_after() abort
     return ''
   endif
 
+  " Do nothing if text_edit is disabled.
+  if !g:lsp_text_edit_enabled
+    return ''
+  endif
+
   let l:completion_item = s:resolve_completion_item(l:completion_item, l:server_name)
 
   " apply textEdit or insertText(snippet).
