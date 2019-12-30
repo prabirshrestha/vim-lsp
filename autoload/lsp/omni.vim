@@ -39,6 +39,7 @@ let s:completion_status_pending = 'pending'
 let s:is_user_data_support = has('patch-8.0.1493')
 let s:user_data_insert_start_key = 'vim-lsp/insertStart'
 let s:user_data_filtertext_key = 'vim-lsp/filterText'
+let s:user_data_text_edit_key = 'vim-lsp/textEdit' " This key can be removed. But vim-lsp-snippets uses this key. So this key leave for now.
 let s:user_data_server_name_key = 'vim-lsp/serverName'
 let s:user_data_completion_item_key = 'vim-lsp/completionItem'
 
@@ -306,6 +307,7 @@ function! s:create_user_data(item, server_name) abort
     " InsertStartKey.
     let l:user_data[s:user_data_insert_start_key] = -1
     if has_key(a:item, 'textEdit') && type(a:item.textEdit) == type({})
+        let l:user_data[s:user_data_text_edit_key] = a:item.textEdit
         let l:user_data[s:user_data_insert_start_key] = a:item.textEdit.range.start.character
     endif
 
