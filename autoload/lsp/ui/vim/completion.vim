@@ -72,7 +72,7 @@ function! s:on_complete_done_after() abort
           \ )
     if exists('g:lsp_snippets_expand_snippet') && len(g:lsp_snippets_expand_snippet) > 0
       " vim-lsp-snippets expects commit characters removed.
-      call s:expand_text_simply(v:completed_item.word)
+      call s:expand_text_simply(v:completed_item['word'])
     elseif exists('g:lsp_snippet_expand') && len(g:lsp_snippet_expand) > 0
       " other snippet integartion point.
       call g:lsp_snippet_expand[0]({
