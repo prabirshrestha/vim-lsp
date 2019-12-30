@@ -115,6 +115,7 @@ function! s:resolve_completion_item(completion_item, server_name) abort
   let l:capabilities = lsp#get_server_capabilities(a:server_name)
   if !has_key(l:capabilities, 'completionProvider')
         \ || !has_key(l:capabilities['completionProvider'], 'resolveProvider')
+        \ || !l:capabilities['completionProvider']['resolveProvider']
     return a:completion_item
   endif
 
