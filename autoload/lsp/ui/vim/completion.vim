@@ -177,7 +177,7 @@ function! s:clear_inserted_text(line, position, completed_item, completion_item)
           \ ])
   endif
 
-  " Remove.
+  " Remove v:completed_item.word (and textEdit range if need).
   call lsp#utils#text_edit#apply_text_edits(lsp#utils#get_buffer_uri(bufnr('%')), [{
         \   'range': l:range,
         \   'newText': ''
