@@ -147,7 +147,7 @@ function! s:resolve_completion_item(completion_item, server_name) abort
 endfunction
 
 "
-" Remove inserted text duratin completion.
+" Remove inserted text during completion.
 "
 function! s:clear_inserted_text(line, position, completed_item, completion_item) abort
   " Remove commit characters.
