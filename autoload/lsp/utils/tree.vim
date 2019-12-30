@@ -152,7 +152,7 @@ endfunction
 " tree view. Clear the index, setting it to a list containing a guard
 " value for index 0 (line numbers are one-based).
 function! s:tree_render(tree) abort
-    if &filetype !=# 'yggdrasil'
+    if &filetype !=# 'lsp-tree'
         return
     endif
 
@@ -195,21 +195,21 @@ function! s:tree_update(...) dict abort
     endif
 endfunction
 
-" Apply syntax to an Yggdrasil buffer
+" Apply syntax to an LspTree buffer
 function! s:filetype_syntax() abort
     syntax clear
-    syntax match YggdrasilMarkLeaf        "•" contained
-    syntax match YggdrasilMarkCollapsed   "▸" contained
-    syntax match YggdrasilMarkExpanded    "▾" contained
-    syntax match YggdrasilNode            "\v^(\s|[▸▾•])*.*"
-    \      contains=YggdrasilMarkLeaf,YggdrasilMarkCollapsed,YggdrasilMarkExpanded
+    syntax match LspTreeMarkLeaf        "•" contained
+    syntax match LspTreeMarkCollapsed   "▸" contained
+    syntax match LspTreeMarkExpanded    "▾" contained
+    syntax match LspTreeNode            "\v^(\s|[▸▾•])*.*"
+    \      contains=LspTreeMarkLeaf,LspTreeMarkCollapsed,LspTreeMarkExpanded
 
-    highlight def link YggdrasilMarkLeaf        Type
-    highlight def link YggdrasilMarkExpanded    Type
-    highlight def link YggdrasilMarkCollapsed   Macro
+    highlight def link LspTreeMarkLeaf        Type
+    highlight def link LspTreeMarkExpanded    Type
+    highlight def link LspTreeMarkCollapsed   Macro
 endfunction
 
-" Apply local settings to an Yggdrasil buffer
+" Apply local settings to an LspTree buffer
 function! s:filetype_settings() abort
     setlocal bufhidden=wipe
     setlocal buftype=nofile
@@ -225,35 +225,35 @@ function! s:filetype_settings() abort
     setlocal noswapfile
     setlocal nowrap
 
-    nnoremap <silent> <buffer> <Plug>(yggdrasil-toggle-node)
-        \ :call b:yggdrasil_tree.set_collapsed_under_cursor(-1)<cr>
+    nnoremap <silent> <buffer> <Plug>(lsp-tree-toggle-node)
+        \ :call b:lsp_tree.set_collapsed_under_cursor(-1)<cr>
 
-    nnoremap <silent> <buffer> <Plug>(yggdrasil-open-node)
-        \ :call b:yggdrasil_tree.set_collapsed_under_cursor(v:false)<cr>
+    nnoremap <silent> <buffer> <Plug>(lsp-tree-open-node)
+        \ :call b:lsp_tree.set_collapsed_under_cursor(v:false)<cr>
 
-    nnoremap <silent> <buffer> <Plug>(yggdrasil-close-node)
-        \ :call b:yggdrasil_tree.set_collapsed_under_cursor(v:true)<cr>
+    nnoremap <silent> <buffer> <Plug>(lsp-tree-close-node)
+        \ :call b:lsp_tree.set_collapsed_under_cursor(v:true)<cr>
 
-    nnoremap <silent> <buffer> <Plug>(yggdrasil-execute-node)
-        \ :call b:yggdrasil_tree.exec_node_under_cursor()<cr>
+    nnoremap <silent> <buffer> <Plug>(lsp-tree-execute-node)
+        \ :call b:lsp_tree.exec_node_under_cursor()<cr>
 
-    if !exists('g:yggdrasil_no_default_maps')
-        nmap <silent> <buffer> o    <Plug>(yggdrasil-toggle-node)
-        nmap <silent> <buffer> <cr> <Plug>(yggdrasil-execute-node)
+    if !exists('g:lsp_tree_no_default_maps')
+        nmap <silent> <buffer> o    <Plug>(lsp-tree-toggle-node)
+        nmap <silent> <buffer> <cr> <Plug>(lsp-tree-execute-node)
 
         nnoremap <silent> <buffer> q :q<cr>
     endif
 endfunction
 
-" Turns the current buffer into an Yggdrasil tree view. Tree data is retrieved
+" Turns the current buffer into an LspTree tree view. Tree data is retrieved
 " from the given {provider}, and the state of the tree is stored in a
-" buffer-local variable called b:yggdrasil_tree.
+" buffer-local variable called b:lsp_tree.
 "
 " The {bufnr} stores the buffer number of the view, {maxid} is the highest
 " known internal identifier of the nodes. The {index} is a list that
 " maps line numbers to nodes.
-function! utils#yggdrasil#tree#new(provider) abort
-    let b:yggdrasil_tree = {
+function! lsp#utils#tree#new(provider) abort
+    let b:lsp_tree = {
     \ 'bufnr': bufnr('.'),
     \ 'maxid': -1,
     \ 'root': {},
@@ -264,13 +264,13 @@ function! utils#yggdrasil#tree#new(provider) abort
     \ 'update': function('s:tree_update'),
     \ }
 
-    augroup vim_yggdrasil
+    augroup vim_lsp_tree
         autocmd!
-        autocmd FileType yggdrasil call s:filetype_syntax() | call s:filetype_settings()
-        autocmd BufEnter <buffer> call s:tree_render(b:yggdrasil_tree)
+        autocmd FileType lsp-tree call s:filetype_syntax() | call s:filetype_settings()
+        autocmd BufEnter <buffer> call s:tree_render(b:lsp_tree)
     augroup END
 
-    setlocal filetype=yggdrasil
+    setlocal filetype=lsp-tree
 
-    call b:yggdrasil_tree.update()
+    call b:lsp_tree.update()
 endfunction
