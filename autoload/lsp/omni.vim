@@ -325,7 +325,7 @@ function! s:create_user_data(item, server_name) abort
     return l:user_data
 endfunction
 
-function! lsp#omni#extract_user_data_from_completed_item(completed_item) abort
+function! lsp#omni#get_user_data_from_completed_item(completed_item) abort
     " the item has no user_data.
     if !has_key(a:completed_item, 'user_data')
         return {}
@@ -333,7 +333,7 @@ function! lsp#omni#extract_user_data_from_completed_item(completed_item) abort
 
     " try to decode user_data.
     try
-        let l:user_data = json_decode(a:completed_item.user_data)
+        let l:user_data = json_decode(a:completed_item['user_data'])
     catch /.*/
         let l:user_data = {}
     endtry
@@ -347,10 +347,7 @@ function! lsp#omni#extract_user_data_from_completed_item(completed_item) abort
         return {}
     endif
 
-    return {
-                \   'server_name': l:user_data[s:user_data_server_name_key],
-                \   'completion_item': l:user_data[s:user_data_completion_item_key]
-                \ }
+    return l:user_data
 endfunction
 
 function! lsp#omni#get_completion_item_kinds() abort
