@@ -75,7 +75,9 @@ function! s:on_complete_done_after() abort
       call s:expand_text_simply(v:completed_item.word)
     elseif exists('g:lsp_snippet_expand') && len(g:lsp_snippet_expand) > 0
       " other snippet integartion point.
-      call g:lsp_snippet_expand[0](l:expand_text)
+      call g:lsp_snippet_expand[0]({
+            \   'snippet': l:expand_text
+            \ })
     else
       " expand text simply.
       call s:expand_text_simply(l:expand_text)
