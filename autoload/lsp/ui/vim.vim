@@ -52,6 +52,32 @@ function! lsp#ui#vim#type_definition(in_preview) abort
     echo 'Retrieving type definition ...'
 endfunction
 
+function! lsp#ui#vim#type_hierarchy() abort
+    let l:servers = filter(lsp#get_whitelisted_servers(), 'lsp#capabilities#has_type_hierarchy_provider(v:val)')
+    let s:last_req_id = s:last_req_id + 1
+
+    if len(l:servers) == 0
+        call s:not_supported('Retrieving type hierarchy')
+        return
+    endif
+    let l:ctx = { 'counter': len(l:servers), 'list':[], 'last_req_id': s:last_req_id }
+    " direction 0 children, 1 parent, 2 both
+    for l:server in l:servers
+        call lsp#send_request(l:server, {
+            \ 'method': 'textDocument/typeHierarchy',
+            \ 'params': {
+            \   'textDocument': lsp#get_text_document_identifier(),
+            \   'position': lsp#get_position(),
+            \   'direction': 2,
+            \   'resolve': 1,
+            \ },
+            \ 'on_notification': function('s:handle_type_hierarchy', [l:ctx, l:server, 'type hierarchy']),
+            \ })
+    endfor
+
+    echo 'Retrieving type hierarchy ...'
+endfunction
+
 function! lsp#ui#vim#declaration(in_preview) abort
     let l:servers = filter(lsp#get_whitelisted_servers(), 'lsp#capabilities#has_declaration_provider(v:val)')
     let s:last_req_id = s:last_req_id + 1
@@ -628,6 +654,84 @@ function! s:handle_code_action(server, last_req_id, type, data) abort
     if l:choice > 0 && l:choice <= l:index
         call s:execute_command_or_code_action(a:server, l:codeActions[l:choice - 1])
     endif
+endfunction
+
+function! s:handle_type_hierarchy(ctx, server, type, data) abort "ctx = {counter, list, jump_if_one, last_req_id}
+    if a:ctx['last_req_id'] != s:last_req_id
+        return
+    endif
+
+    if lsp#client#is_error(a:data['response'])
+        call lsp#utils#error('Failed to '. a:type . ' for ' . a:server . ': ' . lsp#client#error_message(a:data['response']))
+        return
+    endif
+
+    if empty(a:data['response']['result'])
+        echo 'No type hierarchy found'
+        return
+    endif
+
+    " Create new buffer in a split
+    let l:position = 'topleft'
+    let l:orientation = 'new'
+    exec l:position . ' ' . 10 . l:orientation
+
+    let l:provider = {
+        \   'root': a:data['response']['result'],
+        \   'root_state': 'expanded',
+        \   'bufnr': bufnr('%'),
+        \   'getChildren': function('s:get_children_for_tree_hierarchy'),
+        \   'getParent': function('s:get_parent_for_tree_hierarchy'),
+        \   'getTreeItem': function('s:get_treeitem_for_tree_hierarchy'),
+        \ }
+
+    call lsp#utils#tree#new(l:provider)
+
+    echo 'Retrieved type hierarchy'
+endfunction
+
+function! s:hierarchyitem_to_treeitem(hierarchyitem) abort
+    return {
+        \ 'id': a:hierarchyitem,
+        \ 'label': a:hierarchyitem['name'],
+        \ 'command': function('s:hierarchy_treeitem_command', [a:hierarchyitem]),
+        \ 'collapsibleState': has_key(a:hierarchyitem, 'parents') && !empty(a:hierarchyitem['parents']) ? 'expanded' : 'none',
+        \ }
+endfunction
+
+function! s:hierarchy_treeitem_command(hierarchyitem) abort
+    bwipeout
+
+    let l:path = lsp#utils#uri_to_path(a:hierarchyitem['uri'])
+    let l:line = a:hierarchyitem['range']['start']['line'] + 1
+    let l:char = a:hierarchyitem['range']['start']['character']
+    let l:col = lsp#utils#to_col(l:path, l:line, l:char)
+
+    let l:buffer = bufnr(l:path)
+    if &modified && !&hidden
+        let l:cmd = l:buffer !=# -1 ? 'sb ' . l:buffer : 'split ' . fnameescape(l:path)
+    else
+        echom 'edit'
+        let l:cmd = l:buffer !=# -1 ? 'b ' . l:buffer : 'edit ' . fnameescape(l:path)
+    endif
+    execute l:cmd . ' | call cursor('.l:line.','.l:col.')'
+endfunction
+
+function! s:get_children_for_tree_hierarchy(Callback, ...) dict abort
+    if a:0 == 0
+        call a:Callback('success', [l:self['root']])
+        return
+    else
+        call a:Callback('success', a:1['parents'])
+    endif
+endfunction
+
+function! s:get_parent_for_tree_hierarchy(Callback, object) dict abort
+    echom 'get_parent'
+endfunction
+
+function! s:get_treeitem_for_tree_hierarchy(Callback, object) dict abort
+    call a:Callback('success', s:hierarchyitem_to_treeitem(a:object))
 endfunction
 
 " @params

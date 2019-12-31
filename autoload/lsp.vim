@@ -451,7 +451,8 @@ function! lsp#default_get_supported_capabilities(server_info) abort
     \       },
     \       'semanticHighlightingCapabilities': {
     \           'semanticHighlighting': lsp#ui#vim#semantic#is_enabled()
-    \       }
+    \       },
+    \       'typeHierarchy': v:true,
     \   }
     \ }
 endfunction

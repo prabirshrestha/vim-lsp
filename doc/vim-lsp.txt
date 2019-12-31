@@ -78,6 +78,7 @@ CONTENTS                                                  *vim-lsp-contents*
       LspRename                             |:LspRename|
       LspSemanticScopes                     |:LspSemanticScopes|
       LspTypeDefinition                     |:LspTypeDefinition|
+      LspTypeHierarchy                      |:LspTypeHierarchy|
       LspWorkspaceSymbol                    |:LspWorkspaceSymbol|
       LspStatus                             |:LspStatus|
       LspStopServer                         |:LspStopServer|
@@ -1049,6 +1050,10 @@ LspTypeDefinition                                       *:LspTypeDefinition*
 
 Go to the type definition.
 
+LspTypeHierarchy                                       *:LspTypeHierarchy*
+
+View type hierarchy for the symbol under cursor.
+
 Also see |:LspPeekTypeDefinition|.
 
 LspWorkspaceSymbol                                     *:LspWorkspaceSymbol*
@@ -1153,6 +1158,7 @@ Available plug mappings are following:
   nnoremap <plug>(lsp-peek-implementation)
   nnoremap <plug>(lsp-type-definition)
   nnoremap <plug>(lsp-peek-type-definition)
+  nnoremap <plug>(lsp-type-hierarchy)
   nnoremap <plug>(lsp-status)
   nnoremap <plug>(lsp-signature-help)
 

@@ -69,6 +69,10 @@ function! lsp#capabilities#has_type_definition_provider(server_name) abort
     return s:has_bool_provider(a:server_name, 'typeDefinitionProvider')
 endfunction
 
+function! lsp#capabilities#has_type_hierarchy_provider(server_name) abort
+    return s:has_bool_provider(a:server_name, 'typeHierarchyProvider')
+endfunction
+
 function! lsp#capabilities#has_document_highlight_provider(server_name) abort
     return s:has_bool_provider(a:server_name, 'documentHighlightProvider')
 endfunction
