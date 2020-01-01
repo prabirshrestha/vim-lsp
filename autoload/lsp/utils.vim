@@ -186,23 +186,6 @@ function! lsp#utils#echo_with_truncation(msg) abort
     exec 'echo l:msg'
 endfunction
 
-" Convert a character-index (0-based) to byte-index (1-based)
-" This function requires a buffer specifier (expr, see :help bufname()),
-" a line number (lnum, 1-based), and a character-index (char, 0-based).
-function! lsp#utils#to_col(expr, lnum, char) abort
-    let l:lines = getbufline(a:expr, a:lnum)
-    if l:lines == []
-        if type(a:expr) != v:t_string || !filereadable(a:expr)
-            " invalid a:expr
-            return a:char + 1
-        endif
-        " a:expr is a file that is not yet loaded as a buffer
-        let l:lines = readfile(a:expr, '', a:lnum)
-    endif
-    let l:linestr = l:lines[-1]
-    return strlen(strcharpart(l:linestr, 0, a:char)) + 1
-endfunction
-
 " Convert a byte-index (1-based) to a character-index (0-based)
 " This function requires a buffer specifier (expr, see :help bufname()),
 " a line number (lnum, 1-based), and a byte-index (char, 1-based).
