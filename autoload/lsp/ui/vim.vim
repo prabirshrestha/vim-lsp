@@ -671,20 +671,8 @@ endfunction
 
 function! s:hierarchy_treeitem_command(hierarchyitem) abort
     bwipeout
-
-    let l:path = lsp#utils#uri_to_path(a:hierarchyitem['uri'])
-    let l:line = a:hierarchyitem['range']['start']['line'] + 1
-    let l:char = a:hierarchyitem['range']['start']['character']
-    let l:col = lsp#utils#to_col(l:path, l:line, l:char)
-
-    let l:buffer = bufnr(l:path)
-    if &modified && !&hidden
-        let l:cmd = l:buffer !=# -1 ? 'sb ' . l:buffer : 'split ' . fnameescape(l:path)
-    else
-        echom 'edit'
-        let l:cmd = l:buffer !=# -1 ? 'b ' . l:buffer : 'edit ' . fnameescape(l:path)
-    endif
-    execute l:cmd . ' | call cursor('.l:line.','.l:col.')'
+    call lsp#utils#tagstack#_update()
+    call lsp#utils#buffer#_open_lsp_location(a:hierarchyitem)
 endfunction
 
 function! s:get_children_for_tree_hierarchy(Callback, ...) dict abort
