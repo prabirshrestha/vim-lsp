@@ -25,9 +25,7 @@ function! lsp#ui#vim#utils#locations_to_loc_list(result) abort
     for l:location in l:locations
         if s:is_file_uri(l:location[l:uri])
             let l:path = lsp#utils#uri_to_path(l:location[l:uri])
-            let l:line = l:location[l:range]['start']['line'] + 1
-            let l:char = l:location[l:range]['start']['character']
-            let l:col = lsp#utils#to_col(l:path, l:line, l:char)
+            let [l:line, l:col] = lsp#utils#position#_lsp_to_vim(l:path, l:location[l:range]['start'])
 
             let l:index = l:line - 1
             if has_key(l:cache, l:path)
@@ -107,9 +105,7 @@ let s:diagnostic_severity = {
 
 function! s:symbols_to_loc_list_children(server, path, list, symbols, depth) abort
     for l:symbol in a:symbols
-        let l:line = l:symbol['range']['start']['line'] + 1
-        let l:char = l:symbol['range']['start']['character']
-        let l:col = lsp#utils#to_col(a:path, l:line, l:char)
+        let [l:line, l:col] = lsp#utils#position#_lsp_to_vim(a:path, l:symbol['range']['start'])
 
         call add(a:list, {
             \ 'filename': a:path,
@@ -138,9 +134,7 @@ function! lsp#ui#vim#utils#symbols_to_loc_list(server, result) abort
                 let l:location = l:symbol['location']
                 if s:is_file_uri(l:location['uri'])
                     let l:path = lsp#utils#uri_to_path(l:location['uri'])
-                    let l:line = l:location['range']['start']['line'] + 1
-                    let l:char = l:location['range']['start']['character']
-                    let l:col = lsp#utils#to_col(l:path, l:line, l:char)
+                    let [l:line, l:col] = lsp#utils#position#_lsp_to_vim(l:path, l:location['range']['start'])
                     call add(l:list, {
                         \ 'filename': l:path,
                         \ 'lnum': l:line,
@@ -152,9 +146,7 @@ function! lsp#ui#vim#utils#symbols_to_loc_list(server, result) abort
                 let l:location = a:result['request']['params']['textDocument']['uri']
                 if s:is_file_uri(l:location)
                     let l:path = lsp#utils#uri_to_path(l:location)
-                    let l:line = l:symbol['range']['start']['line'] + 1
-                    let l:char = l:symbol['range']['start']['character']
-                    let l:col = lsp#utils#to_col(l:path, l:line, l:char)
+                    let [l:line, l:col] = lsp#utils#position#_lsp_to_vim(l:path, l:symbol['range']['start'])
                     call add(l:list, {
                         \ 'filename': l:path,
                         \ 'lnum': l:line,
@@ -196,9 +188,7 @@ function! lsp#ui#vim#utils#diagnostics_to_loc_list(result) abort
                 let l:text .= l:item['code'] . ':'
             endif
             let l:text .= l:item['message']
-            let l:line = l:item['range']['start']['line'] + 1
-            let l:char = l:item['range']['start']['character']
-            let l:col = lsp#utils#to_col(l:path, l:line, l:char)
+            let [l:line, l:col] = lsp#utils#position#_lsp_to_vim(l:path, l:item['range'])
             call add(l:list, {
                 \ 'filename': l:path,
                 \ 'lnum': l:line,

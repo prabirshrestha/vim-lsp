@@ -542,12 +542,8 @@ function! s:handle_rename_prepare(server, last_req_id, type, data) abort
 
     let l:range = a:data['response']['result']
     let l:lines = getline(1, '$')
-    let l:start_line = l:range['start']['line'] + 1
-    let l:start_char = l:range['start']['character']
-    let l:start_col = lsp#utils#to_col('%', l:start_line, l:start_char)
-    let l:end_line = l:range['end']['line'] + 1
-    let l:end_char = l:range['end']['character']
-    let l:end_col = lsp#utils#to_col('%', l:end_line, l:end_char)
+    let [l:start_line, l:start_col] = lsp#utils#position#_lsp_to_vim('%', l:range['start'])
+    let [l:end_line, l:end_col] = lsp#utils#position#_lsp_to_vim('%', l:range['end'])
     if l:start_line ==# l:end_line
         let l:name = l:lines[l:start_line - 1][l:start_col - 1 : l:end_col - 2]
     else
