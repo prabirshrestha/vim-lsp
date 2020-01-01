@@ -7,7 +7,7 @@
 "   line,
 "   col
 " ]
-function! lsp#utils#position#lsp_to_vim(expr, position) abort
+function! lsp#utils#position#_lsp_to_vim(expr, position) abort
     let l:line = a:position['line'] + 1
     let l:char = a:position['character']
     let l:col = lsp#utils#to_col(a:expr, l:line, l:char)
