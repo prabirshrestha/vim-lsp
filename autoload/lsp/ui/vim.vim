@@ -491,7 +491,7 @@ function! s:handle_location(ctx, server, type, data) abort "ctx = {counter, list
         if empty(a:ctx['list'])
             call lsp#utils#error('No ' . a:type .' found')
         else
-            call lsp#utils#tagstack#update()
+            call lsp#utils#tagstack#_update()
 
             let l:loc = a:ctx['list'][0]
 

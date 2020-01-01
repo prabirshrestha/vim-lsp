@@ -1,5 +1,5 @@
 if exists('*gettagstack') && exists('*settagstack')
-    function! lsp#utils#tagstack#update() abort
+    function! lsp#utils#tagstack#_update() abort
         let l:bufnr = bufnr('%')
         let l:item = {'bufnr': l:bufnr, 'from': [l:bufnr, line('.'), col('.'), 0], 'tagname': expand('<cword>')}
         let l:winid = win_getid()
@@ -27,7 +27,7 @@ if exists('*gettagstack') && exists('*settagstack')
         call settagstack(l:winid, l:stack, l:action)
     endfunction
 else
-    function! lsp#utils#tagstack#update() abort
+    function! lsp#utils#tagstack#_update() abort
         " do nothing
     endfunction
 endif

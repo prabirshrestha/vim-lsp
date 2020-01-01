@@ -9,7 +9,7 @@ Describe lsp#utils#tagstack
         % delete _
     End
 
-    Describe lsp#utils#tagstack#update()
+    Describe lsp#utils#tagstack#_update()
         It should correctly preserve the tag stack
             let l:bufnr = bufnr('%')
 
@@ -18,19 +18,19 @@ Describe lsp#utils#tagstack
             2put = 'baz'
 
             call cursor(1, 1)
-            call lsp#utils#tagstack#update()
+            call lsp#utils#tagstack#_update()
 
             call cursor(1, 2)
-            call lsp#utils#tagstack#update()
+            call lsp#utils#tagstack#_update()
 
             call cursor(3, 3)
-            call lsp#utils#tagstack#update()
+            call lsp#utils#tagstack#_update()
 
             call cursor(2, 1)
-            call lsp#utils#tagstack#update()
+            call lsp#utils#tagstack#_update()
 
             if !exists('*gettagstack') || !exists('*settagstack')
-                " calling lsp#utils#tagstack#update() should be safe if
+                " calling lsp#utils#tagstack#_update() should be safe if
                 " gettagstack and settagstack doesn't exist
                 return
             endif
