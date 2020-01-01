@@ -1,3 +1,23 @@
+function! s:open_location(path, line, col) abort
+    normal! m'
+    let l:buffer = bufnr(a:path)
+    if &modified && !&hidden
+        let l:cmd = l:buffer !=# -1 ? 'sb ' . l:buffer : 'split ' . fnameescape(a:path)
+    else
+        let l:cmd = l:buffer !=# -1 ? 'b ' . l:buffer : 'edit ' . fnameescape(a:path)
+    endif
+    execute l:cmd . ' | call cursor('.a:line.','.a:col.')'
+endfunction
+
+" @param location = {
+"   'filename',
+"   'lnum',
+"   'col',
+" }
+function! lsp#utils#location#_open_vim_list_item(location) abort
+    call s:open_location(a:location['filename'], a:location['lnum'], a:location['col'])
+endfunction
+
 " @params {location} = {
 "   'uri': 'file://....',
 "   'range': {
@@ -12,15 +32,8 @@ function! lsp#utils#location#_open_lsp_location(location) abort
     let [l:start_line, l:start_col] = lsp#utils#position#_lsp_to_vim(l:bufnr, a:location['range']['start'])
     let [l:end_line, l:end_col] = lsp#utils#position#_lsp_to_vim(l:bufnr, a:location['range']['end'])
 
-    normal! m'
-    if &modified && !&hidden
-        let l:cmd = l:bufnr !=# -1 ? 'sb ' . l:bufnr : 'split ' . fnameescape(l:path)
-    else
-        let l:cmd = l:bufnr !=# -1 ? 'b ' . l:bufnr : 'edit ' . fnameescape(l:path)
-    endif
-    execute l:cmd . ' | call cursor('.l:start_line.','.l:start_col.')'
+    call s:open_location(l:path, l:start_line, l:start_col)
 
-    let l:bufnr = bufnr('%')
     normal! V
     call setpos("'<", [l:bufnr, l:start_line, l:start_col])
     call setpos("'>", [l:bufnr, l:end_line, l:end_col])

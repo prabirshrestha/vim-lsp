@@ -496,14 +496,7 @@ function! s:handle_location(ctx, server, type, data) abort "ctx = {counter, list
             let l:loc = a:ctx['list'][0]
 
             if len(a:ctx['list']) == 1 && a:ctx['jump_if_one'] && !a:ctx['in_preview']
-                normal! m'
-                let l:buffer = bufnr(l:loc['filename'])
-                if &modified && !&hidden
-                    let l:cmd = l:buffer !=# -1 ? 'sb ' . l:buffer : 'split ' . fnameescape(l:loc['filename'])
-                else
-                    let l:cmd = l:buffer !=# -1 ? 'b ' . l:buffer : 'edit ' . fnameescape(l:loc['filename'])
-                endif
-                execute l:cmd . ' | call cursor('.l:loc['lnum'].','.l:loc['col'].')'
+                call lsp#utils#location#_open_vim_list_item(l:loc)
                 echo 'Retrieved ' . a:type
                 redraw
             elseif !a:ctx['in_preview']
