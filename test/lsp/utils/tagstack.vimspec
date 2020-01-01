@@ -43,28 +43,28 @@ Describe lsp#utils#tagstack
             Assert Equals(l:tagstack['items'][0], {
                         \ 'bufnr': l:bufnr,
                         \ 'tagname': 'foo',
-                        \ 'from': [5,1,1,0],
+                        \ 'from': [l:bufnr, 1, 1, 0],
                         \ 'matchnr': 1,
                         \ })
 
             Assert Equals(l:tagstack['items'][1], {
                         \ 'bufnr': l:bufnr,
                         \ 'tagname': 'foo',
-                        \ 'from': [5,1,2,0],
+                        \ 'from': [l:bufnr, 1, 2, 0],
                         \ 'matchnr': 1,
                         \ })
 
             Assert Equals(l:tagstack['items'][2], {
                         \ 'bufnr': l:bufnr,
                         \ 'tagname': 'baz',
-                        \ 'from': [5,3,3,0],
+                        \ 'from': [l:bufnr, 3, 3, 0],
                         \ 'matchnr': 1,
                         \ })
 
             Assert Equals(l:tagstack['items'][3], {
                         \ 'bufnr': l:bufnr,
                         \ 'tagname': 'bar',
-                        \ 'from': [5,2,1,0],
+                        \ 'from': [l:bufnr, 2, 1, 0],
                         \ 'matchnr': 1,
                         \ })
         End
