@@ -484,7 +484,7 @@ function! s:handle_location(ctx, server, type, data) abort "ctx = {counter, list
     if lsp#client#is_error(a:data['response'])
         call lsp#utils#error('Failed to retrieve '. a:type . ' for ' . a:server . ': ' . lsp#client#error_message(a:data['response']))
     else
-        let a:ctx['list'] = a:ctx['list'] + lsp#ui#vim#utils#locations_to_loc_list(a:data)
+        let a:ctx['list'] = a:ctx['list'] + lsp#utils#location#_lsp_to_vim_list(a:data['response']['result'])
     endif
 
     if a:ctx['counter'] == 0
