@@ -69,6 +69,7 @@ command! LspPreviousDiagnostic call lsp#ui#vim#diagnostics#previous_diagnostic()
 command! LspReferences call lsp#ui#vim#references()
 command! LspRename call lsp#ui#vim#rename()
 command! LspTypeDefinition call lsp#ui#vim#type_definition(0)
+command! LspTypeHierarchy call lsp#ui#vim#type_hierarchy()
 command! LspPeekTypeDefinition call lsp#ui#vim#type_definition(1)
 command! LspWorkspaceSymbol call lsp#ui#vim#workspace_symbol()
 command! -range LspDocumentFormat call lsp#ui#vim#document_format()
@@ -105,6 +106,7 @@ nnoremap <plug>(lsp-previous-diagnostic) :<c-u>call lsp#ui#vim#diagnostics#previ
 nnoremap <plug>(lsp-references) :<c-u>call lsp#ui#vim#references()<cr>
 nnoremap <plug>(lsp-rename) :<c-u>call lsp#ui#vim#rename()<cr>
 nnoremap <plug>(lsp-type-definition) :<c-u>call lsp#ui#vim#type_definition(0)<cr>
+nnoremap <plug>(lsp-type-hierarchy) :<c-u>call lsp#ui#vim#type_hierarchy()<cr>
 nnoremap <plug>(lsp-peek-type-definition) :<c-u>call lsp#ui#vim#type_definition(1)<cr>
 nnoremap <plug>(lsp-workspace-symbol) :<c-u>call lsp#ui#vim#workspace_symbol()<cr>
 nnoremap <plug>(lsp-document-format) :<c-u>call lsp#ui#vim#document_format()<cr>
