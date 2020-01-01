@@ -2,7 +2,9 @@ Describe lsp#utils#tagstack
 
     Before each
         % delete _
-        call settagstack(1, {'items' : []})
+        if exists('settagstack')
+            call settagstack(1, {'items' : []})
+        endif
     End
 
     After all
