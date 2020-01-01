@@ -474,34 +474,6 @@ function! s:handle_symbol(server, last_req_id, type, data) abort
     endif
 endfunction
 
-function! s:update_tagstack() abort
-    let l:bufnr = bufnr('%')
-    let l:item = {'bufnr': l:bufnr, 'from': [l:bufnr, line('.'), col('.'), 0], 'tagname': expand('<cword>')}
-    let l:winid = win_getid()
-
-    let l:stack = gettagstack(l:winid)
-    if l:stack['length'] == l:stack['curidx']
-        " Replace the last items with item.
-        let l:action = 'r'
-        let l:stack['items'][l:stack['curidx']-1] = l:item
-    elseif l:stack['length'] > l:stack['curidx']
-        " Replace items after used items with item.
-        let l:action = 'r'
-        if l:stack['curidx'] > 1
-            let l:stack['items'] = add(l:stack['items'][:l:stack['curidx']-2], l:item)
-        else
-            let l:stack['items'] = [l:item]
-        endif
-    else
-        " Append item.
-        let l:action = 'a'
-        let l:stack['items'] = [l:item]
-    endif
-    let l:stack['curidx'] += 1
-
-    call settagstack(l:winid, l:stack, l:action)
-endfunction
-
 function! s:handle_location(ctx, server, type, data) abort "ctx = {counter, list, jump_if_one, last_req_id, in_preview}
     if a:ctx['last_req_id'] != s:last_req_id
         return
@@ -519,9 +491,7 @@ function! s:handle_location(ctx, server, type, data) abort "ctx = {counter, list
         if empty(a:ctx['list'])
             call lsp#utils#error('No ' . a:type .' found')
         else
-            if exists('*gettagstack') && exists('*settagstack')
-                call s:update_tagstack()
-            endif
+            call lsp#utils#tagstack#_update()
 
             let l:loc = a:ctx['list'][0]
 
