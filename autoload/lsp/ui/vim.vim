@@ -656,7 +656,7 @@ function! s:handle_code_action(server, last_req_id, type, data) abort
     endif
 endfunction
 
-function! s:handle_type_hierarchy(ctx, server, type, data) abort "ctx = {counter, list, jump_if_one, last_req_id}
+function! s:handle_type_hierarchy(ctx, server, type, data) abort "ctx = {counter, list, last_req_id}
     if a:ctx['last_req_id'] != s:last_req_id
         return
     endif
@@ -726,8 +726,8 @@ function! s:get_children_for_tree_hierarchy(Callback, ...) dict abort
     endif
 endfunction
 
-function! s:get_parent_for_tree_hierarchy(Callback, object) dict abort
-    echom 'get_parent'
+function! s:get_parent_for_tree_hierarchy(...) dict abort
+    " TODO
 endfunction
 
 function! s:get_treeitem_for_tree_hierarchy(Callback, object) dict abort
