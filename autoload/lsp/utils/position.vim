@@ -17,7 +17,7 @@ function! s:to_col(expr, lnum, char) abort
     return strlen(strcharpart(l:linestr, 0, a:char)) + 1
 endfunction
 
-" @param bufnr = bufnr
+" @param expr = see :help bufname()
 " @param position = {
 "   'line': 1,
 "   'character': 1
