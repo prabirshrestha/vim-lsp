@@ -672,7 +672,7 @@ endfunction
 function! s:hierarchy_treeitem_command(hierarchyitem) abort
     bwipeout
     call lsp#utils#tagstack#_update()
-    call lsp#utils#buffer#_open_lsp_location(a:hierarchyitem)
+    call lsp#utils#location#_open_lsp_location(a:hierarchyitem)
 endfunction
 
 function! s:get_children_for_tree_hierarchy(Callback, ...) dict abort
