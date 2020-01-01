@@ -20,6 +20,7 @@ function! lsp#utils#location#_open_lsp_location(location) abort
     endif
     execute l:cmd . ' | call cursor('.l:start_line.','.l:start_col.')'
 
+    let l:bufnr = bufnr('%')
     normal! V
     call setpos("'<", [l:bufnr, l:start_line, l:start_col])
     call setpos("'>", [l:bufnr, l:end_line, l:end_col])
