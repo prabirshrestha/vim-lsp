@@ -121,7 +121,7 @@ function! lsp#ui#vim#utils#diagnostics_to_loc_list(result) abort
                 let l:text .= l:item['code'] . ':'
             endif
             let l:text .= l:item['message']
-            let [l:line, l:col] = lsp#utils#position#_lsp_to_vim(l:path, l:item['range'])
+            let [l:line, l:col] = lsp#utils#position#_lsp_to_vim(l:path, l:item['range']['start'])
             call add(l:list, {
                 \ 'filename': l:path,
                 \ 'lnum': l:line,
@@ -130,6 +130,7 @@ function! lsp#ui#vim#utils#diagnostics_to_loc_list(result) abort
                 \ })
         endfor
     endif
+
 
     return l:list
 endfunction
