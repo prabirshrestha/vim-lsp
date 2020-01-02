@@ -167,7 +167,7 @@ function! s:rename(server, new_name, pos) abort
         \   'position': a:pos,
         \   'newName': a:new_name,
         \ },
-        \ 'on_notification': function('s:handle_workspace_edit', [a:server, l:command_id, 'rename']),
+        \ 'on_notification': function('s:handle_workspace_edit', [a:server, lsp#_last_command(), 'rename']),
         \ })
 
     echo ' ... Renaming ...'
