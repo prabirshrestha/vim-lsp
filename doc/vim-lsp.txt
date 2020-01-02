@@ -40,6 +40,8 @@ CONTENTS                                                  *vim-lsp-contents*
       g:lsp_log_file                        |g:lsp_log_file|
       g:lsp_semantic_enabled                |g:lsp_semantic_enabled|
       g:lsp_text_document_did_save_delay    |g:lsp_text_document_did_save_delay|
+      g:lsp_snippet_expand                  |g:lsp_snippet_expand|
+      g:lsp_completion_resolve_timeout      |g:lsp_completion_resolve_timeout|
     Functions                             |vim-lsp-functions|
       lsp#enable                            |lsp#enable()|
       lsp#disable                           |lsp#disable()|
@@ -587,6 +589,18 @@ g:lsp_text_document_did_save_delay   *g:lsp_text_document_did_save_delay*
     LSP servers, -1 by default means no delay. If >= 0, will delay using
     |timer_start()| with {time} is the number.
 
+g:lsp_snippet_expand                                 *g:lsp_snippet_expand*
+    Type: |List|
+
+    The integration point to other snippet plugin.
+    vim-lsp may invoke the first item of this value when it needs snippet expansion.
+
+g:lsp_completion_resolve_timeout         *g:lsp_completion_resolve_timeout*
+    Type: |Number|
+    Default: `200`
+
+    The `completionItem/resolve` request's timeout value.
+    If your vim freeze at `CompleteDone`, you can set this value to 0.
 
 ==============================================================================
 FUNCTIONS                                               *vim-lsp-functions*
