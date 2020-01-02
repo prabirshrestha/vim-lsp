@@ -41,6 +41,7 @@ CONTENTS                                                  *vim-lsp-contents*
       g:lsp_semantic_enabled                |g:lsp_semantic_enabled|
       g:lsp_text_document_did_save_delay    |g:lsp_text_document_did_save_delay|
       g:lsp_snippet_expand                  |g:lsp_snippet_expand|
+      g:lsp_completion_resolve_timeout      |g:lsp_completion_resolve_timeout|
     Functions                             |vim-lsp-functions|
       lsp#enable                            |lsp#enable()|
       lsp#disable                           |lsp#disable()|
