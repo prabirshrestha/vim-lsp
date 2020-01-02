@@ -1,21 +1,9 @@
-" Remove keys we're not interested in
-function! PreprocessItem(item) abort
-    let l:item = a:item
-
-    if has_key(l:item, 'user_data')
-        let l:user_data = json_decode(l:item['user_data'])
-        unlet l:user_data['vim-lsp/insertStart']
-        let l:item['user_data'] = json_encode(l:user_data)
-    endif
-
-    if l:item['user_data'] == '{}'
-        unlet l:item['user_data']
-    endif
-
-    return l:item
-endfunction
-
 Describe lsp#omni
+
+    Before each
+        call lsp#omni#clear_managed_user_data_map()
+    End
+
     Describe lsp#omni#get_vim_completion_item
         It should return item with proper kind
             let item = {
@@ -34,43 +22,30 @@ Describe lsp#omni
             \ 'empty': 1,
             \ 'kind': 'function',
             \ 'menu': 'my-detail',
-            \ 'user_data': json_encode({
-            \   'vim-lsp/serverName': '',
-            \   'vim-lsp/completionItem': item
-            \ })
+            \ 'user_data': 'vim-lsp/0'
             \}
-            let got = lsp#omni#get_vim_completion_item(item)
 
-            Assert Equals(PreprocessItem(got), want)
+            Assert Equals(lsp#omni#get_vim_completion_item(item), want)
         End
 
-        It should return result contained user_data['vim-lsp/completionItem']
+        It should get user_data by the item
             if !has('patch-8.0.1493')
                 Skip This test requires 'patch-8.0.1493'
             endif
-
-            let l:text_edit = {
-            \    'range': {
-            \      'start': {'line': 5, 'character': 0},
-            \      'end': {'line': 5, 'character': 5}
-            \    },
-            \    'newText': 'yyy'
-            \  }
 
             let item = {
             \ 'label': 'my-label',
             \ 'documentation': 'my documentation.',
             \ 'detail': 'my-detail',
             \ 'kind': '3',
-            \ 'textEdit': l:text_edit
+            \ 'textEdit': {
+            \    'range': {
+            \      'start': {'line': 5, 'character': 0},
+            \      'end': {'line': 5, 'character': 5}
+            \    },
+            \    'newText': 'yyy'
+            \  }
             \}
-
-            let l:want_user_data = {
-            \  'vim-lsp/serverName': '',
-            \  'vim-lsp/completionItem': item,
-            \}
-
-            let l:want_user_data_string = json_encode(l:want_user_data)
 
             let want = {
             \ 'word': 'my-label',
@@ -81,11 +56,15 @@ Describe lsp#omni
             \ 'empty': 1,
             \ 'kind': 'function',
             \ 'menu': 'my-detail',
-            \ 'user_data': l:want_user_data_string
+            \ 'user_data': 'vim-lsp/0'
             \}
-            let got = lsp#omni#get_vim_completion_item(item)
 
-            Assert Equals(PreprocessItem(got), want)
+            let got = lsp#omni#get_vim_completion_item(item)
+            Assert Equals(got, want)
+            Assert Equals(lsp#omni#get_managed_user_data_from_completed_item(got), {
+                        \   'server_name': '',
+                        \   'completion_item': item
+                        \ })
         End
 
         It should return item with newlines in 'menu' replaced
@@ -105,14 +84,10 @@ Describe lsp#omni
             \ 'empty': 1,
             \ 'kind': 'function',
             \ 'menu': 'my-detail more-detail',
-            \ 'user_data': json_encode({
-            \   'vim-lsp/serverName': '',
-            \   'vim-lsp/completionItem': item
-            \ })
+            \ 'user_data': 'vim-lsp/0'
             \}
-            let got = lsp#omni#get_vim_completion_item(item)
 
-            Assert Equals(PreprocessItem(got), want)
+            Assert Equals(lsp#omni#get_vim_completion_item(item), want)
         End
     End
 End
