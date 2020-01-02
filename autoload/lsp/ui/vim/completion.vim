@@ -137,13 +137,16 @@ function! s:resolve_completion_item(completion_item, server_name) abort
     let l:self['response'] = a:data['response']
   endfunction
 
-  call lsp#send_request(a:server_name, {
-        \   'method': 'completionItem/resolve',
-        \   'params': a:completion_item,
-        \   'sync': 1,
-        \   'sync_timeout': g:lsp_completion_resolve_timeout,
-        \   'on_notification': function(l:ctx['callback'], [], l:ctx)
-        \ })
+  try
+    call lsp#send_request(a:server_name, {
+          \   'method': 'completionItem/resolve',
+          \   'params': a:completion_item,
+          \   'sync': 1,
+          \   'sync_timeout': g:lsp_completion_resolve_timeout,
+          \   'on_notification': function(l:ctx['callback'], [], l:ctx)
+          \ })
+  catch /.*/
+  endtry
 
   if empty(l:ctx['response'])
     return a:completion_item

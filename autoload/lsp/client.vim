@@ -251,7 +251,7 @@ function! s:lsp_send(id, opts, type) abort " opts = { id?, method?, result?, par
 
             let l:timeout = get(a:opts, 'sync_timeout', -1)
             while has_key(l:ctx['requests'], l:request['id'])
-                if reltimefloat(reltime(l:start_time)) > l:timeout && l:timeout != -1
+                if (reltimefloat(reltime(l:start_time)) * 1000) > l:timeout && l:timeout != -1
                     throw 'lsp#client: timeout'
                 endif
                 sleep 1m
