@@ -300,7 +300,7 @@ endfunction
 "
 " This function should call at `CompleteDone` only if not empty `v:completed_item`.
 "
-function! lsp#omni#clear_managed_user_data_map() abort
+function! lsp#omni#_clear_managed_user_data_map() abort
     let s:managed_user_data_key_base = 0
     let s:managed_user_data_map = {}
 endfunction
@@ -309,10 +309,11 @@ endfunction
 " create item's user_data.
 "
 function! s:create_user_data(completion_item, server_name) abort
-    let l:user_data_key = 'vim-lsp/' . string(s:managed_user_data_key_base)
-    let s:managed_user_data_map[l:user_data_key] = {}
-    let s:managed_user_data_map[l:user_data_key]['server_name'] = a:server_name
-    let s:managed_user_data_map[l:user_data_key]['completion_item'] = a:completion_item
+    let l:user_data_key = 'vim-lsp/key/' . string(s:managed_user_data_key_base)
+    let s:managed_user_data_map[l:user_data_key] = {
+                \   'server_name': a:server_name,
+                \   'completion_item': a:completion_item
+                \ }
     let s:managed_user_data_key_base += 1
     return l:user_data_key
 endfunction

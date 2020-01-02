@@ -2,7 +2,7 @@
 "
 let s:context = {}
 
-function! lsp#ui#vim#completion#setup() abort
+function! lsp#ui#vim#completion#_setup() abort
   augroup lsp_ui_vim_completion
     autocmd!
     autocmd CompleteDone * call s:on_complete_done()
@@ -32,7 +32,7 @@ function! s:on_complete_done() abort
   let l:managed_user_data = lsp#omni#get_managed_user_data_from_completed_item(v:completed_item)
 
   " Clear managed user_data.
-  call lsp#omni#clear_managed_user_data_map()
+  call lsp#omni#_clear_managed_user_data_map()
 
   " If managed user_data does not exists, skip it.
   if empty(l:managed_user_data)
@@ -81,9 +81,10 @@ function! s:on_complete_done_after() abort
           \   l:completed_item,
           \   l:completion_item
           \ )
+
     if exists('g:lsp_snippets_expand_snippet') && len(g:lsp_snippets_expand_snippet) > 0
       " vim-lsp-snippets expects commit characters removed.
-      call s:expand_text_simply(v:completed_item['word'])
+      call s:simple_expand_text(v:completed_item['word'])
     elseif exists('g:lsp_snippet_expand') && len(g:lsp_snippet_expand) > 0
       " other snippet integartion point.
       call g:lsp_snippet_expand[0]({
@@ -91,7 +92,7 @@ function! s:on_complete_done_after() abort
             \ })
     else
       " expand text simply.
-      call s:expand_text_simply(l:expand_text)
+      call s:simple_expand_text(l:expand_text)
     endif
   endif
 
@@ -196,10 +197,7 @@ function! s:clear_inserted_text(line, position, completed_item, completion_item)
         \ }])
 
   " Move to complete start position.
-  call cursor(
-        \   l:range['start']['line'] + 1,
-        \   lsp#utils#to_col('%', l:range['start']['line'] + 1, l:range['start']['character'])
-        \ )
+  call cursor(lsp#utils#position#_lsp_to_vim('%', l:range['start']))
 endfunction
 
 "
@@ -218,7 +216,7 @@ endfunction
 "
 " Expand text
 "
-function! s:expand_text_simply(text) abort
+function! s:simple_expand_text(text) abort
   let l:pos = {
         \   'line': line('.') - 1,
         \   'character': lsp#utils#to_char('%', line('.'), col('.'))
@@ -239,10 +237,12 @@ function! s:expand_text_simply(text) abort
         \   },
         \   'newText': l:text
         \ }])
-  call cursor(
-        \   l:pos['line'] + 1,
-        \   lsp#utils#to_col('%', l:pos['line'] + 1, l:pos['character']) + l:offset
-        \ )
+
+  let l:pos = lsp#utils#position#_lsp_to_vim('%', {
+        \   'line': l:pos['line'],
+        \   'character': l:pos['character'] + l:offset
+        \ })
+  call cursor(l:pos)
 endfunction
 
 "
