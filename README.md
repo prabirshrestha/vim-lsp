@@ -115,6 +115,7 @@ Refer to `:h vim-lsp-semantic` for more info.
 |`:LspRename`| Rename symbol |
 |`:LspStatus` | Show the status of the language server |
 |`:LspTypeDefinition`| Go to the type definition of the word under the cursor, and open in the current window |
+|`:LspTypeHierarchy`| View type hierarchy of the symbol under the cursor |
 |`:LspWorkspaceSymbol`| Search/Show workspace symbol |
 
 ### Diagnostics

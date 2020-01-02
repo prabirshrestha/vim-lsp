@@ -19,3 +19,4 @@ jobs:
         with:
           github_token: ${{ secrets.github_token }}
           level: error
+          reporter: github-pr-review

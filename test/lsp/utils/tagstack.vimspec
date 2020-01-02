@@ -1,0 +1,75 @@
+Describe lsp#utils#tagstack
+
+    Before each
+        % delete _
+        if exists('*settagstack')
+            call settagstack(1, {'items' : []})
+        endif
+    End
+
+    After all
+        % delete _
+    End
+
+    Describe lsp#utils#tagstack#_update()
+        It should correctly preserve the tag stack
+            let l:bufnr = bufnr('%')
+
+            0put = 'foo'
+            1put = 'bar'
+            2put = 'baz'
+
+            call cursor(1, 1)
+            call lsp#utils#tagstack#_update()
+
+            call cursor(1, 2)
+            call lsp#utils#tagstack#_update()
+
+            call cursor(3, 3)
+            call lsp#utils#tagstack#_update()
+
+            call cursor(2, 1)
+            call lsp#utils#tagstack#_update()
+
+            if !exists('*gettagstack') || !exists('*settagstack')
+                " calling lsp#utils#tagstack#_update() should be safe if
+                " gettagstack and settagstack doesn't exist
+                return
+            endif
+
+            let l:tagstack = gettagstack()
+
+            Assert Equals(l:tagstack['length'], 4)
+            Assert Equals(l:tagstack['curidx'], 5)
+
+            Assert Equals(l:tagstack['items'][0], {
+                        \ 'bufnr': l:bufnr,
+                        \ 'tagname': 'foo',
+                        \ 'from': [l:bufnr, 1, 1, 0],
+                        \ 'matchnr': 1,
+                        \ })
+
+            Assert Equals(l:tagstack['items'][1], {
+                        \ 'bufnr': l:bufnr,
+                        \ 'tagname': 'foo',
+                        \ 'from': [l:bufnr, 1, 2, 0],
+                        \ 'matchnr': 1,
+                        \ })
+
+            Assert Equals(l:tagstack['items'][2], {
+                        \ 'bufnr': l:bufnr,
+                        \ 'tagname': 'baz',
+                        \ 'from': [l:bufnr, 3, 3, 0],
+                        \ 'matchnr': 1,
+                        \ })
+
+            Assert Equals(l:tagstack['items'][3], {
+                        \ 'bufnr': l:bufnr,
+                        \ 'tagname': 'bar',
+                        \ 'from': [l:bufnr, 2, 1, 0],
+                        \ 'matchnr': 1,
+                        \ })
+        End
+    End
+
+End

@@ -1,3 +1,7 @@
+function! lsp#utils#is_file_uri(uri) abort
+    return stridx(a:uri, 'file:///') == 0
+endfunction
+
 function! lsp#utils#is_remote_uri(uri) abort
     return a:uri =~# '^\w\+::' || a:uri =~# '^\w\+://'
 endfunction
@@ -186,23 +190,6 @@ function! lsp#utils#echo_with_truncation(msg) abort
     exec 'echo l:msg'
 endfunction
 
-" Convert a character-index (0-based) to byte-index (1-based)
-" This function requires a buffer specifier (expr, see :help bufname()),
-" a line number (lnum, 1-based), and a character-index (char, 0-based).
-function! lsp#utils#to_col(expr, lnum, char) abort
-    let l:lines = getbufline(a:expr, a:lnum)
-    if l:lines == []
-        if type(a:expr) != v:t_string || !filereadable(a:expr)
-            " invalid a:expr
-            return a:char + 1
-        endif
-        " a:expr is a file that is not yet loaded as a buffer
-        let l:lines = readfile(a:expr, '', a:lnum)
-    endif
-    let l:linestr = l:lines[-1]
-    return strlen(strcharpart(l:linestr, 0, a:char)) + 1
-endfunction
-
 " Convert a byte-index (1-based) to a character-index (0-based)
 " This function requires a buffer specifier (expr, see :help bufname()),
 " a line number (lnum, 1-based), and a byte-index (char, 1-based).
@@ -245,8 +232,9 @@ function! s:get_base64_alphabet() abort
     return l:alphabet
 endfunction
 
+let s:alphabet = s:get_base64_alphabet()
+
 function! lsp#utils#base64_decode(data) abort
-    let l:alphabet = s:get_base64_alphabet()
     let l:ret = []
 
     " Process base64 string in chunks of 4 chars
@@ -256,7 +244,7 @@ function! lsp#utils#base64_decode(data) abort
         " Convert 4 chars to 3 octets
         for l:char in split(l:group, '\zs')
             let l:group_dec = l:group_dec * 64
-            let l:group_dec += max([index(l:alphabet, l:char), 0])
+            let l:group_dec += max([index(s:alphabet, l:char), 0])
         endfor
 
         " Split the number representing the 3 octets into the individual

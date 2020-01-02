@@ -12,16 +12,10 @@ endif
 " positions, one for each line.
 " Return a list of positions.
 function! s:range_to_position(bufnr, range) abort
-    let l:start = a:range['start']
-    let l:end = a:range['end']
     let l:position = []
 
-    let l:start_line = l:start['line'] + 1
-    let l:start_char = l:start['character']
-    let l:start_col = lsp#utils#to_col(a:bufnr, l:start_line, l:start_char)
-    let l:end_line = l:end['line'] + 1
-    let l:end_char = l:end['character']
-    let l:end_col = lsp#utils#to_col(a:bufnr, l:end_line, l:end_char)
+    let [l:start_line, l:start_col] = lsp#utils#position#_lsp_to_vim(a:bufnr, a:range['start'])
+    let [l:end_line, l:end_col] = lsp#utils#position#_lsp_to_vim(a:bufnr, a:range['end'])
     if l:end_line == l:start_line
         let l:position = [[
         \ l:start_line,
