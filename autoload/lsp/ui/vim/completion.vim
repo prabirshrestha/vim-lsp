@@ -23,8 +23,19 @@ endfunction
 " 6. then the line is `call getbufline(|` in `s:on_complete_done_after`
 "
 function! s:on_complete_done() abort
-  let l:user_data = lsp#omni#get_user_data_from_completed_item(v:completed_item)
-  if empty(l:user_data)
+  if empty(v:completed_item)
+    doautocmd User lsp_complete_done
+    return
+  endif
+
+  " Try to get managed user_data.
+  let l:managed_user_data = lsp#omni#get_managed_user_data_from_completed_item(v:completed_item)
+
+  " Clear managed user_data.
+  call lsp#omni#clear_managed_user_data_map()
+
+  " If managed user_data does not exists, skip it.
+  if empty(l:managed_user_data)
     doautocmd User lsp_complete_done
     return
   endif
@@ -32,8 +43,8 @@ function! s:on_complete_done() abort
   let s:context['line'] = getline('.')
   let s:context['position'] = getpos('.')
   let s:context['completed_item'] = copy(v:completed_item)
-  let s:context['server_name'] = l:user_data['vim-lsp/serverName']
-  let s:context['completion_item'] = l:user_data['vim-lsp/completionItem']
+  let s:context['server_name'] = l:managed_user_data['server_name']
+  let s:context['completion_item'] = l:managed_user_data['completion_item']
   call feedkeys(printf("\<C-r>=<SNR>%d_on_complete_done_after()\<CR>", s:SID()), 'n')
 endfunction
 

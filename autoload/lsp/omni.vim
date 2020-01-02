@@ -37,11 +37,8 @@ let s:completion_status_failed = 'failed'
 let s:completion_status_pending = 'pending'
 
 let s:is_user_data_support = has('patch-8.0.1493')
-let s:user_data_insert_start_key = 'vim-lsp/insertStart'
-let s:user_data_filtertext_key = 'vim-lsp/filterText'
-let s:user_data_text_edit_key = 'vim-lsp/textEdit' " This key can be removed. But vim-lsp-snippets uses this key. So this key leave for now.
-let s:user_data_server_name_key = 'vim-lsp/serverName'
-let s:user_data_completion_item_key = 'vim-lsp/completionItem'
+let s:managed_user_data_key_base = 0
+let s:managed_user_data_map = {}
 
 " }}}
 
@@ -80,10 +77,11 @@ function! lsp#omni#complete(findstart, base) abort
 endfunction
 
 function! s:get_insertion_point(item, current_line, typed_pattern) abort
-    if !has_key(a:item, 'user_data')
-        let l:insert_start = -1
-    else
-        let l:insert_start = get(json_decode(a:item['user_data']), s:user_data_insert_start_key, -1)
+    let l:insert_start = -1
+
+    let l:user_data = lsp#omni#get_managed_user_data_from_completed_item(a:item)
+    if has_key(l:user_data, 'completion_item') && has_key(l:user_data['completion_item'], 'textEdit')
+        let l:insert_start = l:user_data['completion_item']['textEdit']['range']['start']['character']
     endif
 
     if l:insert_start >= 0
@@ -94,12 +92,11 @@ function! s:get_insertion_point(item, current_line, typed_pattern) abort
 endfunction
 
 function! s:get_filter_label(item) abort
-    if !has_key(a:item, 'user_data')
-        return trim(a:item['word'])
+    let l:user_data = lsp#omni#get_managed_user_data_from_completed_item(a:item)
+    if has_key(l:user_data, 'completion_item') && has_key(l:user_data['completion_item'], 'filterText')
+        return trim(l:user_data['completion_item']['filterText'])
     endif
-
-    let l:user_data = json_decode(a:item['user_data'])
-    return trim(get(l:user_data, s:user_data_filtertext_key, a:item['word']))
+    return trim(a:item['word'])
 endfunction
 
 function! s:prefix_filter(item, last_typed_word) abort
@@ -274,7 +271,7 @@ function! lsp#omni#default_get_vim_completion_item(item, ...) abort
 
     " Add user_data.
     if s:is_user_data_support
-        let l:completion['user_data'] = json_encode(s:create_user_data(a:item, l:server_name))
+        let l:completion['user_data'] = s:create_user_data(a:item, l:server_name)
     endif
 
     if has_key(a:item, 'detail') && !empty(a:item['detail'])
@@ -299,55 +296,40 @@ function! lsp#omni#get_vim_completion_item(...) abort
 endfunction
 
 "
-" create item's user_data.
+" Clear internal user_data map.
 "
-function! s:create_user_data(item, server_name) abort
-    let l:user_data = {}
-
-    " InsertStartKey.
-    let l:user_data[s:user_data_insert_start_key] = -1
-    if has_key(a:item, 'textEdit') && type(a:item.textEdit) == type({})
-        let l:user_data[s:user_data_text_edit_key] = a:item.textEdit
-        let l:user_data[s:user_data_insert_start_key] = a:item.textEdit.range.start.character
-    endif
-
-    " FilterTextKey.
-    if has_key(a:item, 'filterText')
-        let l:user_data[s:user_data_filtertext_key] = a:item.filterText
-    endif
-
-    " ServerNameKey.
-    let l:user_data[s:user_data_server_name_key] = a:server_name
-
-    " CompletionItemKey.
-    let l:user_data[s:user_data_completion_item_key] = a:item
-
-    return l:user_data
+" This function should call at `CompleteDone` only if not empty `v:completed_item`.
+"
+function! lsp#omni#clear_managed_user_data_map() abort
+    let s:managed_user_data_key_base = 0
+    let s:managed_user_data_map = {}
 endfunction
 
-function! lsp#omni#get_user_data_from_completed_item(completed_item) abort
+"
+" create item's user_data.
+"
+function! s:create_user_data(completion_item, server_name) abort
+    let l:user_data_key = 'vim-lsp/' . string(s:managed_user_data_key_base)
+    let s:managed_user_data_map[l:user_data_key] = {}
+    let s:managed_user_data_map[l:user_data_key]['server_name'] = a:server_name
+    let s:managed_user_data_map[l:user_data_key]['completion_item'] = a:completion_item
+    let s:managed_user_data_key_base += 1
+    return l:user_data_key
+endfunction
+
+function! lsp#omni#get_managed_user_data_from_completed_item(completed_item) abort
     " the item has no user_data.
     if !has_key(a:completed_item, 'user_data')
         return {}
     endif
 
-    " try to decode user_data.
-    try
-        let l:user_data = json_decode(a:completed_item['user_data'])
-    catch /.*/
-        let l:user_data = {}
-    endtry
-    if empty(l:user_data)
+    " Check managed user_data.
+    let l:user_data_key = get(a:completed_item, 'user_data', '')
+    if !has_key(s:managed_user_data_map, l:user_data_key)
         return {}
     endif
 
-    " user_data has no managed keys.
-    if !has_key(l:user_data, s:user_data_server_name_key)
-                \ || !has_key(l:user_data, s:user_data_completion_item_key)
-        return {}
-    endif
-
-    return l:user_data
+    return s:managed_user_data_map[l:user_data_key]
 endfunction
 
 function! lsp#omni#get_completion_item_kinds() abort
