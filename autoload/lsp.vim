@@ -1,7 +1,7 @@
 let s:enabled = 0
 let s:already_setup = 0
 let s:servers = {} " { lsp_id, server_info, init_callbacks, init_result, buffers: { path: { changed_tick } }
-
+let s:last_command_id = 0
 let s:notification_callbacks = [] " { name, callback }
 
 " This hold previous content for each language servers to make
@@ -913,4 +913,13 @@ endfunction
 
 function! lsp#server_complete(lead, line, pos) abort
     return filter(sort(keys(s:servers)), 'stridx(v:val, a:lead)==0 && has_key(s:servers[v:val], "init_result")')
+endfunction
+
+function! lsp#_new_command() abort
+    let s:last_command_id += 1
+    return s:last_command_id
+endfunction
+
+function! lsp#_last_command() abort
+    return s:last_command_id
 endfunction

@@ -1,19 +1,17 @@
-let s:last_req_id = 0
-
 function! s:not_supported(what) abort
     return lsp#utils#error(a:what.' not supported for '.&filetype)
 endfunction
 
 function! lsp#ui#vim#implementation(in_preview) abort
     let l:servers = filter(lsp#get_whitelisted_servers(), 'lsp#capabilities#has_implementation_provider(v:val)')
-    let s:last_req_id = s:last_req_id + 1
+    let l:command_id = lsp#_new_command()
     call setqflist([])
 
     if len(l:servers) == 0
         call s:not_supported('Retrieving implementation')
         return
     endif
-    let l:ctx = { 'counter': len(l:servers), 'list':[], 'last_req_id': s:last_req_id, 'jump_if_one': 1, 'in_preview': a:in_preview }
+    let l:ctx = { 'counter': len(l:servers), 'list':[], 'last_command_id': l:command_id, 'jump_if_one': 1, 'in_preview': a:in_preview }
     for l:server in l:servers
         call lsp#send_request(l:server, {
             \ 'method': 'textDocument/implementation',
@@ -30,14 +28,14 @@ endfunction
 
 function! lsp#ui#vim#type_definition(in_preview) abort
     let l:servers = filter(lsp#get_whitelisted_servers(), 'lsp#capabilities#has_type_definition_provider(v:val)')
-    let s:last_req_id = s:last_req_id + 1
+    let l:command_id = lsp#_new_command()
     call setqflist([])
 
     if len(l:servers) == 0
         call s:not_supported('Retrieving type definition')
         return
     endif
-    let l:ctx = { 'counter': len(l:servers), 'list':[], 'last_req_id': s:last_req_id, 'jump_if_one': 1, 'in_preview': a:in_preview }
+    let l:ctx = { 'counter': len(l:servers), 'list':[], 'last_command_id': l:command_id, 'jump_if_one': 1, 'in_preview': a:in_preview }
     for l:server in l:servers
         call lsp#send_request(l:server, {
             \ 'method': 'textDocument/typeDefinition',
@@ -54,13 +52,13 @@ endfunction
 
 function! lsp#ui#vim#type_hierarchy() abort
     let l:servers = filter(lsp#get_whitelisted_servers(), 'lsp#capabilities#has_type_hierarchy_provider(v:val)')
-    let s:last_req_id = s:last_req_id + 1
+    let l:command_id = lsp#_new_command()
 
     if len(l:servers) == 0
         call s:not_supported('Retrieving type hierarchy')
         return
     endif
-    let l:ctx = { 'counter': len(l:servers), 'list':[], 'last_req_id': s:last_req_id }
+    let l:ctx = { 'counter': len(l:servers), 'list':[], 'last_command_id': l:command_id }
     " direction 0 children, 1 parent, 2 both
     for l:server in l:servers
         call lsp#send_request(l:server, {
@@ -80,7 +78,7 @@ endfunction
 
 function! lsp#ui#vim#declaration(in_preview) abort
     let l:servers = filter(lsp#get_whitelisted_servers(), 'lsp#capabilities#has_declaration_provider(v:val)')
-    let s:last_req_id = s:last_req_id + 1
+    let l:command_id = lsp#_new_command()
     call setqflist([])
 
     if len(l:servers) == 0
@@ -88,7 +86,7 @@ function! lsp#ui#vim#declaration(in_preview) abort
         return
     endif
 
-    let l:ctx = { 'counter': len(l:servers), 'list':[], 'last_req_id': s:last_req_id, 'jump_if_one': 1, 'in_preview': a:in_preview }
+    let l:ctx = { 'counter': len(l:servers), 'list':[], 'last_command_id': l:command_id, 'jump_if_one': 1, 'in_preview': a:in_preview }
     for l:server in l:servers
         call lsp#send_request(l:server, {
             \ 'method': 'textDocument/declaration',
@@ -105,7 +103,7 @@ endfunction
 
 function! lsp#ui#vim#definition(in_preview) abort
     let l:servers = filter(lsp#get_whitelisted_servers(), 'lsp#capabilities#has_definition_provider(v:val)')
-    let s:last_req_id = s:last_req_id + 1
+    let l:command_id = lsp#_new_command()
     call setqflist([])
 
     if len(l:servers) == 0
@@ -113,7 +111,7 @@ function! lsp#ui#vim#definition(in_preview) abort
         return
     endif
 
-    let l:ctx = { 'counter': len(l:servers), 'list':[], 'last_req_id': s:last_req_id, 'jump_if_one': 1, 'in_preview': a:in_preview }
+    let l:ctx = { 'counter': len(l:servers), 'list':[], 'last_command_id': l:command_id, 'jump_if_one': 1, 'in_preview': a:in_preview }
     for l:server in l:servers
         call lsp#send_request(l:server, {
             \ 'method': 'textDocument/definition',
@@ -130,11 +128,11 @@ endfunction
 
 function! lsp#ui#vim#references() abort
     let l:servers = filter(lsp#get_whitelisted_servers(), 'lsp#capabilities#has_references_provider(v:val)')
-    let s:last_req_id = s:last_req_id + 1
+    let l:command_id = lsp#_new_command()
 
     call setqflist([])
 
-    let l:ctx = { 'counter': len(l:servers), 'list':[], 'last_req_id': s:last_req_id, 'jump_if_one': 0, 'in_preview': 0 }
+    let l:ctx = { 'counter': len(l:servers), 'list':[], 'last_command_id': l:command_id, 'jump_if_one': 0, 'in_preview': 0 }
     if len(l:servers) == 0
         call s:not_supported('Retrieving references')
         return
@@ -169,7 +167,7 @@ function! s:rename(server, new_name, pos) abort
         \   'position': a:pos,
         \   'newName': a:new_name,
         \ },
-        \ 'on_notification': function('s:handle_workspace_edit', [a:server, s:last_req_id, 'rename']),
+        \ 'on_notification': function('s:handle_workspace_edit', [a:server, lsp#_last_command(), 'rename']),
         \ })
 
     echo ' ... Renaming ...'
@@ -183,7 +181,7 @@ function! lsp#ui#vim#rename() abort
         let l:prepare_support = 0
     endif
 
-    let s:last_req_id = s:last_req_id + 1
+    let l:command_id = lsp#_new_command()
 
     if len(l:servers) == 0
         call s:not_supported('Renaming')
@@ -200,7 +198,7 @@ function! lsp#ui#vim#rename() abort
             \   'textDocument': lsp#get_text_document_identifier(),
             \   'position': lsp#get_position(),
             \ },
-            \ 'on_notification': function('s:handle_rename_prepare', [l:server, s:last_req_id, 'rename_prepare']),
+            \ 'on_notification': function('s:handle_rename_prepare', [l:server, l:command_id, 'rename_prepare']),
             \ })
         return
     endif
@@ -210,7 +208,7 @@ endfunction
 
 function! s:document_format(sync) abort
     let l:servers = filter(lsp#get_whitelisted_servers(), 'lsp#capabilities#has_document_formatting_provider(v:val)')
-    let s:last_req_id = s:last_req_id + 1
+    let l:command_id = lsp#_new_command()
 
     if len(l:servers) == 0
         call s:not_supported('Document formatting')
@@ -230,7 +228,7 @@ function! s:document_format(sync) abort
         \   },
         \ },
         \ 'sync': a:sync,
-        \ 'on_notification': function('s:handle_text_edit', [l:server, s:last_req_id, 'document format']),
+        \ 'on_notification': function('s:handle_text_edit', [l:server, l:command_id, 'document format']),
         \ })
 endfunction
 
@@ -290,7 +288,7 @@ endfunction
 
 function! s:document_format_range(sync, type) abort
     let l:servers = filter(lsp#get_whitelisted_servers(), 'lsp#capabilities#has_document_range_formatting_provider(v:val)')
-    let s:last_req_id = s:last_req_id + 1
+    let l:command_id = lsp#_new_command()
 
     if len(l:servers) == 0
         call s:not_supported('Document range formatting')
@@ -318,7 +316,7 @@ function! s:document_format_range(sync, type) abort
         \   },
         \ },
         \ 'sync': a:sync,
-        \ 'on_notification': function('s:handle_text_edit', [l:server, s:last_req_id, 'range format']),
+        \ 'on_notification': function('s:handle_text_edit', [l:server, l:command_id, 'range format']),
         \ })
 endfunction
 
@@ -336,7 +334,7 @@ endfunction
 
 function! lsp#ui#vim#workspace_symbol() abort
     let l:servers = filter(lsp#get_whitelisted_servers(), 'lsp#capabilities#has_workspace_symbol_provider(v:val)')
-    let s:last_req_id = s:last_req_id + 1
+    let l:command_id = lsp#_new_command()
 
     call setqflist([])
 
@@ -353,7 +351,7 @@ function! lsp#ui#vim#workspace_symbol() abort
             \ 'params': {
             \   'query': l:query,
             \ },
-            \ 'on_notification': function('s:handle_symbol', [l:server, s:last_req_id, 'workspaceSymbol']),
+            \ 'on_notification': function('s:handle_symbol', [l:server, l:command_id, 'workspaceSymbol']),
             \ })
     endfor
 
@@ -362,7 +360,7 @@ endfunction
 
 function! lsp#ui#vim#document_symbol() abort
     let l:servers = filter(lsp#get_whitelisted_servers(), 'lsp#capabilities#has_document_symbol_provider(v:val)')
-    let s:last_req_id = s:last_req_id + 1
+    let l:command_id = lsp#_new_command()
 
     call setqflist([])
 
@@ -377,7 +375,7 @@ function! lsp#ui#vim#document_symbol() abort
             \ 'params': {
             \   'textDocument': lsp#get_text_document_identifier(),
             \ },
-            \ 'on_notification': function('s:handle_symbol', [l:server, s:last_req_id, 'documentSymbol']),
+            \ 'on_notification': function('s:handle_symbol', [l:server, l:command_id, 'documentSymbol']),
             \ })
     endfor
 
@@ -413,7 +411,7 @@ endfunction
 " https://microsoft.github.io/language-server-protocol/specification#textDocument_codeAction
 function! lsp#ui#vim#code_action() abort
     let l:servers = filter(lsp#get_whitelisted_servers(), 'lsp#capabilities#has_code_action_provider(v:val)')
-    let s:last_req_id = s:last_req_id + 1
+    let l:command_id = lsp#_new_command()
     let l:diagnostic = lsp#ui#vim#diagnostics#get_diagnostics_under_cursor()
 
     if len(l:servers) == 0
@@ -445,15 +443,15 @@ function! lsp#ui#vim#code_action() abort
             \       'only': ['', 'quickfix', 'refactor', 'refactor.extract', 'refactor.inline', 'refactor.rewrite', 'source', 'source.organizeImports'],
             \   },
             \ },
-            \ 'on_notification': function('s:handle_code_action', [l:server, s:last_req_id, 'codeAction']),
+            \ 'on_notification': function('s:handle_code_action', [l:server, l:command_id, 'codeAction']),
             \ })
     endfor
 
     echo 'Retrieving code actions ...'
 endfunction
 
-function! s:handle_symbol(server, last_req_id, type, data) abort
-    if a:last_req_id != s:last_req_id
+function! s:handle_symbol(server, last_command_id, type, data) abort
+    if a:last_command_id != lsp#_last_command()
         return
     endif
 
@@ -474,8 +472,8 @@ function! s:handle_symbol(server, last_req_id, type, data) abort
     endif
 endfunction
 
-function! s:handle_location(ctx, server, type, data) abort "ctx = {counter, list, jump_if_one, last_req_id, in_preview}
-    if a:ctx['last_req_id'] != s:last_req_id
+function! s:handle_location(ctx, server, type, data) abort "ctx = {counter, list, jump_if_one, last_command_id, in_preview}
+    if a:ctx['last_command_id'] != lsp#_last_command()
         return
     endif
 
@@ -523,8 +521,8 @@ function! s:handle_location(ctx, server, type, data) abort "ctx = {counter, list
     endif
 endfunction
 
-function! s:handle_rename_prepare(server, last_req_id, type, data) abort
-    if a:last_req_id != s:last_req_id
+function! s:handle_rename_prepare(server, last_command_id, type, data) abort
+    if a:last_command_id != lsp#_last_command()
         return
     endif
 
@@ -554,8 +552,8 @@ function! s:handle_rename_prepare(server, last_req_id, type, data) abort
     call timer_start(1, {x->s:rename(a:server, input('new name: ', l:name), l:range['start'])})
 endfunction
 
-function! s:handle_workspace_edit(server, last_req_id, type, data) abort
-    if a:last_req_id != s:last_req_id
+function! s:handle_workspace_edit(server, last_command_id, type, data) abort
+    if a:last_command_id != lsp#_last_command()
         return
     endif
 
@@ -569,8 +567,8 @@ function! s:handle_workspace_edit(server, last_req_id, type, data) abort
     echo 'Renamed'
 endfunction
 
-function! s:handle_text_edit(server, last_req_id, type, data) abort
-    if a:last_req_id != s:last_req_id
+function! s:handle_text_edit(server, last_command_id, type, data) abort
+    if a:last_command_id != lsp#_last_command()
         return
     endif
 
@@ -584,7 +582,7 @@ function! s:handle_text_edit(server, last_req_id, type, data) abort
     redraw | echo 'Document formatted'
 endfunction
 
-function! s:handle_code_action(server, last_req_id, type, data) abort
+function! s:handle_code_action(server, last_command_id, type, data) abort
     if lsp#client#is_error(a:data['response'])
         call lsp#utils#error('Failed to '. a:type . ' for ' . a:server . ': ' . lsp#client#error_message(a:data['response']))
         return
@@ -615,8 +613,8 @@ function! s:handle_code_action(server, last_req_id, type, data) abort
     endif
 endfunction
 
-function! s:handle_type_hierarchy(ctx, server, type, data) abort "ctx = {counter, list, last_req_id}
-    if a:ctx['last_req_id'] != s:last_req_id
+function! s:handle_type_hierarchy(ctx, server, type, data) abort "ctx = {counter, list, last_command_id}
+    if a:ctx['last_command_id'] != lsp#_last_command()
         return
     endif
 
