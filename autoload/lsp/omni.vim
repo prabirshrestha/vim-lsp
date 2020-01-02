@@ -309,7 +309,7 @@ endfunction
 " create item's user_data.
 "
 function! s:create_user_data(completion_item, server_name) abort
-    let l:user_data_key = 'vim-lsp/key/' . string(s:managed_user_data_key_base)
+    let l:user_data_key = '{"vim-lsp/key/' . string(s:managed_user_data_key_base) . '":""}'
     let s:managed_user_data_map[l:user_data_key] = {
                 \   'server_name': a:server_name,
                 \   'completion_item': a:completion_item
