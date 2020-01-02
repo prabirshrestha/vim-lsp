@@ -146,6 +146,7 @@ function! s:resolve_completion_item(completion_item, server_name) abort
           \   'on_notification': function(l:ctx['callback'], [], l:ctx)
           \ })
   catch /.*/
+    call lsp#log('s:resolve_completion_item', 'request timeout.')
   endtry
 
   if empty(l:ctx['response'])
