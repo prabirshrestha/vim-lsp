@@ -594,6 +594,12 @@ g:lsp_snippet_expand                                 *g:lsp_snippet_expand*
     The integration point to other snippet plugin.
     vim-lsp may invoke the first item of this value when it needs snippet expansion.
 
+g:lsp_completion_resolve_timeout         *g:lsp_completion_resolve_timeout*
+    Type: |Number|
+    Default: `200`
+
+    The `completionItem/resolve` request's timeout value.
+    If your vim freeze at `CompleteDone`, you can set this value to 0.
 
 ==============================================================================
 FUNCTIONS                                               *vim-lsp-functions*
