@@ -99,6 +99,8 @@ function! s:lsp_location_item_to_vim(loc, cache) abort
     endif
 endfunction
 
+" @summary Use this to convert loc to vim list that is compatible with
+" quickfix and locllist items
 " @param loc = v:null | Location | Location[] | LocationLink
 " @returns []
 function! lsp#utils#location#_lsp_to_vim_list(loc) abort

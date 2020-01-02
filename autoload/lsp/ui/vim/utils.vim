@@ -65,7 +65,7 @@ function! lsp#ui#vim#utils#symbols_to_loc_list(server, result) abort
         for l:symbol in a:result['response']['result']
             if has_key(l:symbol, 'location')
                 let l:location = l:symbol['location']
-                if s:is_file_uri(l:location['uri'])
+                if lsp#utils#is_file_uri(l:location['uri'])
                     let l:path = lsp#utils#uri_to_path(l:location['uri'])
                     let [l:line, l:col] = lsp#utils#position#_lsp_to_vim(l:path, l:location['range']['start'])
                     call add(l:list, {
@@ -77,7 +77,7 @@ function! lsp#ui#vim#utils#symbols_to_loc_list(server, result) abort
                 endif
             else
                 let l:location = a:result['request']['params']['textDocument']['uri']
-                if s:is_file_uri(l:location)
+                if lsp#utils#is_file_uri(l:location)
                     let l:path = lsp#utils#uri_to_path(l:location)
                     let [l:line, l:col] = lsp#utils#position#_lsp_to_vim(l:path, l:symbol['range']['start'])
                     call add(l:list, {
@@ -107,7 +107,7 @@ function! lsp#ui#vim#utils#diagnostics_to_loc_list(result) abort
 
     let l:list = []
 
-    if !empty(l:diagnostics) && s:is_file_uri(l:uri)
+    if !empty(l:diagnostics) && lsp#utils#is_file_uri(l:uri)
         let l:path = lsp#utils#uri_to_path(l:uri)
         for l:item in l:diagnostics
             let l:text = ''
@@ -132,10 +132,6 @@ function! lsp#ui#vim#utils#diagnostics_to_loc_list(result) abort
     endif
 
     return l:list
-endfunction
-
-function! s:is_file_uri(uri) abort
-    return stridx(a:uri, 'file:///') == 0
 endfunction
 
 function! s:get_symbol_text_from_kind(server, kind) abort
