@@ -473,7 +473,6 @@ function! s:handle_symbol(server, last_command_id, type, data) abort
 endfunction
 
 function! s:handle_location(ctx, server, type, data) abort "ctx = {counter, list, jump_if_one, last_command_id, in_preview}
-    echom 'handle_location'
     if a:ctx['last_command_id'] != lsp#_last_command()
         return
     endif
