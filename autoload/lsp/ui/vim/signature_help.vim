@@ -23,7 +23,7 @@ function! lsp#ui#vim#signature_help#get_signature_help_under_cursor() abort
             \ })
     endfor
 
-    echo 'Retrieving signature help ...'
+    call lsp#log('Retrieving signature help')
     return
 endfunction
 
