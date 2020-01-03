@@ -116,7 +116,7 @@ function! lsp#utils#location#_lsp_to_vim_list(loc) abort
             endif
         endfor
     else " Location or LocationLink
-        let l:vim_loc = s:lsp_location_item_to_vim(l:location, l:cache)
+        let l:vim_loc = s:lsp_location_item_to_vim(a:loc, l:cache)
         if !empty(l:vim_loc) " https:// uri will return empty
             call add(l:result, l:vim_loc)
         endif
