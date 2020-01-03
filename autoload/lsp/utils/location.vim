@@ -77,7 +77,7 @@ function! s:lsp_location_item_to_vim(loc, cache) abort
             if stridx(l:path, 'zipfile:///') == 0
                 " FIXME: dirty-hack...readfile() to zipfile not found.
                 call lsp#utils#tagstack#_update()
-                execute ":edit " . l:path
+                execute ':edit ' . l:path
             else
                 let l:contents = readfile(l:path)
             endif
