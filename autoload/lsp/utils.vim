@@ -1,5 +1,5 @@
 function! lsp#utils#is_file_uri(uri) abort
-    return stridx(a:uri, 'file:///') == 0
+    return stridx(a:uri, 'file:///') >= 0
 endfunction
 
 function! lsp#utils#is_remote_uri(uri) abort
@@ -68,10 +68,16 @@ endif
 
 if has('win32') || has('win64')
     function! lsp#utils#uri_to_path(uri) abort
+        if stridx(a:uri, 'zipfile:///') == 0
+            return substitute(s:decode_uri(a:uri), '/', '\\', 'g')
+        endif
         return substitute(s:decode_uri(a:uri[len('file:///'):]), '/', '\\', 'g')
     endfunction
 else
     function! lsp#utils#uri_to_path(uri) abort
+        if stridx(a:uri, 'zipfile:///') == 0
+            return s:decode_uri(a:uri)
+        endif
         return s:decode_uri(a:uri[len('file://'):])
     endfunction
 endif

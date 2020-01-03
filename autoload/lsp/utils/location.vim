@@ -74,7 +74,13 @@ function! s:lsp_location_item_to_vim(loc, cache) abort
         if !empty(l:contents)
             let l:text = l:contents[l:index]
         else
-            let l:contents = readfile(l:path)
+            if stridx(l:path, 'zipfile:///') == 0
+                " FIXME: dirty-hack...readfile() to zipfile not found.
+                call lsp#utils#tagstack#_update()
+                execute ":edit " . l:path
+            else
+                let l:contents = readfile(l:path)
+            endif
             let a:cache[l:path] = l:contents
             let l:text = l:contents[l:index]
         endif
