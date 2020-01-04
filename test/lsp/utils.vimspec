@@ -110,12 +110,12 @@ Describe lsp#utils
         End
     End
 
-    Describe lsp#utils#get_before_line
+    Describe lsp#utils#_get_before_line
         It should return line before cursor on col=1
             enew!
             call setline(1, ['123456789'])
             call cursor(1, 1)
-            Assert Equals(lsp#utils#get_before_line(), '')
+            Assert Equals(lsp#utils#_get_before_line(), '')
         End
 
         It should return line before cursor on col=$
@@ -124,7 +124,7 @@ Describe lsp#utils
             enew!
             call setline(1, ['123456789'])
             call cursor(1, 10)
-            Assert Equals(lsp#utils#get_before_line(), '123456789')
+            Assert Equals(lsp#utils#_get_before_line(), '123456789')
             let &virtualedit = l:saved_virtualedit
         End
 
@@ -132,22 +132,22 @@ Describe lsp#utils
             enew!
             call setline(1, ['あいうえおabc'])
             call cursor(1, 18)
-            Assert Equals(lsp#utils#get_before_line(), 'あいうえおab')
+            Assert Equals(lsp#utils#_get_before_line(), 'あいうえおab')
         End
     End
 
-    Describe lsp#utils#get_before_char_skip_white
+    Describe lsp#utils#_get_before_char_skip_white
         It should return before char in above of line
             enew!
             call setline(1, ['(', ''])
             call cursor(2, 1)
-            Assert Equals(lsp#utils#get_before_char_skip_white(), '(')
+            Assert Equals(lsp#utils#_get_before_char_skip_white(), '(')
         End
         It should return before char with multibyte
             enew!
             call setline(1, ['あいうえお(    '])
             call cursor(1, 21)
-            Assert Equals(lsp#utils#get_before_char_skip_white(), '(')
+            Assert Equals(lsp#utils#_get_before_char_skip_white(), '(')
         End
     End
 

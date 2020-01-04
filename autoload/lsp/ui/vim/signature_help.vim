@@ -133,7 +133,7 @@ function! s:on_text_changed_after(bufnr) abort
         let l:chars += lsp#capabilities#get_signature_help_trigger_characters(l:server_name)
     endfor
 
-    if index(l:chars, lsp#utils#get_before_char_skip_white()) >= 0
+    if index(l:chars, lsp#utils#_get_before_char_skip_white()) >= 0
         call lsp#ui#vim#signature_help#get_signature_help_under_cursor()
     endif
 endfunction

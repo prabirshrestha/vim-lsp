@@ -232,7 +232,7 @@ function! s:get_base64_alphabet() abort
     return l:alphabet
 endfunction
 
-function! lsp#utils#get_before_line() abort
+function! lsp#utils#_get_before_line() abort
   let l:text = getline('.')
   let l:idx = min([strlen(l:text), col('.') - 2])
   let l:idx = max([l:idx, -1])
@@ -242,13 +242,13 @@ function! lsp#utils#get_before_line() abort
   return l:text[0 : l:idx]
 endfunction
 
-function! lsp#utils#get_before_char_skip_white() abort
+function! lsp#utils#_get_before_char_skip_white() abort
   let l:current_lnum = line('.')
 
   let l:lnum = l:current_lnum
   while l:lnum > 0
     if l:lnum == l:current_lnum
-      let l:text = lsp#utils#get_before_line()
+      let l:text = lsp#utils#_get_before_line()
     else
       let l:text = getline(l:lnum)
     endif
