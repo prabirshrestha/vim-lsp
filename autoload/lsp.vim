@@ -393,6 +393,8 @@ function! s:ensure_start(buf, server_name, cb) abort
         return
     endif
 
+    call lsp#log('Starting server', a:server_name, l:cmd)
+
     let l:lsp_id = lsp#client#start({
         \ 'cmd': l:cmd,
         \ 'on_stderr': function('s:on_stderr', [a:server_name]),
