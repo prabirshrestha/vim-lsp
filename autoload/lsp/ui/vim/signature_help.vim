@@ -141,7 +141,7 @@ endfunction
 function! lsp#ui#vim#signature_help#setup() abort
     augroup _lsp_signature_help_
         autocmd!
-        autocmd CursorMoved,CursorMovedI <buffer> call s:on_cursor_moved()
+        autocmd CursorMoved,CursorMovedI * call s:on_cursor_moved()
     augroup END
 endfunction
 

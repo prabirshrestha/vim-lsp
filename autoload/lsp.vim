@@ -58,6 +58,9 @@ function! lsp#enable() abort
         if g:lsp_highlights_enabled | call lsp#ui#vim#highlights#enable() | endif
         if g:lsp_textprop_enabled | call lsp#ui#vim#diagnostics#textprop#enable() | endif
     endif
+    if g:lsp_signature_help_enabled
+        call lsp#ui#vim#signature_help#setup()
+    endif
     call lsp#ui#vim#completion#_setup()
     call s:register_events()
 endfunction
@@ -742,9 +745,6 @@ function! s:handle_initialize(server_name, data) abort
     for l:Init_callback in l:init_callbacks
         call l:Init_callback(a:data)
     endfor
-    if g:lsp_signature_help_enabled
-        call lsp#ui#vim#signature_help#setup()
-    endif
 
     doautocmd User lsp_server_init
 endfunction
