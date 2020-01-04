@@ -234,7 +234,12 @@ endfunction
 
 function! lsp#utils#get_before_line() abort
   let l:text = getline('.')
-  return l:text[0 : min([strlen(l:text), col('.') - 2])]
+  let l:idx = min([strlen(l:text), col('.') - 2])
+  let l:idx = max([l:idx, -1])
+  if l:idx == -1
+    return ''
+  endif
+  return l:text[0 : l:idx]
 endfunction
 
 function! lsp#utils#get_before_char_skip_white() abort

@@ -111,14 +111,20 @@ function! s:get_parameter_doc(parameter) abort
     return printf('***%s*** - %s', a:parameter['label'], l:doc)
 endfunction
 
-function! s:on_text_changed() abort
+function! s:on_cursor_moved() abort
     let l:bufnr = bufnr('%')
     call timer_stop(s:debounce_timer_id)
-    let s:debounce_timer_id = timer_start(500, { -> s:on_text_changed_after(l:bufnr) })
+    let s:debounce_timer_id = timer_start(200, { -> s:on_text_changed_after(l:bufnr) }, { 'repeat': 1 })
 endfunction
 
 function! s:on_text_changed_after(bufnr) abort
     if bufnr('%') != a:bufnr
+        return
+    endif
+    if index(['i', 's'], mode()[0]) == -1
+        return
+    endif
+    if win_id2win(lsp#ui#vim#output#getpreviewwinid()) >= 1
         return
     endif
 
@@ -135,6 +141,7 @@ endfunction
 function! lsp#ui#vim#signature_help#setup() abort
     augroup _lsp_signature_help_
         autocmd!
-        autocmd TextChangedI,TextChangedP <buffer> call s:on_text_changed()
+        autocmd CursorMoved,CursorMovedI <buffer> call s:on_cursor_moved()
     augroup END
 endfunction
+
