@@ -81,13 +81,14 @@ function! s:lsp_location_item_to_vim(loc, cache) abort
     endif
 
     if l:use_link
+        " viewstart/end decremented to account for incrementing in _lsp_to_vim
         return {
             \ 'filename': l:path,
             \ 'lnum': l:line,
             \ 'col': l:col,
             \ 'text': l:text,
-            \ 'viewstart': lsp#utils#position#_lsp_to_vim(l:path, a:loc['targetRange']['start'])[0],
-            \ 'viewend': lsp#utils#position#_lsp_to_vim(l:path, a:loc['targetRange']['end'])[0],
+            \ 'viewstart': lsp#utils#position#_lsp_to_vim(l:path, a:loc['targetRange']['start'])[0] - 1,
+            \ 'viewend': lsp#utils#position#_lsp_to_vim(l:path, a:loc['targetRange']['end'])[0] - 1,
             \ }
     else
         return {
