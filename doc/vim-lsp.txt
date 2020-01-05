@@ -576,10 +576,10 @@ g:lsp_log_file                                           *g:lsp_log_file*
 
 g:lsp_semantic_enabled                             *g:lsp_semantic_enabled*
     Type: |Boolean|
-    Default: `1`
+    Default: `0`
 
     Determines whether or not semantic highlighting is enabled globally. Set
-    to `0` to disable sending requests.
+    to `1` to enable sending requests.
 
 g:lsp_text_document_did_save_delay   *g:lsp_text_document_did_save_delay*
     Type: |Number|
