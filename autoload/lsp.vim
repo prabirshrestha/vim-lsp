@@ -704,6 +704,8 @@ function! s:on_notification(server_name, id, data, event) abort
                 call lsp#ui#vim#diagnostics#handle_text_document_publish_diagnostics(a:server_name, a:data)
             elseif l:response['method'] ==# 'textDocument/semanticHighlighting'
                 call lsp#ui#vim#semantic#handle_semantic(a:server_name, a:data)
+            elseif l:response['method'] ==# 'window/logMessage'
+                call lsp#ui#vim#window#log_message(str2nr(l:response['params']['type']), l:response['params']['message'])
             endif
         endif
     else
@@ -727,6 +729,9 @@ function! s:on_request(server_name, id, request) abort
     elseif a:request['method'] ==# 'workspace/configuration'
         let l:response_items = map(a:request['params']['items'], { key, val -> lsp#utils#workspace_config#get_value(a:server_name, val) })
         call s:send_response(a:server_name, { 'id': a:request['id'], 'result': l:response_items })
+    elseif a:request['method'] ==# 'window/showMessageRequest'
+        let l:response = lsp#ui#vim#window#show_message_request(str2nr(a:request['params']['type']), a:request['params']['message'], get(a:request['params'], 'actions', []))
+        call s:send_response(a:server_name, { 'id': a:request['id'], 'result': l:response })
     else
         " Error returned according to json-rpc specification.
         call s:send_response(a:server_name, { 'id': a:request['id'], 'error': { 'code': -32601, 'message': 'Method not found' } })
