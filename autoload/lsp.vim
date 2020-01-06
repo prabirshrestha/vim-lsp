@@ -1,7 +1,7 @@
 let s:enabled = 0
 let s:already_setup = 0
 let s:servers = {} " { lsp_id, server_info, init_callbacks, init_result, buffers: { path: { changed_tick } }
-
+let s:last_command_id = 0
 let s:notification_callbacks = [] " { name, callback }
 
 " This hold previous content for each language servers to make
@@ -58,6 +58,10 @@ function! lsp#enable() abort
         if g:lsp_highlights_enabled | call lsp#ui#vim#highlights#enable() | endif
         if g:lsp_textprop_enabled | call lsp#ui#vim#diagnostics#textprop#enable() | endif
     endif
+    if g:lsp_signature_help_enabled
+        call lsp#ui#vim#signature_help#setup()
+    endif
+    call lsp#ui#vim#completion#_setup()
     call s:register_events()
 endfunction
 
@@ -392,6 +396,8 @@ function! s:ensure_start(buf, server_name, cb) abort
         return
     endif
 
+    call lsp#log('Starting server', a:server_name, l:cmd)
+
     let l:lsp_id = lsp#client#start({
         \ 'cmd': l:cmd,
         \ 'on_stderr': function('s:on_stderr', [a:server_name]),
@@ -451,7 +457,8 @@ function! lsp#default_get_supported_capabilities(server_info) abort
     \       },
     \       'semanticHighlightingCapabilities': {
     \           'semanticHighlighting': lsp#ui#vim#semantic#is_enabled()
-    \       }
+    \       },
+    \       'typeHierarchy': v:false,
     \   }
     \ }
 endfunction
@@ -740,9 +747,6 @@ function! s:handle_initialize(server_name, data) abort
     for l:Init_callback in l:init_callbacks
         call l:Init_callback(a:data)
     endfor
-    if g:lsp_signature_help_enabled
-        call lsp#ui#vim#signature_help#setup()
-    endif
 
     doautocmd User lsp_server_init
 endfunction
@@ -912,4 +916,13 @@ endfunction
 
 function! lsp#server_complete(lead, line, pos) abort
     return filter(sort(keys(s:servers)), 'stridx(v:val, a:lead)==0 && has_key(s:servers[v:val], "init_result")')
+endfunction
+
+function! lsp#_new_command() abort
+    let s:last_command_id += 1
+    return s:last_command_id
+endfunction
+
+function! lsp#_last_command() abort
+    return s:last_command_id
 endfunction

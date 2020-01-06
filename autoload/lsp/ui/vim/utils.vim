@@ -1,72 +1,3 @@
-function! lsp#ui#vim#utils#locations_to_loc_list(result) abort
-    if !has_key(a:result['response'], 'result')
-        return []
-    endif
-
-    let l:list = []
-
-    let l:locations = type(a:result['response']['result']) == type({}) ? [a:result['response']['result']] : a:result['response']['result']
-
-    if empty(l:locations) " some servers also return null so check to make sure it isn't empty
-        return []
-    endif
-
-    if has_key(l:locations[0],'targetUri') " server returns locationLinks
-        let l:use_link = 1
-        let l:uri = 'targetUri'
-        let l:range = 'targetSelectionRange'
-    else
-        let l:use_link = 0
-        let l:uri = 'uri'
-        let l:range = 'range'
-    endif
-
-    let l:cache={}
-    for l:location in l:locations
-        if s:is_file_uri(l:location[l:uri])
-            let l:path = lsp#utils#uri_to_path(l:location[l:uri])
-            let l:line = l:location[l:range]['start']['line'] + 1
-            let l:char = l:location[l:range]['start']['character']
-            let l:col = lsp#utils#to_col(l:path, l:line, l:char)
-
-            let l:index = l:line - 1
-            if has_key(l:cache, l:path)
-                let l:text = l:cache[l:path][l:index]
-            else
-                let l:contents = getbufline(l:path, 1, '$')
-                if !empty(l:contents)
-                    let l:text = l:contents[l:index]
-                else
-                    let l:contents = readfile(l:path)
-                    let l:cache[l:path] = l:contents
-                    let l:text = l:contents[l:index]
-                endif
-            endif
-            if l:use_link
-                let l:viewstart = l:location['targetRange']['start']['line']
-                let l:viewend = l:location['targetRange']['end']['line']
-                call add(l:list, {
-                            \ 'filename': l:path,
-                            \ 'lnum': l:line,
-                            \ 'col': l:col,
-                            \ 'text': l:text,
-                            \ 'viewstart': l:viewstart,
-                            \ 'viewend': l:viewend
-                            \ })
-            else
-                call add(l:list, {
-                            \ 'filename': l:path,
-                            \ 'lnum': l:line,
-                            \ 'col': l:col,
-                            \ 'text': l:text,
-                            \ })
-            endif
-        endif
-    endfor
-
-    return l:list
-endfunction
-
 let s:default_symbol_kinds = {
     \ '1': 'file',
     \ '2': 'module',
@@ -107,9 +38,7 @@ let s:diagnostic_severity = {
 
 function! s:symbols_to_loc_list_children(server, path, list, symbols, depth) abort
     for l:symbol in a:symbols
-        let l:line = l:symbol['range']['start']['line'] + 1
-        let l:char = l:symbol['range']['start']['character']
-        let l:col = lsp#utils#to_col(a:path, l:line, l:char)
+        let [l:line, l:col] = lsp#utils#position#_lsp_to_vim(a:path, l:symbol['range']['start'])
 
         call add(a:list, {
             \ 'filename': a:path,
@@ -136,11 +65,9 @@ function! lsp#ui#vim#utils#symbols_to_loc_list(server, result) abort
         for l:symbol in a:result['response']['result']
             if has_key(l:symbol, 'location')
                 let l:location = l:symbol['location']
-                if s:is_file_uri(l:location['uri'])
+                if lsp#utils#is_file_uri(l:location['uri'])
                     let l:path = lsp#utils#uri_to_path(l:location['uri'])
-                    let l:line = l:location['range']['start']['line'] + 1
-                    let l:char = l:location['range']['start']['character']
-                    let l:col = lsp#utils#to_col(l:path, l:line, l:char)
+                    let [l:line, l:col] = lsp#utils#position#_lsp_to_vim(l:path, l:location['range']['start'])
                     call add(l:list, {
                         \ 'filename': l:path,
                         \ 'lnum': l:line,
@@ -150,11 +77,9 @@ function! lsp#ui#vim#utils#symbols_to_loc_list(server, result) abort
                 endif
             else
                 let l:location = a:result['request']['params']['textDocument']['uri']
-                if s:is_file_uri(l:location)
+                if lsp#utils#is_file_uri(l:location)
                     let l:path = lsp#utils#uri_to_path(l:location)
-                    let l:line = l:symbol['range']['start']['line'] + 1
-                    let l:char = l:symbol['range']['start']['character']
-                    let l:col = lsp#utils#to_col(l:path, l:line, l:char)
+                    let [l:line, l:col] = lsp#utils#position#_lsp_to_vim(l:path, l:symbol['range']['start'])
                     call add(l:list, {
                         \ 'filename': l:path,
                         \ 'lnum': l:line,
@@ -182,7 +107,7 @@ function! lsp#ui#vim#utils#diagnostics_to_loc_list(result) abort
 
     let l:list = []
 
-    if !empty(l:diagnostics) && s:is_file_uri(l:uri)
+    if !empty(l:diagnostics) && lsp#utils#is_file_uri(l:uri)
         let l:path = lsp#utils#uri_to_path(l:uri)
         for l:item in l:diagnostics
             let l:text = ''
@@ -196,9 +121,7 @@ function! lsp#ui#vim#utils#diagnostics_to_loc_list(result) abort
                 let l:text .= l:item['code'] . ':'
             endif
             let l:text .= l:item['message']
-            let l:line = l:item['range']['start']['line'] + 1
-            let l:char = l:item['range']['start']['character']
-            let l:col = lsp#utils#to_col(l:path, l:line, l:char)
+            let [l:line, l:col] = lsp#utils#position#_lsp_to_vim(l:path, l:item['range']['start'])
             call add(l:list, {
                 \ 'filename': l:path,
                 \ 'lnum': l:line,
@@ -208,11 +131,8 @@ function! lsp#ui#vim#utils#diagnostics_to_loc_list(result) abort
         endfor
     endif
 
-    return l:list
-endfunction
 
-function! s:is_file_uri(uri) abort
-    return stridx(a:uri, 'file:///') == 0
+    return l:list
 endfunction
 
 function! s:get_symbol_text_from_kind(server, kind) abort

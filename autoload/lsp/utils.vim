@@ -1,3 +1,7 @@
+function! lsp#utils#is_file_uri(uri) abort
+    return stridx(a:uri, 'file:///') == 0
+endfunction
+
 function! lsp#utils#is_remote_uri(uri) abort
     return a:uri =~# '^\w\+::' || a:uri =~# '^\w\+://'
 endfunction
@@ -186,23 +190,6 @@ function! lsp#utils#echo_with_truncation(msg) abort
     exec 'echo l:msg'
 endfunction
 
-" Convert a character-index (0-based) to byte-index (1-based)
-" This function requires a buffer specifier (expr, see :help bufname()),
-" a line number (lnum, 1-based), and a character-index (char, 0-based).
-function! lsp#utils#to_col(expr, lnum, char) abort
-    let l:lines = getbufline(a:expr, a:lnum)
-    if l:lines == []
-        if type(a:expr) != v:t_string || !filereadable(a:expr)
-            " invalid a:expr
-            return a:char + 1
-        endif
-        " a:expr is a file that is not yet loaded as a buffer
-        let l:lines = readfile(a:expr, '', a:lnum)
-    endif
-    let l:linestr = l:lines[-1]
-    return strlen(strcharpart(l:linestr, 0, a:char)) + 1
-endfunction
-
 " Convert a byte-index (1-based) to a character-index (0-based)
 " This function requires a buffer specifier (expr, see :help bufname()),
 " a line number (lnum, 1-based), and a byte-index (char, 1-based).
@@ -243,6 +230,36 @@ function! s:get_base64_alphabet() abort
     call add(l:alphabet, '/')
 
     return l:alphabet
+endfunction
+
+function! lsp#utils#_get_before_line() abort
+  let l:text = getline('.')
+  let l:idx = min([strlen(l:text), col('.') - 2])
+  let l:idx = max([l:idx, -1])
+  if l:idx == -1
+    return ''
+  endif
+  return l:text[0 : l:idx]
+endfunction
+
+function! lsp#utils#_get_before_char_skip_white() abort
+  let l:current_lnum = line('.')
+
+  let l:lnum = l:current_lnum
+  while l:lnum > 0
+    if l:lnum == l:current_lnum
+      let l:text = lsp#utils#_get_before_line()
+    else
+      let l:text = getline(l:lnum)
+    endif
+    let l:match = matchlist(l:text, '\([^[:blank:]]\)\s*$')
+    if get(l:match, 1, v:null) isnot v:null
+      return l:match[1]
+    endif
+    let l:lnum -= 1
+  endwhile
+
+  return ''
 endfunction
 
 let s:alphabet = s:get_base64_alphabet()
