@@ -408,48 +408,6 @@ function! s:get_visual_selection_range() abort
           \}
 endfunction
 
-" https://microsoft.github.io/language-server-protocol/specification#textDocument_codeAction
-function! lsp#ui#vim#code_action() abort
-    let l:servers = filter(lsp#get_whitelisted_servers(), 'lsp#capabilities#has_code_action_provider(v:val)')
-    let l:command_id = lsp#_new_command()
-    let l:diagnostic = lsp#ui#vim#diagnostics#get_diagnostics_under_cursor()
-
-    if len(l:servers) == 0
-        call s:not_supported('Code action')
-        return
-    endif
-
-    let l:range = s:get_visual_selection_range()
-    if empty(l:range)
-        if empty(l:diagnostic)
-            echo 'No diagnostics found under the cursors'
-            return
-        else
-            let l:range = l:diagnostic['range']
-            let l:diagnostics = [l:diagnostic]
-        end
-    else
-        let l:diagnostics = []
-    endif
-
-    for l:server in l:servers
-        call lsp#send_request(l:server, {
-            \ 'method': 'textDocument/codeAction',
-            \ 'params': {
-            \   'textDocument': lsp#get_text_document_identifier(),
-            \   'range': l:range,
-            \   'context': {
-            \       'diagnostics' : l:diagnostics,
-            \       'only': ['', 'quickfix', 'refactor', 'refactor.extract', 'refactor.inline', 'refactor.rewrite', 'source', 'source.organizeImports'],
-            \   },
-            \ },
-            \ 'on_notification': function('s:handle_code_action', [l:server, l:command_id, 'codeAction']),
-            \ })
-    endfor
-
-    echo 'Retrieving code actions ...'
-endfunction
-
 function! s:handle_symbol(server, last_command_id, type, data) abort
     if a:last_command_id != lsp#_last_command()
         return
@@ -582,37 +540,6 @@ function! s:handle_text_edit(server, last_command_id, type, data) abort
     redraw | echo 'Document formatted'
 endfunction
 
-function! s:handle_code_action(server, last_command_id, type, data) abort
-    if lsp#client#is_error(a:data['response'])
-        call lsp#utils#error('Failed to '. a:type . ' for ' . a:server . ': ' . lsp#client#error_message(a:data['response']))
-        return
-    endif
-
-    let l:codeActions = a:data['response']['result']
-
-    let l:index = 0
-    let l:choices = []
-
-    call lsp#log('s:handle_code_action', l:codeActions)
-
-    if len(l:codeActions) == 0
-        echo 'No code actions found'
-        return
-    endif
-
-    while l:index < len(l:codeActions)
-        call add(l:choices, string(l:index + 1) . ' - ' . l:codeActions[index]['title'])
-
-        let l:index += 1
-    endwhile
-
-    let l:choice = inputlist(l:choices)
-
-    if l:choice > 0 && l:choice <= l:index
-        call s:execute_command_or_code_action(a:server, l:codeActions[l:choice - 1])
-    endif
-endfunction
-
 function! s:handle_type_hierarchy(ctx, server, type, data) abort "ctx = {counter, list, last_command_id}
     if a:ctx['last_command_id'] != lsp#_last_command()
         return
@@ -678,38 +605,4 @@ endfunction
 function! s:get_treeitem_for_tree_hierarchy(Callback, object) dict abort
     call a:Callback('success', s:hierarchyitem_to_treeitem(a:object))
 endfunction
-
-" @params
-"   server - string
-"   comand_or_code_action - Command | CodeAction
-function! s:execute_command_or_code_action(server, command_or_code_action) abort
-    if has_key(a:command_or_code_action, 'command') && type(a:command_or_code_action['command']) == type('')
-        let l:command = a:command_or_code_action
-        call s:execute_command(a:server, l:command)
-    else
-        let l:code_action = a:command_or_code_action
-        if has_key(l:code_action, 'edit')
-            call lsp#utils#workspace_edit#apply_workspace_edit(a:command_or_code_action['edit'])
-        endif
-        if has_key(l:code_action, 'command')
-            call s:execute_command(a:server, l:code_action['command'])
-        endif
-    endif
-endfunction
-
-" Sends workspace/executeCommand with given command.
-" @params
-"   server - string
-"   command - https://microsoft.github.io/language-server-protocol/specification#command
-function! s:execute_command(server, command) abort
-    let l:params = {'command': a:command['command']}
-    if has_key(a:command, 'arguments')
-        let l:params['arguments'] = a:command['arguments']
-    endif
-    call lsp#send_request(a:server, {
-        \ 'method': 'workspace/executeCommand',
-        \ 'params': l:params,
-        \ })
-endfunction
-
 

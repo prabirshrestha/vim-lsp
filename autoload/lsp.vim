@@ -434,6 +434,14 @@ function! lsp#default_get_supported_capabilities(server_info) abort
     \              'valueSet': lsp#omni#get_completion_item_kinds()
     \           }
     \       },
+    \       'codeAction': {
+    \         'dynamicRegistration': v:false,
+    \         'codeActionLiteralSupport': {
+    \           'codeActionKind': {
+    \             'valueSet': ['', 'quickfix', 'refactor', 'refactor.extract', 'refactor.inline', 'refactor.rewrite', 'source', 'source.organizeImports'],
+    \           }
+    \         }
+    \       },
     \       'declaration': {
     \           'linkSupport' : v:true
     \       },
