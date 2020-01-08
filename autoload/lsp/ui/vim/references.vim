@@ -1,6 +1,8 @@
 " Global state
 let s:last_req_id = 0
 let s:pending = {}
+let s:use_vim_textprops = has('textprop') && !has('nvim')
+let s:prop_id = 11
 
 " Highlight group for references
 if !hlexists('lspReference')
@@ -126,11 +128,39 @@ function! s:handle_references(ctx, data) abort
 
     " Apply highlights to the buffer
     if g:lsp_highlight_references_enabled
-        for l:position in l:position_list
-            let l:match = matchaddpos('lspReference', [l:position], -5)
-            call add(w:lsp_reference_matches, l:match)
-        endfor
+        let l:bufnr = bufnr()
+        call s:init_reference_highlight(l:bufnr)
+        if s:use_vim_textprops
+            for l:position in l:position_list
+                call prop_add(l:position[0], l:position[1],
+                \   {'id': s:prop_id,
+                \    'bufnr': l:bufnr,
+                \    'length': l:position[2],
+                \    'type': 'vim-lsp-reference-highlight'})
+                call add(w:lsp_reference_matches, l:position[0])
+            endfor
+        else
+            for l:position in l:position_list
+                let l:match = matchaddpos('lspReference', [l:position], -5)
+                call add(w:lsp_reference_matches, l:match)
+            endfor
+        endif
     endif
+endfunction
+
+function! s:init_reference_highlight(buf) abort
+    if !empty(getbufvar(a:buf, 'lsp_did_reference_setup'))
+        return
+    endif
+
+    if s:use_vim_textprops
+        call prop_type_add('vim-lsp-reference-highlight',
+        \   {'bufnr': bufnr(),
+        \    'highlight': 'lspReference',
+        \    'combine': v:true})
+    endif
+
+    call setbufvar(a:buf, 'lsp_did_reference_setup', 1)
 endfunction
 
 " Highlight references to the symbol under the cursor
@@ -179,9 +209,19 @@ endfunction
 function! lsp#ui#vim#references#clean_references() abort
     let s:pending[&filetype] = v:false
     if exists('w:lsp_reference_matches')
-        for l:match in w:lsp_reference_matches
-            silent! call matchdelete(l:match)
-        endfor
+        if s:use_vim_textprops
+            let l:bufnr = bufnr()
+            for l:line in w:lsp_reference_matches
+                silent! call prop_remove(
+                \   {'id': s:prop_id,
+                \    'bufnr': l:bufnr,
+                \    'all': v:true}, l:line)
+            endfor
+        else
+            for l:match in w:lsp_reference_matches
+                silent! call matchdelete(l:match)
+            endfor
+        endif
         unlet w:lsp_reference_matches
         unlet w:lsp_reference_positions
     endif
