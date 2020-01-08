@@ -8,10 +8,17 @@ function! lsp#ui#vim#code_action#complete(input, command, len) abort
 endfunction
 
 "
-" @param range  Provides by command invoking like `<','>LspCodeAction` or `10LspCodeAction`
-" @param query  Specified CodeAction#kind string. Invoke CodeAction immediately when query provided and matched CodeAction is only one.
+" @param option = {
+"   selection: v:true | v:false = Provide by CommandLine like `:'<,'>LspCodeAction`
+"   sync: v:true | v:false      = Specify enable synchronous request. Example use case is `BufWritePre`
+"   query: string               = Specify code action kind query. If query provided and then filtered code action is only one, invoke code action immediately.
+" }
 "
-function! lsp#ui#vim#code_action#do(range, query) abort
+function! lsp#ui#vim#code_action#do(option) abort
+    let l:selection = get(a:option, 'selection', v:false)
+    let l:sync = get(a:option, 'sync', v:false)
+    let l:query = get(a:option, 'query', '')
+
     let l:server_names = filter(lsp#get_whitelisted_servers(), 'lsp#capabilities#has_code_action_provider(v:val)')
     if len(l:server_names) == 0
         return lsp#utils#error('Code action not supported for ' . &filetype)
@@ -20,18 +27,19 @@ function! lsp#ui#vim#code_action#do(range, query) abort
     let l:command_id = lsp#_new_command()
     for l:server_name in l:server_names
         let l:diagnostic = lsp#ui#vim#diagnostics#get_diagnostics_under_cursor(l:server_name)
-        let l:visual_range = s:get_visual_range(a:range)
+        let l:visual_range = s:get_visual_range(l:selection)
         call lsp#send_request(l:server_name, {
                     \ 'method': 'textDocument/codeAction',
                     \ 'params': {
                     \   'textDocument': lsp#get_text_document_identifier(),
-                    \   'range': empty(l:diagnostic) ? l:visual_range : l:diagnostic['range'],
+                    \   'range': empty(l:diagnostic) || l:selection ? l:visual_range : l:diagnostic['range'],
                     \   'context': {
-                    \       'diagnostics' : empty(l:diagnostic) ? [] : [l:diagnostic],
+                    \       'diagnostics' : empty(l:diagnostic) && l:selection ? [] : [l:diagnostic],
                     \       'only': ['', 'quickfix', 'refactor', 'refactor.extract', 'refactor.inline', 'refactor.rewrite', 'source', 'source.organizeImports'],
                     \   },
                     \ },
-                    \ 'on_notification': function('s:handle_code_action', [l:server_name, l:command_id, a:query]),
+                    \ 'sync': l:sync,
+                    \ 'on_notification': function('s:handle_code_action', [l:server_name, l:command_id, l:query]),
                     \ })
     endfor
     echo 'Retrieving code actions ...'
@@ -64,7 +72,7 @@ function! s:handle_code_action(server_name, command_id, query, data) abort
 
     " Prompt to choose code actions when empty query provided.
     let l:index = 1
-    if len(l:code_actions) > 1 && empty(a:query)
+    if len(l:code_actions) > 1 || empty(a:query)
         let l:index = inputlist(map(copy(l:code_actions), { i, action ->
                     \   printf('%s - %s', i + 1, action['title'])
                     \ }))
@@ -97,9 +105,9 @@ function! s:handle_one_code_action(server_name, command_or_code_action) abort
     endif
 endfunction
 
-function! s:get_visual_range(range) abort
+function! s:get_visual_range(selection) abort
     " Use current line range if range is not specified.
-    if a:range == 0
+    if !a:selection
         let l:pos = getpos('.')[1 : 2]
         let l:range = {}
         let l:range['start'] = lsp#utils#position#_vim_to_lsp('%', l:pos)
