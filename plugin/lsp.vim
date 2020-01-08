@@ -54,7 +54,7 @@ if g:lsp_auto_enable
 endif
 
 command! -range -nargs=* -complete=customlist,lsp#ui#vim#code_action#complete LspCodeAction call lsp#ui#vim#code_action#do({
-      \   'sync': v:true,
+      \   'sync': v:false,
       \   'selection': <range> != 0,
       \   'query': '<args>'
       \ })
