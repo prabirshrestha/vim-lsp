@@ -26,15 +26,20 @@ function! lsp#ui#vim#code_action#do(option) abort
         return lsp#utils#error('Code action not supported for ' . &filetype)
     endif
 
+    if l:selection
+        let l:range = lsp#utils#range#_get_recent_visual_range()
+    else
+        let l:range = lsp#utils#range#_get_current_line_range()
+    endif
+
     let l:command_id = lsp#_new_command()
     for l:server_name in l:server_names
         let l:diagnostic = lsp#ui#vim#diagnostics#get_diagnostics_under_cursor(l:server_name)
-        let l:visual_range = s:get_visual_range(l:selection)
         call lsp#send_request(l:server_name, {
                     \ 'method': 'textDocument/codeAction',
                     \ 'params': {
                     \   'textDocument': lsp#get_text_document_identifier(),
-                    \   'range': empty(l:diagnostic) || l:selection ? l:visual_range : l:diagnostic['range'],
+                    \   'range': empty(l:diagnostic) || l:selection ? l:range : l:diagnostic['range'],
                     \   'context': {
                     \       'diagnostics' : empty(l:diagnostic) ? [] : [l:diagnostic],
                     \       'only': ['', 'quickfix', 'refactor', 'refactor.extract', 'refactor.inline', 'refactor.rewrite', 'source', 'source.organizeImports'],

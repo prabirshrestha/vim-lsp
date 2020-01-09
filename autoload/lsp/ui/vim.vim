@@ -382,32 +382,6 @@ function! lsp#ui#vim#document_symbol() abort
     echo 'Retrieving document symbols ...'
 endfunction
 
-" Returns currently selected range. If nothing is selected, returns empty
-" dictionary.
-"
-" @returns
-"   Range - https://microsoft.github.io/language-server-protocol/specification#range
-function! s:get_visual_selection_range() abort
-    " TODO: unify this method with s:get_visual_selection_pos()
-    let [l:line_start, l:column_start] = getpos("'<")[1:2]
-    let [l:line_end, l:column_end] = getpos("'>")[1:2]
-    call lsp#log([l:line_start, l:column_start, l:line_end, l:column_end])
-    if l:line_start == 0
-        return {}
-    endif
-    " For line selection, column_end is a very large number, so trim it to
-    " number of characters in this line.
-    if l:column_end - 1 > len(getline(l:line_end))
-      let l:column_end = len(getline(l:line_end)) + 1
-    endif
-    let l:char_start = lsp#utils#to_char('%', l:line_start, l:column_start)
-    let l:char_end = lsp#utils#to_char('%', l:line_end, l:column_end)
-    return {
-          \ 'start': { 'line': l:line_start - 1, 'character': l:char_start },
-          \ 'end': { 'line': l:line_end - 1, 'character': l:char_end },
-          \}
-endfunction
-
 function! s:handle_symbol(server, last_command_id, type, data) abort
     if a:last_command_id != lsp#_last_command()
         return
