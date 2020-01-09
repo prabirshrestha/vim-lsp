@@ -57,8 +57,8 @@ endfunction
 " }
 function! lsp#utils#position#_vim_to_lsp(expr, pos) abort
     return {
-                \   'line': a:pos[0] - 1,
-                \   'character': s:to_char(a:expr, a:pos[0], a:pos[1])
-                \ }
+         \   'line': a:pos[0] - 1,
+         \   'character': s:to_char(a:expr, a:pos[0], a:pos[1])
+         \ }
 endfunction
 

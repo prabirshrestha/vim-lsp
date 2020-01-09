@@ -1,3 +1,5 @@
+" vint: -ProhibitUnusedVariable
+
 function! lsp#ui#vim#code_action#complete(input, command, len) abort
     let l:server_names = filter(lsp#get_whitelisted_servers(), 'lsp#capabilities#has_code_action_provider(v:val)')
     let l:kinds = []
@@ -34,19 +36,19 @@ function! lsp#ui#vim#code_action#do(option) abort
                     \   'textDocument': lsp#get_text_document_identifier(),
                     \   'range': empty(l:diagnostic) || l:selection ? l:visual_range : l:diagnostic['range'],
                     \   'context': {
-                    \       'diagnostics' : empty(l:diagnostic) && l:selection ? [] : [l:diagnostic],
+                    \       'diagnostics' : empty(l:diagnostic) ? [] : [l:diagnostic],
                     \       'only': ['', 'quickfix', 'refactor', 'refactor.extract', 'refactor.inline', 'refactor.rewrite', 'source', 'source.organizeImports'],
                     \   },
                     \ },
                     \ 'sync': l:sync,
-                    \ 'on_notification': function('s:handle_code_action', [l:server_name, l:command_id, l:query]),
+                    \ 'on_notification': function('s:handle_code_action', [l:server_name, l:command_id, l:sync, l:query]),
                     \ })
     endfor
     echo 'Retrieving code actions ...'
 endfunction
 
-function! s:handle_code_action(server_name, command_id, query, data) abort
-    " Check dupulicate request.
+function! s:handle_code_action(server_name, command_id, sync, query, data) abort
+    " Ignore old request.
     if a:command_id != lsp#_last_command()
         return
     endif
@@ -80,11 +82,11 @@ function! s:handle_code_action(server_name, command_id, query, data) abort
 
     " Execute code action.
     if 0 < l:index && l:index <= len(l:code_actions)
-        call s:handle_one_code_action(a:server_name, l:code_actions[l:index - 1])
+        call s:handle_one_code_action(a:server_name, a:sync, l:code_actions[l:index - 1])
     endif
 endfunction
 
-function! s:handle_one_code_action(server_name, command_or_code_action) abort
+function! s:handle_one_code_action(server_name, sync, command_or_code_action) abort
     " has WorkspaceEdit.
     if has_key(a:command_or_code_action, 'edit')
         call lsp#utils#workspace_edit#apply_workspace_edit(a:command_or_code_action['edit'])
@@ -93,14 +95,16 @@ function! s:handle_one_code_action(server_name, command_or_code_action) abort
     elseif has_key(a:command_or_code_action, 'command') && type(a:command_or_code_action['command']) == type('')
         call lsp#send_request(a:server_name, {
                     \   'method': 'workspace/executeCommand',
-                    \   'params': a:command_or_code_action
+                    \   'params': a:command_or_code_action,
+                    \   'sync': a:sync
                     \ })
 
     " has Command.
     elseif has_key(a:command_or_code_action, 'command') && type(a:command_or_code_action['command']) == type({})
         call lsp#send_request(a:server_name, {
                     \   'method': 'workspace/executeCommand',
-                    \   'params': a:command_or_code_action['command']
+                    \   'params': a:command_or_code_action['command'],
+                    \   'sync': a:sync
                     \ })
     endif
 endfunction
