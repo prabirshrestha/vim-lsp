@@ -114,28 +114,3 @@ function! s:handle_one_code_action(server_name, sync, command_or_code_action) ab
     endif
 endfunction
 
-function! s:get_visual_range(selection) abort
-    " Use current line range if range is not specified.
-    if !a:selection
-        let l:pos = getpos('.')[1 : 2]
-        let l:range = {}
-        let l:range['start'] = lsp#utils#position#_vim_to_lsp('%', l:pos)
-        let l:range['end'] = lsp#utils#position#_vim_to_lsp('%', [l:pos[0], l:pos[1] + strlen(getline(l:pos[0])) + 1])
-    endif
-
-    let l:start_pos = getpos("'<")[1 : 2]
-    let l:end_pos = getpos("'>")[1 : 2]
-    let l:end_pos[1] += 1 " To exclusive
-
-    " Fix line selection.
-    let l:end_line = getline(l:end_pos[0])
-    if l:end_pos[1] > strlen(l:end_line)
-        let l:end_pos[1] = strlen(l:end_line) + 1
-    endif
-
-    let l:range = {}
-    let l:range['start'] = lsp#utils#position#_vim_to_lsp('%', l:start_pos)
-    let l:range['end'] = lsp#utils#position#_vim_to_lsp('%', l:end_pos)
-    return l:range
-endfunction
-
