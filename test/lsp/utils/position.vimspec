@@ -35,4 +35,31 @@ Describe lsp#utils#position
 
     End
 
+    Describe lsp#utils#position#_vim_to_lsp
+
+        It should return the character-index from the given byte-index on a buffer
+            call setline(1, ['a β c', 'δ', ''])
+            Assert Equals({ 'line': 0, 'character': 0 }, lsp#utils#position#_vim_to_lsp('%', [1, 1]))
+            Assert Equals({ 'line': 0, 'character': 1 }, lsp#utils#position#_vim_to_lsp('%', [1, 2]))
+            Assert Equals({ 'line': 0, 'character': 2 }, lsp#utils#position#_vim_to_lsp('%', [1, 3]))
+            Assert Equals({ 'line': 0, 'character': 3 }, lsp#utils#position#_vim_to_lsp('%', [1, 5]))
+            Assert Equals({ 'line': 0, 'character': 4 }, lsp#utils#position#_vim_to_lsp('%', [1, 6]))
+            Assert Equals({ 'line': 1, 'character': 0 }, lsp#utils#position#_vim_to_lsp('%', [2, 1]))
+            Assert Equals({ 'line': 1, 'character': 1 }, lsp#utils#position#_vim_to_lsp('%', [2, 3]))
+            Assert Equals({ 'line': 2, 'character': 0 }, lsp#utils#position#_vim_to_lsp('%', [3, 1]))
+        End
+
+        It should return the character-index from the given byte-index in an unloaded file
+            Assert Equals({ 'line': 0, 'character': 0 }, lsp#utils#position#_vim_to_lsp('./test/testfiles/multibyte.txt', [1, 1]))
+            Assert Equals({ 'line': 0, 'character': 1 }, lsp#utils#position#_vim_to_lsp('./test/testfiles/multibyte.txt', [1, 2]))
+            Assert Equals({ 'line': 0, 'character': 2 }, lsp#utils#position#_vim_to_lsp('./test/testfiles/multibyte.txt', [1, 3]))
+            Assert Equals({ 'line': 0, 'character': 3 }, lsp#utils#position#_vim_to_lsp('./test/testfiles/multibyte.txt', [1, 5]))
+            Assert Equals({ 'line': 0, 'character': 4 }, lsp#utils#position#_vim_to_lsp('./test/testfiles/multibyte.txt', [1, 6]))
+            Assert Equals({ 'line': 1, 'character': 0 }, lsp#utils#position#_vim_to_lsp('./test/testfiles/multibyte.txt', [2, 1]))
+            Assert Equals({ 'line': 1, 'character': 1 }, lsp#utils#position#_vim_to_lsp('./test/testfiles/multibyte.txt', [2, 3]))
+            Assert Equals({ 'line': 2, 'character': 0 }, lsp#utils#position#_vim_to_lsp('./test/testfiles/multibyte.txt', [3, 1]))
+        End
+
+    End
+
 End

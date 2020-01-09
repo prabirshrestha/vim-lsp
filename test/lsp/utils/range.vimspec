@@ -1,0 +1,61 @@
+Describe lsp#utils#range
+
+  Before each
+    % delete _
+  End
+
+  Describe lsp#utils#range#_get_recent_visual_range
+
+    It should return single line visual selection
+      call setline(1, ['あいうえお'])
+      normal! gg0llvly
+      Assert Equals(lsp#utils#range#_get_recent_visual_range(), {
+            \   'start': {
+            \     'line': 0,
+            \     'character': 2
+            \   },
+            \   'end': {
+            \     'line': 0,
+            \     'character': 4
+            \   }
+            \ })
+    End
+
+    It should return multi line visual selection
+      call setline(1, ['あいうえお', 'かきくけこ'])
+      normal! gg0llvjly
+      Assert Equals(lsp#utils#range#_get_recent_visual_range(), {
+            \   'start': {
+            \     'line': 0,
+            \     'character': 2
+            \   },
+            \   'end': {
+            \     'line': 1,
+            \     'character': 4
+            \   }
+            \ })
+    End
+
+  End
+
+  Describe lsp#utils#range#_get_current_line_range
+
+    It should return current line range
+      call setline(1, ['あいうえお', 'かきくけこ', 'さしすせそ'])
+      call cursor(2, 1)
+      Assert Equals(lsp#utils#range#_get_current_line_range(), {
+            \   'start': {
+            \     'line': 1,
+            \     'character': 0
+            \   },
+            \   'end': {
+            \     'line': 1,
+            \     'character': 5
+            \   }
+            \ })
+    End
+
+  End
+
+End
+

@@ -161,3 +161,16 @@ function! lsp#capabilities#get_signature_help_trigger_characters(server_name) ab
     endif
     return []
 endfunction
+
+function! lsp#capabilities#get_code_action_kinds(server_name) abort
+    let l:capabilities = lsp#get_server_capabilities(a:server_name)
+    if !empty(l:capabilities) && has_key(l:capabilities, 'codeActionProvider')
+        if type(l:capabilities['codeActionProvider']) == type({})
+            if has_key(l:capabilities['codeActionProvider'], 'codeActionKinds') && type(l:capabilities['codeActionProvider']['codeActionKinds']) == type([])
+                return l:capabilities['codeActionProvider']['codeActionKinds']
+            endif
+        endif
+    endif
+    return []
+endfunction
+
