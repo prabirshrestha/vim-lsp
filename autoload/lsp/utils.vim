@@ -232,6 +232,16 @@ function! s:get_base64_alphabet() abort
     return l:alphabet
 endfunction
 
+if exists('*trim')
+  function! lsp#utils#_trim(string) abort
+    return trim(a:string)
+  endfunction
+else
+  function! lsp#utils#_trim(string) abort
+    return substitute(a:string, '^\s*\|\s*$', '', 'g')
+  endfunction
+endif
+
 function! lsp#utils#_get_before_line() abort
   let l:text = getline('.')
   let l:idx = min([strlen(l:text), col('.') - 2])

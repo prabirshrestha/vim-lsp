@@ -254,7 +254,7 @@ function! lsp#omni#default_get_vim_completion_item(item, ...) abort
     endif
 
     let l:completion = {
-                \ 'word': trim(l:word),
+                \ 'word': lsp#utils#_trim(l:word),
                 \ 'abbr': l:abbr,
                 \ 'menu': '',
                 \ 'info': '',
