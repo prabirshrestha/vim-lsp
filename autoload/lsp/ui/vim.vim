@@ -580,3 +580,10 @@ function! s:get_treeitem_for_tree_hierarchy(Callback, object) dict abort
     call a:Callback('success', s:hierarchyitem_to_treeitem(a:object))
 endfunction
 
+function! lsp#ui#vim#code_action() abort
+  call lsp#ui#vim#code_action#do({
+      \   'sync': v:false,
+      \   'selection': v:false,
+      \   'query': '',
+      \ })
+endfunction
