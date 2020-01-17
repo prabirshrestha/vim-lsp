@@ -98,19 +98,35 @@ function! s:handle_one_code_action(server_name, sync, command_or_code_action) ab
 
     " Command.
     elseif has_key(a:command_or_code_action, 'command') && type(a:command_or_code_action['command']) == type('')
-        call lsp#send_request(a:server_name, {
-                    \   'method': 'workspace/executeCommand',
-                    \   'params': a:command_or_code_action,
-                    \   'sync': a:sync
-                    \ })
+        if s:handle_client_side_code_action(a:command_or_code_action)
+            call lsp#send_request(a:server_name, {
+                        \   'method': 'workspace/executeCommand',
+                        \   'params': a:command_or_code_action,
+                        \   'sync': a:sync
+                        \ })
+        endif
 
     " has Command.
     elseif has_key(a:command_or_code_action, 'command') && type(a:command_or_code_action['command']) == type({})
-        call lsp#send_request(a:server_name, {
-                    \   'method': 'workspace/executeCommand',
-                    \   'params': a:command_or_code_action['command'],
-                    \   'sync': a:sync
-                    \ })
+        if s:handle_client_side_code_action(a:command_or_code_action['command'])
+            call lsp#send_request(a:server_name, {
+                        \   'method': 'workspace/executeCommand',
+                        \   'params': a:command_or_code_action['command'],
+                        \   'sync': a:sync
+                        \ })
+        endif
     endif
 endfunction
 
+function! s:handle_client_side_code_action(command) abort
+  let l:command = a:command['command']
+  let l:arguments = get(a:command, 'arguments')
+
+  if l:command ==# 'java.apply.workspaceEdit'
+      for l:argument in l:arguments
+          call lsp#utils#workspace_edit#apply_workspace_edit(l:argument)
+      endfor
+  else
+      return 1
+  endif
+endfunction
