@@ -700,12 +700,16 @@ function! s:on_notification(server_name, id, data, event) abort
 
     if lsp#client#is_server_instantiated_notification(a:data)
         if has_key(l:response, 'method')
-            if g:lsp_diagnostics_enabled && l:response['method'] ==# 'textDocument/publishDiagnostics'
+            let l:method = l:response['method']
+            if g:lsp_diagnostics_enabled && l:method ==# 'textDocument/publishDiagnostics'
                 call lsp#ui#vim#diagnostics#handle_text_document_publish_diagnostics(a:server_name, a:data)
-            elseif l:response['method'] ==# 'textDocument/semanticHighlighting'
+            elseif l:method ==# 'textDocument/semanticHighlighting'
                 call lsp#ui#vim#semantic#handle_semantic(a:server_name, a:data)
-            elseif l:response['method'] ==# 'window/logMessage'
+            elseif l:method ==# 'window/logMessage'
                 call lsp#ui#vim#window#log_message(str2nr(l:response['params']['type']), l:response['params']['message'])
+            elseif l:method ==# 'window/showMessage'
+                " TODO: enable this when this method supports docking in the corner.
+                " call lsp#ui#vim#output#preview(a:server_name, l:response['params']['message'], {'statusline': ' LSP Message'})
             endif
         endif
     else

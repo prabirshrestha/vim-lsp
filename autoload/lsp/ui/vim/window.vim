@@ -21,33 +21,20 @@ function! lsp#ui#vim#window#log_message(type, message) abort
 endfunction
 
 function! lsp#ui#vim#window#show_message_request(type, message, actions) abort
-  if empty(a:actions)
-    return v:null
-  endif
-
-  let l:prompt = a:message."\n\n"
-  let l:prompt .= "0. <cancel>\n"
-  let l:i = 0
-
-  while l:i < len(a:actions)
-    let l:prompt .= (l:i+1).'. '.a:actions[l:i]["title"]."\n"
-    let l:i += 1
-  endwhile
-
-  let l:prompt .= "\n> "
-
-  while 1
-    call s:echo_begin(a:type)
-    let l:answer = input(l:prompt)
-    call s:echo_end()
-    if l:answer == '0'
+    if empty(a:actions)
       return v:null
     endif
-    let l:parsed_answer = str2nr(l:answer)
-    if l:parsed_answer > 0 && l:parsed_answer <= len(a:actions)
-      return a:actions[l:parsed_answer-1]
-    endif
 
-    echo "\n\n"
-  endwhile
+    let l:options = [a:message]
+    let l:i = 0
+    for l:action in a:actions
+        let l:i = l:i + 1
+        call add(l:options, l:i.'. '.l:action['title'])
+    endfor
+
+    let l:answer = inputlist(l:options)
+    if l:answer < 1 || l:answer > len(a:actions)
+        return v:null
+    endif
+    return a:actions[l:answer-1]
 endfunction
