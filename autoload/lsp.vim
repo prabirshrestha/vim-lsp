@@ -935,3 +935,20 @@ endfunction
 function! lsp#_last_command() abort
     return s:last_command_id
 endfunction
+
+function! lsp#execute_command(command, arguments, callback) abort
+    let l:params = {'command': a:command}
+    if !empty(a:arguments)
+      let l:params['arguments'] = a:arguments
+    endif
+    let l:buf = bufnr('%')
+    if getbufvar(l:buf, '&buftype') ==# 'terminal' | return | endif
+    for l:server_name in lsp#get_whitelisted_servers(l:buf)
+      call lsp#send_request(l:server_name, {
+            \   'method': 'workspace/executeCommand',
+            \   'params': l:params,
+            \   'sync': 0,
+            \   'on_notification': function(a:callback),
+            \ })
+    endfor
+endfunction
