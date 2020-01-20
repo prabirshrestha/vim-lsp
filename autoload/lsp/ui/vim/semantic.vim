@@ -114,7 +114,7 @@ function! s:add_highlight(server, buf, line, tokens) abort
             try
                 call prop_add(a:line + 1, l:highlight['char'] + 1, { 'length': l:highlight['length'], 'bufnr': a:buf, 'type': s:get_textprop_name(a:server, l:highlight['scope'])})
             catch
-                call lsp#log('error while adding prop on line ' . (a:line + 1), v:exception)
+                call lsp#log('SemanticHighlight: error while adding prop on line ' . (a:line + 1), v:exception)
             endtry
         endfor
     elseif s:use_nvim_highlight
