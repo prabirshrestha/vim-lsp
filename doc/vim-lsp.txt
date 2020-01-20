@@ -53,6 +53,7 @@ CONTENTS                                                  *vim-lsp-contents*
       lsp#get_buffer_first_error_line()   |lsp#get_buffer_first_error_line()|
     Commands                              |vim-lsp-commands|
       LspCodeAction                         |:LspCodeAction|
+      LspCodeActionSync                     |:LspCodeActionSync|
       LspDocumentDiagnostics                |:LspDocumentDiagnostics|
       LspDeclaration                        |:LspDeclaration|
       LspDefinition                         |:LspDefinition|
@@ -576,10 +577,10 @@ g:lsp_log_file                                           *g:lsp_log_file*
 
 g:lsp_semantic_enabled                             *g:lsp_semantic_enabled*
     Type: |Boolean|
-    Default: `1`
+    Default: `0`
 
     Determines whether or not semantic highlighting is enabled globally. Set
-    to `0` to disable sending requests.
+    to `1` to enable sending requests.
 
 g:lsp_text_document_did_save_delay   *g:lsp_text_document_did_save_delay*
     Type: |Number|
@@ -914,10 +915,22 @@ Get line number of first error in current buffer.
 ==============================================================================
 Commands                                                  *vim-lsp-commands*
 
-LspCodeAction                                               *:LspCodeAction*
+LspCodeAction [{CodeActionKind}]                            *:LspCodeAction*
 
 Gets a list of possible commands that can be applied to a file so it can be
 fixed (quick fix).
+
+If the optional {CodeActionKind} specified, will invoke code action
+immediately when matched code action is one only.
+
+LspCodeActionSync [{CodeActionKind}]                    *:LspCodeActionSync*
+
+Same as |:LspCodeAction| but synchronous. Useful when running |:autocmd|
+commands such as organize imports before save.
+
+    Example: >
+        autocmd BufWritePre <buffer>
+                \ call execute('LspCodeActionSync source.organizeImports')
 
 LspDocumentDiagnostics                             *:LspDocumentDiagnostics*
 

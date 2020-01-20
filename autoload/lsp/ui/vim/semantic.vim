@@ -1,5 +1,6 @@
 let s:use_vim_textprops = has('textprop') && !has('nvim')
 let s:use_nvim_highlight = exists('*nvim_buf_add_highlight') && has('nvim')
+let s:textprop_cache = 'vim-lsp-semantic-cache'
 
 if s:use_nvim_highlight
     let s:namespace_id = nvim_create_namespace('vim-lsp-semantic')
@@ -44,7 +45,7 @@ function! lsp#ui#vim#semantic#handle_semantic(server, data) abort
     for l:info in a:data['response']['params']['lines']
         let l:linenr = l:info['line']
         let l:tokens = has_key(l:info, 'tokens') ? l:info['tokens'] : ''
-        call s:add_highlight(a:server, l:bufnr, l:linenr, s:tokens_to_hl_info(l:tokens))
+        call s:add_highlight(a:server, l:bufnr, l:linenr, l:tokens)
     endfor
 endfunction
 
@@ -62,13 +63,40 @@ function! s:init_highlight(server, buf) abort
 
             silent! call prop_type_add(s:get_textprop_name(a:server, l:scope_idx), {'bufnr': a:buf, 'highlight': l:hl, 'combine': v:true})
         endfor
+
+        silent! call prop_type_add(s:textprop_cache, {'bufnr': a:buf})
     endif
 
     call setbufvar(a:buf, 'lsp_did_semantic_setup', 1)
 endfunction
 
-function! s:add_highlight(server, buf, line, highlights) abort
+function! s:hash(str) abort
+    let l:hash = 1
+
+    for l:char in split(a:str, '\zs')
+        let l:hash = (l:hash * 31 + char2nr(l:char)) % 2147483647
+    endfor
+
+    return l:hash
+endfunction
+
+function! s:add_highlight(server, buf, line, tokens) abort
+    " Return quickly if the tokens for this line are already set correctly,
+    " according to the cached tokens.
+    " This only works for Vim at the moment, for Neovim, we need extended
+    " marks.
+    if s:use_vim_textprops
+        let l:props = filter(prop_list(a:line + 1, {'bufnr': a:buf}), {idx, prop -> prop['type'] ==# s:textprop_cache})
+        let l:hash = s:hash(a:tokens)
+
+        if !empty(l:props) && l:props[0]['id'] == l:hash
+            " No changes for this line, so just return.
+            return
+        endif
+    endif
+
     let l:scopes = lsp#ui#vim#semantic#get_scopes(a:server)
+    let l:highlights = s:tokens_to_hl_info(a:tokens)
 
     if s:use_vim_textprops
         " Clear text properties from the previous run
@@ -76,7 +104,13 @@ function! s:add_highlight(server, buf, line, highlights) abort
             call prop_remove({'bufnr': a:buf, 'type': s:get_textprop_name(a:server, l:scope_idx), 'all': v:true}, a:line + 1)
         endfor
 
-        for l:highlight in a:highlights
+        " Clear cache from previous run
+        call prop_remove({'bufnr': a:buf, 'type': s:textprop_cache, 'all': v:true}, a:line + 1)
+
+        " Add textprop for cache
+        call prop_add(a:line + 1, 1, {'bufnr': a:buf, 'type': s:textprop_cache, 'id': l:hash})
+
+        for l:highlight in l:highlights
             try
                 call prop_add(a:line + 1, l:highlight['char'] + 1, { 'length': l:highlight['length'], 'bufnr': a:buf, 'type': s:get_textprop_name(a:server, l:highlight['scope'])})
             catch
@@ -87,7 +121,7 @@ function! s:add_highlight(server, buf, line, highlights) abort
         " Clear text properties from the previous run
         call nvim_buf_clear_namespace(a:buf, s:namespace_id, a:line, a:line + 1)
 
-        for l:highlight in a:highlights
+        for l:highlight in l:highlights
             call nvim_buf_add_highlight(a:buf, s:namespace_id, s:get_hl_name(a:server, l:scopes[l:highlight['scope']]), a:line, l:highlight['char'], l:highlight['char'] + l:highlight['length'])
         endfor
     endif

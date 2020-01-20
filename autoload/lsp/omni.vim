@@ -249,8 +249,12 @@ function! lsp#omni#default_get_vim_completion_item(item, ...) abort
         let l:abbr = a:item['label']
     endif
 
+    if has_key(a:item, 'insertTextFormat') && a:item['insertTextFormat'] == 2
+        let l:word = substitute(l:word, '\<\$[0-9]\+\|\${[^}]\+}\>', '', 'g')
+    endif
+
     let l:completion = {
-                \ 'word': l:word,
+                \ 'word': lsp#utils#_trim(l:word),
                 \ 'abbr': l:abbr,
                 \ 'menu': '',
                 \ 'info': '',

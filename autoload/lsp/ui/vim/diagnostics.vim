@@ -55,8 +55,10 @@ endfunction
 "
 " Note: Consider renaming this method (s/diagnostics/diagnostic) to make
 " it clear that it returns just one diagnostic, not a list.
-function! lsp#ui#vim#diagnostics#get_diagnostics_under_cursor() abort
-    let l:diagnostics = s:get_all_buffer_diagnostics()
+function! lsp#ui#vim#diagnostics#get_diagnostics_under_cursor(...) abort
+    let l:target_server_name = get(a:000, 0, '')
+
+    let l:diagnostics = s:get_all_buffer_diagnostics(l:target_server_name)
     if !len(l:diagnostics)
         return
     endif
@@ -127,8 +129,8 @@ function! s:next_diagnostic(diagnostics) abort
     let l:view['col'] = l:next_col
     let l:view['topline'] = 1
     let l:height = winheight(0)
-    let totalnum = line('$')
-    if totalnum > l:height
+    let l:totalnum = line('$')
+    if l:totalnum > l:height
         let l:half = l:height / 2
         if l:totalnum - l:half < l:view['lnum']
             let l:view['topline'] = l:totalnum - l:height + 1
@@ -186,8 +188,8 @@ function! s:previous_diagnostic(diagnostics) abort
     let l:view['col'] = l:next_col
     let l:view['topline'] = 1
     let l:height = winheight(0)
-    let totalnum = line('$')
-    if totalnum > l:height
+    let l:totalnum = line('$')
+    if l:totalnum > l:height
         let l:half = l:height / 2
         if l:totalnum - l:half < l:view['lnum']
             let l:view['topline'] = l:totalnum - l:height + 1
@@ -215,7 +217,9 @@ function! s:get_diagnostics(uri) abort
 endfunction
 
 " Get diagnostics for the current buffer URI from all servers
-function! s:get_all_buffer_diagnostics() abort
+function! s:get_all_buffer_diagnostics(...) abort
+    let l:target_server_name = get(a:000, 0, '')
+
     let l:uri = lsp#utils#get_buffer_uri()
 
     let [l:has_diagnostics, l:diagnostics] = s:get_diagnostics(l:uri)
@@ -225,7 +229,9 @@ function! s:get_all_buffer_diagnostics() abort
 
     let l:all_diagnostics = []
     for [l:server_name, l:data] in items(l:diagnostics)
-        call extend(l:all_diagnostics, l:data['response']['params']['diagnostics'])
+        if empty(l:target_server_name) || l:server_name ==# l:target_server_name
+            call extend(l:all_diagnostics, l:data['response']['params']['diagnostics'])
+        endif
     endfor
 
     return l:all_diagnostics

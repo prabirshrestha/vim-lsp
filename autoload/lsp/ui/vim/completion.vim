@@ -23,7 +23,9 @@ endfunction
 " 6. then the line is `call getbufline(|` in `s:on_complete_done_after`
 "
 function! s:on_complete_done() abort
-  if empty(v:completed_item)
+  " Somtimes, vim occurs `CompleteDone` unexpectedly.
+  " We try to detect it by checking empty completed_item.
+  if empty(v:completed_item) || get(v:completed_item, 'word', '') ==# '' && get(v:completed_item, 'abbr', '') ==# ''
     doautocmd User lsp_complete_done
     return
   endif
@@ -126,6 +128,7 @@ function! s:resolve_completion_item(completion_item, server_name) abort
   " check server capabilities.
   let l:capabilities = lsp#get_server_capabilities(a:server_name)
   if !has_key(l:capabilities, 'completionProvider')
+        \ || type(l:capabilities['completionProvider']) != v:t_dict
         \ || !has_key(l:capabilities['completionProvider'], 'resolveProvider')
         \ || !l:capabilities['completionProvider']['resolveProvider']
     return a:completion_item
@@ -210,7 +213,7 @@ endfunction
 "
 function! s:get_expand_text(completed_item, completion_item) abort
   let l:text = a:completed_item['word']
-  if has_key(a:completion_item, 'textEdit')
+  if has_key(a:completion_item, 'textEdit') && type(a:completion_item['textEdit']) == v:t_dict
     let l:text = a:completion_item['textEdit']['newText']
   elseif has_key(a:completion_item, 'insertText')
     let l:text = a:completion_item['insertText']

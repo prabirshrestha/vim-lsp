@@ -58,6 +58,9 @@ function! lsp#enable() abort
         if g:lsp_highlights_enabled | call lsp#ui#vim#highlights#enable() | endif
         if g:lsp_textprop_enabled | call lsp#ui#vim#diagnostics#textprop#enable() | endif
     endif
+    if g:lsp_signature_help_enabled
+        call lsp#ui#vim#signature_help#setup()
+    endif
     call lsp#ui#vim#completion#_setup()
     call s:register_events()
 endfunction
@@ -203,6 +206,7 @@ endfunction
 function! s:on_text_document_did_open() abort
     let l:buf = bufnr('%')
     if getbufvar(l:buf, '&buftype') ==# 'terminal' | return | endif
+    if getcmdwintype() !=# '' | return | endif
     call lsp#log('s:on_text_document_did_open()', l:buf, &filetype, getcwd(), lsp#utils#get_buffer_uri(l:buf))
     for l:server_name in lsp#get_whitelisted_servers(l:buf)
         call s:ensure_flush(l:buf, l:server_name, function('s:fire_lsp_buffer_enabled', [l:server_name, l:buf]))
@@ -393,6 +397,8 @@ function! s:ensure_start(buf, server_name, cb) abort
         return
     endif
 
+    call lsp#log('Starting server', a:server_name, l:cmd)
+
     let l:lsp_id = lsp#client#start({
         \ 'cmd': l:cmd,
         \ 'on_stderr': function('s:on_stderr', [a:server_name]),
@@ -428,6 +434,14 @@ function! lsp#default_get_supported_capabilities(server_info) abort
     \           'completionItemKind': {
     \              'valueSet': lsp#omni#get_completion_item_kinds()
     \           }
+    \       },
+    \       'codeAction': {
+    \         'dynamicRegistration': v:false,
+    \         'codeActionLiteralSupport': {
+    \           'codeActionKind': {
+    \             'valueSet': ['', 'quickfix', 'refactor', 'refactor.extract', 'refactor.inline', 'refactor.rewrite', 'source', 'source.organizeImports'],
+    \           }
+    \         }
     \       },
     \       'declaration': {
     \           'linkSupport' : v:true
@@ -742,9 +756,6 @@ function! s:handle_initialize(server_name, data) abort
     for l:Init_callback in l:init_callbacks
         call l:Init_callback(a:data)
     endfor
-    if g:lsp_signature_help_enabled
-        call lsp#ui#vim#signature_help#setup()
-    endif
 
     doautocmd User lsp_server_init
 endfunction
