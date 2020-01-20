@@ -129,7 +129,7 @@ function! s:display_completions(timer, info) abort
 
     let s:start_pos = min(map(copy(s:completion['matches']), {_, item -> s:get_insertion_point(item, l:current_line, l:typed_pattern) }))
 
-    let l:filter = has_key(l:server_info, 'config') && has_key(l:server_info['config'], 'filter') ? l:server_info['config']['filter'] : { 'name': 'none' }
+    let l:filter = has_key(l:server_info, 'config') && has_key(l:server_info['config'], 'filter') ? l:server_info['config']['filter'] : { 'name': 'prefix' }
     let l:last_typed_word = strpart(l:current_line, s:start_pos)
 
     if l:filter['name'] ==? 'prefix'
