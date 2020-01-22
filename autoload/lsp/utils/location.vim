@@ -1,7 +1,12 @@
 function! s:open_location(path, line, col) abort
     normal! m'
     let l:buffer = bufnr(a:path)
-    if &modified && !&hidden
+    if exists('g:lsp_custom_open_location')
+        call g:lsp_custom_open_location[0]({
+                    \'path':fnameescape(a:path),
+                    \'line':a:line,
+                    \'col':a:col})
+    elseif &modified && !&hidden
         let l:cmd = l:buffer !=# -1 ? 'sb ' . l:buffer : 'split ' . fnameescape(a:path)
     else
         let l:cmd = l:buffer !=# -1 ? 'b ' . l:buffer : 'edit ' . fnameescape(a:path)

@@ -603,6 +603,25 @@ g:lsp_completion_resolve_timeout         *g:lsp_completion_resolve_timeout*
     The `completionItem/resolve` request's timeout value.
     If your vim freeze at `CompleteDone`, you can set this value to 0.
 
+g:lsp_custom_open_location				*g:lsp_custom_open_location*
+    Type: |String|
+    Default: `""`
+
+    Name of the customizable function to jump to a location (e.g. in use of
+    |LspDefinition|, |LspImplementation|, etc.). The function takes a
+    dictionary as input whose keys include "path", "line", "col" that are the
+    target path, line # and column #. Note, however, vim-lsp handles line #
+    and column # automatically. Users only need to open the file with their
+    favorite command as shown in the following exaple.
+
+    Example:
+	function! s:LspGoTo(args)
+	    let l:cmd = 'tabedit '.a:args["path"]
+	    execute l:cmd
+	endfunction
+>
+	let g:lsp_custom_open_location = [function('s:LspGoTo')]
+
 ==============================================================================
 FUNCTIONS                                               *vim-lsp-functions*
 
