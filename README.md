@@ -16,6 +16,7 @@ _Note: [async.vim](https://github.com/prabirshrestha/async.vim) is required and 
 ```viml
 if executable('pyls')
     " pip install python-language-server
+    " use whitelistre for regular expressions
     au User lsp_setup call lsp#register_server({
         \ 'name': 'pyls',
         \ 'cmd': {server_info->['pyls']},

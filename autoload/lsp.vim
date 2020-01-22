@@ -802,6 +802,16 @@ function! lsp#get_whitelisted_servers(...) abort
                 endif
             endfor
         endif
+
+        if has_key(l:server_info, 'whitelistre')
+            for l:filetype in l:server_info['whitelistre']
+                " If this is a regex expression, we allow it
+                if l:buffer_filetype =~ l:filetype
+                    let l:active_servers += [l:server_name]
+                    break
+                endif
+            endfor
+        endif
     endfor
 
     return l:active_servers
