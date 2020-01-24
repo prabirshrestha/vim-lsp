@@ -107,7 +107,7 @@ endfunction
 function! lsp#capabilities#get_text_document_save_registration_options(server_name) abort
     let l:capabilities = lsp#get_server_capabilities(a:server_name)
     if !empty(l:capabilities) && has_key(l:capabilities, 'textDocumentSync')
-        if type(l:capabilities['textDocumentSync']) == type({})
+        if type(l:capabilities['textDocumentSync']) == type({}) && type(l:capabilities['textDocumentSync']['save']) == type({})
             if  has_key(l:capabilities['textDocumentSync'], 'save')
                 return [1, {
                     \ 'includeText': has_key(l:capabilities['textDocumentSync']['save'], 'includeText') ? l:capabilities['textDocumentSync']['save']['includeText'] : 0,
