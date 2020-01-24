@@ -69,12 +69,38 @@ function! lsp#capabilities#has_type_definition_provider(server_name) abort
     return s:has_bool_provider(a:server_name, 'typeDefinitionProvider')
 endfunction
 
+function! lsp#capabilities#has_type_hierarchy_provider(server_name) abort
+    return s:has_bool_provider(a:server_name, 'typeHierarchyProvider')
+endfunction
+
 function! lsp#capabilities#has_document_highlight_provider(server_name) abort
     return s:has_bool_provider(a:server_name, 'documentHighlightProvider')
 endfunction
 
 function! lsp#capabilities#has_folding_range_provider(server_name) abort
     return s:has_bool_provider(a:server_name, 'foldingRangeProvider')
+endfunction
+
+function! lsp#capabilities#has_semantic_highlight(server_name) abort
+    let l:capabilities = lsp#get_server_capabilities(a:server_name)
+
+    if empty(l:capabilities) || type(l:capabilities) != type({}) || !has_key(l:capabilities, 'semanticHighlighting')
+        return 0
+    endif
+
+    let l:semantic_hl = l:capabilities['semanticHighlighting']
+
+    if type(l:semantic_hl) != type({}) || !has_key(l:semantic_hl, 'scopes')
+        return 0
+    endif
+
+    let l:scopes = l:semantic_hl['scopes']
+
+    if type(l:scopes) != type([]) || empty(l:scopes)
+        return 0
+    endif
+
+    return 1
 endfunction
 
 " [supports_did_save (boolean), { 'includeText': boolean }]
@@ -135,3 +161,16 @@ function! lsp#capabilities#get_signature_help_trigger_characters(server_name) ab
     endif
     return []
 endfunction
+
+function! lsp#capabilities#get_code_action_kinds(server_name) abort
+    let l:capabilities = lsp#get_server_capabilities(a:server_name)
+    if !empty(l:capabilities) && has_key(l:capabilities, 'codeActionProvider')
+        if type(l:capabilities['codeActionProvider']) == type({})
+            if has_key(l:capabilities['codeActionProvider'], 'codeActionKinds') && type(l:capabilities['codeActionProvider']['codeActionKinds']) == type([])
+                return l:capabilities['codeActionProvider']['codeActionKinds']
+            endif
+        endif
+    endif
+    return []
+endfunction
+

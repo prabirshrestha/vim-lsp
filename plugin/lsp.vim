@@ -39,6 +39,9 @@ let g:lsp_signature_help_enabled = get(g:, 'lsp_signature_help_enabled', 1)
 let g:lsp_fold_enabled = get(g:, 'lsp_fold_enabled', 1)
 let g:lsp_hover_conceal = get(g:, 'lsp_hover_conceal', 1)
 let g:lsp_ignorecase = get(g:, 'lsp_ignorecase', &ignorecase)
+let g:lsp_semantic_enabled = get(g:, 'lsp_semantic_enabled', 0)
+let g:lsp_text_document_did_save_delay = get(g:, 'lsp_text_document_did_save_delay', -1)
+let g:lsp_completion_resolve_timeout = get(g:, 'lsp_completion_resolve_timeout', 200)
 
 let g:lsp_get_vim_completion_item = get(g:, 'lsp_get_vim_completion_item', [function('lsp#omni#default_get_vim_completion_item')])
 let g:lsp_get_supported_capabilities = get(g:, 'lsp_get_supported_capabilities', [function('lsp#default_get_supported_capabilities')])
@@ -50,7 +53,16 @@ if g:lsp_auto_enable
     augroup END
 endif
 
-command! -range LspCodeAction call lsp#ui#vim#code_action()
+command! -range -nargs=* -complete=customlist,lsp#ui#vim#code_action#complete LspCodeAction call lsp#ui#vim#code_action#do({
+      \   'sync': v:false,
+      \   'selection': <range> != 0,
+      \   'query': '<args>'
+      \ })
+command! -range -nargs=* -complete=customlist,lsp#ui#vim#code_action#complete LspCodeActionSync call lsp#ui#vim#code_action#do({
+      \   'sync': v:true,
+      \   'selection': <range> != 0,
+      \   'query': '<args>'
+      \ })
 command! LspDeclaration call lsp#ui#vim#declaration(0)
 command! LspPeekDeclaration call lsp#ui#vim#declaration(1)
 command! LspDefinition call lsp#ui#vim#definition(0)
@@ -67,6 +79,7 @@ command! LspPreviousDiagnostic call lsp#ui#vim#diagnostics#previous_diagnostic()
 command! LspReferences call lsp#ui#vim#references()
 command! LspRename call lsp#ui#vim#rename()
 command! LspTypeDefinition call lsp#ui#vim#type_definition(0)
+command! LspTypeHierarchy call lsp#ui#vim#type_hierarchy()
 command! LspPeekTypeDefinition call lsp#ui#vim#type_definition(1)
 command! LspWorkspaceSymbol call lsp#ui#vim#workspace_symbol()
 command! -range LspDocumentFormat call lsp#ui#vim#document_format()
@@ -82,6 +95,7 @@ command! -nargs=? -complete=customlist,lsp#server_complete LspStopServer call ls
 command! -nargs=? -complete=customlist,lsp#utils#empty_complete LspSignatureHelp call lsp#ui#vim#signature_help#get_signature_help_under_cursor()
 command! LspDocumentFold call lsp#ui#vim#folding#fold(0)
 command! LspDocumentFoldSync call lsp#ui#vim#folding#fold(1)
+command! -nargs=? LspSemanticScopes call lsp#ui#vim#semantic#display_scope_tree(<args>)
 
 nnoremap <plug>(lsp-code-action) :<c-u>call lsp#ui#vim#code_action()<cr>
 nnoremap <plug>(lsp-declaration) :<c-u>call lsp#ui#vim#declaration(0)<cr>
@@ -102,6 +116,7 @@ nnoremap <plug>(lsp-previous-diagnostic) :<c-u>call lsp#ui#vim#diagnostics#previ
 nnoremap <plug>(lsp-references) :<c-u>call lsp#ui#vim#references()<cr>
 nnoremap <plug>(lsp-rename) :<c-u>call lsp#ui#vim#rename()<cr>
 nnoremap <plug>(lsp-type-definition) :<c-u>call lsp#ui#vim#type_definition(0)<cr>
+nnoremap <plug>(lsp-type-hierarchy) :<c-u>call lsp#ui#vim#type_hierarchy()<cr>
 nnoremap <plug>(lsp-peek-type-definition) :<c-u>call lsp#ui#vim#type_definition(1)<cr>
 nnoremap <plug>(lsp-workspace-symbol) :<c-u>call lsp#ui#vim#workspace_symbol()<cr>
 nnoremap <plug>(lsp-document-format) :<c-u>call lsp#ui#vim#document_format()<cr>

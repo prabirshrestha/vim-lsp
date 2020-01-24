@@ -292,7 +292,7 @@ function! lsp#ui#vim#output#preview(server, data, options) abort
        \ && type(g:lsp_preview_doubletap) == 3
        \ && len(g:lsp_preview_doubletap) >= 1
        \ && type(g:lsp_preview_doubletap[0]) == 2
-       \ && mode()[0] !=# 'i'
+       \ && index(['i', 's'], mode()[0]) == -1
         echo ''
         return call(g:lsp_preview_doubletap[0], [])
     endif
@@ -380,6 +380,10 @@ function! lsp#ui#vim#output#preview(server, data, options) abort
     return ''
 endfunction
 
+function! s:escape_string_for_display(str) abort
+    return substitute(substitute(a:str, '\r\n', '\n', 'g'), '\r', '\n', 'g')
+endfunction
+
 function! s:append(data, lines, syntax_lines) abort
     if type(a:data) == type([])
         for l:entry in a:data
@@ -389,13 +393,13 @@ function! s:append(data, lines, syntax_lines) abort
         return 'markdown'
     elseif type(a:data) == type('')
         if !empty(a:data)
-            call extend(a:lines, split(a:data, "\n", v:true))
+            call extend(a:lines, split(s:escape_string_for_display(a:data), "\n", v:true))
         endif
 
         return 'markdown'
     elseif type(a:data) == type({}) && has_key(a:data, 'language')
         if !empty(a:data.value)
-            let l:new_lines = split(a:data.value, '\n')
+            let l:new_lines = split(s:escape_string_for_display(a:data.value), '\n')
 
             let l:i = 1
             while l:i <= len(l:new_lines)
@@ -409,7 +413,7 @@ function! s:append(data, lines, syntax_lines) abort
         return 'markdown'
     elseif type(a:data) == type({}) && has_key(a:data, 'kind')
         if !empty(a:data.value)
-              call extend(a:lines, split(a:data.value, '\n', v:true))
+              call extend(a:lines, split(s:escape_string_for_display(a:data.value), '\n', v:true))
         endif
 
         return a:data.kind ==? 'plaintext' ? 'text' : a:data.kind

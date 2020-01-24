@@ -22,6 +22,20 @@ if executable('pyls')
         \ 'whitelist': ['python'],
         \ })
 endif
+
+function! s:on_lsp_buffer_enabled() abort
+    setlocal omnifunc=lsp#complete
+    setlocal signcolumn=yes
+    nmap <buffer> gd <plug>(lsp-definition)
+    nmap <buffer> <f2> <plug>(lsp-rename)
+    " refer to doc to add more commands
+endfunction
+
+augroup lsp_install
+    au!
+    " call s:on_lsp_buffer_enabled only for languages that has the server registered.
+    autocmd User lsp_buffer_enabled call s:on_lsp_buffer_enabled()
+augroup END
 ```
 
 Refer to [vim-lsp-settings](https://github.com/mattn/vim-lsp-settings) on how to easily setup language servers using vim-lsp automatically.
@@ -62,6 +76,12 @@ let g:lsp_fold_enabled = 0
 
 Also see `:h vim-lsp-folding`.
 
+## Semantic highlighting
+vim-lsp supports the unofficial extension to the LSP protocol for semantic highlighting (https://github.com/microsoft/vscode-languageserver-node/pull/367).
+This feature requires Neovim highlights, or Vim with the `textprop` feature enabled.
+You will also need to link language server semantic scopes to Vim highlight groups.
+Refer to `:h vim-lsp-semantic` for more info.
+
 ## Supported commands
 
 **Note:**
@@ -95,6 +115,7 @@ Also see `:h vim-lsp-folding`.
 |`:LspRename`| Rename symbol |
 |`:LspStatus` | Show the status of the language server |
 |`:LspTypeDefinition`| Go to the type definition of the word under the cursor, and open in the current window |
+|`:LspTypeHierarchy`| View type hierarchy of the symbol under the cursor |
 |`:LspWorkspaceSymbol`| Search/Show workspace symbol |
 
 ### Diagnostics

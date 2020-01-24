@@ -55,8 +55,10 @@ endfunction
 "
 " Note: Consider renaming this method (s/diagnostics/diagnostic) to make
 " it clear that it returns just one diagnostic, not a list.
-function! lsp#ui#vim#diagnostics#get_diagnostics_under_cursor() abort
-    let l:diagnostics = s:get_all_buffer_diagnostics()
+function! lsp#ui#vim#diagnostics#get_diagnostics_under_cursor(...) abort
+    let l:target_server_name = get(a:000, 0, '')
+
+    let l:diagnostics = s:get_all_buffer_diagnostics(l:target_server_name)
     if !len(l:diagnostics)
         return
     endif
@@ -68,10 +70,7 @@ function! lsp#ui#vim#diagnostics#get_diagnostics_under_cursor() abort
     let l:closest_distance = -1
 
     for l:diagnostic in l:diagnostics
-        let l:range = l:diagnostic['range']
-        let l:start_line = l:range['start']['line'] + 1
-        let l:start_char = l:range['start']['character']
-        let l:start_col = lsp#utils#to_col('%', l:start_line, l:start_char)
+        let [l:start_line, l:start_col] = lsp#utils#position#_lsp_to_vim('%', l:diagnostic['range']['start'])
 
         if l:line == l:start_line
             let l:distance = abs(l:start_col - l:col)
@@ -111,9 +110,7 @@ function! s:next_diagnostic(diagnostics) abort
     let l:next_line = 0
     let l:next_col = 0
     for l:diagnostic in a:diagnostics
-        let l:line = l:diagnostic['range']['start']['line'] + 1
-        let l:char = l:diagnostic['range']['start']['character']
-        let l:col = lsp#utils#to_col('%', l:line, l:char)
+        let [l:line, l:col] = lsp#utils#position#_lsp_to_vim('%', l:diagnostic['range']['start'])
         if l:line > l:view['lnum']
             \ || (l:line == l:view['lnum'] && l:col > l:view['col'] + 1)
             let l:next_line = l:line
@@ -124,17 +121,16 @@ function! s:next_diagnostic(diagnostics) abort
 
     if l:next_line == 0
         " Wrap to start
-        let l:next_line = a:diagnostics[0]['range']['start']['line'] + 1
-        let l:next_char = a:diagnostics[0]['range']['start']['character']
-        let l:next_col = lsp#utils#to_col('%', l:next_line, l:next_char) - 1
+        let [l:next_line, l:next_col] = lsp#utils#position#_lsp_to_vim('%', a:diagnostics[0]['range']['start'])
+        let l:next_col -= 1
     endif
 
     let l:view['lnum'] = l:next_line
     let l:view['col'] = l:next_col
     let l:view['topline'] = 1
     let l:height = winheight(0)
-    let totalnum = line('$')
-    if totalnum > l:height
+    let l:totalnum = line('$')
+    if l:totalnum > l:height
         let l:half = l:height / 2
         if l:totalnum - l:half < l:view['lnum']
             let l:view['topline'] = l:totalnum - l:height + 1
@@ -172,9 +168,7 @@ function! s:previous_diagnostic(diagnostics) abort
     let l:next_col = 0
     let l:index = len(a:diagnostics) - 1
     while l:index >= 0
-        let l:line = a:diagnostics[l:index]['range']['start']['line'] + 1
-        let l:char = a:diagnostics[l:index]['range']['start']['character']
-        let l:col = lsp#utils#to_col('%', l:line, l:char)
+        let [l:line, l:col] = lsp#utils#position#_lsp_to_vim('%', a:diagnostics[l:index]['range']['start'])
         if l:line < l:view['lnum']
             \ || (l:line == l:view['lnum'] && l:col < l:view['col'])
             let l:next_line = l:line
@@ -186,17 +180,16 @@ function! s:previous_diagnostic(diagnostics) abort
 
     if l:next_line == 0
         " Wrap to end
-        let l:next_line = a:diagnostics[-1]['range']['start']['line'] + 1
-        let l:next_char = a:diagnostics[-1]['range']['start']['character']
-        let l:next_col = lsp#utils#to_col('%', l:next_line, l:next_char) - 1
+        let [l:next_line, l:next_col] = lsp#utils#position#_lsp_to_vim('%', a:diagnostics[-1]['range']['start'])
+        let l:next_col -= 1
     endif
 
     let l:view['lnum'] = l:next_line
     let l:view['col'] = l:next_col
     let l:view['topline'] = 1
     let l:height = winheight(0)
-    let totalnum = line('$')
-    if totalnum > l:height
+    let l:totalnum = line('$')
+    if l:totalnum > l:height
         let l:half = l:height / 2
         if l:totalnum - l:half < l:view['lnum']
             let l:view['topline'] = l:totalnum - l:height + 1
@@ -224,7 +217,9 @@ function! s:get_diagnostics(uri) abort
 endfunction
 
 " Get diagnostics for the current buffer URI from all servers
-function! s:get_all_buffer_diagnostics() abort
+function! s:get_all_buffer_diagnostics(...) abort
+    let l:target_server_name = get(a:000, 0, '')
+
     let l:uri = lsp#utils#get_buffer_uri()
 
     let [l:has_diagnostics, l:diagnostics] = s:get_diagnostics(l:uri)
@@ -234,7 +229,9 @@ function! s:get_all_buffer_diagnostics() abort
 
     let l:all_diagnostics = []
     for [l:server_name, l:data] in items(l:diagnostics)
-        call extend(l:all_diagnostics, l:data['response']['params']['diagnostics'])
+        if empty(l:target_server_name) || l:server_name ==# l:target_server_name
+            call extend(l:all_diagnostics, l:data['response']['params']['diagnostics'])
+        endif
     endfor
 
     return l:all_diagnostics

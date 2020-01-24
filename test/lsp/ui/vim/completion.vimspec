@@ -1,0 +1,37 @@
+Describe lsp#uivim#completion
+
+  Before each
+    %delete _
+    setlocal filetype=html
+    setlocal omnifunc=lsp#omni#complete
+  End
+
+  It should expand simple snippet with multibyte chars
+    Skip This test needs asynchronous process and snippetSupport=true
+
+    call setline(1, ['<div class="あいうえお">'])
+    execute "normal! 'gg$ha id\<C-x>\<C-o>\<C-n>\<Tab>'"
+
+    " wait for feedkeys.
+
+    Assert Equals(getline(1), '<div class="あいうえお" id="">')
+    Assert Equals(getpos('.')[1 : 2], [1, 30])
+  End
+
+  It should expand when textEdit.start.character is less than completion start col
+    Skip This test needs asynchronous process and snippetSupport=true
+
+    call setline(1, [
+          \ '<html>',
+          \ '  <div>',
+          \ '    </>',
+          \ '</html>'])
+    execute "normal! ':gg2j$ha\<C-x>\<C-o>\<C-n>\<Tab>'"
+
+    " wait for feedkeys.
+
+    Assert Equals(getline(3), '  </div>')
+    Assert Equals(getpos('.')[1 : 2], [1, 8])
+  End
+
+End
