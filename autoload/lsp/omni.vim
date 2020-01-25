@@ -40,8 +40,6 @@ let s:is_user_data_support = has('patch-8.0.1493')
 let s:managed_user_data_key_base = 0
 let s:managed_user_data_map = {}
 
-let s:valid_word_pattern = '^[^ :(<{\[\r\n]\+'
-
 " }}}
 
 " completion state
@@ -243,12 +241,12 @@ function! lsp#omni#default_get_vim_completion_item(item, ...) abort
     if get(a:item, 'insertTextFormat', -1) == 2 && !empty(get(a:item, 'insertText', ''))
         " if candidate is snippet, use insertText. But it may include
         " placeholder.
-        let l:word = matchstr(a:item['insertText'], s:valid_word_pattern)
+        let l:word = lsp#utils#make_valid_word(a:item['insertText'])
     elseif !empty(get(a:item, 'insertText', ''))
         " if plain-text insertText, use it.
         let l:word = a:item['insertText']
     elseif has_key(a:item, 'textEdit')
-        let l:word = matchstr(a:item['label'], s:valid_word_pattern)
+        let l:word = lsp#utils#make_valid_word(a:item['label'])
     endif
     if empty(l:word)
         let l:word = a:item['label']

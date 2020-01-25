@@ -172,4 +172,15 @@ Describe lsp#utils
             Assert Equals(lsp#utils#base64_decode('AAAAEgAJABYAAAAIAAQAFw=='), [0, 0, 0, 18, 0, 9, 0, 22, 0, 0, 0, 8, 0, 4, 0, 23])
         End
     End
+
+    Describe lsp#utils#make_valid_word
+        It should make valid word
+            Assert Equals(lsp#utils#make_valid_word('my-word'), 'my-word')
+            Assert Equals(lsp#utils#make_valid_word('my-word: description'), 'my-word')
+            Assert Equals(lsp#utils#make_valid_word('my-word : description'), 'my-word')
+            Assert Equals(lsp#utils#make_valid_word('my-word is word'), 'my-word')
+            Assert Equals(lsp#utils#make_valid_word('my-func()'), 'my-func')
+            Assert Equals(lsp#utils#make_valid_word('my-name::space'), 'my-name::space')
+        End
+    End
 End

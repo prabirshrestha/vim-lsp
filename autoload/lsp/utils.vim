@@ -311,3 +311,11 @@ function! lsp#utils#base64_decode(data) abort
 
     return l:ret
 endfunction
+
+function! lsp#utils#make_valid_word(str) abort
+   let str = matchstr(a:str, '^[^ (<{\[\r\n]\+')
+   if str =~# ':$'
+     return str[:-2]
+   endif
+   return str
+endfunction
