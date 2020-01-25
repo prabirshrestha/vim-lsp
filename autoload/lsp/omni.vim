@@ -237,17 +237,21 @@ endfunction
 function! lsp#omni#default_get_vim_completion_item(item, ...) abort
     let l:server_name = get(a:, 1, '')
 
-    if g:lsp_insert_text_enabled && has_key(a:item, 'insertText') && !empty(a:item['insertText'])
-        if has_key(a:item, 'insertTextFormat') && a:item['insertTextFormat'] != 1
-            let l:word = a:item['label']
-        else
-            let l:word = a:item['insertText']
-        endif
-        let l:abbr = a:item['label']
-    else
-        let l:word = a:item['label']
-        let l:abbr = a:item['label']
+    let l:word = ''
+    if get(a:item, 'insertTextFormat', -1) == 2 && !empty(get(a:item, 'insertText', ''))
+        " if candidate is snippet, use insertText. But it may include
+        " placeholder.
+        let l:word = matchstr(a:item['insertText'], '\w\+')
+    elseif !empty(get(a:item, 'insertText', ''))
+        " if plain-text insertText, use it.
+        let l:word = a:item['insertText']
+    elseif has_key(a:item, 'textEdit')
+        let l:word = matchstr(a:item['label'], '\w\+')
     endif
+    if empty(l:word)
+        let l:word = a:item['label']
+    endif
+    let l:abbr = a:item['label']
 
     if has_key(a:item, 'insertTextFormat') && a:item['insertTextFormat'] == 2
         let l:word = substitute(l:word, '\<\$[0-9]\+\|\${[^}]\+}\>', '', 'g')
