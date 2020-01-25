@@ -40,7 +40,7 @@ let s:is_user_data_support = has('patch-8.0.1493')
 let s:managed_user_data_key_base = 0
 let s:managed_user_data_map = {}
 
-let s:valid_word_pattern = '^[^ (<{\[\r\n]\+'
+let s:valid_word_pattern = '^[^ :(<{\[\r\n]\+'
 
 " }}}
 
