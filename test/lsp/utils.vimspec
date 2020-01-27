@@ -184,7 +184,12 @@ Describe lsp#utils
             Assert Equals(lsp#utils#make_valid_word('my-func()'), 'my-func')
             Assert Equals(lsp#utils#make_valid_word('my-name::space'), 'my-name::space')
             Assert Equals(lsp#utils#make_valid_word('my-name#space'), 'my-name#space')
-            Assert Equals(lsp#utils#make_valid_word('my-name#space'), 'my-name#space')
+            Assert Equals(lsp#utils#make_valid_word('my-name.space'), 'my-name.space')
+            Assert Equals(lsp#utils#make_valid_word('my-name.space: foo'), 'my-name.space')
+            Assert Equals(lsp#utils#make_valid_word('my-name%space: foo'), 'my-name%space')
+            Assert Equals(lsp#utils#make_valid_word('my-name&space: foo'), 'my-name&space')
+            Assert Equals(lsp#utils#make_valid_word('my-array[0]'), 'my-array')
+            Assert Equals(lsp#utils#make_valid_word('my-array<string>'), 'my-array')
         End
     End
 End
