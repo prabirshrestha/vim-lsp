@@ -313,7 +313,7 @@ function! lsp#utils#base64_decode(data) abort
 endfunction
 
 function! lsp#utils#make_valid_word(str) abort
-   let l:str = matchstr(a:str, '^[^ (<{\[\r\n]\+')
+   let l:str = matchstr(a:str, '^[^ (<{\[\t\r\n]\+')
    if l:str =~# ':$'
      return l:str[:-2]
    endif

@@ -190,6 +190,7 @@ Describe lsp#utils
             Assert Equals(lsp#utils#make_valid_word('my-name&space: foo'), 'my-name&space')
             Assert Equals(lsp#utils#make_valid_word('my-array[0]'), 'my-array')
             Assert Equals(lsp#utils#make_valid_word('my-array<string>'), 'my-array')
+            Assert Equals(lsp#utils#make_valid_word("my-name\tdescription"), 'my-name')
         End
     End
 End
