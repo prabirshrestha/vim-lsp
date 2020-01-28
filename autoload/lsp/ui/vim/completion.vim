@@ -54,7 +54,7 @@ endfunction
 " Apply textEdit or insertText(snippet) and additionalTextEdits.
 "
 function! s:on_complete_done_after() abort
-  " Clear statusline. feedkeys above leave garbage on statusline.
+  " Clear message line. feedkeys above leave garbage on message line.
   echo ''
 
   let l:line = s:context['line']
