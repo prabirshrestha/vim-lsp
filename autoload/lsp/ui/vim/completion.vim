@@ -54,6 +54,9 @@ endfunction
 " Apply textEdit or insertText(snippet) and additionalTextEdits.
 "
 function! s:on_complete_done_after() abort
+  " Clear message line. feedkeys above leave garbage on message line.
+  echo ''
+
   let l:line = s:context['line']
   let l:position = s:context['position']
   let l:completed_item = s:context['completed_item']
