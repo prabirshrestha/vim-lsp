@@ -85,6 +85,11 @@ function! s:foldexpr(server, buf, linenr) abort
          \ has_key(l:folding_range, 'endLine')
             let l:start = l:folding_range['startLine'] + 1
             let l:end = l:folding_range['endLine'] + 1
+            let l:cur_line = line('.')
+
+            if (l:start <= l:cur_line) && (l:cur_line <= l:end)
+                continue
+            endif
 
             if (l:start <= a:linenr) && (a:linenr <= l:end)
                 let l:foldlevel += 1
