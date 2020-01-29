@@ -292,7 +292,7 @@ function! lsp#omni#default_get_vim_completion_item(item, ...) abort
         elseif type(a:item['documentation']) == type({}) &&
                     \ has_key(a:item['documentation'], 'value')
             " field is MarkupContent (hopefully 'plaintext')
-            let l:completion['info'] .= a:item['documentation']['value']
+            let l:completion['info'] .= substitute(a:item['documentation']['value'], '\r', '', 'g')
         endif
     endif
 
