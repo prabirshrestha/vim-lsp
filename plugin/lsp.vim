@@ -53,6 +53,9 @@ if g:lsp_auto_enable
     augroup END
 endif
 
+let g:lsp_last_log_message_type = ''
+let g:lsp_last_log_message_text = ''
+
 command! -range -nargs=* -complete=customlist,lsp#ui#vim#code_action#complete LspCodeAction call lsp#ui#vim#code_action#do({
       \   'sync': v:false,
       \   'selection': <range> != 0,

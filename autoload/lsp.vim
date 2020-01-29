@@ -110,6 +110,18 @@ function! s:server_status(server_name) abort
     return 'not running'
 endfunction
 
+function! s:message_type(type) abort
+  if a:type == 1
+    return 'error'
+  elseif a:type == 2
+    return 'warning'
+  elseif a:type == 3
+    return 'info'
+  elseif a:type == 4
+    return 'log'
+  endif
+endfunction
+
 " Returns the current status of all servers (if called with no arguments) or
 " the given server (if given an argument). Can be one of "unknown server",
 " "exited", "starting", "failed", "running", "not running"
@@ -706,7 +718,9 @@ function! s:on_notification(server_name, id, data, event) abort
             elseif l:method ==# 'textDocument/semanticHighlighting'
                 call lsp#ui#vim#semantic#handle_semantic(a:server_name, a:data)
             elseif l:method ==# 'window/logMessage'
-                call lsp#ui#vim#window#log_message(str2nr(l:response['params']['type']), l:response['params']['message'])
+                let g:lsp_last_log_message_type = s:message_type(l:response['params']['type'])
+                let g:lsp_last_log_message_text = l:response['params']['message']
+                redraw!
             elseif l:method ==# 'window/showMessage'
                 " TODO: enable this when this method supports docking in the corner.
                 " call lsp#ui#vim#output#preview(a:server_name, l:response['params']['message'], {'statusline': ' LSP Message'})
