@@ -1,6 +1,7 @@
 let s:enabled = 0
 let s:already_setup = 0
 let s:servers = {} " { lsp_id, server_info, init_callbacks, init_result, buffers: { path: { changed_tick } }
+let s:hooks = {}
 let s:last_command_id = 0
 let s:notification_callbacks = [] " { name, callback }
 
@@ -655,7 +656,11 @@ function! s:send_request(server_name, data) abort
         let l:data['on_notification'] = '---funcref---'
     endif
     call lsp#log_verbose('--->', l:lsp_id, a:server_name, l:data)
+    if s:fire_hook('before', a:server_name, 'notification', l:data['method'], l:data)
+      return
+    endif
     call lsp#client#send_request(l:lsp_id, a:data)
+    call s:fire_hook('after', a:server_name, 'notification', l:data['method'], l:data)
 endfunction
 
 function! s:send_notification(server_name, data) abort
@@ -698,6 +703,12 @@ function! s:on_notification(server_name, id, data, event) abort
     let l:response = a:data['response']
     let l:server = s:servers[a:server_name]
 
+    if has_key(l:response, 'method')
+      if s:fire_hook('before', a:server_name, 'response', l:response['method'], l:response)
+        return
+      endif
+    endif
+
     if lsp#client#is_server_instantiated_notification(a:data)
         if has_key(l:response, 'method')
             if g:lsp_diagnostics_enabled && l:response['method'] ==# 'textDocument/publishDiagnostics'
@@ -717,10 +728,18 @@ function! s:on_notification(server_name, id, data, event) abort
     for l:callback_info in s:notification_callbacks
         call l:callback_info.callback(a:server_name, a:data)
     endfor
+
+    if has_key(l:response, 'method')
+      call s:fire_hook('after', a:server_name, 'response', l:response['method'], l:response)
+    endif
 endfunction
 
 function! s:on_request(server_name, id, request) abort
     call lsp#log_verbose('<---', a:id, a:request)
+    if s:fire_hook('before', a:server_name, 'response', a:request['method'], a:request)
+      return
+    endif
+
     if a:request['method'] ==# 'workspace/applyEdit'
         call lsp#utils#workspace_edit#apply_workspace_edit(a:request['params']['edit'])
         call s:send_response(a:server_name, { 'id': a:request['id'], 'result': { 'applied': v:true } })
@@ -731,6 +750,7 @@ function! s:on_request(server_name, id, request) abort
         " Error returned according to json-rpc specification.
         call s:send_response(a:server_name, { 'id': a:request['id'], 'error': { 'code': -32601, 'message': 'Method not found' } })
     endif
+    call s:fire_hook('after', a:server_name, 'response', a:request['method'], a:request)
 endfunction
 
 function! s:handle_initialize(server_name, data) abort
@@ -934,4 +954,25 @@ endfunction
 
 function! lsp#_last_command() abort
     return s:last_command_id
+endfunction
+
+function! s:hook_key(when, server_name, event, method) abort
+  return a:server_name.'|'.a:event.'|'.a:when.'|'.a:method
+endfunction
+
+function! s:fire_hook(when, server_name, event, method, data) abort
+  let l:key = s:hook_key(a:when, a:server_name, a:event, a:method)
+  if has_key(s:hooks, l:key)
+    return s:hooks[l:key](a:data)
+  endif
+  return 0
+endfunction
+
+" when = <before|after>
+" server_name = <name of language server>
+" event = <request|response|notification>
+" method = <method name>
+function! lsp#register_hook(when, server_name, event, method, handler) abort
+  " TODO: validate parameters are valid
+  let s:hooks[s:hook_key(a:when, a:server_name, a:event, a:method)] = a:handler
 endfunction
