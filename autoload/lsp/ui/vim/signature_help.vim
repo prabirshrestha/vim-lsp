@@ -128,6 +128,7 @@ function! s:on_text_changed_after(bufnr) abort
         return
     endif
 
+    " Cache trigger chars since this loop is heavy
     let l:chars = get(b:, 'lsp_signature_help_trigger_character', [])
     if empty(l:chars)
         for l:server_name in lsp#get_whitelisted_servers(a:bufnr)

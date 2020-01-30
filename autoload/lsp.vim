@@ -688,9 +688,6 @@ function! s:on_exit(server_name, id, data, event) abort
         let l:server['exited'] = 1
         if has_key(l:server, 'init_result')
             unlet l:server['init_result']
-            if has_key(b:, 'lsp_signature_help_trigger_character')
-                unlet b:lsp_signature_help_trigger_character
-            endif
         endif
         doautocmd User lsp_server_exit
     endif
@@ -749,6 +746,10 @@ function! s:handle_initialize(server_name, data) abort
 
     if !lsp#client#is_error(l:response)
         let l:server['init_result'] = l:response
+        " Delete cache of trigger chars
+        if has_key(b:, 'lsp_signature_help_trigger_character')
+            unlet b:lsp_signature_help_trigger_character
+        endif
     else
         let l:server['failed'] = l:response['error']
         call lsp#utils#error('Failed to initialize ' . a:server_name . ' with error ' . l:response['error']['code'] . ': ' . l:response['error']['message'])
