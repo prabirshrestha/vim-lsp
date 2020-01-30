@@ -1,3 +1,4 @@
+" vint: -ProhibitUnusedVariable
 let s:debounce_timer_id = 0
 
 function! s:not_supported(what) abort
