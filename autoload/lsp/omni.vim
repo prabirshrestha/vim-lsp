@@ -129,7 +129,7 @@ function! s:display_completions(timer, info) abort
 
     let s:start_pos = min(map(copy(s:completion['matches']), {_, item -> s:get_insertion_point(item, l:current_line, l:typed_pattern) }))
 
-    let l:filter = has_key(l:server_info, 'config') && has_key(l:server_info['config'], 'filter') ? l:server_info['config']['filter'] : { 'name': 'none' }
+    let l:filter = has_key(l:server_info, 'config') && has_key(l:server_info['config'], 'filter') ? l:server_info['config']['filter'] : { 'name': 'prefix' }
     let l:last_typed_word = strpart(l:current_line, s:start_pos)
 
     if l:filter['name'] ==? 'prefix'
@@ -237,17 +237,21 @@ endfunction
 function! lsp#omni#default_get_vim_completion_item(item, ...) abort
     let l:server_name = get(a:, 1, '')
 
-    if g:lsp_insert_text_enabled && has_key(a:item, 'insertText') && !empty(a:item['insertText'])
-        if has_key(a:item, 'insertTextFormat') && a:item['insertTextFormat'] != 1
-            let l:word = a:item['label']
-        else
-            let l:word = a:item['insertText']
-        endif
-        let l:abbr = a:item['label']
-    else
-        let l:word = a:item['label']
-        let l:abbr = a:item['label']
+    let l:word = ''
+    if get(a:item, 'insertTextFormat', -1) == 2 && !empty(get(a:item, 'insertText', ''))
+        " if candidate is snippet, use insertText. But it may include
+        " placeholder.
+        let l:word = lsp#utils#make_valid_word(a:item['insertText'])
+    elseif !empty(get(a:item, 'insertText', ''))
+        " if plain-text insertText, use it.
+        let l:word = a:item['insertText']
+    elseif has_key(a:item, 'textEdit')
+        let l:word = lsp#utils#make_valid_word(a:item['label'])
     endif
+    if empty(l:word)
+        let l:word = a:item['label']
+    endif
+    let l:abbr = a:item['label']
 
     if has_key(a:item, 'insertTextFormat') && a:item['insertTextFormat'] == 2
         let l:word = substitute(l:word, '\<\$[0-9]\+\|\${[^}]\+}\>', '', 'g')
@@ -288,7 +292,7 @@ function! lsp#omni#default_get_vim_completion_item(item, ...) abort
         elseif type(a:item['documentation']) == type({}) &&
                     \ has_key(a:item['documentation'], 'value')
             " field is MarkupContent (hopefully 'plaintext')
-            let l:completion['info'] .= a:item['documentation']['value']
+            let l:completion['info'] .= substitute(a:item['documentation']['value'], '\r', '', 'g')
         endif
     endif
 
