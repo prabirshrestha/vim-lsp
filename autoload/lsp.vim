@@ -688,6 +688,9 @@ function! s:on_exit(server_name, id, data, event) abort
         let l:server['exited'] = 1
         if has_key(l:server, 'init_result')
             unlet l:server['init_result']
+            if has_key(b:, 'lsp_signature_help_trigger_character')
+                unlet b:lsp_signature_help_trigger_character
+            endif
         endif
         doautocmd User lsp_server_exit
     endif
