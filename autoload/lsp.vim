@@ -746,6 +746,10 @@ function! s:handle_initialize(server_name, data) abort
 
     if !lsp#client#is_error(l:response)
         let l:server['init_result'] = l:response
+        " Delete cache of trigger chars
+        if has_key(b:, 'lsp_signature_help_trigger_character')
+            unlet b:lsp_signature_help_trigger_character
+        endif
     else
         let l:server['failed'] = l:response['error']
         call lsp#utils#error('Failed to initialize ' . a:server_name . ' with error ' . l:response['error']['code'] . ': ' . l:response['error']['message'])
