@@ -48,21 +48,21 @@ function! lsp#ui#vim#output#focuspreview() abort
 endfunction
 
 function! s:bufwidth() abort
-    let width = winwidth(0)
-    let numberwidth = max([&numberwidth, strlen(line('$'))+1])
-    let numwidth = (&number || &relativenumber)? numberwidth : 0
-    let foldwidth = &foldcolumn
+    let l:width = winwidth(0)
+    let l:numberwidth = max([&numberwidth, strlen(line('$'))+1])
+    let l:numwidth = (&number || &relativenumber)? l:numberwidth : 0
+    let l:foldwidth = &foldcolumn
 
     if &signcolumn ==? 'yes'
-        let signwidth = 2
+        let l:signwidth = 2
     elseif &signcolumn ==? 'auto'
-        let signs = execute(printf('sign place buffer=%d', bufnr('')))
-        let signs = split(signs, "\n")
-        let signwidth = len(signs)>2? 2: 0
+        let l:signs = execute(printf('sign place buffer=%d', bufnr('')))
+        let l:signs = split(l:signs, "\n")
+        let l:signwidth = len(l:signs)>2? 2: 0
     else
-        let signwidth = 0
+        let l:signwidth = 0
     endif
-    return width - numwidth - foldwidth - signwidth
+    return l:width - l:numwidth - l:foldwidth - l:signwidth
 endfunction
 
 
@@ -115,7 +115,7 @@ function! lsp#ui#vim#output#floatingpreview(data) abort
 
         let l:opts = s:get_float_positioning(l:height, l:width)
 
-        let s:winid = nvim_open_win(buf, v:true, l:opts)
+        let s:winid = nvim_open_win(l:buf, v:true, l:opts)
         call nvim_win_set_option(s:winid, 'winhl', 'Normal:Pmenu,NormalNC:Pmenu')
         call nvim_win_set_option(s:winid, 'foldenable', v:false)
         call nvim_win_set_option(s:winid, 'wrap', v:true)
@@ -389,7 +389,7 @@ endfunction
 function! s:append(data, lines, syntax_lines) abort
     if type(a:data) == type([])
         for l:entry in a:data
-            call s:append(entry, a:lines, a:syntax_lines)
+            call s:append(l:entry, a:lines, a:syntax_lines)
         endfor
 
         return 'markdown'

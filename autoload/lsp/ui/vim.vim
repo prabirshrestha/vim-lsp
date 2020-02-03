@@ -255,7 +255,7 @@ function! lsp#ui#vim#stop_server(...) abort
             continue
         endif
         echo 'Stopping' l:server 'server ...'
-        call lsp#stop_server(server)
+        call lsp#stop_server(l:server)
     endfor
 endfunction
 

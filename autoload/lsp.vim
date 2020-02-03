@@ -115,7 +115,7 @@ endfunction
 " "exited", "starting", "failed", "running", "not running"
 function! lsp#get_server_status(...) abort
     if a:0 == 0
-        let l:strs = map(keys(s:servers), {k, v -> v . ": " . s:server_status(v)})
+        let l:strs = map(keys(s:servers), {k, v -> v . ': ' . s:server_status(v)})
         return join(l:strs, "\n")
     else
         return s:server_status(a:1)
@@ -513,7 +513,7 @@ function! s:ensure_init(buf, server_name, cb) abort
     if has_key(l:server_info, 'capabilities')
         let l:capabilities = l:server_info['capabilities']
     else
-        let l:capabilities = call(g:lsp_get_supported_capabilities[0], [server_info])
+        let l:capabilities = call(g:lsp_get_supported_capabilities[0], [l:server_info])
     endif
 
     let l:request = {
@@ -882,8 +882,8 @@ function! s:add_didchange_queue(buf) abort
     call add(s:didchange_queue, a:buf)
     call lsp#log('s:send_didchange_queue() will be triggered')
     call timer_stop(s:didchange_timer)
-    let lazy = &updatetime > 1000 ? &updatetime : 1000
-    let s:didchange_timer = timer_start(lazy, function('s:send_didchange_queue'))
+    let l:lazy = &updatetime > 1000 ? &updatetime : 1000
+    let s:didchange_timer = timer_start(l:lazy, function('s:send_didchange_queue'))
 endfunction
 
 function! s:send_didchange_queue(...) abort
