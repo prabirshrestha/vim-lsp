@@ -239,7 +239,11 @@ endfunction
 function! s:on_cursor_moved() abort
     let l:buf = bufnr('%')
     if getbufvar(l:buf, '&buftype') ==# 'terminal' | return | endif
-    call lsp#ui#vim#diagnostics#echo#cursor_moved()
+    if g:lsp_diagnostics_echo_cursor
+        call lsp#ui#vim#diagnostics#echo#cursor_moved()
+    elseif g:lsp_diagnostics_float_cursor
+        call lsp#ui#vim#diagnostics#float#cursor_moved()
+    endif
 endfunction
 
 function! s:call_did_save(buf, server_name, result, cb) abort

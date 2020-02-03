@@ -286,6 +286,10 @@ function! s:align_preview(options) abort
     endif
 endfunction
 
+function! lsp#ui#vim#output#float_supported() abort
+    return s:use_vim_popup || s:use_nvim_float
+endfunction
+
 function! lsp#ui#vim#output#preview(server, data, options) abort
     if s:winid && type(s:preview_data) == type(a:data)
         \ && s:preview_data == a:data
@@ -318,12 +322,10 @@ function! lsp#ui#vim#output#preview(server, data, options) abort
         let l:ft = a:options['filetype']
     endif
 
-    let l:server_info = lsp#get_server_info(a:server)
-    try
-        let l:do_conceal = l:server_info['config']['hover_conceal']
-    catch
-        let l:do_conceal = g:lsp_hover_conceal
-    endtry
+    let l:do_conceal = g:lsp_hover_conceal
+    let l:server_info = a:server != '' ? lsp#get_server_info(a:server) : {}
+    let l:config = get(l:server_info, 'config', {})
+    let l:do_conceal = get(l:config, 'hover_conceal', l:do_conceal)
 
     call setbufvar(winbufnr(s:winid), 'lsp_syntax_highlights', l:syntax_lines)
     call setbufvar(winbufnr(s:winid), 'lsp_do_conceal', l:do_conceal)
