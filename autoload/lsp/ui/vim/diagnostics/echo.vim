@@ -4,7 +4,7 @@ function! lsp#ui#vim#diagnostics#echo#cursor_moved() abort
     endif
 
     if mode() isnot# 'n'
-        " dont' show echo only in normal mode
+        " show echo only in normal mode
         return
     endif
 
