@@ -238,15 +238,24 @@ function! lsp#omni#default_get_vim_completion_item(item, ...) abort
     let l:server_name = get(a:, 1, '')
 
     let l:word = ''
+    let l:maybe = ''
     if get(a:item, 'insertTextFormat', -1) == 2 && !empty(get(a:item, 'insertText', ''))
         " if candidate is snippet, use insertText. But it may include
         " placeholder.
-        let l:word = lsp#utils#make_valid_word(a:item['insertText'])
+        let l:maybe = lsp#utils#make_valid_word(a:item['insertText'])
     elseif !empty(get(a:item, 'insertText', ''))
         " if plain-text insertText, use it.
         let l:word = a:item['insertText']
     elseif has_key(a:item, 'textEdit')
-        let l:word = lsp#utils#make_valid_word(a:item['label'])
+        let l:maybe = lsp#utils#make_valid_word(a:item['label'])
+    endif
+    if !empty(l:maybe)
+        let l:server_info = lsp#get_server_info(l:server_name)
+        let l:typed_pattern = has_key(l:server_info, 'config') && has_key(l:server_info['config'], 'typed_pattern') ? l:server_info['config']['typed_pattern'] : '\k*$'
+        if !empty(l:typed_pattern)
+            let l:current_line = strpart(getline('.'), 0, col('.') - 1)
+            let l:word = l:maybe[len(matchstr(l:current_line, l:typed_pattern)):]
+        endif
     endif
     if empty(l:word)
         let l:word = a:item['label']
