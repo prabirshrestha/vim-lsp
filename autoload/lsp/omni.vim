@@ -250,6 +250,8 @@ function! lsp#omni#default_get_vim_completion_item(item, ...) abort
         let l:maybe = lsp#utils#make_valid_word(a:item['label'])
     endif
     if !empty(l:maybe)
+        " maybe probably be a text should be inserted which server expected.
+        " But it contains prefix text already typed.
         let l:server_info = lsp#get_server_info(l:server_name)
         let l:typed_pattern = has_key(l:server_info, 'config') && has_key(l:server_info['config'], 'typed_pattern') ? l:server_info['config']['typed_pattern'] : '\k*$'
         if !empty(l:typed_pattern)
