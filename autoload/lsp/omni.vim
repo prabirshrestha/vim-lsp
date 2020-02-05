@@ -249,7 +249,7 @@ function! lsp#omni#default_get_vim_completion_item(item, ...) abort
     elseif has_key(a:item, 'textEdit')
         let l:maybe = lsp#utils#make_valid_word(a:item['label'])
     endif
-    if !empty(l:maybe)
+    if !empty(l:maybe) && !empty(l:server_name)
         " maybe probably be a text should be inserted which server expected.
         " But it contains prefix text already typed.
         let l:server_info = lsp#get_server_info(l:server_name)
