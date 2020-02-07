@@ -297,7 +297,9 @@ function! lsp#ui#vim#output#preview(server, data, options) abort
         return call(g:lsp_preview_doubletap[0], [])
     endif
     " Close any previously opened preview window
-    pclose
+    if !g:lsp_preview_float
+        pclose
+    endif
 
     let l:current_window_id = win_getid()
 

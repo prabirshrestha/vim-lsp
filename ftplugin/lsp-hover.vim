@@ -2,7 +2,7 @@
 
 if has('patch-8.1.1517') && g:lsp_preview_float && !has('nvim')
   " Can not set buftype or popup_close will fail with 'not a popup window'
-  setlocal previewwindow bufhidden=wipe noswapfile nobuflisted
+  setlocal bufhidden=wipe noswapfile nobuflisted
 else
   setlocal previewwindow buftype=nofile bufhidden=wipe noswapfile nobuflisted
 endif
