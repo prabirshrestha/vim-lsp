@@ -58,6 +58,11 @@ function! lsp#omni#complete(findstart, base) abort
             let s:completion['status'] = s:completion_status_pending
         endif
 
+        let l:refresh_pattern = get(b:, 'asyncomplete_refresh_pattern', '\(\k\+$\)')
+        let l:curpos = getcurpos()
+        let l:left = strpart(getline(l:curpos[1]), 0, l:curpos[2]-1)
+        let s:completion['startcol'] = matchstrpos(l:left, l:refresh_pattern)[1]
+
         call s:send_completion_request(l:info)
 
         if g:lsp_async_completion
@@ -73,21 +78,6 @@ function! lsp#omni#complete(findstart, base) abort
 
             return exists('v:none') ? v:none : []
         endif
-    endif
-endfunction
-
-function! s:get_insertion_point(item, current_line, typed_pattern) abort
-    let l:insert_start = -1
-
-    let l:user_data = lsp#omni#get_managed_user_data_from_completed_item(a:item)
-    if has_key(l:user_data, 'completion_item') && has_key(l:user_data['completion_item'], 'textEdit')
-        let l:insert_start = l:user_data['completion_item']['textEdit']['range']['start']['character']
-    endif
-
-    if l:insert_start >= 0
-        return l:insert_start
-    else
-        return match(a:current_line, a:typed_pattern)
     endif
 endfunction
 
@@ -124,13 +114,9 @@ function! s:display_completions(timer, info) abort
     let l:server_name = a:info['server_names'][0]
     let l:server_info = lsp#get_server_info(l:server_name)
 
-    let l:typed_pattern = has_key(l:server_info, 'config') && has_key(l:server_info['config'], 'typed_pattern') ? l:server_info['config']['typed_pattern'] : '\k*$'
     let l:current_line = strpart(getline('.'), 0, col('.') - 1)
-
-    let s:start_pos = min(map(copy(s:completion['matches']), {_, item -> s:get_insertion_point(item, l:current_line, l:typed_pattern) }))
-
     let l:filter = has_key(l:server_info, 'config') && has_key(l:server_info['config'], 'filter') ? l:server_info['config']['filter'] : { 'name': 'prefix' }
-    let l:last_typed_word = strpart(l:current_line, s:start_pos)
+    let l:last_typed_word = strpart(l:current_line, s:completion['startcol'])
 
     if l:filter['name'] ==? 'prefix'
         let s:completion['matches'] = filter(s:completion['matches'], {_, item -> s:prefix_filter(item, l:last_typed_word)})
@@ -141,7 +127,7 @@ function! s:display_completions(timer, info) abort
     let s:completion['status'] = ''
 
     if mode() is# 'i'
-        call complete(s:start_pos + 1, s:completion['matches'])
+        call complete(s:completion['startcol'] + 1, s:completion['matches'])
     endif
 endfunction
 
