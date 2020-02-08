@@ -587,6 +587,18 @@ Describe lsp#utils#text_edit
             let l:buffer_text = s:get_text()
             Assert Equals(l:buffer_text, ['package main', '', 'import java.util.ArrayList;', '', 'public class Main {}', ''])
         End
+
+        It adds null
+            let l:text = ['package main', '', 'import java.util.ArrayList;', '', 'public class Main {}']
+            call s:set_text(l:text)
+
+            call lsp#utils#text_edit#apply_text_edits(
+                \ expand('%'),
+                \ v:null)
+
+            let l:buffer_text = s:get_text()
+            Assert Equals(l:buffer_text, l:text + [''])
+        End
     End
 End
 

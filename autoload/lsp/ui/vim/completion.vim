@@ -54,6 +54,9 @@ endfunction
 " Apply textEdit or insertText(snippet) and additionalTextEdits.
 "
 function! s:on_complete_done_after() abort
+  " Clear message line. feedkeys above leave garbage on message line.
+  echo ''
+
   let l:line = s:context['line']
   let l:position = s:context['position']
   let l:completed_item = s:context['completed_item']
@@ -86,7 +89,7 @@ function! s:on_complete_done_after() abort
   endif
 
   " apply additionalTextEdits.
-  if has_key(l:completion_item, 'additionalTextEdits')
+  if has_key(l:completion_item, 'additionalTextEdits') && !empty(l:completion_item['additionalTextEdits'])
     let l:saved_mark = getpos("'a")
     let l:pos = getpos('.')
     call setpos("'a", l:pos)

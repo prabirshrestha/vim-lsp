@@ -120,7 +120,7 @@ function! s:place_highlights(server_name, path, diagnostics) abort
             let [l:start_line, l:start_col] = lsp#utils#position#_lsp_to_vim(l:bufnr, l:item['range']['start'])
             let [l:end_line, l:end_col] = lsp#utils#position#_lsp_to_vim(l:bufnr, l:item['range']['end'])
 
-            let l:prop_type = s:get_prop_type(a:server_name, l:item['severity'])
+            let l:prop_type = s:get_prop_type(a:server_name, get(l:item, 'severity', 1))
             call prop_add(l:start_line, l:start_col, {
                 \ 'end_lnum': l:end_line,
                 \ 'end_col': l:end_col,
