@@ -102,7 +102,7 @@ function! s:on_complete_done_after() abort
   endif
 
   " apply additionalTextEdits.
-  if has_key(l:completion_item, 'additionalTextEdits')
+  if has_key(l:completion_item, 'additionalTextEdits') && !empty(l:completion_item['additionalTextEdits'])
     let l:saved_mark = getpos("'a")
     let l:pos = getpos('.')
     call setpos("'a", l:pos)

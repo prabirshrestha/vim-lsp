@@ -1,3 +1,4 @@
+" vint: -ProhibitUnusedVariable
 let s:debounce_timer_id = 0
 
 function! s:not_supported(what) abort
@@ -114,10 +115,10 @@ endfunction
 function! s:on_cursor_moved() abort
     let l:bufnr = bufnr('%')
     call timer_stop(s:debounce_timer_id)
-    let s:debounce_timer_id = timer_start(200, { -> s:on_text_changed_after(l:bufnr) }, { 'repeat': 1 })
+    let s:debounce_timer_id = timer_start(500, function('s:on_text_changed_after', [l:bufnr]), { 'repeat': 1 })
 endfunction
 
-function! s:on_text_changed_after(bufnr) abort
+function! s:on_text_changed_after(bufnr, timer) abort
     if bufnr('%') != a:bufnr
         return
     endif
@@ -128,10 +129,14 @@ function! s:on_text_changed_after(bufnr) abort
         return
     endif
 
-    let l:chars = []
-    for l:server_name in lsp#get_whitelisted_servers(a:bufnr)
-        let l:chars += lsp#capabilities#get_signature_help_trigger_characters(l:server_name)
-    endfor
+    " Cache trigger chars since this loop is heavy
+    let l:chars = get(b:, 'lsp_signature_help_trigger_character', [])
+    if empty(l:chars)
+        for l:server_name in lsp#get_whitelisted_servers(a:bufnr)
+            let l:chars += lsp#capabilities#get_signature_help_trigger_characters(l:server_name)
+        endfor
+        let b:lsp_signature_help_trigger_character = l:chars
+    endif
 
     if index(l:chars, lsp#utils#_get_before_char_skip_white()) >= 0
         call lsp#ui#vim#signature_help#get_signature_help_under_cursor()

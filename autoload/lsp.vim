@@ -189,9 +189,10 @@ function! s:register_events() abort
         if exists('##TextChangedP')
             autocmd TextChangedP * call s:on_text_document_did_change()
         endif
-        autocmd CursorMoved * call s:on_cursor_moved()
+        if g:lsp_diagnostics_echo_cursor || g:lsp_highlight_references_enabled
+            autocmd CursorMoved * call s:on_cursor_moved()
+        endif
         autocmd BufWinEnter,BufWinLeave,InsertEnter * call lsp#ui#vim#references#clean_references()
-        autocmd CursorMoved * if g:lsp_highlight_references_enabled | call lsp#ui#vim#references#highlight(v:false) | endif
     augroup END
     call s:on_text_document_did_open()
 endfunction
@@ -239,7 +240,14 @@ endfunction
 function! s:on_cursor_moved() abort
     let l:buf = bufnr('%')
     if getbufvar(l:buf, '&buftype') ==# 'terminal' | return | endif
-    call lsp#ui#vim#diagnostics#echo#cursor_moved()
+
+    if g:lsp_diagnostics_echo_cursor
+        call lsp#ui#vim#diagnostics#echo#cursor_moved()
+    endif
+
+    if g:lsp_highlight_references_enabled
+        call lsp#ui#vim#references#highlight(v:false)
+    endif
 endfunction
 
 function! s:call_did_save(buf, server_name, result, cb) abort
@@ -746,6 +754,10 @@ function! s:handle_initialize(server_name, data) abort
 
     if !lsp#client#is_error(l:response)
         let l:server['init_result'] = l:response
+        " Delete cache of trigger chars
+        if has_key(b:, 'lsp_signature_help_trigger_character')
+            unlet b:lsp_signature_help_trigger_character
+        endif
     else
         let l:server['failed'] = l:response['error']
         call lsp#utils#error('Failed to initialize ' . a:server_name . ' with error ' . l:response['error']['code'] . ': ' . l:response['error']['message'])
