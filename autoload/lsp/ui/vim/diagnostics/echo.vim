@@ -1,8 +1,4 @@
 function! lsp#ui#vim#diagnostics#echo#cursor_moved() abort
-    if !g:lsp_diagnostics_echo_cursor
-        return
-    endif
-
     if mode() isnot# 'n'
         " dont' show echo only in normal mode
         return
