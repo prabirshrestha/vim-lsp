@@ -11,7 +11,7 @@ function! s:vim_popup_closed(...) abort
 endfunction
 
 function! lsp#ui#vim#output#closepreview() abort
-    if win_getid() == s:winid
+    if win_getid() ==# s:winid
         " Don't close if window got focus
         return
     endif
@@ -33,7 +33,7 @@ endfunction
 function! lsp#ui#vim#output#focuspreview() abort
     " This does not work for vim8.1 popup but will work for nvim and old preview
     if s:winid
-        if win_getid() != s:winid
+        if win_getid() !=# s:winid
             let s:prevwin = win_getid()
             call win_gotoid(s:winid)
         elseif s:prevwin
@@ -291,12 +291,12 @@ function! lsp#ui#vim#output#float_supported() abort
 endfunction
 
 function! lsp#ui#vim#output#preview(server, data, options) abort
-    if s:winid && type(s:preview_data) == type(a:data)
-        \ && s:preview_data == a:data
-        \ && type(g:lsp_preview_doubletap) == 3
+    if s:winid && type(s:preview_data) ==# type(a:data)
+        \ && s:preview_data ==# a:data
+        \ && type(g:lsp_preview_doubletap) ==# 3
         \ && len(g:lsp_preview_doubletap) >= 1
-        \ && type(g:lsp_preview_doubletap[0]) == 2
-        \ && index(['i', 's'], mode()[0]) == -1
+        \ && type(g:lsp_preview_doubletap[0]) ==# 2
+        \ && index(['i', 's'], mode()[0]) ==# -1
         echo ''
         return call(g:lsp_preview_doubletap[0], [])
     endif
@@ -323,7 +323,7 @@ function! lsp#ui#vim#output#preview(server, data, options) abort
     endif
 
     let l:do_conceal = g:lsp_hover_conceal
-    let l:server_info = a:server != '' ? lsp#get_server_info(a:server) : {}
+    let l:server_info = a:server !=# '' ? lsp#get_server_info(a:server) : {}
     let l:config = get(l:server_info, 'config', {})
     let l:do_conceal = get(l:config, 'hover_conceal', l:do_conceal)
 
@@ -387,19 +387,19 @@ function! s:escape_string_for_display(str) abort
 endfunction
 
 function! s:append(data, lines, syntax_lines) abort
-    if type(a:data) == type([])
+    if type(a:data) ==# type([])
         for l:entry in a:data
             call s:append(l:entry, a:lines, a:syntax_lines)
         endfor
 
         return 'markdown'
-    elseif type(a:data) == type('')
+    elseif type(a:data) ==# type('')
         if !empty(a:data)
             call extend(a:lines, split(s:escape_string_for_display(a:data), "\n", v:true))
         endif
 
         return 'markdown'
-    elseif type(a:data) == type({}) && has_key(a:data, 'language')
+    elseif type(a:data) ==# type({}) && has_key(a:data, 'language')
         if !empty(a:data.value)
             let l:new_lines = split(s:escape_string_for_display(a:data.value), '\n')
 
@@ -413,7 +413,7 @@ function! s:append(data, lines, syntax_lines) abort
         endif
 
         return 'markdown'
-    elseif type(a:data) == type({}) && has_key(a:data, 'kind')
+    elseif type(a:data) ==# type({}) && has_key(a:data, 'kind')
         if !empty(a:data.value)
             call extend(a:lines, split(s:escape_string_for_display(a:data.value), '\n', v:true))
         endif
