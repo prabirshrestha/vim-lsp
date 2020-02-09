@@ -355,6 +355,7 @@ function! lsp#ui#vim#workspace_symbol() abort
             \ })
     endfor
 
+    redraw
     echo 'Retrieving workspace symbols ...'
 endfunction
 

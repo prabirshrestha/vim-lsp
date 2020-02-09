@@ -1,8 +1,4 @@
 function! lsp#ui#vim#diagnostics#float#cursor_moved() abort
-    if !g:lsp_diagnostics_float_cursor || !lsp#ui#vim#output#float_supported()
-        return
-    endif
-
     call s:stop_cursor_moved_timer()
 
     let l:current_pos = getcurpos()[0:2]
