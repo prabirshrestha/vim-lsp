@@ -1277,16 +1277,20 @@ To integrate snippets in vim-lsp, you will first have to install a third-party
 snippet plugin, and a plugin that integrates it in vim-lsp. At the moment,
 you have two options:
 
-1. UltiSnips and vim-lsp-ultisnips
+1. vim-vsnip
+https://github.com/hrsh7th/vim-vsnip
+https://github.com/hrsh7th/vim-vsnip-integ
+
+2. UltiSnips and vim-lsp-ultisnips
 https://github.com/SirVer/ultisnips
 https://github.com/thomasfaingnaert/vim-lsp-ultisnips
 
-2. neosnippet.vim and vim-lsp-neosnippet
+3. neosnippet.vim and vim-lsp-neosnippet
 https://github.com/Shougo/neosnippet.vim
 https://github.com/thomasfaingnaert/vim-lsp-neosnippet
 
-Refer to the readme and docs of vim-lsp-ultisnips and vim-lsp-neosnippet for
-more information and configuration options.
+Refer to the readme and docs of vim-vsnip, vim-lsp-ultisnips and vim-lsp-neosnippet
+for more information and configuration options.
 
 ==============================================================================
 Folding                                                    *vim-lsp-folding*
