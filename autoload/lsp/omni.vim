@@ -58,7 +58,7 @@ function! lsp#omni#complete(findstart, base) abort
             let s:completion['status'] = s:completion_status_pending
         endif
 
-        let l:refresh_pattern = get(b:, 'asyncomplete_refresh_pattern', '\(\k\+$\)')
+        let l:refresh_pattern = get(b:, 'vim_lsp_refresh_pattern', '\(\k\+$\)')
         let l:curpos = getcurpos()
         let l:left = strpart(getline(l:curpos[1]), 0, l:curpos[2]-1)
         let s:completion['startcol'] = matchstrpos(l:left, l:refresh_pattern)[1]
