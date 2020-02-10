@@ -77,7 +77,7 @@ function! s:on_complete_done_after() abort
 
   let l:completion_item = s:resolve_completion_item(l:completion_item, l:server_name)
 
-  " apply textEdit or insertText(snippet).
+  " clear completed string if need.
   let l:expand_text = s:get_expand_text(l:completed_item, l:completion_item)
   if strlen(l:expand_text) > 0
     call s:clear_inserted_text(
@@ -86,19 +86,6 @@ function! s:on_complete_done_after() abort
           \   l:completed_item,
           \   l:completion_item
           \ )
-
-    if exists('g:lsp_snippets_expand_snippet') && len(g:lsp_snippets_expand_snippet) > 0
-      " vim-lsp-snippets expects commit characters removed.
-      call s:simple_expand_text(v:completed_item['word'])
-    elseif exists('g:lsp_snippet_expand') && len(g:lsp_snippet_expand) > 0
-      " other snippet integartion point.
-      call g:lsp_snippet_expand[0]({
-            \   'snippet': l:expand_text
-            \ })
-    else
-      " expand text simply.
-      call s:simple_expand_text(l:expand_text)
-    endif
   endif
 
   " apply additionalTextEdits.
@@ -113,6 +100,20 @@ function! s:on_complete_done_after() abort
     let l:pos = getpos("'a")
     call setpos("'a", l:saved_mark)
     call setpos('.', l:pos)
+  endif
+
+
+  " expand textEdit or insertText.
+  if strlen(l:expand_text) > 0
+    if exists('g:lsp_snippet_expand') && len(g:lsp_snippet_expand) > 0
+      " other snippet integartion point.
+      call g:lsp_snippet_expand[0]({
+            \   'snippet': l:expand_text
+            \ })
+    else
+      " expand text simply.
+      call s:simple_expand_text(l:expand_text)
+    endif
   endif
 
   doautocmd User lsp_complete_done
