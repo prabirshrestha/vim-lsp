@@ -249,14 +249,14 @@ function! lsp#ui#vim#document_format() abort
 endfunction
 
 function! lsp#ui#vim#stop_server(...) abort
-  let l:name = get(a:000, 0, '')
-  for l:server in lsp#get_whitelisted_servers()
-    if !empty(l:name) && l:server != l:name
-        continue
-    endif
-    echo 'Stopping' l:server 'server ...'
-    call lsp#stop_server(server)
-  endfor
+    let l:name = get(a:000, 0, '')
+    for l:server in lsp#get_whitelisted_servers()
+        if !empty(l:name) && l:server != l:name
+            continue
+        endif
+        echo 'Stopping' l:server 'server ...'
+        call lsp#stop_server(l:server)
+    endfor
 endfunction
 
 function! s:get_selection_pos(type) abort
@@ -355,6 +355,7 @@ function! lsp#ui#vim#workspace_symbol() abort
             \ })
     endfor
 
+    redraw
     echo 'Retrieving workspace symbols ...'
 endfunction
 
@@ -438,15 +439,15 @@ function! s:handle_location(ctx, server, type, data) abort "ctx = {counter, list
                 if has_key(l:loc,'viewstart') " showing a locationLink
                     let l:view = l:lines[l:loc['viewstart'] : l:loc['viewend']]
                     call lsp#ui#vim#output#preview(a:server, l:view, {
-                                \   'statusline': ' LSP Peek ' . a:type,
-                                \   'filetype': &filetype
-                                \ })
+                        \   'statusline': ' LSP Peek ' . a:type,
+                        \   'filetype': &filetype
+                        \ })
                 else " showing a location
                     call lsp#ui#vim#output#preview(a:server, l:lines, {
-                                \   'statusline': ' LSP Peek ' . a:type,
-                                \   'cursor': { 'line': l:loc['lnum'], 'col': l:loc['col'], 'align': g:lsp_peek_alignment },
-                                \   'filetype': &filetype
-                                \ })
+                        \   'statusline': ' LSP Peek ' . a:type,
+                        \   'cursor': { 'line': l:loc['lnum'], 'col': l:loc['col'], 'align': g:lsp_peek_alignment },
+                        \   'filetype': &filetype
+                        \ })
                 endif
             endif
         endif
@@ -581,9 +582,9 @@ function! s:get_treeitem_for_tree_hierarchy(Callback, object) dict abort
 endfunction
 
 function! lsp#ui#vim#code_action() abort
-  call lsp#ui#vim#code_action#do({
-      \   'sync': v:false,
-      \   'selection': v:false,
-      \   'query': '',
-      \ })
+    call lsp#ui#vim#code_action#do({
+        \   'sync': v:false,
+        \   'selection': v:false,
+        \   'query': '',
+        \ })
 endfunction

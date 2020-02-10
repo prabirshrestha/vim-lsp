@@ -3,7 +3,7 @@ cmdargs:
 
 policies:
   ProhibitUnusedVariable:
-    enabled: true
+    enabled: false
   ProhibitImplicitScopeVariable:
     enabled: true
   ProhibitNoAbortFunction:

@@ -115,7 +115,7 @@ endfunction
 " "exited", "starting", "failed", "running", "not running"
 function! lsp#get_server_status(...) abort
     if a:0 == 0
-        let l:strs = map(keys(s:servers), {k, v -> v . ": " . s:server_status(v)})
+        let l:strs = map(keys(s:servers), {k, v -> v . ': ' . s:server_status(v)})
         return join(l:strs, "\n")
     else
         return s:server_status(a:1)
@@ -189,9 +189,10 @@ function! s:register_events() abort
         if exists('##TextChangedP')
             autocmd TextChangedP * call s:on_text_document_did_change()
         endif
-        autocmd CursorMoved * call s:on_cursor_moved()
+        if g:lsp_diagnostics_echo_cursor || g:lsp_diagnostics_float_cursor || g:lsp_highlight_references_enabled
+            autocmd CursorMoved * call s:on_cursor_moved()
+        endif
         autocmd BufWinEnter,BufWinLeave,InsertEnter * call lsp#ui#vim#references#clean_references()
-        autocmd CursorMoved * if g:lsp_highlight_references_enabled | call lsp#ui#vim#references#highlight(v:false) | endif
     augroup END
     call s:on_text_document_did_open()
 endfunction
@@ -239,7 +240,16 @@ endfunction
 function! s:on_cursor_moved() abort
     let l:buf = bufnr('%')
     if getbufvar(l:buf, '&buftype') ==# 'terminal' | return | endif
-    call lsp#ui#vim#diagnostics#echo#cursor_moved()
+
+    if g:lsp_diagnostics_echo_cursor
+        call lsp#ui#vim#diagnostics#echo#cursor_moved()
+    elseif g:lsp_diagnostics_float_cursor && lsp#ui#vim#output#float_supported()
+        call lsp#ui#vim#diagnostics#float#cursor_moved()
+    endif
+
+    if g:lsp_highlight_references_enabled
+        call lsp#ui#vim#references#highlight(v:false)
+    endif
 endfunction
 
 function! s:call_did_save(buf, server_name, result, cb) abort
@@ -509,7 +519,7 @@ function! s:ensure_init(buf, server_name, cb) abort
     if has_key(l:server_info, 'capabilities')
         let l:capabilities = l:server_info['capabilities']
     else
-        let l:capabilities = call(g:lsp_get_supported_capabilities[0], [server_info])
+        let l:capabilities = call(g:lsp_get_supported_capabilities[0], [l:server_info])
     endif
 
     let l:request = {
@@ -878,8 +888,8 @@ function! s:add_didchange_queue(buf) abort
     call add(s:didchange_queue, a:buf)
     call lsp#log('s:send_didchange_queue() will be triggered')
     call timer_stop(s:didchange_timer)
-    let lazy = &updatetime > 1000 ? &updatetime : 1000
-    let s:didchange_timer = timer_start(lazy, function('s:send_didchange_queue'))
+    let l:lazy = &updatetime > 1000 ? &updatetime : 1000
+    let s:didchange_timer = timer_start(l:lazy, function('s:send_didchange_queue'))
 endfunction
 
 function! s:send_didchange_queue(...) abort
