@@ -19,7 +19,7 @@ function! lsp#ui#vim#signature_help#get_signature_help_under_cursor() abort
             \ 'method': 'textDocument/signatureHelp',
             \ 'params': {
             \   'textDocument': lsp#get_text_document_identifier(),
-            \   'position': position,
+            \   'position': l:position,
             \ },
             \ 'on_notification': function('s:handle_signature_help', [l:server]),
             \ })

@@ -35,7 +35,7 @@ function! lsp#ui#vim#diagnostics#document_diagnostics() abort
     endif
 
     let l:result = []
-    for [l:server_name, l:data] in items(l:diagnostics)
+    for l:data in values(l:diagnostics)
         let l:result += lsp#ui#vim#utils#diagnostics_to_loc_list(l:data)
     endfor
 

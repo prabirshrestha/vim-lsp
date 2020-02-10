@@ -78,7 +78,7 @@ function! s:clear_all_highlights() abort
         endif
 
         for l:bufnr in range(1, bufnr('$'))
-            if bufexists(l:bufnr)
+            if bufexists(l:bufnr) && bufloaded(l:bufnr)
                 call prop_remove({
                     \ 'type': l:prop_type,
                     \ 'bufnr': l:bufnr,
