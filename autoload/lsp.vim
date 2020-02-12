@@ -214,6 +214,10 @@ function! s:on_text_document_did_open() abort
     endfor
 endfunction
 
+function! lsp#activate() abort
+  call s:on_text_document_did_open()
+endfunction
+
 function! s:on_text_document_did_save() abort
     let l:buf = bufnr('%')
     if getbufvar(l:buf, '&buftype') ==# 'terminal' | return | endif
