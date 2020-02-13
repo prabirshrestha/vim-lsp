@@ -62,6 +62,9 @@ function! lsp#omni#complete(findstart, base) abort
         let l:curpos = getcurpos()
         let l:left = strpart(getline(l:curpos[1]), 0, l:curpos[2]-1)
         let s:completion['startcol'] = matchstrpos(l:left, l:refresh_pattern)[1]
+        if s:completion['startcol'] == -1
+            let s:completion['startcol'] = strlen(l:left)
+        endif
 
         call s:send_completion_request(l:info)
 
