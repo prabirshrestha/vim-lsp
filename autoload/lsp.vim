@@ -243,7 +243,8 @@ function! s:on_cursor_moved() abort
 
     if g:lsp_diagnostics_echo_cursor
         call lsp#ui#vim#diagnostics#echo#cursor_moved()
-    elseif g:lsp_diagnostics_float_cursor && lsp#ui#vim#output#float_supported()
+    endif
+    if g:lsp_diagnostics_float_cursor && lsp#ui#vim#output#float_supported()
         call lsp#ui#vim#diagnostics#float#cursor_moved()
     endif
 
