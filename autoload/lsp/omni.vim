@@ -83,7 +83,7 @@ endfunction
 
 function! s:get_filter_label(item) abort
     let l:user_data = lsp#omni#get_managed_user_data_from_completed_item(a:item)
-    if has_key(l:user_data, 'completion_item') && has_key(l:user_data['completion_item'], 'filterText')
+    if has_key(l:user_data, 'completion_item') && has_key(l:user_data['completion_item'], 'filterText') && !empty(l:user_data['completion_item']['filterText'])
         return trim(l:user_data['completion_item']['filterText'])
     endif
     return trim(a:item['word'])
