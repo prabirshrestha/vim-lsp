@@ -548,7 +548,7 @@ Describe lsp#utils#text_edit
                     \ }])
 
             let l:buffer_text = s:get_text()
-            Assert Equals(l:buffer_text, ['x', 'y', 'z', 'b', ''])
+            Assert Equals(l:buffer_text, ['x', 'y', 'z', '', ''])
         End
 
         It adds imports correctly
