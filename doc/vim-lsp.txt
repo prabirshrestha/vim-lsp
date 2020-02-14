@@ -839,7 +839,7 @@ invoking completion. It does this by checking the textEdit's range of each
 completion item.
 
 You can use a |regexp| to determine what you want to start completion with
-matched text so far. The pattern is matched against the	current line, from
+matched text so far. The pattern is matched against the current line, from
 column 0 up until the cursor's position. Thus, |/$| means "current cursor
 position" in this context.
 
