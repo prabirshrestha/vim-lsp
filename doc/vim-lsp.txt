@@ -830,6 +830,29 @@ The vim |dict| containing information about the server.
 	    Example: >
 		'config': { 'completion_item_kinds': {'26': 'type' } }
 <
+refresh_pattern                                    *vim-lsp-refresh_pattern*	
+    Type: |String| (|pattern|)	
+    Default: `'\k*$'`	
+
+Vim-lsp will automatically detect start column of completion so far when
+invoking completion. It does this by checking the textEdit's range of each
+completion item.	
+
+You can use a |regexp| to determine what you want to start completion with
+matched text so far. The pattern is matched against the	current line, from
+column 0 up until the cursor's position. Thus, |/$| means "current cursor
+position" in this context.	
+
+For example: >	
+	'config': { 'refresh_pattern': '\k*$' }	
+<	
+This uses all characters in `'iskeyword'` in front of the cursor as typed	
+word.	
+
+This key is also used to align the completion menu: the completion menu is	
+placed so its left border is at the column that matches the start of the	
+`refresh_pattern`.	
+
 filter                                           *vim-lsp-completion-filter*
 
 You can filter the completion items returned from the server by specifying a
