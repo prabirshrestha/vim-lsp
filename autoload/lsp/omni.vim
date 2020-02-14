@@ -63,7 +63,7 @@ function! lsp#omni#complete(findstart, base) abort
         for l:server_name in l:info['server_names']
             let l:server_info = lsp#get_server_info(l:server_name)
             if has_key (l:server_info, 'config') && has_key(l:server_info['config'], 'refresh_pattern')
-                let l:refresh_pattern l:server_info['config']['refresh_pattern']
+                let l:refresh_pattern = l:server_info['config']['refresh_pattern']
                 break
             endif
         endfor
