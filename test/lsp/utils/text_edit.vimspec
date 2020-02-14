@@ -551,6 +551,29 @@ Describe lsp#utils#text_edit
             Assert Equals(l:buffer_text, ['x', 'y', 'z', '', ''])
         End
 
+        It should apply edit that contains \r\n
+            call s:set_text(['foo', 'b'])
+
+            call lsp#utils#text_edit#apply_text_edits(
+                    \ expand('%'),
+                    \ [{
+                    \   'range': {
+                    \       'start': {
+                    \           'line': 0,
+                    \           'character': 0
+                    \       },
+                    \       'end': {
+                    \           'line': 1,
+                    \           'character': 1
+                    \       }
+                    \   },
+                    \   'newText': "x\r\ny\r\nz\r\n"
+                    \ }])
+
+            let l:buffer_text = s:get_text()
+            Assert Equals(l:buffer_text, ['x', 'y', 'z', '', ''])
+        End
+
         It adds imports correctly
             call s:set_text(['package main', '', 'import java.util.ArrayList;', '', 'public class Main {}'])
 
