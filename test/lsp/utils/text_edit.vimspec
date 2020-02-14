@@ -599,6 +599,26 @@ Describe lsp#utils#text_edit
             let l:buffer_text = s:get_text()
             Assert Equals(l:buffer_text, l:text + [''])
         End
+
+        It should apply edits to unloaded file
+            let l:target = globpath(&runtimepath, 'test/lsp/utils/text_edit.vimspec')
+            call themis#log(l:target)
+            call lsp#utils#text_edit#apply_text_edits(lsp#utils#path_to_uri(l:target), [{
+            \   'range': {
+            \     'start': {
+            \       'line': 0,
+            \       'character': 0,
+            \     },
+            \     'end': {
+            \       'line': 0,
+            \       'character': 0,
+            \     }
+            \   },
+            \   'newText': "aiueo\n"
+            \ }])
+
+            Assert Equals(getbufline(l:target, 1), ['aiueo'])
+        End
     End
 End
 

@@ -1,7 +1,6 @@
 function! lsp#utils#text_edit#apply_text_edits(uri, text_edits) abort
-    let l:path = lsp#utils#uri_to_path(a:uri)
     let l:current_bufname = bufname('%')
-    let l:target_bufname = l:path
+    let l:target_bufname = lsp#utils#uri_to_path(a:uri)
     let l:cursor_pos = getpos('.')[1 : 3]
     let l:cursor_offset = 0
     let l:topline = line('w0')
@@ -132,7 +131,7 @@ endfunction
 " _switch
 "
 function! s:_switch(path) abort
-  if bufexists(a:path) && bufloaded(a:path)
+  if bufnr(a:path) >= 0
     execute printf('keepalt keepjumps %sbuffer!', bufnr(a:path))
   else
     execute printf('keepalt keepjumps edit! %s', fnameescape(a:path))
