@@ -242,6 +242,9 @@ function! lsp#omni#default_get_vim_completion_item(item, ...) abort
     elseif !empty(get(a:item, 'insertText', ''))
         " if plain-text insertText, use it.
         let l:word = a:item['insertText']
+        if !empty(l:word)
+            let l:word = split(l:word, '\n')[0]
+        endif
     elseif has_key(a:item, 'textEdit')
         let l:word = lsp#utils#make_valid_word(a:item['label'])
     endif
