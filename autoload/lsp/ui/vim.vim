@@ -343,7 +343,10 @@ function! lsp#ui#vim#workspace_symbol() abort
         return
     endif
 
-    let l:query = input('query>')
+    let l:query = inputdialog('query>', '', "\<ESC>")
+    if l:query ==# "\<ESC>"
+        return
+    endif
 
     for l:server in l:servers
         call lsp#send_request(l:server, {
