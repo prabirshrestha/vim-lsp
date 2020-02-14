@@ -319,3 +319,8 @@ function! lsp#utils#make_valid_word(str) abort
    endif
    return l:str
 endfunction
+
+function! lsp#utils#_split_by_eol(text) abort
+    return split(a:text, '\r\n\|\r\|\n', v:true)
+endfunction
+
