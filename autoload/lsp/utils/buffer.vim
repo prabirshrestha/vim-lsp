@@ -26,6 +26,10 @@ function! s:get_fixendofline(buf) abort
     endif
 endfunction
 
+function! lsp#utils#buffer#_get_fixendofline(bufnr) abort
+    return s:get_fixendofline(a:bufnr)
+endfunction
+
 function! lsp#utils#buffer#_get_lines(buf) abort
     let l:lines = getbufline(a:buf, 1, '$')
     if s:get_fixendofline(a:buf)
@@ -56,7 +60,7 @@ function! lsp#utils#buffer#_open_lsp_location(location) abort
     endif
     execute l:cmd . ' | call cursor('.l:start_line.','.l:start_col.')'
 
-    normal V
+    normal! V
     call setpos("'<", [l:bufnr, l:start_line, l:start_col])
     call setpos("'>", [l:bufnr, l:end_line, l:end_col])
 endfunction

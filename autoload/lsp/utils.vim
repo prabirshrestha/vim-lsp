@@ -28,12 +28,12 @@ function! s:encode_uri(path, start_pos_encode, default_prefix) abort
 
     let l:result = strpart(a:path, 0, a:start_pos_encode)
 
-    for i in range(a:start_pos_encode, len(l:path) - 1)
+    for l:i in range(a:start_pos_encode, len(l:path) - 1)
         " Don't encode '/' here, `path` is expected to be a valid path.
-        if l:path[i] =~# '^[a-zA-Z0-9_.~/-]$'
-            let l:result .= l:path[i]
+        if l:path[l:i] =~# '^[a-zA-Z0-9_.~/-]$'
+            let l:result .= l:path[l:i]
         else
-            let l:result .= s:urlencode_char(l:path[i])
+            let l:result .= s:urlencode_char(l:path[l:i])
         endif
     endfor
 
@@ -116,8 +116,8 @@ endfunction
 function! lsp#utils#find_nearest_parent_file_directory(path, filename) abort
     if type(a:filename) == 3
         let l:matched_paths = {}
-        for current_name in a:filename
-            let l:path = lsp#utils#find_nearest_parent_file_directory(a:path, current_name)
+        for l:current_name in a:filename
+            let l:path = lsp#utils#find_nearest_parent_file_directory(a:path, l:current_name)
 
             if !empty(l:path)
                 if has_key(l:matched_paths, l:path)
@@ -319,3 +319,8 @@ function! lsp#utils#make_valid_word(str) abort
    endif
    return l:str
 endfunction
+
+function! lsp#utils#_split_by_eol(text) abort
+    return split(a:text, '\r\n\|\r\|\n', v:true)
+endfunction
+

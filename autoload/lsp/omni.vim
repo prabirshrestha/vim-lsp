@@ -245,6 +245,9 @@ function! lsp#omni#default_get_vim_completion_item(item, ...) abort
     elseif !empty(get(a:item, 'insertText', ''))
         " if plain-text insertText, use it.
         let l:word = a:item['insertText']
+        if !empty(l:word)
+            let l:word = split(l:word, '\n')[0]
+        endif
     elseif has_key(a:item, 'textEdit')
         let l:word = lsp#utils#make_valid_word(a:item['label'])
     endif
@@ -292,7 +295,7 @@ function! lsp#omni#default_get_vim_completion_item(item, ...) abort
         elseif type(a:item['documentation']) == type({}) &&
                     \ has_key(a:item['documentation'], 'value')
             " field is MarkupContent (hopefully 'plaintext')
-            let l:completion['info'] .= a:item['documentation']['value']
+            let l:completion['info'] .= substitute(a:item['documentation']['value'], '\r', '', 'g')
         endif
     endif
 
