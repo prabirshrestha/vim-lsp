@@ -321,9 +321,6 @@ function! lsp#utils#make_valid_word(str) abort
 endfunction
 
 function! lsp#utils#_split_by_eol(text) abort
-    let l:text = a:text
-    let l:text = substitute(l:text, "\r\n", "\n", 'g')
-    let l:text = substitute(l:text, "\r", "\n", 'g')
-    return split(l:text, "\n", v:true)
+    return split(a:text, '\r\n\|\r\|\n', v:true)
 endfunction
 
