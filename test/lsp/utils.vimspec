@@ -176,7 +176,6 @@ Describe lsp#utils
     Describe lsp#utils#make_valid_word
         It should make valid word
             Assert Equals(lsp#utils#make_valid_word('my-word'), 'my-word')
-            Assert Equals(lsp#utils#make_valid_word(' my-word'), '')
             Assert Equals(lsp#utils#make_valid_word("my\nword"), 'my')
             Assert Equals(lsp#utils#make_valid_word('my-word: description'), 'my-word')
             Assert Equals(lsp#utils#make_valid_word('my-word : description'), 'my-word')
