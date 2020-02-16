@@ -26,6 +26,10 @@ function! s:get_fixendofline(buf) abort
     endif
 endfunction
 
+function! lsp#utils#buffer#_get_fixendofline(bufnr) abort
+    return s:get_fixendofline(a:bufnr)
+endfunction
+
 function! lsp#utils#buffer#_get_lines(buf) abort
     let l:lines = getbufline(a:buf, 1, '$')
     if s:get_fixendofline(a:buf)

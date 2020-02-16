@@ -794,7 +794,7 @@ The vim |dict| containing information about the server.
 <
     Using the `config` key, you can also specify a custom 'typed word
     pattern', or a custom filter for completion items, see
-    |vim-lsp-typed_pattern| and |vim-lsp-completion-filter|.
+    |vim-lsp-completion-filter|.
 
     The following per-server configuration options are supported by vim-lsp.
 
@@ -830,28 +830,28 @@ The vim |dict| containing information about the server.
 	    Example: >
 		'config': { 'completion_item_kinds': {'26': 'type' } }
 <
-typed_pattern                                        *vim-lsp-typed_pattern*
+refresh_pattern                                    *vim-lsp-refresh_pattern*
     Type: |String| (|pattern|)
     Default: `'\k*$'`
 
-Vim-lsp will automatically detect the text you have typed so far when invoking
-completion. It does this by checking the textEdit's range of each completion
-item.
+Vim-lsp will automatically detect start column of completion so far when
+invoking completion. It does this by checking the textEdit's range of each
+completion item.
 
-If the language server doesn't use textEdits, you can use a |regexp| to
-determine what you have typed so far. The pattern is matched against the
-current line, from column 0 up until the cursor's position. Thus, |/$| means
-"current cursor position" in this context.
+You can use a |regexp| to determine what you want to start completion with
+matched text so far. The pattern is matched against the current line, from
+column 0 up until the cursor's position. Thus, |/$| means "current cursor
+position" in this context.
 
 For example: >
-	'config': { 'typed_pattern': '\k*$' }
+	'config': { 'refresh_pattern': '\k*$' }
 <
 This uses all characters in `'iskeyword'` in front of the cursor as typed
 word.
 
 This key is also used to align the completion menu: the completion menu is
 placed so its left border is at the column that matches the start of the
-`typed_pattern`.
+`refresh_pattern`.
 
 filter                                           *vim-lsp-completion-filter*
 
@@ -860,9 +860,7 @@ completion filter using the `filter` key in the server info's `config` |dict|.
 The value of the `filter` key is itself a |dict| containing at least a key
 `name`, which specifies which filter to use.
 
-For the meaning of "already typed text" in the remainder of this section, see
-|vim-lsp-typed_pattern|. The case (in)sensitivity of the matching is
-determined by |g:lsp_ignorecase|.
+The case (in)sensitivity of the matching is determined by |g:lsp_ignorecase|.
 
     Example: >
         'config': { 'filter': { 'name': 'none' } }

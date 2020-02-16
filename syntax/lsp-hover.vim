@@ -41,12 +41,9 @@ function! s:cleanup_markdown() abort
     " Workaround for: https://github.com/palantir/python-language-server/issues/386
     if has('conceal')
         for l:escaped_char in ['`', '*', '_', '{', '}', '(', ')', '<', '>', '#', '+', '.', '!', '-']
-            execute printf('syntax match markdownEscape "\\[][%s]" conceal cchar=%s', l:escaped_char, l:escaped_char)
+            execute printf('syntax region vimLspMarkdownEscape matchgroup=Conceal start="\\\ze[%s]" end="[%s]\zs" concealends', l:escaped_char, l:escaped_char)
         endfor
     end
-
-    " Don't highlight concealed chars
-    highlight clear Conceal
 endfunction
 
 call s:do_highlight()
