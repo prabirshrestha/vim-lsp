@@ -313,9 +313,10 @@ function! lsp#utils#base64_decode(data) abort
 endfunction
 
 function! lsp#utils#make_valid_word(str) abort
-   let l:str = matchstr(a:str, '^[^ (<{\[\t\r\n]\+')
+   let l:str = substitute(a:str, '\$[0-9]\+\|\${\%(\\.\|[^}]\)\+}', '', 'g')
+   let l:str = matchstr(l:str, '^[^ (<{\[\t\r\n]\+')
    if l:str =~# ':$'
-     return l:str[:-2]
+       return l:str[:-2]
    endif
    return l:str
 endfunction

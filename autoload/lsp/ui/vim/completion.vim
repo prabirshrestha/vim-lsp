@@ -233,7 +233,7 @@ function! s:simple_expand_text(text) abort
 
   " Remove placeholders and get first placeholder position that use to cursor position.
   " e.g. `|getbufline(${1:expr}, ${2:lnum})${0}` to getbufline(|,)
-  let l:text = substitute(a:text, '\$\%({[0-9]*[^}]*}\|[0-9]*\)', '', 'g')
+  let l:text = substitute(a:text, '\$\%({[0-9]*\%(\\.\|[^}]\)*}\|[0-9]*\)', '', 'g')
   let l:offset = match(a:text, '\$\%({[0-9]*[^}]*}\|[0-9]*\)')
   if l:offset == -1
     let l:offset = strchars(l:text)
