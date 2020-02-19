@@ -149,21 +149,10 @@ function! s:setcontent(lines, ft) abort
     if s:use_vim_popup
         " vim popup
         call setbufline(winbufnr(s:winid), 1, a:lines)
-        let l:lightline_toggle = v:false
-        if exists('#lightline') && !has('nvim')
-            " Lightline does not work in popups but does not recognize it yet.
-            " It is ugly to have an check for an other plugin here, better fix lightline...
-            let l:lightline_toggle = v:true
-            call lightline#disable()
-        endif
         call win_execute(s:winid, 'setlocal filetype=' . a:ft . '.lsp-hover')
-        if l:lightline_toggle
-            call lightline#enable()
-        endif
     else
         " nvim floating or preview
         call setline(1, a:lines)
-
         setlocal readonly nomodifiable
         silent! let &l:filetype = a:ft . '.lsp-hover'
     endif
