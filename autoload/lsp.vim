@@ -506,7 +506,8 @@ function! s:ensure_init(buf, server_name, cb) abort
     let l:server_info = l:server['server_info']
     if has_key(l:server_info, 'root_uri')
         let l:root_uri = l:server_info['root_uri'](l:server_info)
-    else
+	endif
+    if empty(l:root_uri)
         let l:root_uri = lsp#utils#get_default_root_uri()
     endif
 
