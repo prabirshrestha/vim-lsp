@@ -120,6 +120,14 @@ function! s:contains_filter(item, last_typed_word) abort
     endif
 endfunction
 
+let s:pair = {
+\  '"':  '"',
+\  '''':  '''',
+\  '{':  '}',
+\  '(':  ')',
+\  '[':  ']',
+\}
+
 function! s:display_completions(timer, info) abort
     " TODO: Allow multiple servers
     let l:server_name = a:info['server_names'][0]
@@ -131,6 +139,15 @@ function! s:display_completions(timer, info) abort
 
     if l:filter['name'] ==? 'prefix'
         let s:completion['matches'] = filter(s:completion['matches'], {_, item -> s:prefix_filter(item, l:last_typed_word)})
+	    if has_key(s:pair, l:last_typed_word[0])
+            let [l:lhs, l:rhs] = [l:last_typed_word[0], s:pair[l:last_typed_word[0]]]
+            for l:item in s:completion['matches']
+                let l:str = l:item['word']
+                if len(l:str) > 1 && l:str[0] ==# l:lhs && l:str[-1:] ==# l:rhs
+                    let l:item['word'] = l:str[:-2]
+                endif
+            endfor
+        endif
     elseif l:filter['name'] ==? 'contains'
         let s:completion['matches'] = filter(s:completion['matches'], {_, item -> s:contains_filter(item, l:last_typed_word)})
     endif
@@ -254,7 +271,7 @@ function! lsp#omni#default_get_vim_completion_item(item, ...) abort
     let l:abbr = a:item['label']
 
     if has_key(a:item, 'insertTextFormat') && a:item['insertTextFormat'] == 2
-        let l:word = substitute(l:word, '\<\$[0-9]\+\|\${[^}]\+}\>', '', 'g')
+        let l:word = substitute(l:word, '\$[0-9]\+\|\${\%(\\.\|[^}]\)\+}', '', 'g')
     endif
 
     let l:completion = {
