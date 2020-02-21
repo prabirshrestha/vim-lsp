@@ -12,7 +12,7 @@ function! lsp#utils#text_edit#apply_text_edits(uri, text_edits) abort
     call s:_switch(l:current_bufname)
 
     if bufnr(l:current_bufname) == bufnr(l:target_bufname)
-        let l:length = strlen(getline(l:cursor_pos[0]))
+        let l:length = strlen(getline(l:cursor_pos[0])) + 1
         let l:cursor_pos[2] = max([0, l:cursor_pos[1] + l:cursor_pos[2] - l:length])
         let l:cursor_pos[1] = min([l:length, l:cursor_pos[1] + l:cursor_pos[2]])
         call cursor(l:cursor_pos)
@@ -49,7 +49,7 @@ function! s:_apply(bufnr, text_edit, cursor_pos) abort
 
   " fix cursor pos
   let l:cursor_offset = 0
-  if a:text_edit.range.end.line <= a:cursor_pos[0]
+  if a:text_edit.range.end.line + 1 < a:cursor_pos[0]
     let l:cursor_offset = l:new_lines_len - (a:text_edit.range.end.line - a:text_edit.range.start.line) - 1
     let a:cursor_pos[0] += l:cursor_offset
   endif

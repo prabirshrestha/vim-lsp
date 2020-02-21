@@ -90,18 +90,11 @@ function! s:on_complete_done_after() abort
 
   " apply additionalTextEdits.
   if has_key(l:completion_item, 'additionalTextEdits') && !empty(l:completion_item['additionalTextEdits'])
-    let l:saved_mark = getpos("'a")
-    let l:pos = getpos('.')
-    call setpos("'a", l:pos)
     call lsp#utils#text_edit#apply_text_edits(
           \ lsp#utils#get_buffer_uri(bufnr('%')),
           \ l:completion_item['additionalTextEdits']
           \ )
-    let l:pos = getpos("'a")
-    call setpos("'a", l:saved_mark)
-    call setpos('.', l:pos)
   endif
-
 
   " expand textEdit or insertText.
   if strlen(l:expand_text) > 0
