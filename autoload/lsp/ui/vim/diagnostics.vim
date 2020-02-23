@@ -20,6 +20,22 @@ function! lsp#ui#vim#diagnostics#handle_text_document_publish_diagnostics(server
     call lsp#ui#vim#signs#set(a:server_name, a:data)
 endfunction
 
+function! lsp#ui#vim#diagnostics#force_refresh(bufnr) abort
+    let l:data = lsp#ui#vim#diagnostics#get_document_diagnostics(a:bufnr)
+    if !empty(l:data)
+        for [l:server_name, l:response] in items(l:data)
+            call lsp#ui#vim#virtual#set(l:server_name, l:response)
+            call lsp#ui#vim#highlights#set(l:server_name, l:response)
+            call lsp#ui#vim#diagnostics#textprop#set(l:server_name, l:response)
+            call lsp#ui#vim#signs#set(l:server_name, l:response)
+        endfor
+    endif
+endfunction
+
+function! lsp#ui#vim#diagnostics#get_document_diagnostics(bufnr) abort
+    return get(s:diagnostics, lsp#utils#get_buffer_uri(a:bufnr), {})
+endfunction
+
 function! lsp#ui#vim#diagnostics#document_diagnostics() abort
     if !g:lsp_diagnostics_enabled
         call lsp#utils#error('Diagnostics manually disabled -- g:lsp_diagnostics_enabled = 0')

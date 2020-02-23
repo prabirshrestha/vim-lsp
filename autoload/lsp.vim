@@ -209,6 +209,12 @@ function! s:on_text_document_did_open() abort
     if getbufvar(l:buf, '&buftype') ==# 'terminal' | return | endif
     if getcmdwintype() !=# '' | return | endif
     call lsp#log('s:on_text_document_did_open()', l:buf, &filetype, getcwd(), lsp#utils#get_buffer_uri(l:buf))
+
+    " Some language server notify diagnostics to the buffer that has not been loaded yet.
+    " This diagnostics was stored `autoload/lsp/ui/vim/diagnostics.vim` but not highlighted.
+    " So we should refresh highlights when buffer opened.
+    call lsp#ui#vim#diagnostics#force_refresh(l:buf)
+
     for l:server_name in lsp#get_whitelisted_servers(l:buf)
         call s:ensure_flush(l:buf, l:server_name, function('s:fire_lsp_buffer_enabled', [l:server_name, l:buf]))
     endfor
