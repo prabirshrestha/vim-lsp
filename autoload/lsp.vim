@@ -518,10 +518,7 @@ function! s:ensure_init(buf, server_name, cb) abort
     " server has already started, but not initialized
 
     let l:server_info = l:server['server_info']
-    if has_key(l:server_info, 'root_uri')
-        let l:root_uri = l:server_info['root_uri'](l:server_info)
-    endif
-
+    let l:root_uri = has_key(l:server_info, 'root_uri') ?  l:server_info['root_uri'](l:server_info) : ''
     if empty(l:root_uri)
         let l:msg = s:new_rpc_error('ignore initialization lsp server due to empty root_uri', { 'server_name': a:server_name, 'lsp_id': l:server['lsp_id'] })
         call lsp#log(l:msg)
