@@ -91,6 +91,13 @@ function! s:handle_code_action(server_name, command_id, sync, query, data) abort
     endif
 endfunction
 
+function! s:handle_executeCommand(server_name, command_or_code_action, data) abort
+    if lsp#client#is_error(a:data['response'])
+        call lsp#utils#error('Failed to '. a:command_or_code_action['command'] . ' for ' . a:server_name . ': ' . lsp#client#error_message(a:data['response']))
+        return
+    endif
+endfunction
+
 function! s:handle_one_code_action(server_name, sync, command_or_code_action) abort
     " has WorkspaceEdit.
     if has_key(a:command_or_code_action, 'edit')
@@ -102,7 +109,8 @@ function! s:handle_one_code_action(server_name, sync, command_or_code_action) ab
         call lsp#send_request(a:server_name, {
                     \   'method': 'workspace/executeCommand',
                     \   'params': a:command_or_code_action,
-                    \   'sync': a:sync
+                    \   'sync': a:sync,
+                    \   'on_notification': function('s:handle_executeCommand', [a:server_name, a:command_or_code_action]),
                     \ })
 
     " has Command.
@@ -110,7 +118,8 @@ function! s:handle_one_code_action(server_name, sync, command_or_code_action) ab
         call lsp#send_request(a:server_name, {
                     \   'method': 'workspace/executeCommand',
                     \   'params': a:command_or_code_action['command'],
-                    \   'sync': a:sync
+                    \   'sync': a:sync,
+                    \   'on_notification': function('s:handle_executeCommand', [a:server_name, a:command_or_code_action]),
                     \ })
     endif
 endfunction
