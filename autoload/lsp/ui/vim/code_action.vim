@@ -95,9 +95,10 @@ function! s:handle_one_code_action(server_name, sync, command_or_code_action) ab
     " has WorkspaceEdit.
     if has_key(a:command_or_code_action, 'edit')
         call lsp#utils#workspace_edit#apply_workspace_edit(a:command_or_code_action['edit'])
+    endif
 
     " Command.
-    elseif has_key(a:command_or_code_action, 'command') && type(a:command_or_code_action['command']) == type('')
+    if has_key(a:command_or_code_action, 'command') && type(a:command_or_code_action['command']) == type('')
         call lsp#send_request(a:server_name, {
                     \   'method': 'workspace/executeCommand',
                     \   'params': a:command_or_code_action,
