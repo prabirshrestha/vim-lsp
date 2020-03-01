@@ -32,6 +32,10 @@ function! lsp#ui#vim#code_action#do(option) abort
         let l:range = lsp#utils#range#_get_current_line_range()
     endif
 
+    let l:ctx = {
+    \ 'count': len(l:server_names),
+    \ 'results': [],
+    \}
     let l:command_id = lsp#_new_command()
     for l:server_name in l:server_names
         let l:diagnostic = lsp#ui#vim#diagnostics#get_diagnostics_under_cursor(l:server_name)
@@ -46,48 +50,58 @@ function! lsp#ui#vim#code_action#do(option) abort
                     \   },
                     \ },
                     \ 'sync': l:sync,
-                    \ 'on_notification': function('s:handle_code_action', [l:server_name, l:command_id, l:sync, l:query]),
+                    \ 'on_notification': function('s:handle_code_action', [l:ctx, l:server_name, l:command_id, l:sync, l:query]),
                     \ })
     endfor
     echo 'Retrieving code actions ...'
 endfunction
 
-function! s:handle_code_action(server_name, command_id, sync, query, data) abort
+function! s:handle_code_action(ctx, server_name, command_id, sync, query, data) abort
     " Ignore old request.
     if a:command_id != lsp#_last_command()
         return
     endif
 
-    " Check response error.
-    if lsp#client#is_error(a:data['response'])
-        call lsp#utils#error('Failed to CodeAction for ' . a:server_name . ': ' . lsp#client#error_message(a:data['response']))
+    call add(a:ctx['results'], a:data)
+    let a:ctx['count'] -= 1
+    if a:ctx['count'] ># 0
         return
     endif
 
-    " Check code actions.
-    let l:code_actions = a:data['response']['result']
-    call lsp#log('s:handle_code_action', l:code_actions)
-    if len(l:code_actions) == 0
-        echo 'No code actions found'
-        return
-    endif
+    let l:total_code_actions = []
+    for l:data in a:ctx['results']
+        " Check response error.
+        if lsp#client#is_error(l:data['response'])
+            call lsp#utils#error('Failed to CodeAction for ' . a:server_name . ': ' . lsp#client#error_message(l:data['response']))
+            return
+        endif
 
-    " Filter code actions.
-    if !empty(a:query)
-        let l:code_actions = filter(l:code_actions, { _, action -> get(action, 'kind', '') =~# '^' . a:query })
-    endif
+        " Check code actions.
+        let l:code_actions = l:data['response']['result']
+        call lsp#log('s:handle_code_action', l:code_actions)
+        if len(l:code_actions) == 0
+            echo 'No code actions found'
+            return
+        endif
+
+        " Filter code actions.
+        if !empty(a:query)
+            let l:code_actions = filter(l:code_actions, { _, action -> get(action, 'kind', '') =~# '^' . a:query })
+        endif
+        let l:total_code_actions += l:code_actions
+    endfor
 
     " Prompt to choose code actions when empty query provided.
     let l:index = 1
-    if len(l:code_actions) > 1 || empty(a:query)
-        let l:index = inputlist(map(copy(l:code_actions), { i, action ->
+    if len(l:total_code_actions) > 1 || empty(a:query)
+        let l:index = inputlist(map(copy(l:total_code_actions), { i, action ->
                     \   printf('%s - %s', i + 1, action['title'])
                     \ }))
     endif
 
     " Execute code action.
-    if 0 < l:index && l:index <= len(l:code_actions)
-        call s:handle_one_code_action(a:server_name, a:sync, l:code_actions[l:index - 1])
+    if 0 < l:index && l:index <= len(l:total_code_actions)
+        call s:handle_one_code_action(a:server_name, a:sync, l:total_code_actions[l:index - 1])
     endif
 endfunction
 
