@@ -33,6 +33,7 @@ function! lsp#ui#vim#execute_command#_execute(params) abort
     try
       call s:commands[l:command_name]({
       \   'bufnr': l:bufnr,
+      \   'server_name': l:server_name,
       \   'command': l:command,
       \ })
     catch /.*/
