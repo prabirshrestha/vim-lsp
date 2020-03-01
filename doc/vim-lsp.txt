@@ -912,7 +912,7 @@ For example, the rust-analyzer expects the client handles some custom command as
 
       let l:cursor_position = get(l:command['arguments'][0], 'cursorPosition', {})
       if !empty(l:cursor_position)
-          call cursor(lsp#utils#position#_lsp_to_vim('%', l:cursor_position))
+          call cursor(lsp#utils#position#lsp_to_vim('%', l:cursor_position))
       endif
   endfunction
   call lsp#register_command('rust-analyzer.applySourceChange', function('s:rust_analyzer_apply_source_change'))
@@ -939,6 +939,22 @@ Get the status of a server.
 <
     Returns one of "unknown server", " "exited", "starting", "failed",
     "running", "not running".
+
+
+lsp#utils#position#lsp_to_vim({expr}, {position})  *lsp#utils#position#lsp_to_vim()*
+
+Convert LSP's positon to vim's pos ([lnum, col]).
+
+{expr} is same of bufname argument.
+{position} is LSP's position params.
+
+
+lsp#utils#position#vim_to_lsp({expr}, {pos})      *lsp#utils#position#lsp_to_vim()*
+
+Convert vim's pos to LSP's position ({ 'line': ..., 'character': ... }).
+
+{expr} is same of bufname argument.
+{pos} is vim's position params.
 
                             *lsp#utils#find_nearest_parent_file_directory()*
 lsp#utils#find_nearest_parent_file_directory({path}, {filename})

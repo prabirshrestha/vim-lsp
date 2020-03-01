@@ -13,8 +13,8 @@ function! lsp#utils#range#_get_recent_visual_range() abort
     endif
 
     let l:range = {}
-    let l:range['start'] = lsp#utils#position#_vim_to_lsp('%', l:start_pos)
-    let l:range['end'] = lsp#utils#position#_vim_to_lsp('%', l:end_pos)
+    let l:range['start'] = lsp#utils#position#vim_to_lsp('%', l:start_pos)
+    let l:range['end'] = lsp#utils#position#vim_to_lsp('%', l:end_pos)
     return l:range
 endfunction
 
@@ -24,8 +24,8 @@ endfunction
 function! lsp#utils#range#_get_current_line_range() abort
   let l:pos = getpos('.')[1 : 2]
   let l:range = {}
-  let l:range['start'] = lsp#utils#position#_vim_to_lsp('%', l:pos)
-  let l:range['end'] = lsp#utils#position#_vim_to_lsp('%', [l:pos[0], l:pos[1] + strlen(getline(l:pos[0])) + 1])
+  let l:range['start'] = lsp#utils#position#vim_to_lsp('%', l:pos)
+  let l:range['end'] = lsp#utils#position#vim_to_lsp('%', [l:pos[0], l:pos[1] + strlen(getline(l:pos[0])) + 1])
   return l:range
 endfunction
 

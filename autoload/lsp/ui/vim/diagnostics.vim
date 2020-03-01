@@ -86,7 +86,7 @@ function! lsp#ui#vim#diagnostics#get_diagnostics_under_cursor(...) abort
     let l:closest_distance = -1
 
     for l:diagnostic in l:diagnostics
-        let [l:start_line, l:start_col] = lsp#utils#position#_lsp_to_vim('%', l:diagnostic['range']['start'])
+        let [l:start_line, l:start_col] = lsp#utils#position#lsp_to_vim('%', l:diagnostic['range']['start'])
 
         if l:line == l:start_line
             let l:distance = abs(l:start_col - l:col)
@@ -126,7 +126,7 @@ function! s:next_diagnostic(diagnostics) abort
     let l:next_line = 0
     let l:next_col = 0
     for l:diagnostic in a:diagnostics
-        let [l:line, l:col] = lsp#utils#position#_lsp_to_vim('%', l:diagnostic['range']['start'])
+        let [l:line, l:col] = lsp#utils#position#lsp_to_vim('%', l:diagnostic['range']['start'])
         if l:line > l:view['lnum']
             \ || (l:line == l:view['lnum'] && l:col > l:view['col'] + 1)
             let l:next_line = l:line
@@ -137,7 +137,7 @@ function! s:next_diagnostic(diagnostics) abort
 
     if l:next_line == 0
         " Wrap to start
-        let [l:next_line, l:next_col] = lsp#utils#position#_lsp_to_vim('%', a:diagnostics[0]['range']['start'])
+        let [l:next_line, l:next_col] = lsp#utils#position#lsp_to_vim('%', a:diagnostics[0]['range']['start'])
         let l:next_col -= 1
     endif
 
@@ -184,7 +184,7 @@ function! s:previous_diagnostic(diagnostics) abort
     let l:next_col = 0
     let l:index = len(a:diagnostics) - 1
     while l:index >= 0
-        let [l:line, l:col] = lsp#utils#position#_lsp_to_vim('%', a:diagnostics[l:index]['range']['start'])
+        let [l:line, l:col] = lsp#utils#position#lsp_to_vim('%', a:diagnostics[l:index]['range']['start'])
         if l:line < l:view['lnum']
             \ || (l:line == l:view['lnum'] && l:col < l:view['col'])
             let l:next_line = l:line
@@ -196,7 +196,7 @@ function! s:previous_diagnostic(diagnostics) abort
 
     if l:next_line == 0
         " Wrap to end
-        let [l:next_line, l:next_col] = lsp#utils#position#_lsp_to_vim('%', a:diagnostics[-1]['range']['start'])
+        let [l:next_line, l:next_col] = lsp#utils#position#lsp_to_vim('%', a:diagnostics[-1]['range']['start'])
         let l:next_col -= 1
     endif
 
