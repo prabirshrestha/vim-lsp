@@ -49,6 +49,7 @@ CONTENTS                                                  *vim-lsp-contents*
       lsp#enable                            |lsp#enable()|
       lsp#disable                           |lsp#disable()|
       lsp#register_server                   |lsp#register_server()|
+      lsp#register_command                  |lsp#register_command()|
       lsp#stop_server                       |lsp#stop_server()|
       lsp#utils#find_nearest_parent_file_directory()
                               |lsp#utils#find_nearest_parent_file_directory()|
@@ -881,6 +882,41 @@ Note: After triggering completion with |i_CTRL-X_CTRL-O|, further filtering is
 only possible by adding to the already typed prefix (even if you're using the
 `contains` filter). If you'd like to retrigger the filtering, you will have to
 press CTRL-X CTRL-O again.
+
+
+lsp#register_command({command-name}, {callback})     *lsp#register_command()*
+
+Some language server expects handling custom command in the client.
+You can use this function to add custom command handler.
+
+{command-name} is unique id to specify command.
+{callback} is funcref that accepts below argument.
+>
+  callback({
+      'command': {
+          'command': string,
+          'arguments':  [...]
+      }
+  })
+<
+
+For example, the rust-analyzer expects the client handles some custom command as below example.
+>
+  function! s:rust_analyzer_apply_source_change(context)
+      let l:command = get(a:context, 'command', {})
+
+      let l:workspace_edit = get(l:command['arguments'][0], 'workspaceEdit', {})
+      if !empty(l:workspace_edit)
+          call lsp#utils#workspace_edit#apply_workspace_edit(l:workspace_edit)
+      endif
+
+      let l:cursor_position = get(l:command['arguments'][0], 'cursorPosition', {})
+      if !empty(l:cursor_position)
+          call cursor(lsp#utils#position#_lsp_to_vim('%', l:cursor_position))
+      endif
+  endfunction
+  call lsp#register_command('rust-analyzer.applySourceChange', function('s:rust_analyzer_apply_source_change'))
+<
 
 lsp#stop_server({name-of-server})                        *lsp#stop_server()*
 
