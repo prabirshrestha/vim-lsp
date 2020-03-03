@@ -199,7 +199,7 @@ function! s:clear_inserted_text(line, position, completed_item, completion_item)
         \ }])
 
   " Move to complete start position.
-  call cursor(lsp#utils#position#_lsp_to_vim('%', l:range['start']))
+  call cursor(lsp#utils#position#lsp_to_vim('%', l:range['start']))
 endfunction
 
 "
@@ -240,7 +240,7 @@ function! s:simple_expand_text(text) abort
         \   'newText': l:text
         \ }])
 
-  let l:pos = lsp#utils#position#_lsp_to_vim('%', {
+  let l:pos = lsp#utils#position#lsp_to_vim('%', {
         \   'line': l:pos['line'],
         \   'character': l:pos['character'] + l:offset
         \ })
