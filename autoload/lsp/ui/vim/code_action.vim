@@ -89,7 +89,7 @@ function! s:handle_code_action(ctx, server_name, command_id, sync, query, bufnr,
         if !empty(a:query)
             let l:code_actions = filter(l:code_actions, { _, action -> get(action, 'kind', '') =~# '^' . a:query })
         endif
-        if len(l:code_actions) == 0
+        if empty(l:code_actions)
             continue
         endif
 
