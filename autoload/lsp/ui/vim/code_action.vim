@@ -64,9 +64,9 @@ function! s:handle_code_action(ctx, server_name, command_id, sync, query, bufnr,
     endif
 
     call add(a:ctx['results'], {
-	\    'server_name': a:server_name,
-	\    'data': a:data,
-	\})
+    \    'server_name': a:server_name,
+    \    'data': a:data,
+    \})
     let a:ctx['count'] -= 1
     if a:ctx['count'] ># 0
         return
@@ -95,9 +95,9 @@ function! s:handle_code_action(ctx, server_name, command_id, sync, query, bufnr,
 
         for l:code_action in l:code_actions
             call add(l:total_code_actions, {
-		    \    'server_name': l:server_name,
+            \    'server_name': l:server_name,
             \    'code_action': l:code_action,
-		    \})
+            \})
         endfor
     endfor
 
