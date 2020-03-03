@@ -166,6 +166,16 @@ function! lsp#register_server(server_info) abort
     doautocmd User lsp_register_server
 endfunction
 
+"
+" lsp#register_command
+"
+" @param {command_name} = string
+" @param {callback} = funcref
+"
+function! lsp#register_command(command_name, callback) abort
+    call lsp#ui#vim#execute_command#_register(a:command_name, a:callback)
+endfunction
+
 function! lsp#register_notifications(name, callback) abort
     call add(s:notification_callbacks, { 'name': a:name, 'callback': a:callback })
 endfunction
