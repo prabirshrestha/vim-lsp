@@ -949,7 +949,7 @@ Convert LSP's positon to vim's pos ([lnum, col]).
 {position} is LSP's position params.
 
 
-lsp#utils#position#vim_to_lsp({expr}, {pos})      *lsp#utils#position#lsp_to_vim()*
+lsp#utils#position#vim_to_lsp({expr}, {pos})       *lsp#utils#position#vim_to_lsp()*
 
 Convert vim's pos to LSP's position ({ 'line': ..., 'character': ... }).
 
