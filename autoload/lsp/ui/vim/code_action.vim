@@ -36,6 +36,7 @@ function! lsp#ui#vim#code_action#do(option) abort
     \ 'count': len(l:server_names),
     \ 'results': [],
     \}
+    let l:bufnr = bufnr('%')
     let l:command_id = lsp#_new_command()
     for l:server_name in l:server_names
         let l:diagnostic = lsp#ui#vim#diagnostics#get_diagnostics_under_cursor(l:server_name)
@@ -50,13 +51,13 @@ function! lsp#ui#vim#code_action#do(option) abort
                     \   },
                     \ },
                     \ 'sync': l:sync,
-                    \ 'on_notification': function('s:handle_code_action', [l:ctx, l:server_name, l:command_id, l:sync, l:query]),
+                    \ 'on_notification': function('s:handle_code_action', [l:ctx, l:server_name, l:command_id, l:sync, l:query, l:bufnr]),
                     \ })
     endfor
     echo 'Retrieving code actions ...'
 endfunction
 
-function! s:handle_code_action(ctx, server_name, command_id, sync, query, data) abort
+function! s:handle_code_action(ctx, server_name, command_id, sync, query, bufnr, data) abort
     " Ignore old request.
     if a:command_id != lsp#_last_command()
         return
@@ -101,18 +102,11 @@ function! s:handle_code_action(ctx, server_name, command_id, sync, query, data) 
 
     " Execute code action.
     if 0 < l:index && l:index <= len(l:total_code_actions)
-        call s:handle_one_code_action(a:server_name, a:sync, l:total_code_actions[l:index - 1])
+        call s:handle_one_code_action(a:server_name, a:sync, a:bufnr, l:total_code_actions[l:index - 1])
     endif
 endfunction
 
-function! s:handle_executeCommand(server_name, command_or_code_action, data) abort
-    if lsp#client#is_error(a:data['response'])
-        call lsp#utils#error('Failed to '. a:command_or_code_action['command'] . ' for ' . a:server_name . ': ' . lsp#client#error_message(a:data['response']))
-        return
-    endif
-endfunction
-
-function! s:handle_one_code_action(server_name, sync, command_or_code_action) abort
+function! s:handle_one_code_action(server_name, sync, bufnr, command_or_code_action) abort
     " has WorkspaceEdit.
     if has_key(a:command_or_code_action, 'edit')
         call lsp#utils#workspace_edit#apply_workspace_edit(a:command_or_code_action['edit'])
@@ -120,21 +114,23 @@ function! s:handle_one_code_action(server_name, sync, command_or_code_action) ab
 
     " Command.
     if has_key(a:command_or_code_action, 'command') && type(a:command_or_code_action['command']) == type('')
-        call lsp#send_request(a:server_name, {
-                    \   'method': 'workspace/executeCommand',
-                    \   'params': a:command_or_code_action,
-                    \   'sync': a:sync,
-                    \   'on_notification': function('s:handle_executeCommand', [a:server_name, a:command_or_code_action]),
-                    \ })
+        call lsp#ui#vim#execute_command#_execute({
+        \   'server_name': a:server_name,
+        \   'command_name': get(a:command_or_code_action, 'command', ''),
+        \   'command_args': get(a:command_or_code_action, 'arguments', v:null),
+        \   'sync': a:sync,
+        \   'bufnr': a:bufnr,
+        \ })
 
     " has Command.
     elseif has_key(a:command_or_code_action, 'command') && type(a:command_or_code_action['command']) == type({})
-        call lsp#send_request(a:server_name, {
-                    \   'method': 'workspace/executeCommand',
-                    \   'params': a:command_or_code_action['command'],
-                    \   'sync': a:sync,
-                    \   'on_notification': function('s:handle_executeCommand', [a:server_name, a:command_or_code_action]),
-                    \ })
+        call lsp#ui#vim#execute_command#_execute({
+        \   'server_name': a:server_name,
+        \   'command_name': get(a:command_or_code_action['command'], 'command', ''),
+        \   'command_args': get(a:command_or_code_action['command'], 'arguments', v:null),
+        \   'sync': a:sync,
+        \   'bufnr': a:bufnr,
+        \ })
     endif
 endfunction
 
