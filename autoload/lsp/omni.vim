@@ -250,6 +250,7 @@ endfunction
 
 function! lsp#omni#default_get_vim_completion_item(item, ...) abort
     let l:server_name = get(a:, 1, '')
+    let l:complete_position = get(a:, 2, lsp#get_position())
 
     let l:word = ''
     if get(a:item, 'insertTextFormat', -1) == 2 && !empty(get(a:item, 'insertText', ''))
@@ -296,7 +297,7 @@ function! lsp#omni#default_get_vim_completion_item(item, ...) abort
 
     " Add user_data.
     if s:is_user_data_support
-        let l:completion['user_data'] = s:create_user_data(a:item, l:server_name)
+        let l:completion['user_data'] = s:create_user_data(a:item, l:server_name, l:complete_position)
     endif
 
     if has_key(a:item, 'detail') && !empty(a:item['detail'])
@@ -333,12 +334,13 @@ endfunction
 "
 " create item's user_data.
 "
-function! s:create_user_data(completion_item, server_name) abort
+function! s:create_user_data(completion_item, server_name, complete_position) abort
     let l:user_data_key = '{"vim-lsp/key' . '":"' . string(s:managed_user_data_key_base) . '"}'
     let s:managed_user_data_map[l:user_data_key] = {
-                \   'server_name': a:server_name,
-                \   'completion_item': a:completion_item
-                \ }
+    \   'complete_position': a:complete_position,
+    \   'server_name': a:server_name,
+    \   'completion_item': a:completion_item
+    \ }
     let s:managed_user_data_key_base += 1
     return l:user_data_key
 endfunction
