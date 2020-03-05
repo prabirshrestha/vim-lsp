@@ -43,8 +43,9 @@ function! s:on_complete_done() abort
   endif
 
   let s:context['line'] = getline('.')
-  let s:context['position'] = getpos('.')
   let s:context['completed_item'] = copy(v:completed_item)
+  let s:context['done_position'] = getpos('.')
+  let s:context['complete_position'] = l:managed_user_data['complete_position']
   let s:context['server_name'] = l:managed_user_data['server_name']
   let s:context['completion_item'] = l:managed_user_data['completion_item']
   call feedkeys(printf("\<C-r>=<SNR>%d_on_complete_done_after()\<CR>", s:SID()), 'n')
@@ -58,8 +59,9 @@ function! s:on_complete_done_after() abort
   echo ''
 
   let l:line = s:context['line']
-  let l:position = s:context['position']
   let l:completed_item = s:context['completed_item']
+  let l:done_position = s:context['done_position']
+  let l:complete_position = s:context['complete_position']
   let l:server_name = s:context['server_name']
   let l:completion_item = s:context['completion_item']
 
@@ -82,9 +84,10 @@ function! s:on_complete_done_after() abort
   if strlen(l:expand_text) > 0
     call s:clear_inserted_text(
           \   l:line,
-          \   l:position,
+          \   l:done_position,
+          \   l:complete_position,
           \   l:completed_item,
-          \   l:completion_item
+          \   l:completion_item,
           \ )
   endif
 
@@ -167,29 +170,34 @@ endfunction
 "
 " Remove inserted text during completion.
 "
-function! s:clear_inserted_text(line, position, completed_item, completion_item) abort
+function! s:clear_inserted_text(line, done_position, complete_position, completed_item, completion_item) abort
   " Remove commit characters.
   call setline('.', a:line)
 
   " Create range to remove v:completed_item.
   let l:range = {
         \   'start': {
-        \     'line': a:position[1] - 1,
-        \     'character': lsp#utils#to_char('%', a:position[1], a:position[2] + a:position[3]) - strchars(a:completed_item['word'])
+        \     'line': a:done_position[1] - 1,
+        \     'character': lsp#utils#to_char('%', a:done_position[1], a:done_position[2] + a:done_position[3]) - strchars(a:completed_item['word'])
         \   },
         \   'end': {
-        \     'line': a:position[1] - 1,
-        \     'character': lsp#utils#to_char('%', a:position[1], a:position[2] + a:position[3])
+        \     'line': a:done_position[1] - 1,
+        \     'character': lsp#utils#to_char('%', a:done_position[1], a:done_position[2] + a:done_position[3])
         \   }
         \ }
 
   " Expand remove range to textEdit.
   if has_key(a:completion_item, 'textEdit')
-    let l:range['start']['character'] = a:completion_item['textEdit']['range']['start']['character']
-    let l:range['end']['character'] = max([
-          \   l:range['end']['character'],
-          \   a:completion_item['textEdit']['range']['end']['character']
-          \ ])
+    let l:range = {
+    \   'start': {
+    \     'line': a:completion_item['textEdit']['range']['start']['line'],
+    \     'character': a:completion_item['textEdit']['range']['start']['character'],
+    \   },
+    \   'end': {
+    \     'line': a:completion_item['textEdit']['range']['end']['line'],
+    \     'character': a:completion_item['textEdit']['range']['end']['character'] + strchars(a:completed_item['word']) - (a:complete_position['character'] - l:range['start']['character'])
+    \   }
+    \ }
   endif
 
   " Remove v:completed_item.word (and textEdit range if need).
