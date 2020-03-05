@@ -185,11 +185,16 @@ function! s:clear_inserted_text(line, position, completed_item, completion_item)
 
   " Expand remove range to textEdit.
   if has_key(a:completion_item, 'textEdit')
+    let l:offset = max([0, l:range['start']['character'] - a:completion_item['textEdit']['range']['start']['character']])
     let l:range['start']['character'] = a:completion_item['textEdit']['range']['start']['character']
     let l:range['end']['character'] = max([
           \   l:range['end']['character'],
           \   a:completion_item['textEdit']['range']['end']['character']
           \ ])
+
+    if l:range['end']['character'] + l:offset <= strchars(getline(l:range['end']['line'] + 1))
+      let l:range['end']['character'] += l:offset
+    endif
   endif
 
   " Remove v:completed_item.word (and textEdit range if need).
