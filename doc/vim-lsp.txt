@@ -992,9 +992,35 @@ lsp#get_buffer_diagnostics_counts()    *lsp#get_buffer_diagnostics_counts()*
 
 Get dict with diagnostic counts for current buffer. Useful e.g. for display
 in status line.
+See also |lsp_diagnostics_updated|.
 
     Returns dictionary with keys "error", "warning", "information", "hint".
 
+    Example with lightline.vim (https://github.com/itchyny/lightline.vim): >
+	let g:lightline = {
+		\ 'colorscheme': 'wombat',
+		\ 'active': {
+		\   'left': [
+		\     [ 'mode', 'paste' ],
+		\     [ 'readonly', 'filename', 'modified', 'lsp-errors' ]
+		\   ]
+		\ },
+		\ 'component_function': {
+		\   'lsp-errors': 'VimLspErrors'
+		\ },
+		\ }
+
+	function! VimLspErrors() abort
+	    let l:errors = lsp#get_buffer_diagnostics_counts()['error']
+	    if l:errors != 0
+		return printf('Errors: %d', l:errors)
+	    endif
+	    return ''
+	endfunction
+
+	" Use autocmd to force lightline updates
+	au User lsp_diagnostics_updated call lightline#update()
+<
 lsp#get_buffer_first_error_line()        *lsp#get_buffer_first_error_line()*
 
 Get line number of first error in current buffer.
@@ -1212,6 +1238,12 @@ lsp_float_closed                                          *lsp_float_closed*
 
 This autocommand is run after the floating window is closed.
 See also |preview-window|
+
+lsp_diagnostics_updated                            *lsp_diagnostics_updated*
+
+This autocommand is run after the diagnostics are updated. This can be used to
+keep the count of diagnostics up to date in the status line.
+See also |lsp#get_buffer_diagnostics_counts()|
 
 lsp_register_server                                    *lsp_register_server*
 
