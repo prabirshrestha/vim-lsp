@@ -5,7 +5,6 @@ endfunction
 function! lsp#ui#vim#implementation(in_preview) abort
     let l:servers = filter(lsp#get_whitelisted_servers(), 'lsp#capabilities#has_implementation_provider(v:val)')
     let l:command_id = lsp#_new_command()
-    call setqflist([])
 
     if len(l:servers) == 0
         call s:not_supported('Retrieving implementation')
@@ -29,7 +28,6 @@ endfunction
 function! lsp#ui#vim#type_definition(in_preview) abort
     let l:servers = filter(lsp#get_whitelisted_servers(), 'lsp#capabilities#has_type_definition_provider(v:val)')
     let l:command_id = lsp#_new_command()
-    call setqflist([])
 
     if len(l:servers) == 0
         call s:not_supported('Retrieving type definition')
@@ -79,7 +77,6 @@ endfunction
 function! lsp#ui#vim#declaration(in_preview) abort
     let l:servers = filter(lsp#get_whitelisted_servers(), 'lsp#capabilities#has_declaration_provider(v:val)')
     let l:command_id = lsp#_new_command()
-    call setqflist([])
 
     if len(l:servers) == 0
         call s:not_supported('Retrieving declaration')
@@ -104,7 +101,6 @@ endfunction
 function! lsp#ui#vim#definition(in_preview) abort
     let l:servers = filter(lsp#get_whitelisted_servers(), 'lsp#capabilities#has_definition_provider(v:val)')
     let l:command_id = lsp#_new_command()
-    call setqflist([])
 
     if len(l:servers) == 0
         call s:not_supported('Retrieving definition')
@@ -130,7 +126,6 @@ function! lsp#ui#vim#references() abort
     let l:servers = filter(lsp#get_whitelisted_servers(), 'lsp#capabilities#has_references_provider(v:val)')
     let l:command_id = lsp#_new_command()
 
-    call setqflist([])
 
     let l:ctx = { 'counter': len(l:servers), 'list':[], 'last_command_id': l:command_id, 'jump_if_one': 0, 'in_preview': 0 }
     if len(l:servers) == 0
@@ -336,8 +331,6 @@ function! lsp#ui#vim#workspace_symbol() abort
     let l:servers = filter(lsp#get_whitelisted_servers(), 'lsp#capabilities#has_workspace_symbol_provider(v:val)')
     let l:command_id = lsp#_new_command()
 
-    call setqflist([])
-
     if len(l:servers) == 0
         call s:not_supported('Retrieving workspace symbols')
         return
@@ -365,8 +358,6 @@ endfunction
 function! lsp#ui#vim#document_symbol() abort
     let l:servers = filter(lsp#get_whitelisted_servers(), 'lsp#capabilities#has_document_symbol_provider(v:val)')
     let l:command_id = lsp#_new_command()
-
-    call setqflist([])
 
     if len(l:servers) == 0
         call s:not_supported('Retrieving symbols')
@@ -398,7 +389,7 @@ function! s:handle_symbol(server, last_command_id, type, data) abort
 
     let l:list = lsp#ui#vim#utils#symbols_to_loc_list(a:server, a:data)
 
-    call setqflist(l:list)
+    call setqflist(l:list, 'r')
 
     if empty(l:list)
         call lsp#utils#error('No ' . a:type .' found')
@@ -434,7 +425,7 @@ function! s:handle_location(ctx, server, type, data) abort "ctx = {counter, list
                 echo 'Retrieved ' . a:type
                 redraw
             elseif !a:ctx['in_preview']
-                call setqflist(a:ctx['list'])
+                call setqflist(a:ctx['list'], 'r')
                 echo 'Retrieved ' . a:type
                 botright copen
             else
