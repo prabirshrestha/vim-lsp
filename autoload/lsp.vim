@@ -390,7 +390,7 @@ function! s:ensure_flush(buf, server_name, cb) abort
     call lsp#utils#step#start([
         \ {s->s:ensure_start(a:buf, a:server_name, s.callback)},
         \ {s->s:is_step_error(s) ? s:throw_step_error(s) : s:ensure_init(a:buf, a:server_name, s.callback)},
-        \ {s->s:is_step_error(s) ? s:throw_step_error(s) : s:ensure_conf(a:buf, a:server_name, s.callback)},
+        \ {s->s:is_step_error(s) ? s:throw_step_error(s) : s:ensure_workspace(a:buf, a:server_name, s.callback)},
         \ {s->s:is_step_error(s) ? s:throw_step_error(s) : s:ensure_open(a:buf, a:server_name, s.callback)},
         \ {s->s:is_step_error(s) ? s:throw_step_error(s) : s:ensure_changed(a:buf, a:server_name, s.callback)},
         \ {s->a:cb(s.result[0])}
@@ -456,6 +456,7 @@ function! lsp#default_get_supported_capabilities(server_info) abort
     return {
     \   'workspace': {
     \       'applyEdit': v:true,
+    \       'workspaceFolders': v:true,
     \       'configuration': v:true
     \   },
     \   'textDocument': {
@@ -560,18 +561,8 @@ function! s:ensure_init(buf, server_name, cb) abort
     call s:send_request(a:server_name, l:request)
 endfunction
 
-function! s:ensure_conf(buf, server_name, cb) abort
-    let l:server = s:servers[a:server_name]
-    let l:server_info = l:server['server_info']
-    if has_key(l:server_info, 'workspace_config')
-        let l:workspace_config = l:server_info['workspace_config']
-        call s:send_notification(a:server_name, {
-            \ 'method': 'workspace/didChangeConfiguration',
-            \ 'params': {
-            \   'settings': l:workspace_config,
-            \ }
-            \ })
-    endif
+function! s:ensure_workspace(buf, server_name, cb) abort
+    call lsp#ui#vim#workspace#_ensure_workspace(a:server_name)
     let l:msg = s:new_rpc_success('configuration sent', { 'server_name': a:server_name })
     call lsp#log(l:msg)
     call a:cb(l:msg)
@@ -1035,25 +1026,8 @@ function! lsp#get_buffer_first_error_line() abort
     return lsp#ui#vim#diagnostics#get_buffer_first_error_line()
 endfunction
 
-function! s:merge_dict(dict_old, dict_new) abort
-    for l:key in keys(a:dict_new)
-        if has_key(a:dict_old, l:key) && type(a:dict_old[l:key]) == v:t_dict && type(a:dict_new[l:key]) == v:t_dict
-            call s:merge_dict(a:dict_old[l:key], a:dict_new[l:key])
-        else
-            let a:dict_old[l:key] = a:dict_new[l:key]
-        endif
-    endfor
-endfunction
-
 function! lsp#update_workspace_config(server_name, workspace_config) abort
-    let l:server = s:servers[a:server_name]
-    let l:server_info = l:server['server_info']
-    if has_key(l:server_info, 'workspace_config')
-        call s:merge_dict(l:server_info['workspace_config'], a:workspace_config)
-    else
-        let l:server_info['workspace_config'] = a:workspace_config
-    endif
-    call s:ensure_conf(bufnr('%'), a:server_name, function('s:Noop'))
+    call lsp#ui#vim#workspace#_update_workspace_config(a:server_name, a:workspace_config)
 endfunction
 
 function! lsp#server_complete(lead, line, pos) abort

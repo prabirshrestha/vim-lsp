@@ -378,3 +378,13 @@ else
         endtry
     endfunction
 endif
+
+function! lsp#utils#merge_dict(dict_old, dict_new) abort
+    for l:key in keys(a:dict_new)
+        if has_key(a:dict_old, l:key) && type(a:dict_old[l:key]) == v:t_dict && type(a:dict_new[l:key]) == v:t_dict
+            call lsp#utils#merge_dict(a:dict_old[l:key], a:dict_new[l:key])
+        else
+            let a:dict_old[l:key] = a:dict_new[l:key]
+        endif
+    endfor
+endfunction
