@@ -389,7 +389,8 @@ function! s:handle_symbol(server, last_command_id, type, data) abort
 
     let l:list = lsp#ui#vim#utils#symbols_to_loc_list(a:server, a:data)
 
-    call setqflist(l:list, 'r')
+    call setqflist([])
+    call setqflist(l:list)
 
     if empty(l:list)
         call lsp#utils#error('No ' . a:type .' found')
@@ -425,7 +426,8 @@ function! s:handle_location(ctx, server, type, data) abort "ctx = {counter, list
                 echo 'Retrieved ' . a:type
                 redraw
             elseif !a:ctx['in_preview']
-                call setqflist(a:ctx['list'], 'r')
+                call setqflist([])
+                call setqflist(a:ctx['list'])
                 echo 'Retrieved ' . a:type
                 botright copen
             else
