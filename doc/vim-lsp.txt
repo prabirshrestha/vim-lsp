@@ -749,7 +749,7 @@ The vim |dict| containing information about the server.
 
  * blacklist:
     optional
-    String array of filetypes to run the language server.
+    String array of filetypes not to run the language server.
 
     Example: >
 	'blacklist': ['javascript', 'typescript']
