@@ -21,6 +21,10 @@ let s:workspace = {}
 " lsp#ui#vim#workspace#_ensure_workspace
 "
 function! lsp#ui#vim#workspace#_ensure_workspace(server_name) abort
+  " Initialize workspace (this may sent `workspace/didChangeConfiguration`)
+  let l:workspace = s:init_workspace(a:server_name)
+
+  " Check workspaceFolders capability.
   if !lsp#capabilities#has_workspace_folders_supported(a:server_name)
     return
   endif
@@ -34,9 +38,6 @@ function! lsp#ui#vim#workspace#_ensure_workspace(server_name) abort
   if l:root_uri ==# ''
     return
   endif
-
-  " Initialize workspace (this may sent `workspace/didChangeConfiguration`)
-  let l:workspace = s:init_workspace(a:server_name)
 
   " find already registered folder.
   let l:folder = v:null
@@ -80,6 +81,14 @@ function! lsp#ui#vim#workspace#_update_workspace_config(server_name, config) abo
   \     'settings': l:workspace['config']
   \   }
   \ })
+endfunction
+
+"
+" lsp#ui#vim#workspace#_get_folders
+"
+function! lsp#ui#vim#workspace#_get_folders(server_name) abort
+  let l:workspace = s:init_workspace(a:server_name)
+  return l:workspace['folders']
 endfunction
 
 "

@@ -754,6 +754,9 @@ function! s:on_request(server_name, id, request) abort
     elseif a:request['method'] ==# 'workspace/configuration'
         let l:response_items = map(a:request['params']['items'], { key, val -> lsp#utils#workspace_config#get_value(a:server_name, val) })
         call s:send_response(a:server_name, { 'id': a:request['id'], 'result': l:response_items })
+    elseif a:request['method'] ==# 'workspace/workspaceFolders'
+        let l:response_folders = lsp#ui#vim#workspace#_get_folders(a:server_name)
+        call s:send_response(a:server_name, { 'id': a:request['id'], 'result': l:response_folders })
     else
         " Error returned according to json-rpc specification.
         call s:send_response(a:server_name, { 'id': a:request['id'], 'error': { 'code': -32601, 'message': 'Method not found' } })
