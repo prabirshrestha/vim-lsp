@@ -16,6 +16,10 @@ Describe lsp#uivim#diagnostics
 	\  'input': {'response': {'params': {'uri': l:uri, 'diagnostics': [{'severity': 1}, {'severity': 2}]}}},
 	\  'want': {'information': 0, 'hint': 0, 'warning': 1, 'error': 1}
     \},
+	\{
+	\  'input': {'response': {'params': {'uri': l:uri, 'diagnostics': [{'severity': 1}, {}]}}},
+	\  'want': {'information': 0, 'hint': 0, 'warning': 0, 'error': 2}
+    \},
     \]
     for l:test in l:tests
       call lsp#ui#vim#diagnostics#handle_text_document_publish_diagnostics('test', l:test.input)
