@@ -95,8 +95,8 @@ function! s:place_highlights(server_name, path, diagnostics) abort
 
     if !empty(a:diagnostics) && l:bufnr >= 0
         for l:item in a:diagnostics
-            let [l:line, l:start_col] = lsp#utils#position#_lsp_to_vim(l:bufnr, l:item['range']['start'])
-            let [l:_, l:end_col] = lsp#utils#position#_lsp_to_vim(l:bufnr, l:item['range']['end'])
+            let [l:line, l:start_col] = lsp#utils#position#lsp_to_vim(l:bufnr, l:item['range']['start'])
+            let [l:_, l:end_col] = lsp#utils#position#lsp_to_vim(l:bufnr, l:item['range']['end'])
 
             let l:name = get(s:severity_sign_names_mapping, l:item['severity'], 'LspError')
             let l:hl_name = l:name . 'Highlight'

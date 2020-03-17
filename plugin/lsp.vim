@@ -23,6 +23,8 @@ let g:lsp_signs_priority_map = get(g:, 'lsp_signs_priority_map', {})
 let g:lsp_diagnostics_enabled = get(g:, 'lsp_diagnostics_enabled', 1)
 let g:lsp_diagnostics_echo_cursor = get(g:, 'lsp_diagnostics_echo_cursor', 0)
 let g:lsp_diagnostics_echo_delay = get(g:, 'lsp_diagnostics_echo_delay', 500)
+let g:lsp_diagnostics_float_cursor = get(g:, 'lsp_diagnostics_float_cursor', 0)
+let g:lsp_diagnostics_float_delay = get(g:, 'lsp_diagnostics_float_delay', 500)
 let g:lsp_next_sign_id = get(g:, 'lsp_next_sign_id', 6999)
 let g:lsp_preview_keep_focus = get(g:, 'lsp_preview_keep_focus', 1)
 let g:lsp_use_event_queue = get(g:, 'lsp_use_event_queue', has('nvim') || has('patch-8.1.0889'))
@@ -39,7 +41,7 @@ let g:lsp_signature_help_enabled = get(g:, 'lsp_signature_help_enabled', 1)
 let g:lsp_fold_enabled = get(g:, 'lsp_fold_enabled', 1)
 let g:lsp_hover_conceal = get(g:, 'lsp_hover_conceal', 1)
 let g:lsp_ignorecase = get(g:, 'lsp_ignorecase', &ignorecase)
-let g:lsp_semantic_enabled = get(g:, 'lsp_semantic_enabled', 1)
+let g:lsp_semantic_enabled = get(g:, 'lsp_semantic_enabled', 0)
 let g:lsp_text_document_did_save_delay = get(g:, 'lsp_text_document_did_save_delay', -1)
 let g:lsp_completion_resolve_timeout = get(g:, 'lsp_completion_resolve_timeout', 200)
 
@@ -53,7 +55,16 @@ if g:lsp_auto_enable
     augroup END
 endif
 
-command! -range LspCodeAction call lsp#ui#vim#code_action()
+command! -range -nargs=* -complete=customlist,lsp#ui#vim#code_action#complete LspCodeAction call lsp#ui#vim#code_action#do({
+      \   'sync': v:false,
+      \   'selection': <range> != 0,
+      \   'query': '<args>'
+      \ })
+command! -range -nargs=* -complete=customlist,lsp#ui#vim#code_action#complete LspCodeActionSync call lsp#ui#vim#code_action#do({
+      \   'sync': v:true,
+      \   'selection': <range> != 0,
+      \   'query': '<args>'
+      \ })
 command! LspDeclaration call lsp#ui#vim#declaration(0)
 command! LspPeekDeclaration call lsp#ui#vim#declaration(1)
 command! LspDefinition call lsp#ui#vim#definition(0)

@@ -85,6 +85,10 @@ function! lsp#get_server_info(server_name) abort
     return s:servers[a:server_name]['server_info']
 endfunction
 
+function! lsp#get_server_root_uri(server_name) abort
+    return get(s:servers[a:server_name]['server_info'], '_root_uri_resolved', '')
+endfunction
+
 function! lsp#get_server_capabilities(server_name) abort
     let l:server = s:servers[a:server_name]
     return has_key(l:server, 'init_result') ? l:server['init_result']['result']['capabilities'] : {}
@@ -115,7 +119,7 @@ endfunction
 " "exited", "starting", "failed", "running", "not running"
 function! lsp#get_server_status(...) abort
     if a:0 == 0
-        let l:strs = map(keys(s:servers), {k, v -> v . ": " . s:server_status(v)})
+        let l:strs = map(keys(s:servers), {k, v -> v . ': ' . s:server_status(v)})
         return join(l:strs, "\n")
     else
         return s:server_status(a:1)
@@ -162,6 +166,16 @@ function! lsp#register_server(server_info) abort
     doautocmd User lsp_register_server
 endfunction
 
+"
+" lsp#register_command
+"
+" @param {command_name} = string
+" @param {callback} = funcref
+"
+function! lsp#register_command(command_name, callback) abort
+    call lsp#ui#vim#execute_command#_register(a:command_name, a:callback)
+endfunction
+
 function! lsp#register_notifications(name, callback) abort
     call add(s:notification_callbacks, { 'name': a:name, 'callback': a:callback })
 endfunction
@@ -189,9 +203,10 @@ function! s:register_events() abort
         if exists('##TextChangedP')
             autocmd TextChangedP * call s:on_text_document_did_change()
         endif
-        autocmd CursorMoved * call s:on_cursor_moved()
+        if g:lsp_diagnostics_echo_cursor || g:lsp_diagnostics_float_cursor || g:lsp_highlight_references_enabled
+            autocmd CursorMoved * call s:on_cursor_moved()
+        endif
         autocmd BufWinEnter,BufWinLeave,InsertEnter * call lsp#ui#vim#references#clean_references()
-        autocmd CursorMoved * if g:lsp_highlight_references_enabled | call lsp#ui#vim#references#highlight(v:false) | endif
     augroup END
     call s:on_text_document_did_open()
 endfunction
@@ -206,10 +221,21 @@ endfunction
 function! s:on_text_document_did_open() abort
     let l:buf = bufnr('%')
     if getbufvar(l:buf, '&buftype') ==# 'terminal' | return | endif
+    if getcmdwintype() !=# '' | return | endif
     call lsp#log('s:on_text_document_did_open()', l:buf, &filetype, getcwd(), lsp#utils#get_buffer_uri(l:buf))
+
+    " Some language server notify diagnostics to the buffer that has not been loaded yet.
+    " This diagnostics was stored `autoload/lsp/ui/vim/diagnostics.vim` but not highlighted.
+    " So we should refresh highlights when buffer opened.
+    call lsp#ui#vim#diagnostics#force_refresh(l:buf)
+
     for l:server_name in lsp#get_whitelisted_servers(l:buf)
         call s:ensure_flush(l:buf, l:server_name, function('s:fire_lsp_buffer_enabled', [l:server_name, l:buf]))
     endfor
+endfunction
+
+function! lsp#activate() abort
+  call s:on_text_document_did_open()
 endfunction
 
 function! s:on_text_document_did_save() abort
@@ -238,7 +264,17 @@ endfunction
 function! s:on_cursor_moved() abort
     let l:buf = bufnr('%')
     if getbufvar(l:buf, '&buftype') ==# 'terminal' | return | endif
-    call lsp#ui#vim#diagnostics#echo#cursor_moved()
+
+    if g:lsp_diagnostics_echo_cursor
+        call lsp#ui#vim#diagnostics#echo#cursor_moved()
+    endif
+    if g:lsp_diagnostics_float_cursor && lsp#ui#vim#output#float_supported()
+        call lsp#ui#vim#diagnostics#float#cursor_moved()
+    endif
+
+    if g:lsp_highlight_references_enabled
+        call lsp#ui#vim#references#highlight(v:false)
+    endif
 endfunction
 
 function! s:call_did_save(buf, server_name, result, cb) abort
@@ -434,6 +470,14 @@ function! lsp#default_get_supported_capabilities(server_info) abort
     \              'valueSet': lsp#omni#get_completion_item_kinds()
     \           }
     \       },
+    \       'codeAction': {
+    \         'dynamicRegistration': v:false,
+    \         'codeActionLiteralSupport': {
+    \           'codeActionKind': {
+    \             'valueSet': ['', 'quickfix', 'refactor', 'refactor.extract', 'refactor.inline', 'refactor.rewrite', 'source', 'source.organizeImports'],
+    \           }
+    \         }
+    \       },
     \       'declaration': {
     \           'linkSupport' : v:true
     \       },
@@ -484,23 +528,18 @@ function! s:ensure_init(buf, server_name, cb) abort
     " server has already started, but not initialized
 
     let l:server_info = l:server['server_info']
-    if has_key(l:server_info, 'root_uri')
-        let l:root_uri = l:server_info['root_uri'](l:server_info)
-    else
-        let l:root_uri = lsp#utils#get_default_root_uri()
-    endif
-
+    let l:root_uri = has_key(l:server_info, 'root_uri') ?  l:server_info['root_uri'](l:server_info) : ''
     if empty(l:root_uri)
         let l:msg = s:new_rpc_error('ignore initialization lsp server due to empty root_uri', { 'server_name': a:server_name, 'lsp_id': l:server['lsp_id'] })
         call lsp#log(l:msg)
-        call a:cb(l:msg)
-        return
+        let l:root_uri = lsp#utils#get_default_root_uri()
     endif
+    let l:server['server_info']['_root_uri_resolved'] = l:root_uri
 
     if has_key(l:server_info, 'capabilities')
         let l:capabilities = l:server_info['capabilities']
     else
-        let l:capabilities = call(g:lsp_get_supported_capabilities[0], [server_info])
+        let l:capabilities = call(g:lsp_get_supported_capabilities[0], [l:server_info])
     endif
 
     let l:request = {
@@ -572,6 +611,12 @@ function! s:ensure_changed(buf, server_name, cb) abort
     let l:path = lsp#utils#get_buffer_uri(a:buf)
 
     let l:buffers = l:server['buffers']
+    if !has_key(l:buffers, l:path)
+        let l:msg = s:new_rpc_success('file is not managed', { 'server_name': a:server_name, 'path': l:path })
+        call lsp#log(l:msg)
+        call a:cb(l:msg)
+        return
+    endif
     let l:buffer_info = l:buffers[l:path]
 
     let l:changed_tick = getbufvar(a:buf, 'changedtick')
@@ -605,7 +650,7 @@ function! s:ensure_open(buf, server_name, cb) abort
     let l:path = lsp#utils#get_buffer_uri(a:buf)
 
     if empty(l:path)
-        let l:msg = s:new_rpc_error('ignore open since not a valid uri', { 'server_name': a:server_name, 'path': l:path })
+        let l:msg = s:new_rpc_success('ignore open since not a valid uri', { 'server_name': a:server_name, 'path': l:path })
         call lsp#log(l:msg)
         call a:cb(l:msg)
         return
@@ -737,6 +782,10 @@ function! s:handle_initialize(server_name, data) abort
 
     if !lsp#client#is_error(l:response)
         let l:server['init_result'] = l:response
+        " Delete cache of trigger chars
+        if has_key(b:, 'lsp_signature_help_trigger_character')
+            unlet b:lsp_signature_help_trigger_character
+        endif
     else
         let l:server['failed'] = l:response['error']
         call lsp#utils#error('Failed to initialize ' . a:server_name . ' with error ' . l:response['error']['code'] . ': ' . l:response['error']['message'])
@@ -865,8 +914,8 @@ function! s:add_didchange_queue(buf) abort
     call add(s:didchange_queue, a:buf)
     call lsp#log('s:send_didchange_queue() will be triggered')
     call timer_stop(s:didchange_timer)
-    let lazy = &updatetime > 1000 ? &updatetime : 1000
-    let s:didchange_timer = timer_start(lazy, function('s:send_didchange_queue'))
+    let l:lazy = &updatetime > 1000 ? &updatetime : 1000
+    let s:didchange_timer = timer_start(l:lazy, function('s:send_didchange_queue'))
 endfunction
 
 function! s:send_didchange_queue(...) abort

@@ -59,11 +59,12 @@ Describe lsp#omni
             \ 'user_data': '{"vim-lsp/key":"0"}'
             \}
 
-            let got = lsp#omni#get_vim_completion_item(item)
+            let got = lsp#omni#get_vim_completion_item(item, '', { 'line': 1, 'character': 1 })
             Assert Equals(got, want)
             Assert Equals(lsp#omni#get_managed_user_data_from_completed_item(got), {
                         \   'server_name': '',
-                        \   'completion_item': item
+                        \   'completion_item': item,
+                        \   'complete_position': { 'line': 1, 'character': 1 }
                         \ })
         End
 

@@ -29,8 +29,8 @@ function! lsp#utils#location#_open_lsp_location(location) abort
     let l:path = lsp#utils#uri_to_path(a:location['uri'])
     let l:bufnr = bufnr(l:path)
 
-    let [l:start_line, l:start_col] = lsp#utils#position#_lsp_to_vim(l:bufnr, a:location['range']['start'])
-    let [l:end_line, l:end_col] = lsp#utils#position#_lsp_to_vim(l:bufnr, a:location['range']['end'])
+    let [l:start_line, l:start_col] = lsp#utils#position#lsp_to_vim(l:bufnr, a:location['range']['start'])
+    let [l:end_line, l:end_col] = lsp#utils#position#lsp_to_vim(l:bufnr, a:location['range']['end'])
 
     call s:open_location(l:path, l:start_line, l:start_col)
 
@@ -64,7 +64,7 @@ function! s:lsp_location_item_to_vim(loc, cache) abort
     endif
 
     let l:path = lsp#utils#uri_to_path(l:uri)
-    let [l:line, l:col] = lsp#utils#position#_lsp_to_vim(l:path, l:range['start'])
+    let [l:line, l:col] = lsp#utils#position#lsp_to_vim(l:path, l:range['start'])
 
     let l:index = l:line - 1
     if has_key(a:cache, l:path)
@@ -81,13 +81,14 @@ function! s:lsp_location_item_to_vim(loc, cache) abort
     endif
 
     if l:use_link
+        " viewstart/end decremented to account for incrementing in _lsp_to_vim
         return {
             \ 'filename': l:path,
             \ 'lnum': l:line,
             \ 'col': l:col,
             \ 'text': l:text,
-            \ 'viewstart': lsp#utils#position#_lsp_to_vim(l:path, a:loc['targetRange']['start'])[0],
-            \ 'viewend': lsp#utils#position#_lsp_to_vim(l:path, a:loc['targetRange']['end'])[0],
+            \ 'viewstart': lsp#utils#position#lsp_to_vim(l:path, a:loc['targetRange']['start'])[0] - 1,
+            \ 'viewend': lsp#utils#position#lsp_to_vim(l:path, a:loc['targetRange']['end'])[0] - 1,
             \ }
     else
         return {
