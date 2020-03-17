@@ -100,15 +100,19 @@ function! lsp#ui#vim#diagnostics#get_diagnostics_under_cursor(...) abort
     return l:closest_diagnostic
 endfunction
 
+function! s:severity_of(diagnostic) abort
+    return get(a:diagnostic, 'severity', 1)
+endfunction
+
 function! lsp#ui#vim#diagnostics#next_error() abort
     let l:diagnostics = filter(s:get_all_buffer_diagnostics(),
-        \ {_, diagnostic -> diagnostic['severity'] ==# 1 })
+        \ {_, diagnostic -> s:severity_of(diagnostic) ==# 1 })
     call s:next_diagnostic(l:diagnostics)
 endfunction
 
 function! lsp#ui#vim#diagnostics#next_warning() abort
     let l:diagnostics = filter(s:get_all_buffer_diagnostics(),
-        \ {_, diagnostic -> diagnostic['severity'] ==# 2 })
+        \ {_, diagnostic -> s:severity_of(diagnostic) ==# 2 })
     call s:next_diagnostic(l:diagnostics)
 endfunction
 
@@ -159,13 +163,13 @@ endfunction
 
 function! lsp#ui#vim#diagnostics#previous_error() abort
     let l:diagnostics = filter(s:get_all_buffer_diagnostics(),
-        \ {_, diagnostic -> diagnostic['severity'] ==# 1 })
+        \ {_, diagnostic -> s:severity_of(diagnostic) ==# 1 })
     call s:previous_diagnostic(l:diagnostics)
 endfunction
 
 function! lsp#ui#vim#diagnostics#previous_warning() abort
     let l:diagnostics = filter(s:get_all_buffer_diagnostics(),
-        \ {_, diagnostic -> diagnostic['severity'] ==# 2 })
+        \ {_, diagnostic -> s:severity_of(diagnostic) ==# 2 })
     call s:previous_diagnostic(l:diagnostics)
 endfunction
 
@@ -286,7 +290,7 @@ function! lsp#ui#vim#diagnostics#get_buffer_diagnostics_counts() abort
     let [l:has_diagnostics, l:diagnostics] = s:get_diagnostics(l:uri)
     for [l:server_name, l:data] in items(l:diagnostics)
         for l:diag in l:data['response']['params']['diagnostics']
-            let l:key = get(s:diagnostic_kinds, l:diag['severity'], 'error')
+            let l:key = get(s:diagnostic_kinds, s:severity_of(l:diag), 'error')
             let l:counts[l:key] += 1
         endfor
     endfor
@@ -299,7 +303,7 @@ function! lsp#ui#vim#diagnostics#get_buffer_first_error_line() abort
     let l:first_error_line = v:null
     for [l:server_name, l:data] in items(l:diagnostics)
         for l:diag in l:data['response']['params']['diagnostics']
-            if l:diag['severity'] ==# 1 && (l:first_error_line ==# v:null || l:first_error_line ># l:diag['range']['start']['line'])
+            if s:severity_of(l:diag) ==# 1 && (l:first_error_line ==# v:null || l:first_error_line ># l:diag['range']['start']['line'])
                 let l:first_error_line = l:diag['range']['start']['line']
             endif
         endfor
