@@ -49,7 +49,7 @@ Describe lsp#omni
 
             let want = {
             \ 'word': 'my-label',
-            \ 'abbr': 'my-label',
+            \ 'abbr': 'my-label~',
             \ 'info': 'my documentation.',
             \ 'icase': 1,
             \ 'dup': 1,
