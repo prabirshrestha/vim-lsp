@@ -1,8 +1,11 @@
-function! s:open_location(path, line, col) abort
+" @param where = '' | 'split' | 'vsplit'
+function! s:open_location(path, line, col, where) abort
     normal! m'
     let l:buffer = bufnr(a:path)
-    if &modified && !&hidden
+    if a:where ==# 'split' || (&modified && !&hidden)
         let l:cmd = l:buffer !=# -1 ? 'sb ' . l:buffer : 'split ' . fnameescape(a:path)
+    elseif a:where ==# 'vsplit'
+        let l:cmd = l:buffer !=# -1 ? 'vert sb ' . l:buffer : 'vsplit ' . fnameescape(a:path)
     else
         let l:cmd = l:buffer !=# -1 ? 'b ' . l:buffer : 'edit ' . fnameescape(a:path)
     endif
@@ -13,9 +16,10 @@ endfunction
 "   'filename',
 "   'lnum',
 "   'col',
+"   'where',
 " }
-function! lsp#utils#location#_open_vim_list_item(location) abort
-    call s:open_location(a:location['filename'], a:location['lnum'], a:location['col'])
+function! lsp#utils#location#_open_vim_list_item(location, where) abort
+    call s:open_location(a:location['filename'], a:location['lnum'], a:location['col'], a:where)
 endfunction
 
 " @params {location} = {

@@ -2,7 +2,12 @@ function! s:not_supported(what) abort
     return lsp#utils#error(a:what.' not supported for '.&filetype)
 endfunction
 
-function! lsp#ui#vim#implementation(in_preview) abort
+function! lsp#ui#vim#open_where(input, command, len) abort
+  let l:all = ['buffer', 'split', 'vsplit']
+  return filter(copy(l:all), { _, e -> e =~ '^' . a:input })
+endfunction
+
+function! lsp#ui#vim#implementation(where) abort
     let l:servers = filter(lsp#get_whitelisted_servers(), 'lsp#capabilities#has_implementation_provider(v:val)')
     let l:command_id = lsp#_new_command()
     call setqflist([])
@@ -11,7 +16,7 @@ function! lsp#ui#vim#implementation(in_preview) abort
         call s:not_supported('Retrieving implementation')
         return
     endif
-    let l:ctx = { 'counter': len(l:servers), 'list':[], 'last_command_id': l:command_id, 'jump_if_one': 1, 'in_preview': a:in_preview }
+    let l:ctx = { 'counter': len(l:servers), 'list':[], 'last_command_id': l:command_id, 'jump_if_one': 1, 'where': a:where }
     for l:server in l:servers
         call lsp#send_request(l:server, {
             \ 'method': 'textDocument/implementation',
@@ -26,7 +31,7 @@ function! lsp#ui#vim#implementation(in_preview) abort
     echo 'Retrieving implementation ...'
 endfunction
 
-function! lsp#ui#vim#type_definition(in_preview) abort
+function! lsp#ui#vim#type_definition(where) abort
     let l:servers = filter(lsp#get_whitelisted_servers(), 'lsp#capabilities#has_type_definition_provider(v:val)')
     let l:command_id = lsp#_new_command()
     call setqflist([])
@@ -35,7 +40,7 @@ function! lsp#ui#vim#type_definition(in_preview) abort
         call s:not_supported('Retrieving type definition')
         return
     endif
-    let l:ctx = { 'counter': len(l:servers), 'list':[], 'last_command_id': l:command_id, 'jump_if_one': 1, 'in_preview': a:in_preview }
+    let l:ctx = { 'counter': len(l:servers), 'list':[], 'last_command_id': l:command_id, 'jump_if_one': 1, 'where': a:where }
     for l:server in l:servers
         call lsp#send_request(l:server, {
             \ 'method': 'textDocument/typeDefinition',
@@ -76,7 +81,7 @@ function! lsp#ui#vim#type_hierarchy() abort
     echo 'Retrieving type hierarchy ...'
 endfunction
 
-function! lsp#ui#vim#declaration(in_preview) abort
+function! lsp#ui#vim#declaration(where) abort
     let l:servers = filter(lsp#get_whitelisted_servers(), 'lsp#capabilities#has_declaration_provider(v:val)')
     let l:command_id = lsp#_new_command()
     call setqflist([])
@@ -86,7 +91,7 @@ function! lsp#ui#vim#declaration(in_preview) abort
         return
     endif
 
-    let l:ctx = { 'counter': len(l:servers), 'list':[], 'last_command_id': l:command_id, 'jump_if_one': 1, 'in_preview': a:in_preview }
+    let l:ctx = { 'counter': len(l:servers), 'list':[], 'last_command_id': l:command_id, 'jump_if_one': 1, 'where': a:where }
     for l:server in l:servers
         call lsp#send_request(l:server, {
             \ 'method': 'textDocument/declaration',
@@ -101,7 +106,7 @@ function! lsp#ui#vim#declaration(in_preview) abort
     echo 'Retrieving declaration ...'
 endfunction
 
-function! lsp#ui#vim#definition(in_preview) abort
+function! lsp#ui#vim#definition(where) abort
     let l:servers = filter(lsp#get_whitelisted_servers(), 'lsp#capabilities#has_definition_provider(v:val)')
     let l:command_id = lsp#_new_command()
     call setqflist([])
@@ -111,7 +116,7 @@ function! lsp#ui#vim#definition(in_preview) abort
         return
     endif
 
-    let l:ctx = { 'counter': len(l:servers), 'list':[], 'last_command_id': l:command_id, 'jump_if_one': 1, 'in_preview': a:in_preview }
+    let l:ctx = { 'counter': len(l:servers), 'list':[], 'last_command_id': l:command_id, 'jump_if_one': 1, 'where': a:where }
     for l:server in l:servers
         call lsp#send_request(l:server, {
             \ 'method': 'textDocument/definition',
@@ -132,7 +137,7 @@ function! lsp#ui#vim#references() abort
 
     call setqflist([])
 
-    let l:ctx = { 'counter': len(l:servers), 'list':[], 'last_command_id': l:command_id, 'jump_if_one': 0, 'in_preview': 0 }
+    let l:ctx = { 'counter': len(l:servers), 'list':[], 'last_command_id': l:command_id, 'jump_if_one': 0, 'where': 0 }
     if len(l:servers) == 0
         call s:not_supported('Retrieving references')
         return
@@ -408,7 +413,7 @@ function! s:handle_symbol(server, last_command_id, type, data) abort
     endif
 endfunction
 
-function! s:handle_location(ctx, server, type, data) abort "ctx = {counter, list, jump_if_one, last_command_id, in_preview}
+function! s:handle_location(ctx, server, type, data) abort "ctx = {counter, list, jump_if_one, last_command_id, where}
     if a:ctx['last_command_id'] != lsp#_last_command()
         return
     endif
@@ -429,11 +434,11 @@ function! s:handle_location(ctx, server, type, data) abort "ctx = {counter, list
 
             let l:loc = a:ctx['list'][0]
 
-            if len(a:ctx['list']) == 1 && a:ctx['jump_if_one'] && !a:ctx['in_preview']
-                call lsp#utils#location#_open_vim_list_item(l:loc)
+            if len(a:ctx['list']) == 1 && a:ctx['jump_if_one'] && a:ctx['where'] !=# 'preview'
+                call lsp#utils#location#_open_vim_list_item(l:loc, a:ctx['where'])
                 echo 'Retrieved ' . a:type
                 redraw
-            elseif !a:ctx['in_preview']
+            elseif a:ctx['where'] !=# 'preview'
                 call setqflist(a:ctx['list'])
                 echo 'Retrieved ' . a:type
                 botright copen
