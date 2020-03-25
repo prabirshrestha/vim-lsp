@@ -140,6 +140,9 @@ function! s:next_diagnostic(diagnostics) abort
     endfor
 
     if l:next_line == 0
+        if !g:lsp_diagnostics_wrapscan
+            return
+        endif
         " Wrap to start
         let [l:next_line, l:next_col] = lsp#utils#position#lsp_to_vim('%', a:diagnostics[0]['range']['start'])
         let l:next_col -= 1
@@ -199,6 +202,9 @@ function! s:previous_diagnostic(diagnostics) abort
     endwhile
 
     if l:next_line == 0
+        if !g:lsp_diagnostics_wrapscan
+            return
+        endif
         " Wrap to end
         let [l:next_line, l:next_col] = lsp#utils#position#lsp_to_vim('%', a:diagnostics[-1]['range']['start'])
         let l:next_col -= 1
