@@ -104,27 +104,35 @@ function! s:severity_of(diagnostic) abort
     return get(a:diagnostic, 'severity', 1)
 endfunction
 
-function! lsp#ui#vim#diagnostics#next_error() abort
+function! lsp#ui#vim#diagnostics#next_error(...) abort
     let l:diagnostics = filter(s:get_all_buffer_diagnostics(),
         \ {_, diagnostic -> s:severity_of(diagnostic) ==# 1 })
-    call s:next_diagnostic(l:diagnostics)
+    let l:options = lsp#utils#parse_command_options(a:000)
+    call s:next_diagnostic(l:diagnostics, l:options)
 endfunction
 
-function! lsp#ui#vim#diagnostics#next_warning() abort
+function! lsp#ui#vim#diagnostics#next_warning(...) abort
     let l:diagnostics = filter(s:get_all_buffer_diagnostics(),
         \ {_, diagnostic -> s:severity_of(diagnostic) ==# 2 })
-    call s:next_diagnostic(l:diagnostics)
+    let l:options = lsp#utils#parse_command_options(a:000)
+    call s:next_diagnostic(l:diagnostics, l:options)
 endfunction
 
-function! lsp#ui#vim#diagnostics#next_diagnostic() abort
-    call s:next_diagnostic(s:get_all_buffer_diagnostics())
+function! lsp#ui#vim#diagnostics#next_diagnostic(...) abort
+    let l:options = lsp#utils#parse_command_options(a:000)
+    call s:next_diagnostic(s:get_all_buffer_diagnostics(), l:options)
 endfunction
 
-function! s:next_diagnostic(diagnostics) abort
+function! s:next_diagnostic(diagnostics, options) abort
     if !len(a:diagnostics)
         return
     endif
     call sort(a:diagnostics, 's:compare_diagnostics')
+
+    let l:wrap = 1
+    if has_key(a:options, 'wrap')
+        let l:wrap = a:options['wrap']
+    endif
 
     let l:view = winsaveview()
     let l:next_line = 0
@@ -140,6 +148,9 @@ function! s:next_diagnostic(diagnostics) abort
     endfor
 
     if l:next_line == 0
+        if !l:wrap
+            return
+        endif
         " Wrap to start
         let [l:next_line, l:next_col] = lsp#utils#position#lsp_to_vim('%', a:diagnostics[0]['range']['start'])
         let l:next_col -= 1
@@ -161,27 +172,35 @@ function! s:next_diagnostic(diagnostics) abort
     call winrestview(l:view)
 endfunction
 
-function! lsp#ui#vim#diagnostics#previous_error() abort
+function! lsp#ui#vim#diagnostics#previous_error(...) abort
     let l:diagnostics = filter(s:get_all_buffer_diagnostics(),
         \ {_, diagnostic -> s:severity_of(diagnostic) ==# 1 })
-    call s:previous_diagnostic(l:diagnostics)
+    let l:options = lsp#utils#parse_command_options(a:000)
+    call s:previous_diagnostic(l:diagnostics, l:options)
 endfunction
 
-function! lsp#ui#vim#diagnostics#previous_warning() abort
+function! lsp#ui#vim#diagnostics#previous_warning(...) abort
+    let l:options = lsp#utils#parse_command_options(a:000)
     let l:diagnostics = filter(s:get_all_buffer_diagnostics(),
         \ {_, diagnostic -> s:severity_of(diagnostic) ==# 2 })
-    call s:previous_diagnostic(l:diagnostics)
+    call s:previous_diagnostic(l:diagnostics, l:options)
 endfunction
 
-function! lsp#ui#vim#diagnostics#previous_diagnostic() abort
-    call s:previous_diagnostic(s:get_all_buffer_diagnostics())
+function! lsp#ui#vim#diagnostics#previous_diagnostic(...) abort
+    let l:options = lsp#utils#parse_command_options(a:000)
+    call s:previous_diagnostic(s:get_all_buffer_diagnostics(), l:options)
 endfunction
 
-function! s:previous_diagnostic(diagnostics) abort
+function! s:previous_diagnostic(diagnostics, options) abort
     if !len(a:diagnostics)
         return
     endif
     call sort(a:diagnostics, 's:compare_diagnostics')
+
+    let l:wrap = 1
+    if has_key(a:options, 'wrap')
+        let l:wrap = a:options['wrap']
+    endif
 
     let l:view = winsaveview()
     let l:next_line = 0
@@ -199,6 +218,9 @@ function! s:previous_diagnostic(diagnostics) abort
     endwhile
 
     if l:next_line == 0
+        if !l:wrap
+            return
+        endif
         " Wrap to end
         let [l:next_line, l:next_col] = lsp#utils#position#lsp_to_vim('%', a:diagnostics[-1]['range']['start'])
         let l:next_col -= 1
