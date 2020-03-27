@@ -535,6 +535,6 @@ function! lsp#ui#vim#code_action() abort
     call lsp#ui#vim#code_action#do({
         \   'sync': v:false,
         \   'selection': v:false,
-        \   'query': '',
+        \   'query_filter': v:false,
         \ })
 endfunction

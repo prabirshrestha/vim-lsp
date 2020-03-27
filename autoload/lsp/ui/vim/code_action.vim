@@ -13,13 +13,14 @@ endfunction
 " @param option = {
 "   selection: v:true | v:false = Provide by CommandLine like `:'<,'>LspCodeAction`
 "   sync: v:true | v:false      = Specify enable synchronous request. Example use case is `BufWritePre`
-"   query: string               = Specify code action kind query. If query provided and then filtered code action is only one, invoke code action immediately.
+"   query_filter: v:false | (action) => (v:true | v:false)
+"                               = Specify code action query filter. If query filter provided and then filtered code action is only one, invoke code action immediately.
 " }
 "
 function! lsp#ui#vim#code_action#do(option) abort
     let l:selection = get(a:option, 'selection', v:false)
     let l:sync = get(a:option, 'sync', v:false)
-    let l:query = get(a:option, 'query', '')
+    let l:Query_filter = get(a:option, 'query_filter', v:false)
 
     let l:server_names = filter(lsp#get_whitelisted_servers(), 'lsp#capabilities#has_code_action_provider(v:val)')
     if len(l:server_names) == 0
@@ -51,13 +52,13 @@ function! lsp#ui#vim#code_action#do(option) abort
                     \   },
                     \ },
                     \ 'sync': l:sync,
-                    \ 'on_notification': function('s:handle_code_action', [l:ctx, l:server_name, l:command_id, l:sync, l:query, l:bufnr]),
+                    \ 'on_notification': function('s:handle_code_action', [l:ctx, l:server_name, l:command_id, l:sync, l:Query_filter, l:bufnr]),
                     \ })
     endfor
     echo 'Retrieving code actions ...'
 endfunction
 
-function! s:handle_code_action(ctx, server_name, command_id, sync, query, bufnr, data) abort
+function! s:handle_code_action(ctx, server_name, command_id, sync, query_filter, bufnr, data) abort
     " Ignore old request.
     if a:command_id != lsp#_last_command()
         return
@@ -86,8 +87,8 @@ function! s:handle_code_action(ctx, server_name, command_id, sync, query, bufnr,
         let l:code_actions = l:data['response']['result']
 
         " Filter code actions.
-        if !empty(a:query)
-            let l:code_actions = filter(l:code_actions, { _, action -> get(action, 'kind', '') =~# '^' . a:query })
+        if !empty(a:query_filter)
+            let l:code_actions = filter(l:code_actions, { _, action -> a:query_filter(action) })
         endif
         if empty(l:code_actions)
             continue
@@ -107,9 +108,9 @@ function! s:handle_code_action(ctx, server_name, command_id, sync, query, bufnr,
     endif
     call lsp#log('s:handle_code_action', l:total_code_actions)
 
-    " Prompt to choose code actions when empty query provided.
+    " Prompt to choose code actions when empty query filter provided.
     let l:index = 1
-    if len(l:total_code_actions) > 1 || empty(a:query)
+    if len(l:total_code_actions) > 1 || empty(a:query_filter)
         let l:index = inputlist(map(copy(l:total_code_actions), { i, action ->
                     \   printf('%s - [%s] %s', i + 1, action['server_name'], action['code_action']['title'])
                     \ }))
