@@ -1029,12 +1029,14 @@ LspDeclaration                                             *:LspDeclaration*
 
 Go to declaration. Useful for languages such as C/C++ where there is a clear
 distinction between declaration and definition.
+This accepts |<mods>|.
 
 Also see |:LspPeekDeclaration|.
 
 LspDefinition                                               *:LspDefinition*
 
 Go to definition.
+This accepts |<mods>|.
 
 Also see |:LspPeekDefinition|.
 
@@ -1143,6 +1145,7 @@ Jump to Previous warning diagnostics
 LspImplementation                                       *:LspImplementation*
 
 Find all implementation of interface.
+This accepts |<mods>|.
 
 Also see |:LspPeekImplementation|.
 
@@ -1165,6 +1168,7 @@ Also see |vim-lsp-semantic|.
 LspTypeDefinition                                       *:LspTypeDefinition*
 
 Go to the type definition.
+This accepts |<mods>|.
 
 LspTypeHierarchy                                       *:LspTypeHierarchy*
 

@@ -2,13 +2,19 @@ function! s:not_supported(what) abort
     return lsp#utils#error(a:what.' not supported for '.&filetype)
 endfunction
 
-function! lsp#ui#vim#implementation(in_preview) abort
+function! lsp#ui#vim#implementation(in_preview, ...) abort
     let l:ctx = { 'in_preview': a:in_preview }
+    if a:0
+        let l:ctx['mods'] = a:1
+    endif
     call s:list_location('implementation', l:ctx)
 endfunction
 
-function! lsp#ui#vim#type_definition(in_preview) abort
+function! lsp#ui#vim#type_definition(in_preview, ...) abort
     let l:ctx = { 'in_preview': a:in_preview }
+    if a:0
+        let l:ctx['mods'] = a:1
+    endif
     call s:list_location('typeDefinition', l:ctx)
 endfunction
 
@@ -38,13 +44,19 @@ function! lsp#ui#vim#type_hierarchy() abort
     echo 'Retrieving type hierarchy ...'
 endfunction
 
-function! lsp#ui#vim#declaration(in_preview) abort
+function! lsp#ui#vim#declaration(in_preview, ...) abort
     let l:ctx = { 'in_preview': a:in_preview }
+    if a:0
+        let l:ctx['mods'] = a:1
+    endif
     call s:list_location('declaration', l:ctx)
 endfunction
 
-function! lsp#ui#vim#definition(in_preview) abort
+function! lsp#ui#vim#definition(in_preview, ...) abort
     let l:ctx = { 'in_preview': a:in_preview }
+    if a:0
+        let l:ctx['mods'] = a:1
+    endif
     call s:list_location('definition', l:ctx)
 endfunction
 
@@ -64,7 +76,7 @@ function! s:list_location(method, ctx, ...) abort
 
     call setqflist([])
 
-    let l:ctx = extend({ 'counter': len(l:servers), 'list':[], 'last_command_id': l:command_id, 'jump_if_one': 1, 'in_preview': 0 }, a:ctx)
+    let l:ctx = extend({ 'counter': len(l:servers), 'list':[], 'last_command_id': l:command_id, 'jump_if_one': 1, 'mods': '', 'in_preview': 0 }, a:ctx)
     if len(l:servers) == 0
         call s:not_supported('Retrieving ' . l:operation)
         return
@@ -343,7 +355,7 @@ function! s:handle_symbol(server, last_command_id, type, data) abort
     endif
 endfunction
 
-function! s:handle_location(ctx, server, type, data) abort "ctx = {counter, list, jump_if_one, last_command_id, in_preview}
+function! s:handle_location(ctx, server, type, data) abort "ctx = {counter, list, last_command_id, jump_if_one, mods, in_preview}
     if a:ctx['last_command_id'] != lsp#_last_command()
         return
     endif
@@ -365,7 +377,7 @@ function! s:handle_location(ctx, server, type, data) abort "ctx = {counter, list
             let l:loc = a:ctx['list'][0]
 
             if len(a:ctx['list']) == 1 && a:ctx['jump_if_one'] && !a:ctx['in_preview']
-                call lsp#utils#location#_open_vim_list_item(l:loc)
+                call lsp#utils#location#_open_vim_list_item(l:loc, a:ctx['mods'])
                 echo 'Retrieved ' . a:type
                 redraw
             elseif !a:ctx['in_preview']
