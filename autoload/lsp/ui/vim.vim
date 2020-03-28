@@ -3,51 +3,13 @@ function! s:not_supported(what) abort
 endfunction
 
 function! lsp#ui#vim#implementation(in_preview) abort
-    let l:servers = filter(lsp#get_whitelisted_servers(), 'lsp#capabilities#has_implementation_provider(v:val)')
-    let l:command_id = lsp#_new_command()
-    call setqflist([])
-
-    if len(l:servers) == 0
-        call s:not_supported('Retrieving implementation')
-        return
-    endif
-    let l:ctx = { 'counter': len(l:servers), 'list':[], 'last_command_id': l:command_id, 'jump_if_one': 1, 'in_preview': a:in_preview }
-    for l:server in l:servers
-        call lsp#send_request(l:server, {
-            \ 'method': 'textDocument/implementation',
-            \ 'params': {
-            \   'textDocument': lsp#get_text_document_identifier(),
-            \   'position': lsp#get_position(),
-            \ },
-            \ 'on_notification': function('s:handle_location', [l:ctx, l:server, 'implementation']),
-            \ })
-    endfor
-
-    echo 'Retrieving implementation ...'
+    let l:ctx = { 'in_preview': a:in_preview }
+    call s:list_location('implementation', l:ctx)
 endfunction
 
 function! lsp#ui#vim#type_definition(in_preview) abort
-    let l:servers = filter(lsp#get_whitelisted_servers(), 'lsp#capabilities#has_type_definition_provider(v:val)')
-    let l:command_id = lsp#_new_command()
-    call setqflist([])
-
-    if len(l:servers) == 0
-        call s:not_supported('Retrieving type definition')
-        return
-    endif
-    let l:ctx = { 'counter': len(l:servers), 'list':[], 'last_command_id': l:command_id, 'jump_if_one': 1, 'in_preview': a:in_preview }
-    for l:server in l:servers
-        call lsp#send_request(l:server, {
-            \ 'method': 'textDocument/typeDefinition',
-            \ 'params': {
-            \   'textDocument': lsp#get_text_document_identifier(),
-            \   'position': lsp#get_position(),
-            \ },
-            \ 'on_notification': function('s:handle_location', [l:ctx, l:server, 'type definition']),
-            \ })
-    endfor
-
-    echo 'Retrieving type definition ...'
+    let l:ctx = { 'in_preview': a:in_preview }
+    call s:list_location('typeDefinition', l:ctx)
 endfunction
 
 function! lsp#ui#vim#type_hierarchy() abort
@@ -77,80 +39,53 @@ function! lsp#ui#vim#type_hierarchy() abort
 endfunction
 
 function! lsp#ui#vim#declaration(in_preview) abort
-    let l:servers = filter(lsp#get_whitelisted_servers(), 'lsp#capabilities#has_declaration_provider(v:val)')
-    let l:command_id = lsp#_new_command()
-    call setqflist([])
-
-    if len(l:servers) == 0
-        call s:not_supported('Retrieving declaration')
-        return
-    endif
-
-    let l:ctx = { 'counter': len(l:servers), 'list':[], 'last_command_id': l:command_id, 'jump_if_one': 1, 'in_preview': a:in_preview }
-    for l:server in l:servers
-        call lsp#send_request(l:server, {
-            \ 'method': 'textDocument/declaration',
-            \ 'params': {
-            \   'textDocument': lsp#get_text_document_identifier(),
-            \   'position': lsp#get_position(),
-            \ },
-            \ 'on_notification': function('s:handle_location', [l:ctx, l:server, 'declaration']),
-            \ })
-    endfor
-
-    echo 'Retrieving declaration ...'
+    let l:ctx = { 'in_preview': a:in_preview }
+    call s:list_location('declaration', l:ctx)
 endfunction
 
 function! lsp#ui#vim#definition(in_preview) abort
-    let l:servers = filter(lsp#get_whitelisted_servers(), 'lsp#capabilities#has_definition_provider(v:val)')
-    let l:command_id = lsp#_new_command()
-    call setqflist([])
-
-    if len(l:servers) == 0
-        call s:not_supported('Retrieving definition')
-        return
-    endif
-
-    let l:ctx = { 'counter': len(l:servers), 'list':[], 'last_command_id': l:command_id, 'jump_if_one': 1, 'in_preview': a:in_preview }
-    for l:server in l:servers
-        call lsp#send_request(l:server, {
-            \ 'method': 'textDocument/definition',
-            \ 'params': {
-            \   'textDocument': lsp#get_text_document_identifier(),
-            \   'position': lsp#get_position(),
-            \ },
-            \ 'on_notification': function('s:handle_location', [l:ctx, l:server, 'definition']),
-            \ })
-    endfor
-
-    echo 'Retrieving definition ...'
+    let l:ctx = { 'in_preview': a:in_preview }
+    call s:list_location('definition', l:ctx)
 endfunction
 
 function! lsp#ui#vim#references() abort
-    let l:servers = filter(lsp#get_whitelisted_servers(), 'lsp#capabilities#has_references_provider(v:val)')
+    let l:ctx = { 'jump_if_one': 0 }
+    let l:request_params = { 'context': { 'includeDeclaration': v:false } }
+    call s:list_location('references', l:ctx, l:request_params)
+endfunction
+
+function! s:list_location(method, ctx, ...) abort
+    " typeDefinition => type definition
+    let l:operation = substitute(a:method, '\u', ' \l\0', 'g')
+
+    let l:capabilities_func = printf('lsp#capabilities#has_%s_provider(v:val)', substitute(l:operation, ' ', '_', 'g'))
+    let l:servers = filter(lsp#get_whitelisted_servers(), l:capabilities_func)
     let l:command_id = lsp#_new_command()
 
     call setqflist([])
 
-    let l:ctx = { 'counter': len(l:servers), 'list':[], 'last_command_id': l:command_id, 'jump_if_one': 0, 'in_preview': 0 }
+    let l:ctx = extend({ 'counter': len(l:servers), 'list':[], 'last_command_id': l:command_id, 'jump_if_one': 1, 'in_preview': 0 }, a:ctx)
     if len(l:servers) == 0
-        call s:not_supported('Retrieving references')
+        call s:not_supported('Retrieving ' . l:operation)
         return
     endif
 
+    let l:params = {
+        \   'textDocument': lsp#get_text_document_identifier(),
+        \   'position': lsp#get_position(),
+        \ }
+    if a:0
+        call extend(l:params, a:1)
+    endif
     for l:server in l:servers
         call lsp#send_request(l:server, {
-            \ 'method': 'textDocument/references',
-            \ 'params': {
-            \   'textDocument': lsp#get_text_document_identifier(),
-            \   'position': lsp#get_position(),
-            \   'context': {'includeDeclaration': v:false},
-            \ },
-            \ 'on_notification': function('s:handle_location', [l:ctx, l:server, 'references']),
+            \ 'method': 'textDocument/' . a:method,
+            \ 'params': l:params,
+            \ 'on_notification': function('s:handle_location', [l:ctx, l:server, l:operation]),
             \ })
     endfor
 
-    echo 'Retrieving references ...'
+    echo printf('Retrieving %s ...', l:operation)
 endfunction
 
 function! s:rename(server, new_name, pos) abort
