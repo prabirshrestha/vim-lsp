@@ -1,12 +1,16 @@
 function! s:open_location(path, line, col) abort
     normal! m'
     let l:buffer = bufnr(a:path)
-    if &modified && !&hidden
+    if l:buffer == bufnr('%')
+        let l:cmd = ''
+    elseif &modified && !&hidden
         let l:cmd = l:buffer !=# -1 ? 'sb ' . l:buffer : 'split ' . fnameescape(a:path)
+            \ . ' | '
     else
         let l:cmd = l:buffer !=# -1 ? 'b ' . l:buffer : 'edit ' . fnameescape(a:path)
+            \ . ' | '
     endif
-    execute l:cmd . ' | call cursor('.a:line.','.a:col.')'
+    execute l:cmd . 'call cursor('.a:line.','.a:col.')'
 endfunction
 
 " @param location = {
