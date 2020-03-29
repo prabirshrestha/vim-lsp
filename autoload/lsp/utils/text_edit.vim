@@ -1,21 +1,18 @@
 function! lsp#utils#text_edit#apply_text_edits(uri, text_edits) abort
     let l:current_bufname = bufname('%')
     let l:target_bufname = lsp#utils#uri_to_path(a:uri)
-    let l:cursor_pos = getpos('.')[1 : 3]
+    let l:cursor_position = lsp#get_position()
     let l:cursor_offset = 0
     let l:topline = line('w0')
 
     call s:_switch(l:target_bufname)
     for l:text_edit in s:_normalize(a:text_edits)
-        let l:cursor_offset += s:_apply(bufnr(l:target_bufname), l:text_edit, l:cursor_pos)
+        let l:cursor_offset += s:_apply(bufnr(l:target_bufname), l:text_edit, l:cursor_position)
     endfor
     call s:_switch(l:current_bufname)
 
     if bufnr(l:current_bufname) == bufnr(l:target_bufname)
-        let l:length = strlen(getline(l:cursor_pos[0])) + 1
-        let l:cursor_pos[2] = max([0, l:cursor_pos[1] + l:cursor_pos[2] - l:length])
-        let l:cursor_pos[1] = min([l:length, l:cursor_pos[1] + l:cursor_pos[2]])
-        call cursor(l:cursor_pos)
+        call cursor(lsp#utils#position#lsp_to_vim('%', l:cursor_position))
         call winrestview({ 'topline': l:topline + l:cursor_offset })
     endif
 endfunction
@@ -23,7 +20,7 @@ endfunction
 "
 " _apply
 "
-function! s:_apply(bufnr, text_edit, cursor_pos) abort
+function! s:_apply(bufnr, text_edit, cursor_position) abort
   " create before/after line.
   let l:start_line = getline(a:text_edit.range.start.line + 1)
   let l:end_line = getline(a:text_edit.range.end.line + 1)
@@ -47,11 +44,20 @@ function! s:_apply(bufnr, text_edit, cursor_pos) abort
 
   let l:new_lines_len = len(l:new_lines)
 
-  " fix cursor pos
+  " fix cursor col
+  if a:text_edit.range.end.line == a:cursor_position.line
+      if a:text_edit.range.end.character <= a:cursor_position.character
+          let l:end_character = strchars(l:new_lines[-1]) - strchars(l:after_line)
+          let l:end_offset = a:cursor_position.character - a:text_edit.range.end.character
+          let a:cursor_position.character = l:end_character + l:end_offset
+      endif
+  endif
+
+  " fix cursor line
   let l:cursor_offset = 0
-  if a:text_edit.range.end.line + 1 < a:cursor_pos[0]
-    let l:cursor_offset = l:new_lines_len - (a:text_edit.range.end.line - a:text_edit.range.start.line) - 1
-    let a:cursor_pos[0] += l:cursor_offset
+  if a:text_edit.range.end.line <= a:cursor_position.line
+      let l:cursor_offset = l:new_lines_len - (a:text_edit.range.end.line - a:text_edit.range.start.line) - 1
+      let a:cursor_position.line += l:cursor_offset
   endif
 
   " append new lines.
