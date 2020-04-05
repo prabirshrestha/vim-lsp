@@ -16,8 +16,8 @@ endif
 function! s:range_to_position(bufnr, range) abort
     let l:position = []
 
-    let [l:start_line, l:start_col] = lsp#utils#position#_lsp_to_vim(a:bufnr, a:range['start'])
-    let [l:end_line, l:end_col] = lsp#utils#position#_lsp_to_vim(a:bufnr, a:range['end'])
+    let [l:start_line, l:start_col] = lsp#utils#position#lsp_to_vim(a:bufnr, a:range['start'])
+    let [l:end_line, l:end_col] = lsp#utils#position#lsp_to_vim(a:bufnr, a:range['end'])
     if l:end_line == l:start_line
         let l:position = [[
         \ l:start_line,

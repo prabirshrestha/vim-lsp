@@ -249,14 +249,14 @@ function! lsp#ui#vim#document_format() abort
 endfunction
 
 function! lsp#ui#vim#stop_server(...) abort
-  let l:name = get(a:000, 0, '')
-  for l:server in lsp#get_whitelisted_servers()
-    if !empty(l:name) && l:server != l:name
-        continue
-    endif
-    echo 'Stopping' l:server 'server ...'
-    call lsp#stop_server(server)
-  endfor
+    let l:name = get(a:000, 0, '')
+    for l:server in lsp#get_whitelisted_servers()
+        if !empty(l:name) && l:server != l:name
+            continue
+        endif
+        echo 'Stopping' l:server 'server ...'
+        call lsp#stop_server(l:server)
+    endfor
 endfunction
 
 function! s:get_selection_pos(type) abort
@@ -343,7 +343,10 @@ function! lsp#ui#vim#workspace_symbol() abort
         return
     endif
 
-    let l:query = input('query>')
+    let l:query = inputdialog('query>', '', "\<ESC>")
+    if l:query ==# "\<ESC>"
+        return
+    endif
 
     for l:server in l:servers
         call lsp#send_request(l:server, {
@@ -355,6 +358,7 @@ function! lsp#ui#vim#workspace_symbol() abort
             \ })
     endfor
 
+    redraw
     echo 'Retrieving workspace symbols ...'
 endfunction
 
@@ -438,15 +442,15 @@ function! s:handle_location(ctx, server, type, data) abort "ctx = {counter, list
                 if has_key(l:loc,'viewstart') " showing a locationLink
                     let l:view = l:lines[l:loc['viewstart'] : l:loc['viewend']]
                     call lsp#ui#vim#output#preview(a:server, l:view, {
-                                \   'statusline': ' LSP Peek ' . a:type,
-                                \   'filetype': &filetype
-                                \ })
+                        \   'statusline': ' LSP Peek ' . a:type,
+                        \   'filetype': &filetype
+                        \ })
                 else " showing a location
                     call lsp#ui#vim#output#preview(a:server, l:lines, {
-                                \   'statusline': ' LSP Peek ' . a:type,
-                                \   'cursor': { 'line': l:loc['lnum'], 'col': l:loc['col'], 'align': g:lsp_peek_alignment },
-                                \   'filetype': &filetype
-                                \ })
+                        \   'statusline': ' LSP Peek ' . a:type,
+                        \   'cursor': { 'line': l:loc['lnum'], 'col': l:loc['col'], 'align': g:lsp_peek_alignment },
+                        \   'filetype': &filetype
+                        \ })
                 endif
             endif
         endif
@@ -465,8 +469,8 @@ function! s:handle_rename_prepare(server, last_command_id, type, data) abort
 
     let l:range = a:data['response']['result']
     let l:lines = getline(1, '$')
-    let [l:start_line, l:start_col] = lsp#utils#position#_lsp_to_vim('%', l:range['start'])
-    let [l:end_line, l:end_col] = lsp#utils#position#_lsp_to_vim('%', l:range['end'])
+    let [l:start_line, l:start_col] = lsp#utils#position#lsp_to_vim('%', l:range['start'])
+    let [l:end_line, l:end_col] = lsp#utils#position#lsp_to_vim('%', l:range['end'])
     if l:start_line ==# l:end_line
         let l:name = l:lines[l:start_line - 1][l:start_col - 1 : l:end_col - 2]
     else
@@ -581,9 +585,9 @@ function! s:get_treeitem_for_tree_hierarchy(Callback, object) dict abort
 endfunction
 
 function! lsp#ui#vim#code_action() abort
-  call lsp#ui#vim#code_action#do({
-      \   'sync': v:false,
-      \   'selection': v:false,
-      \   'query': '',
-      \ })
+    call lsp#ui#vim#code_action#do({
+        \   'sync': v:false,
+        \   'selection': v:false,
+        \   'query': '',
+        \ })
 endfunction
