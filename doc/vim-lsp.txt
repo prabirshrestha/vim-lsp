@@ -1241,9 +1241,13 @@ lsp_diagnostics_updated                            *lsp_diagnostics_updated*
 This autocommand us run after every time after new diagnostics received and 
 processed by vim-lsp. Example way of using it is to update statusline counts.
 >
-  augroup LightlineLSP
+  function! DoSomething
+    echo lsp#get_buffer_diagnostics_counts()
+  endfunction
+
+  augroup OnLSP
     autocmd!
-    autocmd User lsp_diagnostics_updated call lightline#update()
+    autocmd User lsp_diagnostics_updated call DoSomething()
   augroup END
 <
 
