@@ -1239,7 +1239,7 @@ current active, the event will be triggered when the buffer will be active.
 lsp_diagnostics_updated                            *lsp_diagnostics_updated*
 
 This autocommand us run after every time after new diagnostics received and 
-processed by vim-lsp. Example way of using it is to update statusline counts.
+processed by vim-lsp.
 >
   function! DoSomething
     echo lsp#get_buffer_diagnostics_counts()
