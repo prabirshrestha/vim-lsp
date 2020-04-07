@@ -99,6 +99,7 @@ CONTENTS                                                  *vim-lsp-contents*
       lsp_server_init                       |lsp_server_init|
       lsp_server_exit                       |lsp_server_exit|
       lsp_buffer_enabled                    |lsp_buffer_enabled|
+      lsp_diagnostics_updated               |lsp_diagnostics_updated|
     Mappings                              |vim-lsp-mappings|
        <plug>(lsp-preview-close)            |<plug>(lsp-preview-close)|
        <plug>(lsp-preview-focus)            |<plug>(lsp-preview-focus)|
@@ -1235,6 +1236,16 @@ This autocommand is run after vim-lsp is enabled for the buffer. This event is
 triggered imediately when the buffer is currently active. If the buffer is not
 current active, the event will be triggered when the buffer will be active.
 
+lsp_diagnostics_updated                            *lsp_diagnostics_updated*
+
+This autocommand us run after every time after new diagnostics received and 
+processed by vim-lsp. Example way of using it is to update statusline counts.
+>
+  augroup LightlineLSP
+    autocmd!
+    autocmd User lsp_diagnostics_updated call lightline#update()
+  augroup END
+<
 
 ==============================================================================
 Mappings                                                  *vim-lsp-mappings*
