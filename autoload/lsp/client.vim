@@ -103,7 +103,7 @@ function! s:on_stdout(id, data, event) abort
                     try
                         call l:ctx['opts']['on_notification'](a:id, l:on_notification_data, 'on_notification')
                     catch
-                        call lsp#log('s:on_stdout client option on_notification() error', v:exception)
+                        call lsp#log('s:on_stdout client option on_notification() error', v:exception, v:throwpoint)
                     endtry
                 endif
                 if has_key(l:ctx['on_notifications'], l:response['id'])
@@ -126,7 +126,7 @@ function! s:on_stdout(id, data, event) abort
                     try
                         call l:ctx['opts']['on_notification'](a:id, l:on_notification_data, 'on_notification')
                     catch
-                        call lsp#log('s:on_stdout on_notification() error', v:exception)
+                        call lsp#log('s:on_stdout on_notification() error', v:exception, v:throwpoint)
                     endtry
                 endif
             endif
@@ -160,7 +160,7 @@ function! s:on_stderr(id, data, event) abort
         try
             call l:ctx['opts']['on_stderr'](a:id, a:data, a:event)
         catch
-            call lsp#log('s:on_stderr exception', v:exception)
+            call lsp#log('s:on_stderr exception', v:exception, v:throwpoint)
             echom v:exception
         endtry
     endif
@@ -175,7 +175,7 @@ function! s:on_exit(id, status, event) abort
         try
             call l:ctx['opts']['on_exit'](a:id, a:status, a:event)
         catch
-            call lsp#log('s:on_exit exception', v:exception)
+            call lsp#log('s:on_exit exception', v:exception, v:throwpoint)
             echom v:exception
         endtry
     endif
