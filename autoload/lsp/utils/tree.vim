@@ -1,3 +1,14 @@
+" This file is part of an installation of vim-yggdrasil, a vim/neovim tree viewer library.
+" The source code of vim-yggdrasil is available at https://github.com/m-pilia/vim-yggdrasil
+"
+" vim-yggdrasil is free software, distributed under the MIT license.
+" The full license is available at https://github.com/m-pilia/vim-yggdrasil/blob/master/LICENSE
+"
+" Yggdrasil version (git SHA-1): 043d0ab53dcdd0d91b7c7cd205791d64d4ed9624
+"
+" This installation was generated on 2020-03-15T14:47:27-0700 with the following vim command:
+"     :YggdrasilPlant -plugin_dir=./ -namespace=lsp/utils
+
 scriptencoding utf-8
 
 " Callback to retrieve the tree item representation of an object.
@@ -195,7 +206,12 @@ function! s:tree_update(...) dict abort
     endif
 endfunction
 
-" Apply syntax to an LspTree buffer
+" Destroy the tree view. Wipe out the buffer containing it.
+function! s:tree_wipe() dict abort
+    execute 'bwipeout' . l:self.bufnr
+endfunction
+
+" Apply syntax to an lsp-tree buffer
 function! s:filetype_syntax() abort
     syntax clear
     syntax match LspTreeMarkLeaf        "•" contained
@@ -209,7 +225,7 @@ function! s:filetype_syntax() abort
     highlight def link LspTreeMarkCollapsed   Macro
 endfunction
 
-" Apply local settings to an LspTree buffer
+" Apply local settings to an lsp-tree buffer
 function! s:filetype_settings() abort
     setlocal bufhidden=wipe
     setlocal buftype=nofile
@@ -237,15 +253,17 @@ function! s:filetype_settings() abort
     nnoremap <silent> <buffer> <Plug>(lsp-tree-execute-node)
         \ :call b:lsp_tree.exec_node_under_cursor()<cr>
 
+    nnoremap <silent> <buffer> <Plug>(lsp-tree-wipe-tree)
+        \ :call b:lsp_tree.wipe()<cr>
+
     if !exists('g:lsp_tree_no_default_maps')
         nmap <silent> <buffer> o    <Plug>(lsp-tree-toggle-node)
         nmap <silent> <buffer> <cr> <Plug>(lsp-tree-execute-node)
-
-        nnoremap <silent> <buffer> q :q<cr>
+        nmap <silent> <buffer> q    <Plug>(lsp-tree-wipe-tree)
     endif
 endfunction
 
-" Turns the current buffer into an LspTree tree view. Tree data is retrieved
+" Turns the current buffer into an lsp-tree tree view. Tree data is retrieved
 " from the given {provider}, and the state of the tree is stored in a
 " buffer-local variable called b:lsp_tree.
 "
@@ -254,7 +272,7 @@ endfunction
 " maps line numbers to nodes.
 function! lsp#utils#tree#new(provider) abort
     let b:lsp_tree = {
-    \ 'bufnr': bufnr('.'),
+    \ 'bufnr': bufnr('%'),
     \ 'maxid': -1,
     \ 'root': {},
     \ 'index': [],
@@ -262,6 +280,7 @@ function! lsp#utils#tree#new(provider) abort
     \ 'set_collapsed_under_cursor': function('s:tree_set_collapsed_under_cursor'),
     \ 'exec_node_under_cursor': function('s:tree_exec_node_under_cursor'),
     \ 'update': function('s:tree_update'),
+    \ 'wipe': function('s:tree_wipe'),
     \ }
 
     augroup vim_lsp_tree

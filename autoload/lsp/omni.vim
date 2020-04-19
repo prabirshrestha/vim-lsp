@@ -58,6 +58,22 @@ function! lsp#omni#complete(findstart, base) abort
             let s:completion['status'] = s:completion_status_pending
         endif
 
+        " Find first item which has refresh_pattern
+        let l:refresh_pattern = '\(\k\+$\)'
+        for l:server_name in l:info['server_names']
+            let l:server_info = lsp#get_server_info(l:server_name)
+            if has_key (l:server_info, 'config') && has_key(l:server_info['config'], 'refresh_pattern')
+                let l:refresh_pattern = l:server_info['config']['refresh_pattern']
+                break
+            endif
+        endfor
+        let l:curpos = getcurpos()
+        let l:left = strpart(getline(l:curpos[1]), 0, l:curpos[2]-1)
+        let s:completion['startcol'] = matchstrpos(l:left, l:refresh_pattern)[1]
+        if s:completion['startcol'] == -1
+            let s:completion['startcol'] = strlen(l:left)
+        endif
+
         call s:send_completion_request(l:info)
 
         if g:lsp_async_completion
@@ -76,27 +92,12 @@ function! lsp#omni#complete(findstart, base) abort
     endif
 endfunction
 
-function! s:get_insertion_point(item, current_line, typed_pattern) abort
-    let l:insert_start = -1
-
-    let l:user_data = lsp#omni#get_managed_user_data_from_completed_item(a:item)
-    if has_key(l:user_data, 'completion_item') && has_key(l:user_data['completion_item'], 'textEdit')
-        let l:insert_start = l:user_data['completion_item']['textEdit']['range']['start']['character']
-    endif
-
-    if l:insert_start >= 0
-        return l:insert_start
-    else
-        return match(a:current_line, a:typed_pattern)
-    endif
-endfunction
-
 function! s:get_filter_label(item) abort
     let l:user_data = lsp#omni#get_managed_user_data_from_completed_item(a:item)
-    if has_key(l:user_data, 'completion_item') && has_key(l:user_data['completion_item'], 'filterText')
-        return trim(l:user_data['completion_item']['filterText'])
+    if has_key(l:user_data, 'completion_item') && has_key(l:user_data['completion_item'], 'filterText') && !empty(l:user_data['completion_item']['filterText'])
+        return lsp#utils#_trim(l:user_data['completion_item']['filterText'])
     endif
-    return trim(a:item['word'])
+    return lsp#utils#_trim(a:item['word'])
 endfunction
 
 function! s:prefix_filter(item, last_typed_word) abort
@@ -119,21 +120,34 @@ function! s:contains_filter(item, last_typed_word) abort
     endif
 endfunction
 
+let s:pair = {
+\  '"':  '"',
+\  '''':  '''',
+\  '{':  '}',
+\  '(':  ')',
+\  '[':  ']',
+\}
+
 function! s:display_completions(timer, info) abort
     " TODO: Allow multiple servers
     let l:server_name = a:info['server_names'][0]
     let l:server_info = lsp#get_server_info(l:server_name)
 
-    let l:typed_pattern = has_key(l:server_info, 'config') && has_key(l:server_info['config'], 'typed_pattern') ? l:server_info['config']['typed_pattern'] : '\k*$'
     let l:current_line = strpart(getline('.'), 0, col('.') - 1)
-
-    let s:start_pos = min(map(copy(s:completion['matches']), {_, item -> s:get_insertion_point(item, l:current_line, l:typed_pattern) }))
-
     let l:filter = has_key(l:server_info, 'config') && has_key(l:server_info['config'], 'filter') ? l:server_info['config']['filter'] : { 'name': 'prefix' }
-    let l:last_typed_word = strpart(l:current_line, s:start_pos)
+    let l:last_typed_word = strpart(l:current_line, s:completion['startcol'])
 
     if l:filter['name'] ==? 'prefix'
         let s:completion['matches'] = filter(s:completion['matches'], {_, item -> s:prefix_filter(item, l:last_typed_word)})
+	    if has_key(s:pair, l:last_typed_word[0])
+            let [l:lhs, l:rhs] = [l:last_typed_word[0], s:pair[l:last_typed_word[0]]]
+            for l:item in s:completion['matches']
+                let l:str = l:item['word']
+                if len(l:str) > 1 && l:str[0] ==# l:lhs && l:str[-1:] ==# l:rhs
+                    let l:item['word'] = l:str[:-2]
+                endif
+            endfor
+        endif
     elseif l:filter['name'] ==? 'contains'
         let s:completion['matches'] = filter(s:completion['matches'], {_, item -> s:contains_filter(item, l:last_typed_word)})
     endif
@@ -141,7 +155,7 @@ function! s:display_completions(timer, info) abort
     let s:completion['status'] = ''
 
     if mode() is# 'i'
-        call complete(s:start_pos + 1, s:completion['matches'])
+        call complete(s:completion['startcol'] + 1, s:completion['matches'])
     endif
 endfunction
 
@@ -236,17 +250,24 @@ endfunction
 
 function! lsp#omni#default_get_vim_completion_item(item, ...) abort
     let l:server_name = get(a:, 1, '')
+    let l:complete_position = get(a:, 2, lsp#get_position())
 
     let l:word = ''
+    let l:expandable = v:false
     if get(a:item, 'insertTextFormat', -1) == 2 && !empty(get(a:item, 'insertText', ''))
         " if candidate is snippet, use insertText. But it may include
         " placeholder.
         let l:word = lsp#utils#make_valid_word(a:item['insertText'])
+        let l:expandable = l:word !=# a:item['insertText']
     elseif !empty(get(a:item, 'insertText', ''))
         " if plain-text insertText, use it.
         let l:word = a:item['insertText']
     elseif has_key(a:item, 'textEdit')
         let l:word = lsp#utils#make_valid_word(a:item['label'])
+        let l:expandable = l:word !=# a:item['textEdit']['newText']
+    endif
+    if !empty(l:word)
+        let l:word = split(l:word, '\n')[0]
     endif
     if empty(l:word)
         let l:word = a:item['label']
@@ -254,12 +275,12 @@ function! lsp#omni#default_get_vim_completion_item(item, ...) abort
     let l:abbr = a:item['label']
 
     if has_key(a:item, 'insertTextFormat') && a:item['insertTextFormat'] == 2
-        let l:word = substitute(l:word, '\<\$[0-9]\+\|\${[^}]\+}\>', '', 'g')
+        let l:word = substitute(l:word, '\$[0-9]\+\|\${\%(\\.\|[^}]\)\+}', '', 'g')
     endif
 
     let l:completion = {
                 \ 'word': lsp#utils#_trim(l:word),
-                \ 'abbr': l:abbr,
+                \ 'abbr': l:abbr . (l:expandable ? '~' : ''),
                 \ 'menu': '',
                 \ 'info': '',
                 \ 'icase': 1,
@@ -279,7 +300,7 @@ function! lsp#omni#default_get_vim_completion_item(item, ...) abort
 
     " Add user_data.
     if s:is_user_data_support
-        let l:completion['user_data'] = s:create_user_data(a:item, l:server_name)
+        let l:completion['user_data'] = s:create_user_data(a:item, l:server_name, l:complete_position)
     endif
 
     if has_key(a:item, 'detail') && !empty(a:item['detail'])
@@ -316,12 +337,13 @@ endfunction
 "
 " create item's user_data.
 "
-function! s:create_user_data(completion_item, server_name) abort
+function! s:create_user_data(completion_item, server_name, complete_position) abort
     let l:user_data_key = '{"vim-lsp/key' . '":"' . string(s:managed_user_data_key_base) . '"}'
     let s:managed_user_data_map[l:user_data_key] = {
-                \   'server_name': a:server_name,
-                \   'completion_item': a:completion_item
-                \ }
+    \   'complete_position': a:complete_position,
+    \   'server_name': a:server_name,
+    \   'completion_item': a:completion_item
+    \ }
     let s:managed_user_data_key_base += 1
     return l:user_data_key
 endfunction
