@@ -83,7 +83,9 @@ function! s:clear_highlights(server_name, path) abort
     let l:ns = s:get_highlight_group(a:server_name)
     let l:bufnr = bufnr(a:path)
 
-    call nvim_buf_clear_namespace(l:bufnr, l:ns, 0, -1)
+    if l:bufnr != -1
+        call nvim_buf_clear_namespace(l:bufnr, l:ns, 0, -1)
+    endif
 endfunction
 
 function! s:place_highlights(server_name, path, diagnostics) abort
