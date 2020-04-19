@@ -253,15 +253,18 @@ function! lsp#omni#default_get_vim_completion_item(item, ...) abort
     let l:complete_position = get(a:, 2, lsp#get_position())
 
     let l:word = ''
+    let l:expandable = v:false
     if get(a:item, 'insertTextFormat', -1) == 2 && !empty(get(a:item, 'insertText', ''))
         " if candidate is snippet, use insertText. But it may include
         " placeholder.
         let l:word = lsp#utils#make_valid_word(a:item['insertText'])
+        let l:expandable = l:word !=# a:item['insertText']
     elseif !empty(get(a:item, 'insertText', ''))
         " if plain-text insertText, use it.
         let l:word = a:item['insertText']
     elseif has_key(a:item, 'textEdit')
         let l:word = lsp#utils#make_valid_word(a:item['label'])
+        let l:expandable = l:word !=# a:item['textEdit']['newText']
     endif
     if !empty(l:word)
         let l:word = split(l:word, '\n')[0]
@@ -277,7 +280,7 @@ function! lsp#omni#default_get_vim_completion_item(item, ...) abort
 
     let l:completion = {
                 \ 'word': lsp#utils#_trim(l:word),
-                \ 'abbr': l:abbr,
+                \ 'abbr': l:abbr . (l:expandable ? '~' : ''),
                 \ 'menu': '',
                 \ 'info': '',
                 \ 'icase': 1,
