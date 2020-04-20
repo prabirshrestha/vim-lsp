@@ -1,18 +1,18 @@
 function! s:open_location(path, line, col, ...) abort
     normal! m'
     let l:mods = a:0 ? a:1 : ''
-    if l:mods is# '' && (!&modified || &hidden)
+    if l:mods == '' && &modified && !&hidden
         let l:mods = &splitbelow ? 'rightbelow' : 'leftabove'
     endif
     let l:buffer = bufnr(a:path)
-    if l:mods is# ''
+    if l:mods == ''
         if l:buffer == bufnr('%')
             let l:cmd = ''
         else
-            let l:cmd = l:buffer !=# -1 ? 'b ' . l:buffer : 'edit ' . fnameescape(a:path)
+            let l:cmd = l:buffer !=# -1 ? 'b ' . l:buffer : 'edit ' . fnameescape(a:path) . ' | '
         endif
     else
-        let l:cmd = l:mods . ' ' . (l:buffer !=# -1 ? 'sb ' . l:buffer : 'split ' . fnameescape(a:path))
+        let l:cmd = l:mods . ' ' . (l:buffer !=# -1 ? 'sb ' . l:buffer : 'split ' . fnameescape(a:path)) . ' | '
     endif
     execute l:cmd . 'call cursor('.a:line.','.a:col.')'
 endfunction
