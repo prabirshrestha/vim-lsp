@@ -1,10 +1,10 @@
 function! s:open_location(path, line, col, ...) abort
     normal! m'
     let l:mods = a:0 ? a:1 : ''
-    if l:mods ==# '' && &modified && !&hidden
+    let l:buffer = bufnr(a:path)
+    if l:mods ==# '' && &modified && !&hidden && l:buffer != bufnr('%')
         let l:mods = &splitbelow ? 'rightbelow' : 'leftabove'
     endif
-    let l:buffer = bufnr(a:path)
     if l:mods ==# ''
         if l:buffer == bufnr('%')
             let l:cmd = ''
