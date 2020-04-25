@@ -176,7 +176,6 @@ Describe lsp#utils
     Describe lsp#utils#make_valid_word
         It should make valid word
             Assert Equals(lsp#utils#make_valid_word('my-word'), 'my-word')
-            Assert Equals(lsp#utils#make_valid_word(' my-word'), '')
             Assert Equals(lsp#utils#make_valid_word("my\nword"), 'my')
             Assert Equals(lsp#utils#make_valid_word('my-word: description'), 'my-word')
             Assert Equals(lsp#utils#make_valid_word('my-word : description'), 'my-word')
@@ -192,5 +191,25 @@ Describe lsp#utils
             Assert Equals(lsp#utils#make_valid_word('my-array<string>'), 'my-array')
             Assert Equals(lsp#utils#make_valid_word("my-name\tdescription"), 'my-name')
         End
+    End
+
+    Describe lsp#utils#_split_by_eol
+
+        It should split text by \r\n
+          Assert Equals(lsp#utils#_split_by_eol("あいうえお\r\nかきくけこ"), ['あいうえお', 'かきくけこ'])
+        End
+
+        It should split text by \r
+          Assert Equals(lsp#utils#_split_by_eol("あいうえお\rかきくけこ"), ['あいうえお', 'かきくけこ'])
+        End
+
+        It should split text by \r\n\r
+          Assert Equals(lsp#utils#_split_by_eol("あいうえお\r\n\rかきくけこ"), ['あいうえお', '', 'かきくけこ'])
+        End
+
+        It should split text by \r\n\n\r\r\n
+          Assert Equals(lsp#utils#_split_by_eol("あいうえお\r\n\n\r\r\nかきくけこ"), ['あいうえお', '', '', '', 'かきくけこ'])
+        End
+
     End
 End

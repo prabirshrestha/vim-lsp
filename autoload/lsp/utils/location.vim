@@ -1,12 +1,20 @@
-function! s:open_location(path, line, col) abort
+function! s:open_location(path, line, col, ...) abort
     normal! m'
+    let l:mods = a:0 ? a:1 : ''
     let l:buffer = bufnr(a:path)
-    if &modified && !&hidden
-        let l:cmd = l:buffer !=# -1 ? 'sb ' . l:buffer : 'split ' . fnameescape(a:path)
-    else
-        let l:cmd = l:buffer !=# -1 ? 'b ' . l:buffer : 'edit ' . fnameescape(a:path)
+    if l:mods ==# '' && &modified && !&hidden && l:buffer != bufnr('%')
+        let l:mods = &splitbelow ? 'rightbelow' : 'leftabove'
     endif
-    execute l:cmd . ' | call cursor('.a:line.','.a:col.')'
+    if l:mods ==# ''
+        if l:buffer == bufnr('%')
+            let l:cmd = ''
+        else
+            let l:cmd = l:buffer !=# -1 ? 'b ' . l:buffer : 'edit ' . fnameescape(a:path) . ' | '
+        endif
+    else
+        let l:cmd = l:mods . ' ' . (l:buffer !=# -1 ? 'sb ' . l:buffer : 'split ' . fnameescape(a:path)) . ' | '
+    endif
+    execute l:cmd . 'call cursor('.a:line.','.a:col.')'
 endfunction
 
 " @param location = {
@@ -14,8 +22,8 @@ endfunction
 "   'lnum',
 "   'col',
 " }
-function! lsp#utils#location#_open_vim_list_item(location) abort
-    call s:open_location(a:location['filename'], a:location['lnum'], a:location['col'])
+function! lsp#utils#location#_open_vim_list_item(location, mods) abort
+    call s:open_location(a:location['filename'], a:location['lnum'], a:location['col'], a:mods)
 endfunction
 
 " @params {location} = {
@@ -29,8 +37,8 @@ function! lsp#utils#location#_open_lsp_location(location) abort
     let l:path = lsp#utils#uri_to_path(a:location['uri'])
     let l:bufnr = bufnr(l:path)
 
-    let [l:start_line, l:start_col] = lsp#utils#position#_lsp_to_vim(l:bufnr, a:location['range']['start'])
-    let [l:end_line, l:end_col] = lsp#utils#position#_lsp_to_vim(l:bufnr, a:location['range']['end'])
+    let [l:start_line, l:start_col] = lsp#utils#position#lsp_to_vim(l:bufnr, a:location['range']['start'])
+    let [l:end_line, l:end_col] = lsp#utils#position#lsp_to_vim(l:bufnr, a:location['range']['end'])
 
     call s:open_location(l:path, l:start_line, l:start_col)
 
@@ -64,7 +72,7 @@ function! s:lsp_location_item_to_vim(loc, cache) abort
     endif
 
     let l:path = lsp#utils#uri_to_path(l:uri)
-    let [l:line, l:col] = lsp#utils#position#_lsp_to_vim(l:path, l:range['start'])
+    let [l:line, l:col] = lsp#utils#position#lsp_to_vim(l:path, l:range['start'])
 
     let l:index = l:line - 1
     if has_key(a:cache, l:path)
@@ -87,8 +95,8 @@ function! s:lsp_location_item_to_vim(loc, cache) abort
             \ 'lnum': l:line,
             \ 'col': l:col,
             \ 'text': l:text,
-            \ 'viewstart': lsp#utils#position#_lsp_to_vim(l:path, a:loc['targetRange']['start'])[0] - 1,
-            \ 'viewend': lsp#utils#position#_lsp_to_vim(l:path, a:loc['targetRange']['end'])[0] - 1,
+            \ 'viewstart': lsp#utils#position#lsp_to_vim(l:path, a:loc['targetRange']['start'])[0] - 1,
+            \ 'viewend': lsp#utils#position#lsp_to_vim(l:path, a:loc['targetRange']['end'])[0] - 1,
             \ }
     else
         return {

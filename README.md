@@ -52,9 +52,10 @@ Refer to docs on configuring omnifunc or [asyncomplete.vim](https://github.com/p
 
 ## Snippets
 vim-lsp does not support snippets by default. If you want snippet integration, you will first have to install a third-party snippet plugin and a plugin that integrates it in vim-lsp.
-At the moment, you have two options:
-1. [UltiSnips](https://github.com/SirVer/ultisnips) together with [vim-lsp-ultisnips](https://github.com/thomasfaingnaert/vim-lsp-ultisnips)
-2. [neosnippet.vim](https://github.com/Shougo/neosnippet.vim) together with [vim-lsp-neosnippet](https://github.com/thomasfaingnaert/vim-lsp-neosnippet)
+At the moment, you have following options:
+1. [vim-vsnip](https://github.com/hrsh7th/vim-vsnip) together with [vim-vsnip-integ](https://github.com/hrsh7th/vim-vsnip-integ)
+2. [UltiSnips](https://github.com/SirVer/ultisnips) together with [vim-lsp-ultisnips](https://github.com/thomasfaingnaert/vim-lsp-ultisnips)
+3. [neosnippet.vim](https://github.com/Shougo/neosnippet.vim) together with [vim-lsp-neosnippet](https://github.com/thomasfaingnaert/vim-lsp-neosnippet)
 
 For more information, refer to the readme and documentation of the respective plugins.
 
@@ -145,7 +146,7 @@ let g:lsp_signs_warning = {'text': '‼', 'icon': '/path/to/some/icon'} " icons 
 let g:lsp_signs_hint = {'icon': '/path/to/some/other/icon'} " icons require GUI
 ```
 
-Also two highlight groups for every sign group are defined (for example for LspError these are LspErrorText and LspErrorLine). By default, LspError text is highlighted using Error group, LspWarning is highlighted as Todo, others use Normal group. Line highlighting is not set by default. If your colorscheme of choise does not provide any of these, it is possible to clear them or link to some other group, like so:
+Also two highlight groups for every sign group are defined (for example for LspError these are LspErrorText and LspErrorHighlight). By default, LspError text is highlighted using Error group, LspWarning is highlighted as Todo, others use Normal group. Line highlighting is not set by default. If your colorscheme of choise does not provide any of these, it is possible to clear them or link to some other group, like so:
 
 ```viml
 highlight link LspErrorText GruvboxRedSign " requires gruvbox

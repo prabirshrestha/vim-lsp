@@ -20,6 +20,9 @@ CONTENTS                                                  *vim-lsp-contents*
       g:lsp_insert_text_enabled             |g:lsp_insert_text_enabled|
       g:lsp_text_edit_enabled               |g:lsp_text_edit_enabled|
       g:lsp_diagnostics_echo_cursor         |g:lsp_diagnostics_echo_cursor|
+      g:lsp_diagnostics_echo_delay          |g:lsp_diagnostics_echo_delay|
+      g:lsp_diagnostics_float_cursor         |g:lsp_diagnostics_float_cursor|
+      g:lsp_diagnostics_float_delay          |g:lsp_diagnostics_float_delay|
       g:lsp_signs_enabled                   |g:lsp_signs_enabled|
       g:lsp_signs_priority                  |g:lsp_signs_priority|
       g:lsp_signs_priority_map              |g:lsp_signs_priority_map|
@@ -46,6 +49,7 @@ CONTENTS                                                  *vim-lsp-contents*
       lsp#enable                            |lsp#enable()|
       lsp#disable                           |lsp#disable()|
       lsp#register_server                   |lsp#register_server()|
+      lsp#register_command                  |lsp#register_command()|
       lsp#stop_server                       |lsp#stop_server()|
       lsp#utils#find_nearest_parent_file_directory()
                               |lsp#utils#find_nearest_parent_file_directory()|
@@ -95,6 +99,7 @@ CONTENTS                                                  *vim-lsp-contents*
       lsp_server_init                       |lsp_server_init|
       lsp_server_exit                       |lsp_server_exit|
       lsp_buffer_enabled                    |lsp_buffer_enabled|
+      lsp_diagnostics_updated               |lsp_diagnostics_updated|
     Mappings                              |vim-lsp-mappings|
        <plug>(lsp-preview-close)            |<plug>(lsp-preview-close)|
        <plug>(lsp-preview-focus)            |<plug>(lsp-preview-focus)|
@@ -343,6 +348,42 @@ g:lsp_diagnostics_echo_cursor                *g:lsp_diagnostics_echo_cursor*
     Example: >
 	let g:lsp_diagnostics_echo_cursor = 1
 	let g:lsp_diagnostics_echo_cursor = 0
+
+g:lsp_diagnostics_echo_delay                *g:lsp_diagnostics_echo_delay*
+    Type: |Number|
+    Default: `500`
+
+    Delay milliseconds to echo diagnostic error for the current line to status. Requires
+    Enables echo of diagnostic error for the current line to status. Requires
+    |g:lsp_diagnostics_enabled| and |g:lsp_diagnostics_echo_cursor| set to 1.
+
+    Example: >
+	let g:lsp_diagnostics_echo_delay = 200
+	let g:lsp_diagnostics_echo_delay = 1000
+
+g:lsp_diagnostics_float_cursor                *g:lsp_diagnostics_float_cursor*
+    Type: |Number|
+    Default: `0`
+
+    Enables a floating window of diagnostic error for the current line to status. Requires
+    nvim_win_open() or popup_create is available, and |g:lsp_diagnostics_enabled| set to 1.
+
+    Example: >
+	let g:lsp_diagnostics_float_cursor = 1
+	let g:lsp_diagnostics_float_cursor = 0
+
+g:lsp_diagnostics_float_delay                *g:lsp_diagnostics_float_delay*
+    Type: |Number|
+    Default: `500`
+
+    Delay milliseconds to show diagnostic error for the current line to status
+    in a float window. Requires Enables float of diagnostic error for the
+    current line to status. Requires |g:lsp_diagnostics_enabled| and
+    |g:lsp_diagnostics_echo_cursor| set to 1.
+
+    Example: >
+	let g:lsp_diagnostics_echo_delay = 200
+	let g:lsp_diagnostics_echo_delay = 1000
 
 g:lsp_signs_enabled                                   *g:lsp_signs_enabled*
     Type: |Number|
@@ -709,7 +750,7 @@ The vim |dict| containing information about the server.
 
  * blacklist:
     optional
-    String array of filetypes to run the language server.
+    String array of filetypes not to run the language server.
 
     Example: >
 	'blacklist': ['javascript', 'typescript']
@@ -755,7 +796,7 @@ The vim |dict| containing information about the server.
 <
     Using the `config` key, you can also specify a custom 'typed word
     pattern', or a custom filter for completion items, see
-    |vim-lsp-typed_pattern| and |vim-lsp-completion-filter|.
+    |vim-lsp-completion-filter|.
 
     The following per-server configuration options are supported by vim-lsp.
 
@@ -791,28 +832,28 @@ The vim |dict| containing information about the server.
 	    Example: >
 		'config': { 'completion_item_kinds': {'26': 'type' } }
 <
-typed_pattern                                        *vim-lsp-typed_pattern*
+refresh_pattern                                    *vim-lsp-refresh_pattern*
     Type: |String| (|pattern|)
     Default: `'\k*$'`
 
-Vim-lsp will automatically detect the text you have typed so far when invoking
-completion. It does this by checking the textEdit's range of each completion
-item.
+Vim-lsp will automatically detect start column of completion so far when
+invoking completion. It does this by checking the textEdit's range of each
+completion item.
 
-If the language server doesn't use textEdits, you can use a |regexp| to
-determine what you have typed so far. The pattern is matched against the
-current line, from column 0 up until the cursor's position. Thus, |/$| means
-"current cursor position" in this context.
+You can use a |regexp| to determine what you want to start completion with
+matched text so far. The pattern is matched against the current line, from
+column 0 up until the cursor's position. Thus, |/$| means "current cursor
+position" in this context.
 
 For example: >
-	'config': { 'typed_pattern': '\k*$' }
+	'config': { 'refresh_pattern': '\k*$' }
 <
 This uses all characters in `'iskeyword'` in front of the cursor as typed
 word.
 
 This key is also used to align the completion menu: the completion menu is
 placed so its left border is at the column that matches the start of the
-`typed_pattern`.
+`refresh_pattern`.
 
 filter                                           *vim-lsp-completion-filter*
 
@@ -821,9 +862,7 @@ completion filter using the `filter` key in the server info's `config` |dict|.
 The value of the `filter` key is itself a |dict| containing at least a key
 `name`, which specifies which filter to use.
 
-For the meaning of "already typed text" in the remainder of this section, see
-|vim-lsp-typed_pattern|. The case (in)sensitivity of the matching is
-determined by |g:lsp_ignorecase|.
+The case (in)sensitivity of the matching is determined by |g:lsp_ignorecase|.
 
     Example: >
         'config': { 'filter': { 'name': 'none' } }
@@ -844,6 +883,41 @@ Note: After triggering completion with |i_CTRL-X_CTRL-O|, further filtering is
 only possible by adding to the already typed prefix (even if you're using the
 `contains` filter). If you'd like to retrigger the filtering, you will have to
 press CTRL-X CTRL-O again.
+
+
+lsp#register_command({command-name}, {callback})     *lsp#register_command()*
+
+Some language server expects handling custom command in the client.
+You can use this function to add custom command handler.
+
+{command-name} is unique id to specify command.
+{callback} is funcref that accepts below argument.
+>
+  callback({
+      'command': {
+          'command': string,
+          'arguments':  [...]
+      }
+  })
+<
+
+For example, the rust-analyzer expects the client handles some custom command as below example.
+>
+  function! s:rust_analyzer_apply_source_change(context)
+      let l:command = get(a:context, 'command', {})
+
+      let l:workspace_edit = get(l:command['arguments'][0], 'workspaceEdit', {})
+      if !empty(l:workspace_edit)
+          call lsp#utils#workspace_edit#apply_workspace_edit(l:workspace_edit)
+      endif
+
+      let l:cursor_position = get(l:command['arguments'][0], 'cursorPosition', {})
+      if !empty(l:cursor_position)
+          call cursor(lsp#utils#position#lsp_to_vim('%', l:cursor_position))
+      endif
+  endfunction
+  call lsp#register_command('rust-analyzer.applySourceChange', function('s:rust_analyzer_apply_source_change'))
+<
 
 lsp#stop_server({name-of-server})                        *lsp#stop_server()*
 
@@ -866,6 +940,22 @@ Get the status of a server.
 <
     Returns one of "unknown server", " "exited", "starting", "failed",
     "running", "not running".
+
+
+lsp#utils#position#lsp_to_vim({expr}, {position})  *lsp#utils#position#lsp_to_vim()*
+
+Convert LSP's positon to vim's pos ([lnum, col]).
+
+{expr} is same of bufname argument.
+{position} is LSP's position params.
+
+
+lsp#utils#position#vim_to_lsp({expr}, {pos})       *lsp#utils#position#vim_to_lsp()*
+
+Convert vim's pos to LSP's position ({ 'line': ..., 'character': ... }).
+
+{expr} is same of bufname argument.
+{pos} is vim's position params.
 
                             *lsp#utils#find_nearest_parent_file_directory()*
 lsp#utils#find_nearest_parent_file_directory({path}, {filename})
@@ -940,12 +1030,14 @@ LspDeclaration                                             *:LspDeclaration*
 
 Go to declaration. Useful for languages such as C/C++ where there is a clear
 distinction between declaration and definition.
+This accepts |<mods>|.
 
 Also see |:LspPeekDeclaration|.
 
 LspDefinition                                               *:LspDefinition*
 
 Go to definition.
+This accepts |<mods>|.
 
 Also see |:LspPeekDefinition|.
 
@@ -1054,6 +1146,7 @@ Jump to Previous warning diagnostics
 LspImplementation                                       *:LspImplementation*
 
 Find all implementation of interface.
+This accepts |<mods>|.
 
 Also see |:LspPeekImplementation|.
 
@@ -1076,6 +1169,7 @@ Also see |vim-lsp-semantic|.
 LspTypeDefinition                                       *:LspTypeDefinition*
 
 Go to the type definition.
+This accepts |<mods>|.
 
 LspTypeHierarchy                                       *:LspTypeHierarchy*
 
@@ -1146,6 +1240,20 @@ This autocommand is run after vim-lsp is enabled for the buffer. This event is
 triggered imediately when the buffer is currently active. If the buffer is not
 current active, the event will be triggered when the buffer will be active.
 
+lsp_diagnostics_updated                            *lsp_diagnostics_updated*
+
+This autocommand us run after every time after new diagnostics received and 
+processed by vim-lsp.
+>
+  function! DoSomething
+    echo lsp#get_buffer_diagnostics_counts()
+  endfunction
+
+  augroup OnLSP
+    autocmd!
+    autocmd User lsp_diagnostics_updated call DoSomething()
+  augroup END
+<
 
 ==============================================================================
 Mappings                                                  *vim-lsp-mappings*
@@ -1238,16 +1346,20 @@ To integrate snippets in vim-lsp, you will first have to install a third-party
 snippet plugin, and a plugin that integrates it in vim-lsp. At the moment,
 you have two options:
 
-1. UltiSnips and vim-lsp-ultisnips
+1. vim-vsnip
+https://github.com/hrsh7th/vim-vsnip
+https://github.com/hrsh7th/vim-vsnip-integ
+
+2. UltiSnips and vim-lsp-ultisnips
 https://github.com/SirVer/ultisnips
 https://github.com/thomasfaingnaert/vim-lsp-ultisnips
 
-2. neosnippet.vim and vim-lsp-neosnippet
+3. neosnippet.vim and vim-lsp-neosnippet
 https://github.com/Shougo/neosnippet.vim
 https://github.com/thomasfaingnaert/vim-lsp-neosnippet
 
-Refer to the readme and docs of vim-lsp-ultisnips and vim-lsp-neosnippet for
-more information and configuration options.
+Refer to the readme and docs of vim-vsnip, vim-lsp-ultisnips and vim-lsp-neosnippet
+for more information and configuration options.
 
 ==============================================================================
 Folding                                                    *vim-lsp-folding*
