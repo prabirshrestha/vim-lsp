@@ -18,6 +18,8 @@ function! lsp#ui#vim#diagnostics#handle_text_document_publish_diagnostics(server
     call lsp#ui#vim#highlights#set(a:server_name, a:data)
     call lsp#ui#vim#diagnostics#textprop#set(a:server_name, a:data)
     call lsp#ui#vim#signs#set(a:server_name, a:data)
+
+    doautocmd User lsp_diagnostics_updated
 endfunction
 
 function! lsp#ui#vim#diagnostics#force_refresh(bufnr) abort

@@ -99,6 +99,7 @@ CONTENTS                                                  *vim-lsp-contents*
       lsp_server_init                       |lsp_server_init|
       lsp_server_exit                       |lsp_server_exit|
       lsp_buffer_enabled                    |lsp_buffer_enabled|
+      lsp_diagnostics_updated               |lsp_diagnostics_updated|
     Mappings                              |vim-lsp-mappings|
        <plug>(lsp-preview-close)            |<plug>(lsp-preview-close)|
        <plug>(lsp-preview-focus)            |<plug>(lsp-preview-focus)|
@@ -1029,12 +1030,14 @@ LspDeclaration                                             *:LspDeclaration*
 
 Go to declaration. Useful for languages such as C/C++ where there is a clear
 distinction between declaration and definition.
+This accepts |<mods>|.
 
 Also see |:LspPeekDeclaration|.
 
 LspDefinition                                               *:LspDefinition*
 
 Go to definition.
+This accepts |<mods>|.
 
 Also see |:LspPeekDefinition|.
 
@@ -1149,6 +1152,7 @@ With '-wrap=0', stop wrapping around the top of file.
 LspImplementation                                       *:LspImplementation*
 
 Find all implementation of interface.
+This accepts |<mods>|.
 
 Also see |:LspPeekImplementation|.
 
@@ -1171,6 +1175,7 @@ Also see |vim-lsp-semantic|.
 LspTypeDefinition                                       *:LspTypeDefinition*
 
 Go to the type definition.
+This accepts |<mods>|.
 
 LspTypeHierarchy                                       *:LspTypeHierarchy*
 
@@ -1241,6 +1246,20 @@ This autocommand is run after vim-lsp is enabled for the buffer. This event is
 triggered imediately when the buffer is currently active. If the buffer is not
 current active, the event will be triggered when the buffer will be active.
 
+lsp_diagnostics_updated                            *lsp_diagnostics_updated*
+
+This autocommand us run after every time after new diagnostics received and 
+processed by vim-lsp.
+>
+  function! DoSomething
+    echo lsp#get_buffer_diagnostics_counts()
+  endfunction
+
+  augroup OnLSP
+    autocmd!
+    autocmd User lsp_diagnostics_updated call DoSomething()
+  augroup END
+<
 
 ==============================================================================
 Mappings                                                  *vim-lsp-mappings*

@@ -253,15 +253,18 @@ function! lsp#omni#default_get_vim_completion_item(item, ...) abort
     let l:complete_position = get(a:, 2, lsp#get_position())
 
     let l:word = ''
+    let l:expandable = v:false
     if get(a:item, 'insertTextFormat', -1) == 2 && !empty(get(a:item, 'insertText', ''))
         " if candidate is snippet, use insertText. But it may include
         " placeholder.
         let l:word = lsp#utils#make_valid_word(a:item['insertText'])
+        let l:expandable = l:word !=# a:item['insertText']
     elseif !empty(get(a:item, 'insertText', ''))
         " if plain-text insertText, use it.
         let l:word = a:item['insertText']
     elseif has_key(a:item, 'textEdit')
         let l:word = lsp#utils#make_valid_word(a:item['label'])
+        let l:expandable = l:word !=# a:item['textEdit']['newText']
     endif
     if !empty(l:word)
         let l:word = split(l:word, '\n')[0]
@@ -277,7 +280,7 @@ function! lsp#omni#default_get_vim_completion_item(item, ...) abort
 
     let l:completion = {
                 \ 'word': lsp#utils#_trim(l:word),
-                \ 'abbr': l:abbr,
+                \ 'abbr': l:abbr . (l:expandable ? '~' : ''),
                 \ 'menu': '',
                 \ 'info': '',
                 \ 'icase': 1,
@@ -335,7 +338,7 @@ endfunction
 " create item's user_data.
 "
 function! s:create_user_data(completion_item, server_name, complete_position) abort
-    let l:user_data_key = '{"vim-lsp/key' . '":"' . string(s:managed_user_data_key_base) . '"}'
+    let l:user_data_key = s:create_user_data_key(s:managed_user_data_key_base)
     let s:managed_user_data_map[l:user_data_key] = {
     \   'complete_position': a:complete_position,
     \   'server_name': a:server_name,
@@ -351,17 +354,35 @@ function! lsp#omni#get_managed_user_data_from_completed_item(completed_item) abo
         return {}
     endif
 
+    let l:user_data_string = get(a:completed_item, 'user_data', '')
+
     " Check managed user_data.
-    let l:user_data_key = get(a:completed_item, 'user_data', '')
-    if !has_key(s:managed_user_data_map, l:user_data_key)
-        return {}
+    if has_key(s:managed_user_data_map, l:user_data_string)
+        return s:managed_user_data_map[l:user_data_string]
     endif
 
-    return s:managed_user_data_map[l:user_data_key]
+    " Check json.
+    if stridx(l:user_data_string, '"vim-lsp/key"') != -1
+        try
+            let l:user_data = json_decode(l:user_data_string)
+            if has_key(l:user_data, 'vim-lsp/key')
+                let l:user_data_key = s:create_user_data_key(l:user_data['vim-lsp/key'])
+                if has_key(s:managed_user_data_map, l:user_data_key)
+                    return s:managed_user_data_map[l:user_data_key]
+                endif
+            endif
+        catch /.*/
+        endtry
+    endif
+    return {}
 endfunction
 
 function! lsp#omni#get_completion_item_kinds() abort
     return map(keys(s:default_completion_item_kinds), {idx, key -> str2nr(key)})
+endfunction
+
+function! s:create_user_data_key(base) abort
+    return '{"vim-lsp/key":"' . a:base . '"}'
 endfunction
 
 " }}}
