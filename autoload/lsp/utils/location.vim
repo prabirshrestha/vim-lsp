@@ -9,7 +9,7 @@ function! s:open_location(path, line, col, ...) abort
         if l:buffer == bufnr('%')
             let l:cmd = ''
         else
-            let l:cmd = l:buffer !=# -1 ? 'b ' . l:buffer : 'edit ' . fnameescape(a:path) . ' | '
+            let l:cmd = (l:buffer !=# -1 ? 'b ' . l:buffer : 'edit ' . fnameescape(a:path)) . ' | '
         endif
     else
         let l:cmd = l:mods . ' ' . (l:buffer !=# -1 ? 'sb ' . l:buffer : 'split ' . fnameescape(a:path)) . ' | '
