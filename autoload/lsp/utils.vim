@@ -332,7 +332,6 @@ endfunction
 " parse command options like "-key" or "-key=value"
 function! lsp#utils#parse_command_options(params) abort
     let l:result = {}
-    echomsg a:params
     for l:param in a:params
         let l:match = matchlist(l:param, '-\{1,2}\zs\([^=]*\)\(=\(.*\)\)\?\m')
         let l:result[l:match[1]] = l:match[3]
