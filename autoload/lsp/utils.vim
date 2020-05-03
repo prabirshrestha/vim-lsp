@@ -3,7 +3,7 @@ function! lsp#utils#is_file_uri(uri) abort
 endfunction
 
 function! lsp#utils#is_remote_uri(uri) abort
-    return a:uri =~# '^\w\+::' || a:uri =~# '^\w\+://'
+    return a:uri =~# '^\w\+::' || a:uri =~# '^[a-z][a-z0-9+.-]*://'
 endfunction
 
 function! s:decode_uri(uri) abort
@@ -42,7 +42,7 @@ endfunction
 
 if has('win32') || has('win64')
     function! lsp#utils#path_to_uri(path) abort
-        if empty(a:path)
+        if empty(a:path) || lsp#utils#is_remote_uri(a:path)
             return a:path
         else
             " You must not encode the volume information on the path if
@@ -58,7 +58,7 @@ if has('win32') || has('win64')
     endfunction
 else
     function! lsp#utils#path_to_uri(path) abort
-        if empty(a:path)
+        if empty(a:path) || lsp#utils#is_remote_uri(a:path)
             return a:path
         else
             return s:encode_uri(a:path, 0, 'file://')

@@ -8,7 +8,7 @@ CONTENTS                                                  *vim-lsp-contents*
     Install                               |vim-lsp-install|
     Language Servers                      |vim-lsp-language-servers|
       Configure                             |vim-lsp-configure|
-      vim-lsp-settings                      |vim-lsp-settings|
+      vim-lsp-settings                      |vim-lsp-settings_plugin|
       Wiki                                  |vim-lsp-configure-wiki|
     Options                               |vim-lsp-options|
       g:lsp_diagnostics_enabled             |g:lsp_diagnostics_enabled|
@@ -174,7 +174,7 @@ on pyls (https://github.com/palantir/python-language-server)
             autocmd User lsp_buffer_enabled call s:on_lsp_buffer_enabled()
        augroup END
 <
-VIM-LSP-SETTINGS                                         *vim-lsp-settings*
+VIM-LSP-SETTINGS                                         *vim-lsp-settings_plugin*
 Refer to [vim-lsp-settings](https://github.com/mattn/vim-lsp-settings) on how
 to automatically register various language servers.
 >
@@ -528,6 +528,16 @@ g:lsp_get_vim_completion_item               *g:lsp_get_vim_completion_item*
 
     Note: You can reuse functionality provided by vim-lsp by calling
     `lsp#omni#default_get_vim_completion_item` from within your function.
+
+    Example: >
+    function! LspGetCompletionItem(item, ...) abort
+        let l:DefaultFn = function('lsp#omni#default_get_vim_completion_item')
+        let l:completion = call(l:DefaultFn, [a:item] + a:000)
+        " customize completion item here
+        return l:completion
+    endfunction
+
+    let g:lsp_get_vim_completion_item = [function('LspGetCompletionItem')]
 
 g:lsp_get_supported_capabilities         *g:lsp_get_supported_capabilities*
     Type: |List|
