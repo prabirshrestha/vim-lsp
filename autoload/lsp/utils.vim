@@ -329,3 +329,12 @@ function! lsp#utils#_split_by_eol(text) abort
     return split(a:text, '\r\n\|\r\|\n', v:true)
 endfunction
 
+" parse command options like "-key" or "-key=value"
+function! lsp#utils#parse_command_options(params) abort
+    let l:result = {}
+    for l:param in a:params
+        let l:match = matchlist(l:param, '-\{1,2}\zs\([^=]*\)\(=\(.*\)\)\?\m')
+        let l:result[l:match[1]] = l:match[3]
+    endfor
+    return l:result
+endfunction
