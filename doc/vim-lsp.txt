@@ -529,6 +529,16 @@ g:lsp_get_vim_completion_item               *g:lsp_get_vim_completion_item*
     Note: You can reuse functionality provided by vim-lsp by calling
     `lsp#omni#default_get_vim_completion_item` from within your function.
 
+    Example: >
+    function! LspGetCompletionItem(item, ...) abort
+        let l:DefaultFn = function('lsp#omni#default_get_vim_completion_item')
+        let l:completion = call(l:DefaultFn, [a:item] + a:000)
+        " customize completion item here
+        return l:completion
+    endfunction
+
+    let g:lsp_get_vim_completion_item = [function('LspGetCompletionItem')]
+
 g:lsp_get_supported_capabilities         *g:lsp_get_supported_capabilities*
     Type: |List|
     Default: `[function('lsp#default_get_supported_capabilities')]`
