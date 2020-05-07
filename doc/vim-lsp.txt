@@ -8,7 +8,7 @@ CONTENTS                                                  *vim-lsp-contents*
     Install                               |vim-lsp-install|
     Language Servers                      |vim-lsp-language-servers|
       Configure                             |vim-lsp-configure|
-      vim-lsp-settings                      |vim-lsp-settings|
+      vim-lsp-settings                      |vim-lsp-settings_plugin|
       Wiki                                  |vim-lsp-configure-wiki|
     Options                               |vim-lsp-options|
       g:lsp_diagnostics_enabled             |g:lsp_diagnostics_enabled|
@@ -174,7 +174,7 @@ on pyls (https://github.com/palantir/python-language-server)
             autocmd User lsp_buffer_enabled call s:on_lsp_buffer_enabled()
        augroup END
 <
-VIM-LSP-SETTINGS                                         *vim-lsp-settings*
+VIM-LSP-SETTINGS                                         *vim-lsp-settings_plugin*
 Refer to [vim-lsp-settings](https://github.com/mattn/vim-lsp-settings) on how
 to automatically register various language servers.
 >
@@ -528,6 +528,16 @@ g:lsp_get_vim_completion_item               *g:lsp_get_vim_completion_item*
 
     Note: You can reuse functionality provided by vim-lsp by calling
     `lsp#omni#default_get_vim_completion_item` from within your function.
+
+    Example: >
+    function! LspGetCompletionItem(item, ...) abort
+        let l:DefaultFn = function('lsp#omni#default_get_vim_completion_item')
+        let l:completion = call(l:DefaultFn, [a:item] + a:000)
+        " customize completion item here
+        return l:completion
+    endfunction
+
+    let g:lsp_get_vim_completion_item = [function('LspGetCompletionItem')]
 
 g:lsp_get_supported_capabilities         *g:lsp_get_supported_capabilities*
     Type: |List|
@@ -1083,21 +1093,24 @@ Gets the hover information and displays it in the |preview-window|.
    automatically on cursormove if not focused and can be closed with <esc> if
    focused.
 
-LspNextDiagnostic                                       *:LspNextDiagnostic*
+LspNextDiagnostic [-wrap=0]                              *:LspNextDiagnostic*
 
 Jump to Next diagnostics including error, warning, information, hint.
+With '-wrap=0', stop wrapping around the end of file.
 
-LspNextError                                                 *:LspNextError*
+LspNextError [-wrap=0]                                 *:LspNextError*
 
 Jump to Next err diagnostics
+With '-wrap=0', stop wrapping around the end of file.
 
 LspNextReference                                         *:LspNextReference*
 
 Jump to the next reference of the symbol under cursor.
 
-LspNextWarning                                              :LspNextWarning*
+LspNextWarning [-wrap=0]                              :LspNextWarning*
 
 Jump to Next warning diagnostics
+With '-wrap=0', stop wrapping around the end of file.
 
 LspPeekDeclaration                                     *:LspPeekDeclaration*
 
@@ -1127,21 +1140,24 @@ Like |:LspTypeDefinition|, but opens the type definition in the
 
 Also see |g:lsp_peek_alignment| and |g:lsp_preview_float|.
 
-LspPreviousDiagnostic                               *:LspPreviousDiagnostic*
+LspPreviousDiagnostic [-wrap=0]               *:LspPreviousDiagnostic*
 
 Jump to Previous diagnostics including error, warning, information, hint.
+With '-wrap=0', stop wrapping around the top of file.
 
-LspPreviousError                                         *:LspPreviousError*
+LspPreviousError [-wrap=0]                         *:LspPreviousError*
 
 Jump to Previous err diagnostics
+With '-wrap=0', stop wrapping around the top of file.
 
 LspPreviousReference                                 *:LspPreviousReference*
 
 Jump to the previous reference of the symbol under cursor.
 
-LspPreviousWarning                                     *:LspPreviousWarning*
+LspPreviousWarning [-wrap=0]                     *:LspPreviousWarning*
 
 Jump to Previous warning diagnostics
+With '-wrap=0', stop wrapping around the top of file.
 
 LspImplementation                                       *:LspImplementation*
 
@@ -1273,15 +1289,21 @@ Available plug mappings are following:
   nnoremap <plug>(lsp-document-diagnostics)
   nnoremap <plug>(lsp-hover)
   nnoremap <plug>(lsp-next-diagnostic)
+  nnoremap <plug>(lsp-next-diagnostic-nowrap)
   nnoremap <plug>(lsp-next-error)
+  nnoremap <plug>(lsp-next-error-nowrap)
   nnoremap <plug>(lsp-next-reference)
   nnoremap <plug>(lsp-next-warning)
+  nnoremap <plug>(lsp-next-warning-nowrap)
   nnoremap <plug>(lsp-preview-close)
   nnoremap <plug>(lsp-preview-focus)
   nnoremap <plug>(lsp-previous-diagnostic)
+  nnoremap <plug>(lsp-previous-diagnostic-nowrap)
   nnoremap <plug>(lsp-previous-error)
+  nnoremap <plug>(lsp-previous-error-nowrap)
   nnoremap <plug>(lsp-previous-reference)
   nnoremap <plug>(lsp-previous-warning)
+  nnoremap <plug>(lsp-previous-warning-nowrap)
   nnoremap <plug>(lsp-references)
   nnoremap <plug>(lsp-rename)
   nnoremap <plug>(lsp-workspace-symbol)
