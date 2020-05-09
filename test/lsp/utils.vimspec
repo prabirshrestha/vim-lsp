@@ -46,6 +46,40 @@ Describe lsp#utils
         End
     End
 
+    Describe lsp#utils#path_to_uri
+        It should return uri from path (Windows)
+            if !has('win32')
+              Skip This tests is not for UNIX
+            endif
+            let tests = [
+            \  {'path': 'C:\path\to\the\file.txt', 'uri': 'file:///C:/path/to/the/file.txt'},
+            \  {'path': 'C:\path\to\the\file+name.txt', 'uri': 'file:///C:/path/to/the/file%2Bname.txt'},
+            \  {'path': 'C:\path\to\the\file name.txt', 'uri': 'file:///C:/path/to/the/file%20name.txt'},
+            \  {'path': 'http://foo/bar.txt', 'uri': 'http://foo/bar.txt'},
+            \]
+            for test in tests
+                let uri = lsp#utils#path_to_uri(test.path)
+                Assert Equals(uri, test.uri)
+            endfor
+        End
+
+        It should return uri from path (UNIX)
+            if has('win32')
+              Skip This tests is not for Windows
+            endif
+            let tests = [
+            \  {'path': '/path/to/the/file.txt', 'uri': 'file:///path/to/the/file.txt'},
+            \  {'path': '/path/to/the/file+name.txt', 'uri': 'file:///path/to/the/file%2Bname.txt'},
+            \  {'path': '/path/to/the/file name.txt', 'uri': 'file:///path/to/the/file%20name.txt'},
+            \  {'path': 'http://foo/bar.txt', 'uri': 'http://foo/bar.txt'},
+            \]
+            for test in tests
+                let uri = lsp#utils#path_to_uri(test.path)
+                Assert Equals(uri, test.uri)
+            endfor
+        End
+    End
+
     Describe lsp#utils#find_nearest_parent_file_directory
         It should return the root directory if it is found
             let tests = [

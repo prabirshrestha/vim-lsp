@@ -7,20 +7,36 @@ let s:severity_sign_names_mapping = {
     \ 4: 'LspHint',
     \ }
 
-if !hlexists('LspErrorText')
-    highlight link LspErrorText Error
+if !hlexists('LspErrorVirtual')
+  if !hlexists('LspErrorText')
+    highlight link LspErrorVirtual Error
+  else
+    highlight link LspErrorVirtual LspErrorText
+  endif
 endif
 
-if !hlexists('LspWarningText')
-    highlight link LspWarningText Todo
+if !hlexists('LspWarningVirtual')
+  if !hlexists('LspWarningText')
+    highlight link LspWarningVirtual Todo
+  else
+    highlight link LspWarningVirtual LspWarningText
+  endif
 endif
 
-if !hlexists('LspInformationText')
-    highlight link LspInformationText Normal
+if !hlexists('LspInformationVirtual')
+  if !hlexists('LspInformationText')
+    highlight link LspInformationVirtual Normal
+  else
+    highlight link LspInformationVirtual LspInformationText
+  endif
 endif
 
-if !hlexists('LspHintText')
-    highlight link LspHintText Normal
+if !hlexists('LspHintVirtual')
+  if !hlexists('LspHintText')
+    highlight link LspHintVirtual Normal
+  else
+    highlight link LspHintVirtual LspHintText
+  endif
 endif
 
 function! lsp#ui#vim#virtual#enable() abort
@@ -80,7 +96,7 @@ function! s:place_virtual(server_name, path, diagnostics) abort
             let l:line = l:item['range']['start']['line']
 
             let l:name = get(s:severity_sign_names_mapping, l:item['severity'], 'LspError')
-            let l:hl_name = l:name . 'Text'
+            let l:hl_name = l:name . 'Virtual'
             call nvim_buf_set_virtual_text(l:bufnr, l:ns, l:line,
                         \ [[g:lsp_virtual_text_prefix . l:item['message'], l:hl_name]], {})
         endfor
