@@ -428,7 +428,12 @@ g:lsp_virtual_text_enabled                      *g:lsp_virtual_text_enabled*
     Default: `1` for neovim 0.3+
 
     Enables virtual text to be shown next to diagnostic errors. Requires
-    NeoVim with version 0.3 or newer.
+    NeoVim with version 0.3 or newer.  Virtual text uses the same highlight
+    groups used for signs (eg LspErrorText), but can be uniquely defined if
+    you want to have different highlight groups for signs and virtual text.
+    To set unique virtual text highlighting, you can set or link
+    `LspErrorVirtual`, `LspWarningVirtual`, `LspInformationVirtual` and
+    `LspHintVirtual` highlight groups.
 
     Example: >
 	let g:lsp_virtual_text_enabled = 1
@@ -1258,7 +1263,7 @@ current active, the event will be triggered when the buffer will be active.
 
 lsp_diagnostics_updated                            *lsp_diagnostics_updated*
 
-This autocommand us run after every time after new diagnostics received and 
+This autocommand us run after every time after new diagnostics received and
 processed by vim-lsp.
 >
   function! DoSomething
