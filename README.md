@@ -146,7 +146,7 @@ let g:lsp_signs_warning = {'text': '‼', 'icon': '/path/to/some/icon'} " icons 
 let g:lsp_signs_hint = {'icon': '/path/to/some/other/icon'} " icons require GUI
 ```
 
-Also two highlight groups for every sign group are defined (for example for LspError these are LspErrorText and LspErrorHighlight). By default, LspError text is highlighted using Error group, LspWarning is highlighted as Todo, others use Normal group. Line highlighting is not set by default. If your colorscheme of choise does not provide any of these, it is possible to clear them or link to some other group, like so:
+Also three highlight groups for every sign group are defined (for example for LspError these are LspErrorText, LspErrorVirtual, and LspErrorHighlight). By default, LspError text is highlighted using Error group, LspWarning is highlighted as Todo, others use Normal group. Virtual text will by default use the Text highlight group, for example for LspErrorVirtual will default to LspErrorText. Line highlighting is not set by default. If your colorscheme of choice does not provide any of these, it is possible to clear them or link to some other group, like so:
 
 ```viml
 highlight link LspErrorText GruvboxRedSign " requires gruvbox
