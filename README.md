@@ -31,6 +31,9 @@ endif
 function! s:on_lsp_buffer_enabled() abort
     setlocal omnifunc=lsp#complete
     setlocal signcolumn=yes
+    if exists('+tagfunc')
+        setlocal tagfunc=lsp#tagfunc
+    endif
     nmap <buffer> gd <plug>(lsp-definition)
     nmap <buffer> <f2> <plug>(lsp-rename)
     " refer to doc to add more commands
