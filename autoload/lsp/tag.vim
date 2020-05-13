@@ -4,33 +4,6 @@ function! s:not_supported(what) abort
     call lsp#log(a:what . ' not supported for ' . &filetype)
 endfunction
 
-" polyfill for the neovim wait function
-function! s:wait(timeout, condition, ...) abort
-    if exists('*wait')
-        return call('wait', extend([a:timeout, a:condition], a:000))
-    endif
-
-    try
-        let l:timeout = a:timeout / 1000.0
-        let l:interval = get(a:000, 0, 200)
-        let l:Condition = a:condition
-        if type(l:Condition) != v:t_func
-            let l:Condition = function('eval', l:Condition)
-        endif
-        let l:start = reltime()
-        while l:timeout < 0 || reltimefloat(reltime(l:start)) < l:timeout
-            if l:Condition()
-                return 0
-            endif
-
-            execute 'sleep ' . l:interval . 'm'
-        endwhile
-        return -1
-    catch /^Vim:Interrupt$/
-        return -2
-    endtry
-endfunction
-
 function! s:location_to_tag(loc) abort
     if has_key(a:loc, 'targetUri')
         let l:uri = a:loc['targetUri']
@@ -176,9 +149,7 @@ function! lsp#tag#tagfunc(pattern, flags, info) abort
         " No supported methods so use builtin tag source
         return v:null
     endif
-    while s:wait(-1, {-> l:ctx['counter'] == 0}) == -3
-        continue " ignore spurious internal error
-    endwhile
+    call lsp#utils#_wait(-1, {-> l:ctx['counter'] == 0}, 50)
     call sort(l:ctx['list'], function('s:compare_tags', [a:info['buf_ffname']]))
     return l:ctx['list']
 endfunction
