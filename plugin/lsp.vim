@@ -3,6 +3,8 @@ if exists('g:lsp_loaded') || !exists('*json_encode') || !has('timers') || !has('
 endif
 let g:lsp_loaded = 1
 
+let g:lsp_use_lua = get(g:, 'lsp_use_lua', has('nvim-0.5.0') || (has('lua') && has('patch-8.2.0782')))
+
 let g:lsp_auto_enable = get(g:, 'lsp_auto_enable', 1)
 let g:lsp_async_completion = get(g:, 'lsp_async_completion', 0)
 let g:lsp_log_file = get(g:, 'lsp_log_file', '')
