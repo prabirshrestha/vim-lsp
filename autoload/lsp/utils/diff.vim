@@ -6,7 +6,69 @@
 " definition of `TextDocumentContentChangeEvent`.
 "
 " Finds a single change between the common prefix, and common postfix.
+let s:lua_initialized = 0
+
+function! s:init_lua() abort
+    let s:lua_initialized = 1
+
+    lua <<EOF
+    if vimlsp == nil then vimlsp = {} end
+    if vimlsp.utils == nil then vimlsp.utils = {} end
+    if vimlsp.utils.diff == nil then vimlsp.utils.diff = {} end
+
+    local M = vimlsp.utils.diff
+
+    local function first_difference(old, new)
+        local line_count = math.min(#old, #new)
+        if line_count == 0 then
+            return 0, 0
+        end
+        local i = 0
+        while i < line_count do
+            if old[i] ~= new[i] then
+                break
+            end
+            i = i + 1
+        end
+        if i >= line_count then
+            return line_count - 1, vim.fn.strchars(old[line_count - 1])
+        end
+        local old_line = old[i]
+        local new_line = new[i]
+        local length = math.min(vim.fn.strchars(old_line), vim.fn.strchars(new_line))
+        local j = 0
+        while j < length do
+            if vim.fn.strgetchar(old_line, j) ~= vim.fn.strgetchar(new_line, j) then
+                break
+            end
+            j = j + 1
+        end
+        return i, j
+    end
+
+    function M.compute(old, new)
+        local start_line, start_char = first_difference(old, new)
+    end
+EOF
+endfunction
+
 function! lsp#utils#diff#compute(old, new) abort
+    if g:lsp_use_lua
+        if !s:lua_initialized
+            call s:init_lua()
+        endif
+        if has('nvim')
+            lua vimlsp.utils.diff.compute(vim.api.nvim_eval('a:old'), vim.api.nvim_eval('a:new'))
+        else
+            lua vimlsp.utils.diff.compute(vim.eval('a:old'), vim.eval('a:new'))
+        endif
+        return s:vim_compute(a:old, a:new) " once lua is ported remove this
+    else
+        return s:vim_compute(a:old, a:new)
+    endif
+endfunction
+
+function! s:vim_compute(old, new) abort
   let [l:start_line, l:start_char] = s:FirstDifference(a:old, a:new)
   let [l:end_line, l:end_char] =
       \ s:LastDifference(a:old[l:start_line :], a:new[l:start_line :], l:start_char)
