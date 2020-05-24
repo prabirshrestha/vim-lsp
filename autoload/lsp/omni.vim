@@ -250,7 +250,7 @@ endfunction
 
 function! lsp#omni#default_get_vim_completion_item(item, ...) abort
     let l:server_name = get(a:, 1, '')
-    let l:complete_position = get(a:, 2, lsp#get_position())
+    let l:complete_position = a:0 >= 2 ? a:2 : lsp#get_position()
 
     let l:word = ''
     let l:expandable = v:false
