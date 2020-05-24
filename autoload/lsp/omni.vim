@@ -182,6 +182,8 @@ endfunction
 
 function! lsp#omni#get_kind_text(completion_item, ...) abort
     let l:server = get(a:, 1, '')
+    let l:completion_item_kind = get(a:completion_item, 'kind', '')
+    if empty(l:completion_item_kind) | return '' | endif
     if empty(l:server) " server name
         let l:completion_item_kinds = s:default_completion_item_kinds
     else
@@ -196,8 +198,7 @@ function! lsp#omni#get_kind_text(completion_item, ...) abort
         let l:completion_item_kinds = s:completion_item_kinds[l:server]
     endif
 
-    return has_key(a:completion_item, 'kind') && has_key(l:completion_item_kinds, a:completion_item['kind'])
-                \ ? l:completion_item_kinds[a:completion_item['kind']] : ''
+    return get(l:completion_item_kinds, l:completion_item_kind, '')
 endfunction
 
 " auxiliary functions {{{
