@@ -10,6 +10,9 @@ let s:has_lua = has('lua') || has('nvim-0.4.0')
 
 if s:has_lua && !exists('s:lua')
   lua <<EOF
+  -- Returns a zero-based index of the last line that is different between
+  -- old and new. If old and new are not zero indexed, pass offset to indicate
+  -- the index base.
   function vimlsp_last_difference(old, new, offset, line_count)
     for i = 0, line_count - 1 do
       if old[#old - i + offset] ~= new[#new - i + offset] then
@@ -18,15 +21,16 @@ if s:has_lua && !exists('s:lua')
     end
     return -1 * line_count
   end
+  -- Returns a zero-based index of the first line that is different between
+  -- old and new. If old and new are not zero indexed, pass offset to indicate
+  -- the index base.
   function vimlsp_first_difference(old, new, offset, line_count)
-	local i = 0
-	while i < line_count + offset do
-	  if old[i + offset] ~= new[i + offset] then
-		break
-	  end
-	  i = i + 1
+    for i = 0, line_count - 1 do
+      if old[i + offset] ~= new[i + offset] then
+        return i
+      end
     end
-	return i
+    return line_count - 1
   end
 EOF
 endif
