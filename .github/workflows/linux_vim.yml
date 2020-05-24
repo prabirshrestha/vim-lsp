@@ -18,7 +18,7 @@ jobs:
         include:
           - name: vim-v82-x64
             os: ubuntu-latest
-            vim_version: 8.2.0037
+            vim_version: 8.2.0813
             glibc_version: 2.15
           - name: vim-v81-x64
             os: ubuntu-latest

@@ -6,6 +6,7 @@ CONTENTS                                                  *vim-lsp-contents*
 
     Introduction                          |vim-lsp-introduction|
     Install                               |vim-lsp-install|
+    Performance                           |vim-lsp-performance|
     Language Servers                      |vim-lsp-language-servers|
       Configure                             |vim-lsp-configure|
       vim-lsp-settings                      |vim-lsp-settings_plugin|
@@ -131,6 +132,25 @@ Install the async.vim and vim-lsp plugins. Below is a sample using plug.vim
 
 Note:  async.vim (https://github.com/prabirshrestha/async.vim) is required to
 use vim-lsp. It is used to normalize the jobs api between Vim 8 and Neovim.
+
+==============================================================================
+PERFORMANCE                                          *vim-lsp-performance*
+
+While VimScript is very portable it has performance implications. If you would
+like to improve performance make sure you have vim/neovim with lua support.
+Currently only diff algorithm uses lua internally if available.
+Following is th default value used to detect lua.
+>
+    let g:lsp_enable_lua = has('nvim-0.4.0') || (has('lua') && has('patch-8.2.0775'))
+
+Windows users can download the binaries from the following url and place
+lua53.dll in the `PATH` or besides `vim.exe` or `gvim.exe` executables.
+
+32 bit:
+http://downloads.sourceforge.net/luabinaries/lua-5.3.2_Win32_dllw4_lib.zip
+
+64bit:
+http://downloads.sourceforge.net/luabinaries/lua-5.3.2_Win64_dllw4_lib.zip
 
 ==============================================================================
 LANGUAGE SERVERS                                 *vim-lsp-language-servers*
