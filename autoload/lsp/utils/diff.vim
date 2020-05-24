@@ -6,7 +6,7 @@
 " definition of `TextDocumentContentChangeEvent`.
 "
 " Finds a single change between the common prefix, and common postfix.
-let s:has_lua = has('lua') || has('nvim-0.4.0')
+let s:has_lua = has('nvim-0.4.0') || (has('lua') && has('patch-8.2.0775'))
 
 function! s:init_lua() abort
   lua <<EOF
