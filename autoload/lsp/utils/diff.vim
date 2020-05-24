@@ -6,6 +6,32 @@
 " definition of `TextDocumentContentChangeEvent`.
 "
 " Finds a single change between the common prefix, and common postfix.
+let s:has_lua = has('lua') || has('nvim-0.4.0')
+
+if s:has_lua && !exists('s:lua')
+  lua <<EOF
+  function vimlsp_last_difference(old, new, offset, line_count)
+    for i = 0, line_count - 1 do
+      if old[#old - i + offset] ~= new[#new - i + offset] then
+        return -1 * i
+      end
+    end
+    return -1 * line_count
+  end
+  function vimlsp_first_difference(old, new, offset, line_count)
+	local i = 0
+	while i < line_count + offset do
+	  if old[i + offset] ~= new[i + offset] then
+		break
+	  end
+	  i = i + 1
+    end
+	return i
+  end
+EOF
+endif
+let s:lua = 1
+
 function! lsp#utils#diff#compute(old, new) abort
   let [l:start_line, l:start_char] = s:FirstDifference(a:old, a:new)
   let [l:end_line, l:end_char] =
@@ -31,11 +57,17 @@ endfunction
 function! s:FirstDifference(old, new) abort
   let l:line_count = min([len(a:old), len(a:new)])
   if l:line_count == 0 | return [0, 0] | endif
-  let l:i = 0
-  while l:i < l:line_count
-    if a:old[l:i] !=# a:new[l:i] | break | endif
-    let l:i += 1
-  endwhile
+  if g:lsp_use_lua && s:has_lua
+    let l:eval = has('nvim') ? 'vim.api.nvim_eval' : 'vim.eval'
+    let l:i = luaeval('vimlsp_first_difference('
+        \.l:eval.'("a:old"),'.l:eval.'("a:new"),'.l:eval.'("has(\"nvim\")"),'.l:line_count.')')
+  else
+    let i = 0
+    while i < line_count
+      if a:old[i] !=# a:new[i] | break | endif
+      let i += 1
+    endwhile
+  endif
   if l:i >= l:line_count
     return [l:line_count - 1, strchars(a:old[l:line_count - 1])]
   endif
@@ -53,11 +85,17 @@ endfunction
 function! s:LastDifference(old, new, start_char) abort
   let l:line_count = min([len(a:old), len(a:new)])
   if l:line_count == 0 | return [0, 0] | endif
-  let l:i = -1
-  while l:i >= -1 * l:line_count
-    if a:old[l:i] !=# a:new[l:i] | break | endif
-    let l:i -= 1
-  endwhile
+  if g:lsp_use_lua && s:has_lua
+    let l:eval = has('nvim') ? 'vim.api.nvim_eval' : 'vim.eval'
+    let l:i = luaeval('vimlsp_last_difference('
+        \.l:eval.'("a:old"),'.l:eval.'("a:new"),'.l:eval.'("has(\"nvim\")"),'.l:line_count.')')
+  else
+    let i = -1
+    while i >= -1 * line_count
+      if a:old[i] !=# a:new[i] | break | endif
+      let i -= 1
+    endwhile
+  endif
   if l:i <= -1 * l:line_count
     let l:i = -1 * l:line_count
     let l:old_line = strcharpart(a:old[l:i], a:start_char)
