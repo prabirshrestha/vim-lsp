@@ -8,7 +8,7 @@
 " Finds a single change between the common prefix, and common postfix.
 let s:has_lua = has('lua') || has('nvim-0.4.0')
 
-if s:has_lua && !exists('s:lua')
+function! s:init_lua() abort
   lua <<EOF
   -- Returns a zero-based index of the last line that is different between
   -- old and new. If old and new are not zero indexed, pass offset to indicate
@@ -33,8 +33,12 @@ if s:has_lua && !exists('s:lua')
     return line_count - 1
   end
 EOF
+	let s:lua = 1
+endfunction
+
+if s:has_lua && !exists('s:lua')
+  call s:init_lua()
 endif
-let s:lua = 1
 
 function! lsp#utils#diff#compute(old, new) abort
   let [l:start_line, l:start_char] = s:FirstDifference(a:old, a:new)
