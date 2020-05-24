@@ -71,7 +71,7 @@ function! s:FirstDifference(old, new) abort
         \.l:eval.'("a:old"),'.l:eval.'("a:new"),'.l:eval.'("has(\"nvim\")"),'.l:line_count.')')
   else
 	for l:i in range(l:line_count)
-	  if a:old[i] !=# a:new[i] | break | endif
+	  if a:old[l:i] !=# a:new[l:i] | break | endif
 	endfor
   endif
   if l:i >= l:line_count
@@ -97,7 +97,7 @@ function! s:LastDifference(old, new, start_char) abort
         \.l:eval.'("a:old"),'.l:eval.'("a:new"),'.l:eval.'("has(\"nvim\")"),'.l:line_count.')')
   else
 	for l:i in range(-1, -1 * l:line_count, -1)
-	  if a:old[i] !=# a:new[i] | break | endif
+	  if a:old[l:i] !=# a:new[l:i] | break | endif
 	endfor
   endif
   if l:i <= -1 * l:line_count
