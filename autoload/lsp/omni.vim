@@ -286,7 +286,7 @@ function! lsp#omni#default_get_vim_completion_item(item, ...) abort
                 \ 'icase': 1,
                 \ 'dup': 1,
                 \ 'empty': 1,
-                \ 'kind': lsp#omni#get_kind_text(a:item, l:server_name)
+                \ 'kind': g:lsp_get_vim_completion_item_set_kind ? lsp#omni#get_kind_text(a:item, l:server_name) : ''
                 \ }
 
     " check support user_data.
