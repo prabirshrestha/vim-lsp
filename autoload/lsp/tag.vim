@@ -17,9 +17,11 @@ function! s:location_to_tag(loc) abort
         return v:null
     endif
 
+    let l:path = lsp#utils#uri_to_path(l:uri)
+    let [l:line, l:col] = lsp#utils#position#lsp_to_vim(l:path, l:range['start'])
     return {
-        \ 'filename': lsp#utils#uri_to_path(l:uri),
-        \ 'cmd': string(l:range['start']['line'] + 1)
+        \ 'filename': l:path,
+        \ 'cmd': printf('/\%%%dl\%%%dc/', l:line, l:col)
         \ }
 endfunction
 
@@ -32,7 +34,7 @@ function! s:handle_locations(ctx, server, type, data) abort
 
         let l:list = a:ctx['list']
         let l:result = a:data['response']['result']
-        if type(l:result) != v:t_list
+        if type(l:result) != type([])
             let l:result = [l:result]
         endif
         for l:loc in l:result
@@ -62,7 +64,7 @@ function! s:handle_symbols(ctx, server, data) abort
 
             let l:tag['name'] = l:symbol['name']
             if has_key(l:symbol, 'kind')
-                let l:tag['kind'] = lsp#ui#vim#utils#get_symbol_text_from_kind(a:server, l:symbol['kind'])
+                let l:tag['kind'] = lsp#ui#vim#utils#_get_symbol_text_from_kind(a:server, l:symbol['kind'])
             endif
             call add(l:list, l:tag)
         endfor

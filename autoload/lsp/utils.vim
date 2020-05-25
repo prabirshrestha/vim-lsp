@@ -342,10 +342,10 @@ endfunction
 " polyfill for the neovim wait function
 if exists('*wait')
     function! lsp#utils#_wait(timeout, condition, ...) abort
-        if type(a:timeout) != v:t_number
+        if type(a:timeout) != type(0)
             return -3
         endif
-        if type(get(a:000, 0, 0)) != v:t_number
+        if type(get(a:000, 0, 0)) != type(0)
             return -3
         endif
         while 1
@@ -361,7 +361,7 @@ else
             let l:timeout = a:timeout / 1000.0
             let l:interval = get(a:000, 0, 200)
             let l:Condition = a:condition
-            if type(l:Condition) != v:t_func
+            if type(l:Condition) != type(function('eval'))
                 let l:Condition = function('eval', l:Condition)
             endif
             let l:start = reltime()

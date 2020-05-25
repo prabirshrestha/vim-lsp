@@ -44,7 +44,7 @@ function! s:symbols_to_loc_list_children(server, path, list, symbols, depth) abo
             \ 'filename': a:path,
             \ 'lnum': l:line,
             \ 'col': l:col,
-            \ 'text': lsp#ui#vim#utils#get_symbol_text_from_kind(a:server, l:symbol['kind']) . ' : ' . printf('%' . a:depth. 's', '  ') . l:symbol['name'],
+            \ 'text': lsp#ui#vim#utils#_get_symbol_text_from_kind(a:server, l:symbol['kind']) . ' : ' . printf('%' . a:depth. 's', '  ') . l:symbol['name'],
             \ })
         if has_key(l:symbol, 'children') && !empty(l:symbol['children'])
             call s:symbols_to_loc_list_children(a:server, a:path, a:list, l:symbol['children'], a:depth + 1)
@@ -72,7 +72,7 @@ function! lsp#ui#vim#utils#symbols_to_loc_list(server, result) abort
                         \ 'filename': l:path,
                         \ 'lnum': l:line,
                         \ 'col': l:col,
-                        \ 'text': lsp#ui#vim#utils#get_symbol_text_from_kind(a:server, l:symbol['kind']) . ' : ' . l:symbol['name'],
+                        \ 'text': lsp#ui#vim#utils#_get_symbol_text_from_kind(a:server, l:symbol['kind']) . ' : ' . l:symbol['name'],
                         \ })
                 endif
             else
@@ -84,7 +84,7 @@ function! lsp#ui#vim#utils#symbols_to_loc_list(server, result) abort
                         \ 'filename': l:path,
                         \ 'lnum': l:line,
                         \ 'col': l:col,
-                        \ 'text': lsp#ui#vim#utils#get_symbol_text_from_kind(a:server, l:symbol['kind']) . ' : ' . l:symbol['name'],
+                        \ 'text': lsp#ui#vim#utils#_get_symbol_text_from_kind(a:server, l:symbol['kind']) . ' : ' . l:symbol['name'],
                         \ })
                     if has_key(l:symbol, 'children') && !empty(l:symbol['children'])
                         call s:symbols_to_loc_list_children(a:server, l:path, l:list, l:symbol['children'], 1)
@@ -135,7 +135,7 @@ function! lsp#ui#vim#utils#diagnostics_to_loc_list(result) abort
     return l:list
 endfunction
 
-function! lsp#ui#vim#utils#get_symbol_text_from_kind(server, kind) abort
+function! lsp#ui#vim#utils#_get_symbol_text_from_kind(server, kind) abort
     if !has_key(s:symbol_kinds, a:server)
         let l:server_info = lsp#get_server_info(a:server)
         if has_key (l:server_info, 'config') && has_key(l:server_info['config'], 'symbol_kinds')
