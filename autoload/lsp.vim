@@ -901,6 +901,10 @@ function! lsp#complete(...) abort
     return call('lsp#omni#complete', a:000)
 endfunction
 
+function! lsp#tagfunc(...) abort
+    return call('lsp#tag#tagfunc', a:000)
+endfunction
+
 let s:didchange_queue = []
 let s:didchange_timer = -1
 

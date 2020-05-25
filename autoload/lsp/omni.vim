@@ -82,9 +82,7 @@ function! lsp#omni#complete(findstart, base) abort
             return exists('v:none') ? v:none : []
         else
             " wait for retrieve textDocument/completion response and then call `s:display_completions` explicitly.
-            while s:completion['status'] is# s:completion_status_pending && !complete_check()
-                sleep 10m
-            endwhile
+            call lsp#utils#_wait(-1, {-> s:completion['status'] isnot# s:completion_status_pending || complete_check()}, 10)
             call timer_start(0, { timer -> s:display_completions(timer, l:info) })
 
             return exists('v:none') ? v:none : []

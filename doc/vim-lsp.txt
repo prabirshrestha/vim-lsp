@@ -47,6 +47,7 @@ CONTENTS                                                  *vim-lsp-contents*
       g:lsp_text_document_did_save_delay    |g:lsp_text_document_did_save_delay|
       g:lsp_snippet_expand                  |g:lsp_snippet_expand|
       g:lsp_completion_resolve_timeout      |g:lsp_completion_resolve_timeout|
+      g:lsp_tagfunc_source_methods          |g:lsp_tagfunc_source_methods|
     Functions                             |vim-lsp-functions|
       lsp#enable                            |lsp#enable()|
       lsp#disable                           |lsp#disable()|
@@ -109,6 +110,7 @@ CONTENTS                                                  *vim-lsp-contents*
     Autocomplete                          |vim-lsp-autocomplete|
       omnifunc                              |vim-lsp-omnifunc|
       asyncomplete.vim                      |vim-lsp-asyncomplete|
+    Tagfunc                               |vim-lsp-tagfunc|
     Snippets                              |vim-lsp-snippets|
     Folding                               |vim-lsp-folding|
     Semantic highlighting                 |vim-lsp-semantic|
@@ -691,6 +693,13 @@ g:lsp_completion_resolve_timeout         *g:lsp_completion_resolve_timeout*
 
     The `completionItem/resolve` request's timeout value.
     If your vim freeze at `CompleteDone`, you can set this value to 0.
+
+g:lsp_tagfunc_source_methods                 *g:lsp_tagfunc_source_methods*
+    Type: |List|
+    Default: `['definition', 'declaration', 'implementation', 'typeDefinition']`
+
+    The LSP methods to call to get symbols for tag lookup. See
+    |vim-lsp-tagfunc|.
 
 ==============================================================================
 FUNCTIONS                                               *vim-lsp-functions*
@@ -1398,6 +1407,15 @@ Example: >
     Plug 'prabirshrestha/asyncomplete-lsp.vim'
 
 For additional configuration refer to asyncomplete.vim docs.
+
+==============================================================================
+Tagfunc                                                    *vim-lsp-tagfunc*
+
+vim-lsp can integrate with vim's native tag functionality for navigating code
+using the |'tagfunc'| option (requires vim/neovim with patch-8.1.1228).
+
+    Example: >
+	autocmd FileType typescript setlocal tagfunc=lsp#tagfunc
 
 ==============================================================================
 Snippets                                                  *vim-lsp-snippets*
