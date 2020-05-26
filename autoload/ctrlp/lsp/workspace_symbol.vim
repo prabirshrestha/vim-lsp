@@ -19,7 +19,9 @@ function! ctrlp#lsp#workspace_symbol#id() abort
 endfunction
 
 let s:reqid = 0
+let s:items = []
 function! ctrlp#lsp#workspace_symbol#init() abort
+    return s:items
 endfunction
 
 function! s:clear_timer() abort
@@ -40,14 +42,15 @@ function! s:search(...) abort
     let l:input = ctrlp#input()
 
     if empty(l:input)
-        call ctrlp#set([])
+        let s:items = []
+        call ctrlp#setlines()
         call ctrlp#update()
         return
     endif
 
     let l:buf = bufnr('%') - 1
     let l:servers = filter(lsp#get_whitelisted_servers(l:buf), 'lsp#capabilities#has_workspace_symbol_provider(v:val)')
-    let l:ctx = { 'reqid': s:reqid, 'items': [] }
+    let l:ctx = { 'reqid': s:reqid }
     echom printf('Searching for "%s"', l:input)
     for l:server in l:servers
         call lsp#send_request(l:server, {
@@ -71,13 +74,14 @@ function! s:handle_results(server, ctx, data) abort
     endif
     let l:list = lsp#ui#vim#utils#symbols_to_loc_list(a:server, a:data)
     for l:item in l:list
-        call add(a:ctx['items'], printf('%s     %s', l:item['text'], l:item['filename']))
+        call add(s:items, printf('%s     %s', l:item['text'], l:item['filename']))
     endfor
-    call ctrlp#set(a:ctx['items'])
+    call ctrlp#setlines()
     call ctrlp#update()
 endfunction
 
 function! ctrlp#lsp#workspace_symbol#exit() abort
+    let s:items = []
     call s:clear_timer()
 endfunction
 
