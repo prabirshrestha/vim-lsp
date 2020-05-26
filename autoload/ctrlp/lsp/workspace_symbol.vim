@@ -4,7 +4,7 @@ endif
 let g:ctrlp_lsp_workspace_symbol_loaded = 1
 
 call add(g:ctrlp_ext_vars, {
-    \ 'init': 'ctrlp#lsp#workspace_symbol#init()',
+    \ 'init': 'ctrlp#lsp#workspace_symbol#init(s:crbufnr)',
     \ 'search': 'ctrlp#lsp#workspace_symbol#search()',
     \ 'accept': 'ctrlp#lsp#workspace_symbol#accept',
     \ 'exit': 'ctrlp#lsp#workspace_symbol#exit()',
@@ -20,7 +20,8 @@ endfunction
 
 let s:reqid = 0
 let s:items = []
-function! ctrlp#lsp#workspace_symbol#init() abort
+function! ctrlp#lsp#workspace_symbol#init(bufnr) abort
+    if !exists('s:bufnr') | let s:bufnr = a:bufnr | endif
     return s:items
 endfunction
 
@@ -48,13 +49,12 @@ function! s:search(...) abort
         return
     endif
 
-    let l:buf = bufnr('%') - 1
-    let l:servers = filter(lsp#get_whitelisted_servers(l:buf), 'lsp#capabilities#has_workspace_symbol_provider(v:val)')
+    let l:servers = filter(lsp#get_whitelisted_servers(s:bufnr), 'lsp#capabilities#has_workspace_symbol_provider(v:val)')
     let l:ctx = { 'reqid': s:reqid }
     echom printf('Searching for "%s"', l:input)
     for l:server in l:servers
         call lsp#send_request(l:server, {
-            \ 'bufnr': l:buf,
+            \ 'bufnr': s:bufnr,
             \ 'method': 'workspace/symbol',
             \ 'params': {
             \   'query': l:input,
@@ -82,6 +82,7 @@ endfunction
 
 function! ctrlp#lsp#workspace_symbol#exit() abort
     let s:items = []
+    unlet s:bufnr
     call s:clear_timer()
 endfunction
 
