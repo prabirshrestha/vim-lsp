@@ -51,7 +51,6 @@ function! s:search(...) abort
 
     let l:servers = filter(lsp#get_whitelisted_servers(s:bufnr), 'lsp#capabilities#has_workspace_symbol_provider(v:val)')
     let l:ctx = { 'reqid': s:reqid }
-    echom printf('Searching for "%s"', l:input)
     for l:server in l:servers
         call lsp#send_request(l:server, {
             \ 'bufnr': s:bufnr,
@@ -74,7 +73,7 @@ function! s:handle_results(server, ctx, data) abort
     endif
     let l:list = lsp#ui#vim#utils#symbols_to_loc_list(a:server, a:data)
     for l:item in l:list
-        call add(s:items, printf('%s     %s', l:item['text'], l:item['filename']))
+        call add(s:items, l:item['text'])
     endfor
     call ctrlp#setlines()
     call ctrlp#update()
