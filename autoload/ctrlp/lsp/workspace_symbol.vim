@@ -5,7 +5,7 @@ let g:ctrlp_lsp_workspace_symbol_loaded = 1
 
 call add(g:ctrlp_ext_vars, {
     \ 'init': 'ctrlp#lsp#workspace_symbol#init()',
-    \ 'change': 'ctrlp#lsp#workspace_symbol#change()',
+    \ 'search': 'ctrlp#lsp#workspace_symbol#search()',
     \ 'accept': 'ctrlp#lsp#workspace_symbol#accept',
     \ 'exit': 'ctrlp#lsp#workspace_symbol#exit()',
     \ 'lname': 'LspWorkspaceSymbol',
@@ -31,7 +31,7 @@ function! s:clear_timer() abort
     endif
 endfunction
 
-function! ctrlp#lsp#workspace_symbol#change() abort
+function! ctrlp#lsp#workspace_symbol#search() abort
     call s:clear_timer()
     let s:search_timer = timer_start(250, function('s:search'))
 endfunction
