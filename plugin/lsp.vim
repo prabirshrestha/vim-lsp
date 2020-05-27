@@ -3,6 +3,7 @@ if exists('g:lsp_loaded') || !exists('*json_encode') || !has('timers') || !has('
 endif
 let g:lsp_loaded = 1
 
+let g:lsp_use_lua = get(g:, 'lsp_use_lua', has('nvim-0.4.0') || (has('lua') && has('patch-8.2.0775')))
 let g:lsp_auto_enable = get(g:, 'lsp_auto_enable', 1)
 let g:lsp_async_completion = get(g:, 'lsp_async_completion', 0)
 let g:lsp_log_file = get(g:, 'lsp_log_file', '')
@@ -44,8 +45,10 @@ let g:lsp_ignorecase = get(g:, 'lsp_ignorecase', &ignorecase)
 let g:lsp_semantic_enabled = get(g:, 'lsp_semantic_enabled', 0)
 let g:lsp_text_document_did_save_delay = get(g:, 'lsp_text_document_did_save_delay', -1)
 let g:lsp_completion_resolve_timeout = get(g:, 'lsp_completion_resolve_timeout', 200)
+let g:lsp_tagfunc_source_methods = get(g:, 'lsp_tagfunc_source_methods', ['definition', 'declaration', 'implementation', 'typeDefinition'])
 
 let g:lsp_get_vim_completion_item = get(g:, 'lsp_get_vim_completion_item', [function('lsp#omni#default_get_vim_completion_item')])
+let g:lsp_get_vim_completion_item_set_kind = get(g:, 'lsp_get_vim_completion_item_set_kind', 0)
 let g:lsp_get_supported_capabilities = get(g:, 'lsp_get_supported_capabilities', [function('lsp#default_get_supported_capabilities')])
 
 if g:lsp_auto_enable

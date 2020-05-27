@@ -6,6 +6,7 @@ CONTENTS                                                  *vim-lsp-contents*
 
     Introduction                          |vim-lsp-introduction|
     Install                               |vim-lsp-install|
+    Performance                           |vim-lsp-performance|
     Language Servers                      |vim-lsp-language-servers|
       Configure                             |vim-lsp-configure|
       vim-lsp-settings                      |vim-lsp-settings_plugin|
@@ -32,6 +33,7 @@ CONTENTS                                                  *vim-lsp-contents*
       g:lsp_use_event_queue                 |g:lsp_use_event_queue|
       g:lsp_highlight_references_enabled    |g:lsp_highlight_references_enabled|
       g:lsp_get_vim_completion_item         |g:lsp_get_vim_completion_item|
+      g:lsp_get_vim_completion_item_set_kind |g:lsp_get_vim_completion_item_set_kind|
       g:lsp_get_supported_capabilities      |g:lsp_get_supported_capabilities|
       g:lsp_peek_alignment                  |g:lsp_peek_alignment|
       g:lsp_preview_max_width               |g:lsp_preview_max_width|
@@ -45,6 +47,7 @@ CONTENTS                                                  *vim-lsp-contents*
       g:lsp_text_document_did_save_delay    |g:lsp_text_document_did_save_delay|
       g:lsp_snippet_expand                  |g:lsp_snippet_expand|
       g:lsp_completion_resolve_timeout      |g:lsp_completion_resolve_timeout|
+      g:lsp_tagfunc_source_methods          |g:lsp_tagfunc_source_methods|
     Functions                             |vim-lsp-functions|
       lsp#enable                            |lsp#enable()|
       lsp#disable                           |lsp#disable()|
@@ -107,6 +110,7 @@ CONTENTS                                                  *vim-lsp-contents*
     Autocomplete                          |vim-lsp-autocomplete|
       omnifunc                              |vim-lsp-omnifunc|
       asyncomplete.vim                      |vim-lsp-asyncomplete|
+    Tagfunc                               |vim-lsp-tagfunc|
     Snippets                              |vim-lsp-snippets|
     Folding                               |vim-lsp-folding|
     Semantic highlighting                 |vim-lsp-semantic|
@@ -131,6 +135,28 @@ Install the async.vim and vim-lsp plugins. Below is a sample using plug.vim
 
 Note:  async.vim (https://github.com/prabirshrestha/async.vim) is required to
 use vim-lsp. It is used to normalize the jobs api between Vim 8 and Neovim.
+
+==============================================================================
+PERFORMANCE                                          *vim-lsp-performance*
+
+While VimScript is very portable it has performance implications. If you would
+like to improve performance make sure you have vim/neovim with lua support.
+Currently only diff algorithm uses lua internally if available.
+Following is th default value used to detect lua.
+>
+    let g:lsp_enable_lua = has('nvim-0.4.0') || (has('lua') && has('patch-8.2.0775'))
+
+Windows users can download the binaries from the following url and place
+lua53.dll in the `PATH` or besides `vim.exe` or `gvim.exe` executables.
+
+32 bit:
+http://downloads.sourceforge.net/luabinaries/lua-5.3.2_Win32_dllw4_lib.zip
+
+64bit:
+http://downloads.sourceforge.net/luabinaries/lua-5.3.2_Win64_dllw4_lib.zip
+
+Set |g:lsp_get_vim_completion_item_set_kind| to `0`.
+Set |g:lsp_semantic_enabled| to 0.
 
 ==============================================================================
 LANGUAGE SERVERS                                 *vim-lsp-language-servers*
@@ -544,6 +570,15 @@ g:lsp_get_vim_completion_item               *g:lsp_get_vim_completion_item*
 
     let g:lsp_get_vim_completion_item = [function('LspGetCompletionItem')]
 
+g:lsp_get_vim_completion_item_set_kind     *g:lsp_get_vim_completion_item_set_kind*
+    Type: |Number|
+    Default: `0`
+
+    Sets the flag to enable or disabling setting the kind.
+
+    Example: >
+    let g:lsp_get_vim_completion_item_set_kind = 1
+
 g:lsp_get_supported_capabilities         *g:lsp_get_supported_capabilities*
     Type: |List|
     Default: `[function('lsp#default_get_supported_capabilities')]`
@@ -658,6 +693,13 @@ g:lsp_completion_resolve_timeout         *g:lsp_completion_resolve_timeout*
 
     The `completionItem/resolve` request's timeout value.
     If your vim freeze at `CompleteDone`, you can set this value to 0.
+
+g:lsp_tagfunc_source_methods                 *g:lsp_tagfunc_source_methods*
+    Type: |List|
+    Default: `['definition', 'declaration', 'implementation', 'typeDefinition']`
+
+    The LSP methods to call to get symbols for tag lookup. See
+    |vim-lsp-tagfunc|.
 
 ==============================================================================
 FUNCTIONS                                               *vim-lsp-functions*
@@ -1365,6 +1407,15 @@ Example: >
     Plug 'prabirshrestha/asyncomplete-lsp.vim'
 
 For additional configuration refer to asyncomplete.vim docs.
+
+==============================================================================
+Tagfunc                                                    *vim-lsp-tagfunc*
+
+vim-lsp can integrate with vim's native tag functionality for navigating code
+using the |'tagfunc'| option (requires vim/neovim with patch-8.1.1228).
+
+    Example: >
+	autocmd FileType typescript setlocal tagfunc=lsp#tagfunc
 
 ==============================================================================
 Snippets                                                  *vim-lsp-snippets*

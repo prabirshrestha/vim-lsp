@@ -338,3 +338,43 @@ function! lsp#utils#parse_command_options(params) abort
     endfor
     return l:result
 endfunction
+
+" polyfill for the neovim wait function
+if exists('*wait')
+    function! lsp#utils#_wait(timeout, condition, ...) abort
+        if type(a:timeout) != type(0)
+            return -3
+        endif
+        if type(get(a:000, 0, 0)) != type(0)
+            return -3
+        endif
+        while 1
+            let l:result=call('wait', extend([a:timeout, a:condition], a:000))
+            if l:result != -3 " ignore spurious errors
+                return l:result
+            endif
+        endwhile
+    endfunction
+else
+    function! lsp#utils#_wait(timeout, condition, ...) abort
+        try
+            let l:timeout = a:timeout / 1000.0
+            let l:interval = get(a:000, 0, 200)
+            let l:Condition = a:condition
+            if type(l:Condition) != type(function('eval'))
+                let l:Condition = function('eval', l:Condition)
+            endif
+            let l:start = reltime()
+            while l:timeout < 0 || reltimefloat(reltime(l:start)) < l:timeout
+                if l:Condition()
+                    return 0
+                endif
+
+                execute 'sleep ' . l:interval . 'm'
+            endwhile
+            return -1
+        catch /^Vim:Interrupt$/
+            return -2
+        endtry
+    endfunction
+endif

@@ -11,6 +11,11 @@ Plug 'prabirshrestha/vim-lsp'
 
 _Note: [async.vim](https://github.com/prabirshrestha/async.vim) is required and is used to normalize jobs between vim8 and neovim._
 
+__Performance__
+
+Certain bottlenecks in VimScript have been implemented in lua. If you would like to take advantage of these performance gains
+use vim compiled with lua or neovim v0.4.0+
+
 ## Registering servers
 
 ```viml
@@ -26,6 +31,7 @@ endif
 function! s:on_lsp_buffer_enabled() abort
     setlocal omnifunc=lsp#complete
     setlocal signcolumn=yes
+    if exists('+tagfunc') | setlocal tagfunc=lsp#tagfunc | endif
     nmap <buffer> gd <plug>(lsp-definition)
     nmap <buffer> <f2> <plug>(lsp-rename)
     " refer to doc to add more commands

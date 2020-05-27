@@ -82,9 +82,7 @@ function! lsp#omni#complete(findstart, base) abort
             return exists('v:none') ? v:none : []
         else
             " wait for retrieve textDocument/completion response and then call `s:display_completions` explicitly.
-            while s:completion['status'] is# s:completion_status_pending && !complete_check()
-                sleep 10m
-            endwhile
+            call lsp#utils#_wait(-1, {-> s:completion['status'] isnot# s:completion_status_pending || complete_check()}, 10)
             call timer_start(0, { timer -> s:display_completions(timer, l:info) })
 
             return exists('v:none') ? v:none : []
@@ -250,7 +248,7 @@ endfunction
 
 function! lsp#omni#default_get_vim_completion_item(item, ...) abort
     let l:server_name = get(a:, 1, '')
-    let l:complete_position = get(a:, 2, lsp#get_position())
+    let l:complete_position = a:0 >= 2 ? a:2 : lsp#get_position()
 
     let l:word = ''
     let l:expandable = v:false
@@ -286,7 +284,7 @@ function! lsp#omni#default_get_vim_completion_item(item, ...) abort
                 \ 'icase': 1,
                 \ 'dup': 1,
                 \ 'empty': 1,
-                \ 'kind': lsp#omni#get_kind_text(a:item, l:server_name)
+                \ 'kind': g:lsp_get_vim_completion_item_set_kind ? lsp#omni#get_kind_text(a:item, l:server_name) : ''
                 \ }
 
     " check support user_data.
