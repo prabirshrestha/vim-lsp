@@ -248,7 +248,7 @@ function! s:lsp_send(id, opts, type) abort " opts = { id?, method?, result?, par
         let l:id = l:request['id']
         if get(a:opts, 'sync', 0) !=# 0
             let l:timeout = get(a:opts, 'sync_timeout', -1)
-            if lsp#utils#_wait(l:timeout, {-> has_key(l:ctx['requests'], l:request['id'])}, 1) == -1
+            if lsp#utils#_wait(l:timeout, {-> !has_key(l:ctx['requests'], l:request['id'])}, 1) == -1
                 throw 'lsp#client: timeout'
             endif
         endif
