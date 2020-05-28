@@ -405,11 +405,11 @@ g:lsp_diagnostics_float_delay                *g:lsp_diagnostics_float_delay*
     Delay milliseconds to show diagnostic error for the current line to status
     in a float window. Requires Enables float of diagnostic error for the
     current line to status. Requires |g:lsp_diagnostics_enabled| and
-    |g:lsp_diagnostics_echo_cursor| set to 1.
+    |g:lsp_diagnostics_float_cursor| set to 1.
 
     Example: >
-	let g:lsp_diagnostics_echo_delay = 200
-	let g:lsp_diagnostics_echo_delay = 1000
+	let g:lsp_diagnostics_float_delay = 200
+	let g:lsp_diagnostics_float_delay = 1000
 
 g:lsp_signs_enabled                                   *g:lsp_signs_enabled*
     Type: |Number|
