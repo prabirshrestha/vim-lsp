@@ -894,6 +894,16 @@ The vim |dict| containing information about the server.
 	    Example: >
 		'config': { 'completion_item_kinds': {'26': 'type' } }
 <
+	* diagnostics
+	    Type: |Boolean|
+	    Default: |v:true|
+
+	    This allows disablingdiagnostics per server. Useful when dealing
+	    with multiple servers (One for diagnostic only)
+
+	    Example: >
+		'config': { 'diagnostics': v:false }
+<
 refresh_pattern                                    *vim-lsp-refresh_pattern*
     Type: |String| (|pattern|)
     Default: `'\k*$'`

@@ -736,10 +736,12 @@ function! s:on_notification(server_name, id, data, event) abort
     call lsp#log_verbose('<---', a:id, a:server_name, a:data)
     let l:response = a:data['response']
     let l:server = s:servers[a:server_name]
+    let l:server_info = l:server['server_info']
+    let l:lsp_diagnostics_config_enabled = get(get(l:server_info, 'config', {}), 'diagnostics', v:true)
 
     if lsp#client#is_server_instantiated_notification(a:data)
         if has_key(l:response, 'method')
-            if g:lsp_diagnostics_enabled && l:response['method'] ==# 'textDocument/publishDiagnostics'
+            if g:lsp_diagnostics_enabled && l:lsp_diagnostics_config_enabled && l:response['method'] ==# 'textDocument/publishDiagnostics'
                 call lsp#ui#vim#diagnostics#handle_text_document_publish_diagnostics(a:server_name, a:data)
             elseif l:response['method'] ==# 'textDocument/semanticHighlighting'
                 call lsp#ui#vim#semantic#handle_semantic(a:server_name, a:data)
