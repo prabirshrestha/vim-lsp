@@ -1,12 +1,20 @@
-function! s:open_location(path, line, col) abort
+function! s:open_location(path, line, col, ...) abort
     normal! m'
+    let l:mods = a:0 ? a:1 : ''
     let l:buffer = bufnr(a:path)
-    if &modified && !&hidden
-        let l:cmd = l:buffer !=# -1 ? 'sb ' . l:buffer : 'split ' . fnameescape(a:path)
-    else
-        let l:cmd = l:buffer !=# -1 ? 'b ' . l:buffer : 'edit ' . fnameescape(a:path)
+    if l:mods ==# '' && &modified && !&hidden && l:buffer != bufnr('%')
+        let l:mods = &splitbelow ? 'rightbelow' : 'leftabove'
     endif
-    execute l:cmd . ' | call cursor('.a:line.','.a:col.')'
+    if l:mods ==# ''
+        if l:buffer == bufnr('%')
+            let l:cmd = ''
+        else
+            let l:cmd = (l:buffer !=# -1 ? 'b ' . l:buffer : 'edit ' . fnameescape(a:path)) . ' | '
+        endif
+    else
+        let l:cmd = l:mods . ' ' . (l:buffer !=# -1 ? 'sb ' . l:buffer : 'split ' . fnameescape(a:path)) . ' | '
+    endif
+    execute l:cmd . 'call cursor('.a:line.','.a:col.')'
 endfunction
 
 " @param location = {
@@ -14,8 +22,8 @@ endfunction
 "   'lnum',
 "   'col',
 " }
-function! lsp#utils#location#_open_vim_list_item(location) abort
-    call s:open_location(a:location['filename'], a:location['lnum'], a:location['col'])
+function! lsp#utils#location#_open_vim_list_item(location, mods) abort
+    call s:open_location(a:location['filename'], a:location['lnum'], a:location['col'], a:mods)
 endfunction
 
 " @params {location} = {
