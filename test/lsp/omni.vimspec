@@ -6,7 +6,7 @@ Describe lsp#omni
         call lsp#omni#_clear_managed_user_data_map()
     End
 
-    Describe lsp#omni#get_vim_completion_item
+    Describe lsp#omni#get_vim_completion_items
         It should return item with proper kind
             let item = {
             \ 'label': 'my-label',
@@ -15,19 +15,28 @@ Describe lsp#omni
             \ 'kind': '3'
             \}
 
-            let want = {
-            \ 'word': 'my-label',
-            \ 'abbr': 'my-label',
-            \ 'info': 'my documentation.',
-            \ 'icase': 1,
-            \ 'dup': 1,
-            \ 'empty': 1,
-            \ 'kind': 'function',
-            \ 'menu': 'my-detail',
-            \ 'user_data': '{"vim-lsp/key":"0"}'
+            let options = {
+            \ 'server': { 'name': 'dummy-server' },
+            \ 'position': lsp#get_position(),
+            \ 'response': { 'result': [item] },
             \}
 
-            Assert Equals(lsp#omni#get_vim_completion_item(item), want)
+            let want = {
+            \ 'items': [{
+            \   'word': 'my-label',
+            \   'abbr': 'my-label',
+            \   'info': 'my documentation.',
+            \   'icase': 1,
+            \   'dup': 1,
+            \   'empty': 1,
+            \   'kind': 'function',
+            \   'menu': 'my-detail',
+            \   'user_data': '{"vim-lsp/key":"0"}',
+            \ }],
+            \ 'incomplete': 0,
+            \}
+
+            Assert Equals(lsp#omni#get_vim_completion_items(options), want)
         End
 
         It should get user_data by the item
@@ -78,19 +87,28 @@ Describe lsp#omni
             \ 'kind': '3'
             \}
 
-            let want = {
-            \ 'word': 'my-label',
-            \ 'abbr': 'my-label',
-            \ 'info': 'my documentation.',
-            \ 'icase': 1,
-            \ 'dup': 1,
-            \ 'empty': 1,
-            \ 'kind': 'function',
-            \ 'menu': 'my-detail more-detail',
-            \ 'user_data': '{"vim-lsp/key":"0"}'
+            let options = {
+            \ 'server': { 'name': 'dummy-server' },
+            \ 'position': lsp#get_position(),
+            \ 'response': { 'result': [item] },
             \}
 
-            Assert Equals(lsp#omni#get_vim_completion_item(item), want)
+            let want = {
+            \ 'items': [{
+            \  'word': 'my-label',
+            \  'abbr': 'my-label',
+            \  'info': 'my documentation.',
+            \  'icase': 1,
+            \  'dup': 1,
+            \  'empty': 1,
+            \  'kind': 'function',
+            \  'menu': 'my-detail more-detail',
+            \  'user_data': '{"vim-lsp/key":"0"}',
+            \  }],
+            \  'incomplete': 0,
+            \}
+
+            Assert Equals(lsp#omni#get_vim_completion_items(options), want)
         End
     End
 End
