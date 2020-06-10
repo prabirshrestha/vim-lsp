@@ -65,6 +65,14 @@ function! lsp#capabilities#has_code_action_provider(server_name) abort
     return s:has_bool_provider(a:server_name, 'codeActionProvider')
 endfunction
 
+function! lsp#capabilities#has_code_lens_provider(server_name) abort
+    let l:capabilities = lsp#get_server_capabilities(a:server_name)
+    if !empty(l:capabilities) && has_key(l:capabilities, 'codeLensProvider')
+        return 1
+    endif
+    return 0
+endfunction
+
 function! lsp#capabilities#has_type_definition_provider(server_name) abort
     return s:has_bool_provider(a:server_name, 'typeDefinitionProvider')
 endfunction
@@ -108,12 +116,11 @@ function! lsp#capabilities#get_text_document_save_registration_options(server_na
     let l:capabilities = lsp#get_server_capabilities(a:server_name)
     if !empty(l:capabilities) && has_key(l:capabilities, 'textDocumentSync')
         if type(l:capabilities['textDocumentSync']) == type({})
-            if  has_key(l:capabilities['textDocumentSync'], 'save')
-                return [1, {
-                    \ 'includeText': has_key(l:capabilities['textDocumentSync']['save'], 'includeText') ? l:capabilities['textDocumentSync']['save']['includeText'] : 0,
-                    \ }]
+            let l:save_options = get(l:capabilities['textDocumentSync'], 'save', 0)
+            if type(l:save_options) == type({})
+              return [1, {'includeText': get(save_options, 'includeText', 0)}]
             else
-                return [0, { 'includeText': 0 }]
+              return [l:save_options ? 1 : 0, {'includeText': 0 }]
             endif
         else
             return [1, { 'includeText': 0 }]

@@ -18,7 +18,7 @@ jobs:
         include:
           - name: vim-v82-x64
             os: windows-latest
-            vim_version: 8.2.0037
+            vim_version: 8.2.0813
             vim_arch: x64
             vim_ver_path: vim82
           - name: vim-v81-x64

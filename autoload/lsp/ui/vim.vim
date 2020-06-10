@@ -382,7 +382,7 @@ function! s:handle_location(ctx, server, type, data) abort "ctx = {counter, list
                 echo 'Retrieved ' . a:type
                 botright copen
             else
-                let l:lines = readfile(fnameescape(l:loc['filename']))
+                let l:lines = readfile(l:loc['filename'])
                 if has_key(l:loc,'viewstart') " showing a locationLink
                     let l:view = l:lines[l:loc['viewstart'] : l:loc['viewend']]
                     call lsp#ui#vim#output#preview(a:server, l:view, {
@@ -533,5 +533,11 @@ function! lsp#ui#vim#code_action() abort
         \   'sync': v:false,
         \   'selection': v:false,
         \   'query': '',
+        \ })
+endfunction
+
+function! lsp#ui#vim#code_lens() abort
+    call lsp#ui#vim#code_lens#do({
+        \   'sync': v:false,
         \ })
 endfunction

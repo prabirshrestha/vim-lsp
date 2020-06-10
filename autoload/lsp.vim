@@ -353,7 +353,9 @@ function! s:fire_lsp_buffer_enabled(server_name, buf, ...) abort
     if a:buf == bufnr('%')
         doautocmd User lsp_buffer_enabled
     else
-        exec printf('autocmd BufEnter <buffer=%d> ++once doautocmd User lsp_buffer_enabled', a:buf)
+        " Not using ++once in autocmd for compatibility of VIM8.0
+        let l:cmd = printf('autocmd BufEnter <buffer=%d> doautocmd User lsp_buffer_enabled', a:buf)
+        exec printf('augroup _lsp_fire_buffer_enabled | exec "%s | autocmd! _lsp_fire_buffer_enabled BufEnter <buffer>" | augroup END', l:cmd)
     endif
 endfunction
 
@@ -734,10 +736,12 @@ function! s:on_notification(server_name, id, data, event) abort
     call lsp#log_verbose('<---', a:id, a:server_name, a:data)
     let l:response = a:data['response']
     let l:server = s:servers[a:server_name]
+    let l:server_info = l:server['server_info']
+    let l:lsp_diagnostics_config_enabled = get(get(l:server_info, 'config', {}), 'diagnostics', v:true)
 
     if lsp#client#is_server_instantiated_notification(a:data)
         if has_key(l:response, 'method')
-            if g:lsp_diagnostics_enabled && l:response['method'] ==# 'textDocument/publishDiagnostics'
+            if g:lsp_diagnostics_enabled && l:lsp_diagnostics_config_enabled && l:response['method'] ==# 'textDocument/publishDiagnostics'
                 call lsp#ui#vim#diagnostics#handle_text_document_publish_diagnostics(a:server_name, a:data)
             elseif l:response['method'] ==# 'textDocument/semanticHighlighting'
                 call lsp#ui#vim#semantic#handle_semantic(a:server_name, a:data)
@@ -897,6 +901,10 @@ endfunction
 " omnicompletion
 function! lsp#complete(...) abort
     return call('lsp#omni#complete', a:000)
+endfunction
+
+function! lsp#tagfunc(...) abort
+    return call('lsp#tag#tagfunc', a:000)
 endfunction
 
 let s:didchange_queue = []
