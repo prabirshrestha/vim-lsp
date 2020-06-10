@@ -141,7 +141,7 @@ use vim-lsp. It is used to normalize the jobs api between Vim 8 and Neovim.
 ==============================================================================
 PERFORMANCE                                          *vim-lsp-performance*
 
-While VimScript is very portable it has performance implications. If you would
+While Vim script is very portable it has performance implications. If you would
 like to improve performance make sure you have vim/neovim with lua support.
 Currently only diff algorithm uses lua internally if available.
 Following is th default value used to detect lua.

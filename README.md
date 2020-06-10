@@ -13,7 +13,7 @@ _Note: [async.vim](https://github.com/prabirshrestha/async.vim) is required and 
 
 __Performance__
 
-Certain bottlenecks in VimScript have been implemented in lua. If you would like to take advantage of these performance gains
+Certain bottlenecks in Vim script have been implemented in lua. If you would like to take advantage of these performance gains
 use vim compiled with lua or neovim v0.4.0+
 
 ## Registering servers
