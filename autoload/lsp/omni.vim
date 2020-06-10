@@ -82,9 +82,7 @@ function! lsp#omni#complete(findstart, base) abort
             return exists('v:none') ? v:none : []
         else
             " wait for retrieve textDocument/completion response and then call `s:display_completions` explicitly.
-            while s:completion['status'] is# s:completion_status_pending && !complete_check()
-                sleep 10m
-            endwhile
+            call lsp#utils#_wait(-1, {-> s:completion['status'] isnot# s:completion_status_pending || complete_check()}, 10)
             call timer_start(0, { timer -> s:display_completions(timer, l:info) })
 
             return exists('v:none') ? v:none : []
@@ -250,7 +248,7 @@ endfunction
 
 function! lsp#omni#default_get_vim_completion_item(item, ...) abort
     let l:server_name = get(a:, 1, '')
-    let l:complete_position = get(a:, 2, lsp#get_position())
+    let l:complete_position = a:0 >= 2 ? a:2 : lsp#get_position()
 
     let l:word = ''
     let l:expandable = v:false
@@ -286,7 +284,7 @@ function! lsp#omni#default_get_vim_completion_item(item, ...) abort
                 \ 'icase': 1,
                 \ 'dup': 1,
                 \ 'empty': 1,
-                \ 'kind': lsp#omni#get_kind_text(a:item, l:server_name)
+                \ 'kind': g:lsp_get_vim_completion_item_set_kind ? lsp#omni#get_kind_text(a:item, l:server_name) : ''
                 \ }
 
     " check support user_data.
@@ -320,8 +318,40 @@ function! lsp#omni#default_get_vim_completion_item(item, ...) abort
     return l:completion
 endfunction
 
+" deprecated. use lsp#omni#get_vim_completion_items(options) instead
 function! lsp#omni#get_vim_completion_item(...) abort
     return call(g:lsp_get_vim_completion_item[0], a:000)
+endfunction
+
+" options = {
+"   server: {}, " needs to be server_info and not server_name
+"   position: lsp#get_position(),
+"   response: {}, " needs to be the entire lsp response. errors need to be
+"   handled before calling the fuction
+" }
+function! lsp#omni#get_vim_completion_items(options) abort
+    let l:server = a:options['server']
+    let l:complete_position = a:options['position']
+
+    let l:result = a:options['response']['result']
+    if type(l:result) == type([])
+        let l:items = l:result
+        let l:incomplete = 0
+    elseif type(l:result) == type({})
+        let l:items = l:result['items']
+        let l:incomplete = l:result['isIncomplete']
+    else
+        let l:items = []
+        let l:incomplete = 0
+    endif
+
+    let l:vim_complete_items = []
+    let l:server_name = l:server['name']
+    for l:item in l:items
+        call add(l:vim_complete_items, lsp#omni#get_vim_completion_item(l:item, l:server_name, l:complete_position))
+    endfor
+
+    return { 'items': l:vim_complete_items, 'incomplete': l:incomplete }
 endfunction
 
 "

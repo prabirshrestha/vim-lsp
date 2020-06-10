@@ -1,5 +1,7 @@
 Describe lsp#omni
 
+    let g:lsp_get_vim_completion_item_set_kind = 1
+
     Before each
         call lsp#omni#_clear_managed_user_data_map()
     End

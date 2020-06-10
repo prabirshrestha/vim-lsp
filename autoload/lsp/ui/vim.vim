@@ -538,3 +538,9 @@ function! lsp#ui#vim#code_action() abort
         \   'query': '',
         \ })
 endfunction
+
+function! lsp#ui#vim#code_lens() abort
+    call lsp#ui#vim#code_lens#do({
+        \   'sync': v:false,
+        \ })
+endfunction
