@@ -318,8 +318,40 @@ function! lsp#omni#default_get_vim_completion_item(item, ...) abort
     return l:completion
 endfunction
 
+" deprecated. use lsp#omni#get_vim_completion_items(options) instead
 function! lsp#omni#get_vim_completion_item(...) abort
     return call(g:lsp_get_vim_completion_item[0], a:000)
+endfunction
+
+" options = {
+"   server: {}, " needs to be server_info and not server_name
+"   position: lsp#get_position(),
+"   response: {}, " needs to be the entire lsp response. errors need to be
+"   handled before calling the fuction
+" }
+function! lsp#omni#get_vim_completion_items(options) abort
+    let l:server = a:options['server']
+    let l:complete_position = a:options['position']
+
+    let l:result = a:options['response']['result']
+    if type(l:result) == type([])
+        let l:items = l:result
+        let l:incomplete = 0
+    elseif type(l:result) == type({})
+        let l:items = l:result['items']
+        let l:incomplete = l:result['isIncomplete']
+    else
+        let l:items = []
+        let l:incomplete = 0
+    endif
+
+    let l:vim_complete_items = []
+    let l:server_name = l:server['name']
+    for l:item in l:items
+        call add(l:vim_complete_items, lsp#omni#get_vim_completion_item(l:item, l:server_name, l:complete_position))
+    endfor
+
+    return { 'items': l:vim_complete_items, 'incomplete': l:incomplete }
 endfunction
 
 "
