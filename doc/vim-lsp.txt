@@ -258,7 +258,12 @@ g:lsp_preview_keep_focus                         *g:lsp_preview_keep_focus*
 	let g:lsp_preview_keep_focus = 0
 <
     * |preview-window| can be closed using the default vim mapping - `<c-w><c-z>`.
-
+    * |preview-window| can be also automatically closed after completion with
+    the following auto command: >
+	autocmd! CompleteDone * if pumvisible() == 0 | pclose | endif)
+<    * |preview-window| can be supressed with: >
+	set completeopt-=preview
+<
 g:lsp_preview_float                         *g:lsp_preview_float*
     Type: |Number|
     Default: `1`
@@ -407,11 +412,11 @@ g:lsp_diagnostics_float_delay                *g:lsp_diagnostics_float_delay*
     Delay milliseconds to show diagnostic error for the current line to status
     in a float window. Requires Enables float of diagnostic error for the
     current line to status. Requires |g:lsp_diagnostics_enabled| and
-    |g:lsp_diagnostics_echo_cursor| set to 1.
+    |g:lsp_diagnostics_float_cursor| set to 1.
 
     Example: >
-	let g:lsp_diagnostics_echo_delay = 200
-	let g:lsp_diagnostics_echo_delay = 1000
+	let g:lsp_diagnostics_float_delay = 200
+	let g:lsp_diagnostics_float_delay = 1000
 
 g:lsp_signs_enabled                                   *g:lsp_signs_enabled*
     Type: |Number|
@@ -890,6 +895,16 @@ The vim |dict| containing information about the server.
 
 	    Example: >
 		'config': { 'completion_item_kinds': {'26': 'type' } }
+<
+	* diagnostics
+	    Type: |Boolean|
+	    Default: |v:true|
+
+	    This allows disablingdiagnostics per server. Useful when dealing
+	    with multiple servers (One for diagnostic only)
+
+	    Example: >
+		'config': { 'diagnostics': v:false }
 <
 refresh_pattern                                    *vim-lsp-refresh_pattern*
     Type: |String| (|pattern|)
