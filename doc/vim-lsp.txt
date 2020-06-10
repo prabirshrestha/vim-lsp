@@ -61,6 +61,8 @@ CONTENTS                                                  *vim-lsp-contents*
     Commands                              |vim-lsp-commands|
       LspCodeAction                         |:LspCodeAction|
       LspCodeActionSync                     |:LspCodeActionSync|
+      LspCodeLens                           |:LspCodeLens|
+      LspCodeLensSync                       |:LspCodeLensSync|
       LspDocumentDiagnostics                |:LspDocumentDiagnostics|
       LspDeclaration                        |:LspDeclaration|
       LspDefinition                         |:LspDefinition|
@@ -1094,6 +1096,14 @@ commands such as organize imports before save.
         autocmd BufWritePre <buffer>
                 \ call execute('LspCodeActionSync source.organizeImports')
 
+LspCodeLens                                                   *:LspCodeLens*
+
+Gets a list of possible commands that can be executed on the current document.
+
+LspCodeLensSync                                           *:LspCodeLensSync*
+
+Same as |:LspCodeLens| but synchronous.
+
 LspDocumentDiagnostics                             *:LspDocumentDiagnostics*
 
 Gets the current document diagnostics.
@@ -1343,6 +1353,7 @@ To map keys to the feature of vim-lsp, use <plug> mappings:
 Available plug mappings are following:
 
   nnoremap <plug>(lsp-code-action)
+  nnoremap <plug>(lsp-code-lens)
   nnoremap <plug>(lsp-declaration)
   nnoremap <plug>(lsp-peek-declaration)
   nnoremap <plug>(lsp-definition)
