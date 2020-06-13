@@ -32,8 +32,6 @@ CONTENTS                                                  *vim-lsp-contents*
       g:lsp_textprop_enabled                |g:lsp_textprop_enabled|
       g:lsp_use_event_queue                 |g:lsp_use_event_queue|
       g:lsp_highlight_references_enabled    |g:lsp_highlight_references_enabled|
-      g:lsp_get_vim_completion_item         |g:lsp_get_vim_completion_item|
-      g:lsp_get_vim_completion_item_set_kind |g:lsp_get_vim_completion_item_set_kind|
       g:lsp_get_supported_capabilities      |g:lsp_get_supported_capabilities|
       g:lsp_peek_alignment                  |g:lsp_peek_alignment|
       g:lsp_preview_max_width               |g:lsp_preview_max_width|
@@ -157,7 +155,6 @@ http://downloads.sourceforge.net/luabinaries/lua-5.3.2_Win32_dllw4_lib.zip
 64bit:
 http://downloads.sourceforge.net/luabinaries/lua-5.3.2_Win64_dllw4_lib.zip
 
-Set |g:lsp_get_vim_completion_item_set_kind| to `0`.
 Set |g:lsp_semantic_enabled| to 0.
 
 ==============================================================================
@@ -552,39 +549,6 @@ g:lsp_highlight_references_enabled      *g:lsp_highlight_references_enabled*
 
     Example: >
     highlight lspReference ctermfg=red guifg=red ctermbg=green guibg=green
-
-
-g:lsp_get_vim_completion_item               *g:lsp_get_vim_completion_item*
-    Type: |List|
-    Default: `[function('lsp#omni#default_get_vim_completion_item')]`
-
-    A |List| containing one element of type |Funcref|. This element is a
-    reference to the function that vim-lsp should use to produce the items in
-    the completion menu. Changing this variable allows customizing how items
-    are displayed in the completion menu, or adding custom `user_data` to
-    items (see |complete-items|).
-
-    Note: You can reuse functionality provided by vim-lsp by calling
-    `lsp#omni#default_get_vim_completion_item` from within your function.
-
-    Example: >
-    function! LspGetCompletionItem(item, ...) abort
-        let l:DefaultFn = function('lsp#omni#default_get_vim_completion_item')
-        let l:completion = call(l:DefaultFn, [a:item] + a:000)
-        " customize completion item here
-        return l:completion
-    endfunction
-
-    let g:lsp_get_vim_completion_item = [function('LspGetCompletionItem')]
-
-g:lsp_get_vim_completion_item_set_kind     *g:lsp_get_vim_completion_item_set_kind*
-    Type: |Number|
-    Default: `0`
-
-    Sets the flag to enable or disabling setting the kind.
-
-    Example: >
-    let g:lsp_get_vim_completion_item_set_kind = 1
 
 g:lsp_get_supported_capabilities         *g:lsp_get_supported_capabilities*
     Type: |List|

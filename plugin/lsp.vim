@@ -47,8 +47,6 @@ let g:lsp_text_document_did_save_delay = get(g:, 'lsp_text_document_did_save_del
 let g:lsp_completion_resolve_timeout = get(g:, 'lsp_completion_resolve_timeout', 200)
 let g:lsp_tagfunc_source_methods = get(g:, 'lsp_tagfunc_source_methods', ['definition', 'declaration', 'implementation', 'typeDefinition'])
 
-let g:lsp_get_vim_completion_item = get(g:, 'lsp_get_vim_completion_item', [function('lsp#omni#default_get_vim_completion_item')])
-let g:lsp_get_vim_completion_item_set_kind = get(g:, 'lsp_get_vim_completion_item_set_kind', 0)
 let g:lsp_get_supported_capabilities = get(g:, 'lsp_get_supported_capabilities', [function('lsp#default_get_supported_capabilities')])
 
 if g:lsp_auto_enable
