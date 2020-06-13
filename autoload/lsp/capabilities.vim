@@ -65,6 +65,14 @@ function! lsp#capabilities#has_code_action_provider(server_name) abort
     return s:has_bool_provider(a:server_name, 'codeActionProvider')
 endfunction
 
+function! lsp#capabilities#has_code_lens_provider(server_name) abort
+    let l:capabilities = lsp#get_server_capabilities(a:server_name)
+    if !empty(l:capabilities) && has_key(l:capabilities, 'codeLensProvider')
+        return 1
+    endif
+    return 0
+endfunction
+
 function! lsp#capabilities#has_type_definition_provider(server_name) abort
     return s:has_bool_provider(a:server_name, 'typeDefinitionProvider')
 endfunction

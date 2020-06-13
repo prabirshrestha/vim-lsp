@@ -31,6 +31,10 @@ function! lsp#ui#vim#output#closepreview() abort
 endfunction
 
 function! lsp#ui#vim#output#focuspreview() abort
+    if s:is_cmdwin()
+        return
+    endif
+
     " This does not work for vim8.1 popup but will work for nvim and old preview
     if s:winid
         if win_getid() !=# s:winid
@@ -280,6 +284,10 @@ function! lsp#ui#vim#output#float_supported() abort
 endfunction
 
 function! lsp#ui#vim#output#preview(server, data, options) abort
+    if s:is_cmdwin()
+        return
+    endif
+
     if s:winid && type(s:preview_data) ==# type(a:data)
         \ && s:preview_data ==# a:data
         \ && type(g:lsp_preview_doubletap) ==# 3
@@ -411,4 +419,8 @@ function! s:append(data, lines, syntax_lines) abort
 
         return a:data.kind ==? 'plaintext' ? 'text' : a:data.kind
     endif
+endfunction
+
+function! s:is_cmdwin() abort
+    return getcmdwintype() !=# ''
 endfunction
