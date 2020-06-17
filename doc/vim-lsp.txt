@@ -257,7 +257,7 @@ g:lsp_preview_keep_focus                         *g:lsp_preview_keep_focus*
     * |preview-window| can be closed using the default vim mapping - `<c-w><c-z>`.
     * |preview-window| can be also automatically closed after completion with
     the following auto command: >
-	autocmd! CompleteDone * if pumvisible() == 0 | pclose | endif)
+	autocmd! CompleteDone * if pumvisible() == 0 | pclose | endif
 <    * |preview-window| can be supressed with: >
 	set completeopt-=preview
 <
