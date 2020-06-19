@@ -20,10 +20,11 @@ CONTENTS                                                  *vim-lsp-contents*
       g:lsp_preview_doubletap               |g:lsp_preview_doubletap|
       g:lsp_insert_text_enabled             |g:lsp_insert_text_enabled|
       g:lsp_text_edit_enabled               |g:lsp_text_edit_enabled|
+      g:lsp_documentation_float             |g:lsp_documentation_float|
       g:lsp_diagnostics_echo_cursor         |g:lsp_diagnostics_echo_cursor|
       g:lsp_diagnostics_echo_delay          |g:lsp_diagnostics_echo_delay|
-      g:lsp_diagnostics_float_cursor         |g:lsp_diagnostics_float_cursor|
-      g:lsp_diagnostics_float_delay          |g:lsp_diagnostics_float_delay|
+      g:lsp_diagnostics_float_cursor        |g:lsp_diagnostics_float_cursor|
+      g:lsp_diagnostics_float_delay         |g:lsp_diagnostics_float_delay|
       g:lsp_signs_enabled                   |g:lsp_signs_enabled|
       g:lsp_signs_priority                  |g:lsp_signs_priority|
       g:lsp_signs_priority_map              |g:lsp_signs_priority_map|
@@ -367,6 +368,16 @@ g:lsp_text_edit_enabled                           *g:lsp_text_edit_enabled*
     Example: >
 	let g:lsp_text_edit_enabled = 1
 	let g:lsp_text_edit_enabled = 0
+
+g:lsp_documentation_float                      *g:lsp_documentation_float*
+    Type: |Number|
+    Default: `1`
+
+    Enables floating window documentation for complete items.
+
+    Example: >
+	let g:lsp_documentation_float = 1
+	let g:lsp_documentation_float = 0
 
 g:lsp_diagnostics_echo_cursor                *g:lsp_diagnostics_echo_cursor*
     Type: |Number|
