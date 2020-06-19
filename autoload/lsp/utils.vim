@@ -1,5 +1,9 @@
+function! lsp#utils#is_file_uri(uri) abort
+    return stridx(a:uri, 'file:///') == 0
+endfunction
+
 function! lsp#utils#is_remote_uri(uri) abort
-    return a:uri =~# '^\w\+::' || a:uri =~# '^\w\+://'
+    return a:uri =~# '^\w\+::' || a:uri =~# '^[a-z][a-z0-9+.-]*://'
 endfunction
 
 function! s:decode_uri(uri) abort
@@ -24,12 +28,12 @@ function! s:encode_uri(path, start_pos_encode, default_prefix) abort
 
     let l:result = strpart(a:path, 0, a:start_pos_encode)
 
-    for i in range(a:start_pos_encode, len(l:path) - 1)
+    for l:i in range(a:start_pos_encode, len(l:path) - 1)
         " Don't encode '/' here, `path` is expected to be a valid path.
-        if l:path[i] =~# '^[a-zA-Z0-9_.~/-]$'
-            let l:result .= l:path[i]
+        if l:path[l:i] =~# '^[a-zA-Z0-9_.~/-]$'
+            let l:result .= l:path[l:i]
         else
-            let l:result .= s:urlencode_char(l:path[i])
+            let l:result .= s:urlencode_char(l:path[l:i])
         endif
     endfor
 
@@ -38,7 +42,7 @@ endfunction
 
 if has('win32') || has('win64')
     function! lsp#utils#path_to_uri(path) abort
-        if empty(a:path)
+        if empty(a:path) || lsp#utils#is_remote_uri(a:path)
             return a:path
         else
             " You must not encode the volume information on the path if
@@ -54,7 +58,7 @@ if has('win32') || has('win64')
     endfunction
 else
     function! lsp#utils#path_to_uri(path) abort
-        if empty(a:path)
+        if empty(a:path) || lsp#utils#is_remote_uri(a:path)
             return a:path
         else
             return s:encode_uri(a:path, 0, 'file://')
@@ -112,8 +116,8 @@ endfunction
 function! lsp#utils#find_nearest_parent_file_directory(path, filename) abort
     if type(a:filename) == 3
         let l:matched_paths = {}
-        for current_name in a:filename
-            let l:path = lsp#utils#find_nearest_parent_file_directory(a:path, current_name)
+        for l:current_name in a:filename
+            let l:path = lsp#utils#find_nearest_parent_file_directory(a:path, l:current_name)
 
             if !empty(l:path)
                 if has_key(l:matched_paths, l:path)
@@ -123,8 +127,8 @@ function! lsp#utils#find_nearest_parent_file_directory(path, filename) abort
                 endif
             endif
         endfor
-        return empty(l:matched_paths) ? 
-                    \ '' : 
+        return empty(l:matched_paths) ?
+                    \ '' :
                     \ keys(l:matched_paths)[index(values(l:matched_paths), max(values(l:matched_paths)))]
 
     elseif type(a:filename) == 1
@@ -186,23 +190,6 @@ function! lsp#utils#echo_with_truncation(msg) abort
     exec 'echo l:msg'
 endfunction
 
-" Convert a character-index (0-based) to byte-index (1-based)
-" This function requires a buffer specifier (expr, see :help bufname()),
-" a line number (lnum, 1-based), and a character-index (char, 0-based).
-function! lsp#utils#to_col(expr, lnum, char) abort
-    let l:lines = getbufline(a:expr, a:lnum)
-    if l:lines == []
-        if type(a:expr) != v:t_string || !filereadable(a:expr)
-            " invalid a:expr
-            return a:char + 1
-        endif
-        " a:expr is a file that is not yet loaded as a buffer
-        let l:lines = readfile(a:expr, '', a:lnum)
-    endif
-    let l:linestr = l:lines[-1]
-    return strlen(strcharpart(l:linestr, 0, a:char)) + 1
-endfunction
-
 " Convert a byte-index (1-based) to a character-index (0-based)
 " This function requires a buffer specifier (expr, see :help bufname()),
 " a line number (lnum, 1-based), and a byte-index (char, 1-based).
@@ -219,3 +206,175 @@ function! lsp#utils#to_char(expr, lnum, col) abort
     let l:linestr = l:lines[-1]
     return strchars(strpart(l:linestr, 0, a:col - 1))
 endfunction
+
+function! s:get_base64_alphabet() abort
+    let l:alphabet = []
+
+    " Uppercase letters
+    for l:c in range(char2nr('A'), char2nr('Z'))
+        call add(l:alphabet, nr2char(l:c))
+    endfor
+
+    " Lowercase letters
+    for l:c in range(char2nr('a'), char2nr('z'))
+        call add(l:alphabet, nr2char(l:c))
+    endfor
+
+    " Numbers
+    for l:c in range(char2nr('0'), char2nr('9'))
+        call add(l:alphabet, nr2char(l:c))
+    endfor
+
+    " Symbols
+    call add(l:alphabet, '+')
+    call add(l:alphabet, '/')
+
+    return l:alphabet
+endfunction
+
+if exists('*trim')
+  function! lsp#utils#_trim(string) abort
+    return trim(a:string)
+  endfunction
+else
+  function! lsp#utils#_trim(string) abort
+    return substitute(a:string, '^\s*\|\s*$', '', 'g')
+  endfunction
+endif
+
+function! lsp#utils#_get_before_line() abort
+  let l:text = getline('.')
+  let l:idx = min([strlen(l:text), col('.') - 2])
+  let l:idx = max([l:idx, -1])
+  if l:idx == -1
+    return ''
+  endif
+  return l:text[0 : l:idx]
+endfunction
+
+function! lsp#utils#_get_before_char_skip_white() abort
+  let l:current_lnum = line('.')
+
+  let l:lnum = l:current_lnum
+  while l:lnum > 0
+    if l:lnum == l:current_lnum
+      let l:text = lsp#utils#_get_before_line()
+    else
+      let l:text = getline(l:lnum)
+    endif
+    let l:match = matchlist(l:text, '\([^[:blank:]]\)\s*$')
+    if get(l:match, 1, v:null) isnot v:null
+      return l:match[1]
+    endif
+    let l:lnum -= 1
+  endwhile
+
+  return ''
+endfunction
+
+let s:alphabet = s:get_base64_alphabet()
+
+function! lsp#utils#base64_decode(data) abort
+    let l:ret = []
+
+    " Process base64 string in chunks of 4 chars
+    for l:group in split(a:data, '.\{4}\zs')
+        let l:group_dec = 0
+
+        " Convert 4 chars to 3 octets
+        for l:char in split(l:group, '\zs')
+            let l:group_dec = l:group_dec * 64
+            let l:group_dec += max([index(s:alphabet, l:char), 0])
+        endfor
+
+        " Split the number representing the 3 octets into the individual
+        " octets
+        let l:octets = []
+        let l:i = 0
+        while l:i < 3
+            call add(l:octets, l:group_dec % 256)
+            let l:group_dec = l:group_dec / 256
+            let l:i += 1
+        endwhile
+
+        call extend(l:ret, reverse(l:octets))
+    endfor
+
+    " Handle padding
+    if len(a:data) >= 2
+        if strpart(a:data, len(a:data) - 2) ==# '=='
+            call remove(l:ret, -2, -1)
+        elseif strpart(a:data, len(a:data) - 1) ==# '='
+            call remove(l:ret, -1, -1)
+        endif
+    endif
+
+    return l:ret
+endfunction
+
+function! lsp#utils#make_valid_word(str) abort
+   let l:str = substitute(a:str, '\$[0-9]\+\|\${\%(\\.\|[^}]\)\+}', '', 'g')
+   let l:str = substitute(l:str, '\\\(.\)', '\1', 'g')
+   let l:valid = matchstr(l:str, '^[^"'' (<{\[\t\r\n]\+')
+   if empty(l:valid)
+       return l:str
+   endif
+   if l:valid =~# ':$'
+       return l:valid[:-2]
+   endif
+   return l:valid
+endfunction
+
+function! lsp#utils#_split_by_eol(text) abort
+    return split(a:text, '\r\n\|\r\|\n', v:true)
+endfunction
+
+" parse command options like "-key" or "-key=value"
+function! lsp#utils#parse_command_options(params) abort
+    let l:result = {}
+    for l:param in a:params
+        let l:match = matchlist(l:param, '-\{1,2}\zs\([^=]*\)\(=\(.*\)\)\?\m')
+        let l:result[l:match[1]] = l:match[3]
+    endfor
+    return l:result
+endfunction
+
+" polyfill for the neovim wait function
+if exists('*wait')
+    function! lsp#utils#_wait(timeout, condition, ...) abort
+        if type(a:timeout) != type(0)
+            return -3
+        endif
+        if type(get(a:000, 0, 0)) != type(0)
+            return -3
+        endif
+        while 1
+            let l:result=call('wait', extend([a:timeout, a:condition], a:000))
+            if l:result != -3 " ignore spurious errors
+                return l:result
+            endif
+        endwhile
+    endfunction
+else
+    function! lsp#utils#_wait(timeout, condition, ...) abort
+        try
+            let l:timeout = a:timeout / 1000.0
+            let l:interval = get(a:000, 0, 200)
+            let l:Condition = a:condition
+            if type(l:Condition) != type(function('eval'))
+                let l:Condition = function('eval', l:Condition)
+            endif
+            let l:start = reltime()
+            while l:timeout < 0 || reltimefloat(reltime(l:start)) < l:timeout
+                if l:Condition()
+                    return 0
+                endif
+
+                execute 'sleep ' . l:interval . 'm'
+            endwhile
+            return -1
+        catch /^Vim:Interrupt$/
+            return -2
+        endtry
+    endfunction
+endif

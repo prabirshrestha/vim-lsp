@@ -1,0 +1,46 @@
+name: linux_vim
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        name: [vim-v82-x64, vim-v81-x64]
+        include:
+          - name: vim-v82-x64
+            os: ubuntu-latest
+            vim_version: 8.2.0813
+            glibc_version: 2.15
+          - name: vim-v81-x64
+            os: ubuntu-latest
+            vim_version: 8.1.2414
+            glibc_version: 2.15
+    runs-on: ${{matrix.os}}
+    steps:
+      - uses: actions/checkout@v1
+      - name: Download vim
+        shell: bash
+        run: |
+          mkdir -p ~/vim/bin
+          curl -L https://github.com/vim/vim-appimage/releases/download/v${{matrix.vim_version}}/GVim-v${{matrix.vim_version}}.glibc${{matrix.glibc_version}}-x86_64.AppImage -o ~/vim/bin/vim
+          chmod u+x ~/vim/bin/vim
+      - name: Download test runner
+        shell: bash
+        run: git clone --depth 1 --branch v1.5.4 --single-branch https://github.com/thinca/vim-themis ~/themis
+      - name: Run tests
+        shell: bash
+        run: |
+          export PATH=~/vim/bin:$PATH
+          export PATH=~/themis/bin:$PATH
+          export THEMIS_VIM=vim
+          vim --version
+          themis --reporter spec

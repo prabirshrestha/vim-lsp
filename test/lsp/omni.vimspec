@@ -1,5 +1,12 @@
 Describe lsp#omni
-    Describe lsp#omni#get_vim_completion_item
+
+    let g:lsp_get_vim_completion_item_set_kind = 1
+
+    Before each
+        call lsp#omni#_clear_managed_user_data_map()
+    End
+
+    Describe lsp#omni#get_vim_completion_items
         It should return item with proper kind
             let item = {
             \ 'label': 'my-label',
@@ -8,90 +15,77 @@ Describe lsp#omni
             \ 'kind': '3'
             \}
 
-            let want = {
-            \ 'word': 'my-label',
-            \ 'abbr': 'my-label',
-            \ 'info': 'my documentation.',
-            \ 'icase': 1,
-            \ 'dup': 1,
-            \ 'empty': 1,
-            \ 'kind': 'function',
-            \ 'menu': 'my-detail'
+            let options = {
+            \ 'server': { 'name': 'dummy-server' },
+            \ 'position': lsp#get_position(),
+            \ 'response': { 'result': [item] },
             \}
-            let got = lsp#omni#get_vim_completion_item(item)
 
-            Assert Equals(got, want)
+            let want = {
+            \ 'items': [{
+            \   'word': 'my-label',
+            \   'abbr': 'my-label',
+            \   'info': 'my documentation.',
+            \   'icase': 1,
+            \   'dup': 1,
+            \   'empty': 1,
+            \   'kind': 'function',
+            \   'menu': 'my-detail',
+            \   'user_data': '{"vim-lsp/key":"0"}',
+            \ }],
+            \ 'incomplete': 0,
+            \}
+
+            Assert Equals(lsp#omni#get_vim_completion_items(options), want)
         End
 
-        It should return result contained user_data['vim-lsp/textEdit'], if exist textEdit in item
+        It should get user_data by the item
             if !has('patch-8.0.1493')
                 Skip This test requires 'patch-8.0.1493'
             endif
 
-            let l:text_edit = {
+            let item = {
+            \ 'label': 'my-label',
+            \ 'documentation': 'my documentation.',
+            \ 'detail': 'my-detail',
+            \ 'kind': '3',
+            \ 'textEdit': {
             \    'range': {
             \      'start': {'line': 5, 'character': 0},
             \      'end': {'line': 5, 'character': 5}
             \    },
             \    'newText': 'yyy'
             \  }
-
-            let item = {
-            \ 'label': 'my-label',
-            \ 'documentation': 'my documentation.',
-            \ 'detail': 'my-detail',
-            \ 'kind': '3',
-            \ 'textEdit': l:text_edit
             \}
 
-            let l:want_user_data = {
-            \  'vim-lsp/textEdit': l:text_edit
-            \}
-
-            let l:want_user_data_string = json_encode(l:want_user_data)
-
-            let want = {
-            \ 'word': 'my-label',
-            \ 'abbr': 'my-label',
-            \ 'info': 'my documentation.',
-            \ 'icase': 1,
-            \ 'dup': 1,
-            \ 'empty': 1,
-            \ 'kind': 'function',
-            \ 'menu': 'my-detail',
-            \ 'user_data': l:want_user_data_string
-            \}
-            let got = lsp#omni#get_vim_completion_item(item)
-
-            Assert Equals(got, want)
-        End
-
-        It should not add user_data, if provide textEdit property and textEdit value is null
-            if !has('patch-8.0.1493')
-                Skip This test requires 'patch-8.0.1493'
-            endif
-
-            let item = {
-            \ 'label': 'my-label',
-            \ 'documentation': 'my documentation.',
-            \ 'detail': 'my-detail',
-            \ 'kind': '3',
-            \ 'textEdit': v:null
+            let options = {
+            \ 'server': { 'name': 'dummy-server' },
+            \ 'position': { 'line': 1, 'character': 1 },
+            \ 'response': { 'result': [item] },
             \}
 
             let want = {
-            \ 'word': 'my-label',
-            \ 'abbr': 'my-label',
-            \ 'info': 'my documentation.',
-            \ 'icase': 1,
-            \ 'dup': 1,
-            \ 'empty': 1,
-            \ 'kind': 'function',
-            \ 'menu': 'my-detail',
+            \ 'items': [{
+            \  'word': 'my-label',
+            \  'abbr': 'my-label~',
+            \  'info': 'my documentation.',
+            \  'icase': 1,
+            \  'dup': 1,
+            \  'empty': 1,
+            \  'kind': 'function',
+            \  'menu': 'my-detail',
+            \  'user_data': '{"vim-lsp/key":"0"}',
+            \  }],
+            \  'incomplete': 0,
             \}
-            let got = lsp#omni#get_vim_completion_item(item)
 
+            let got = lsp#omni#get_vim_completion_items(options)
             Assert Equals(got, want)
+            Assert Equals(lsp#omni#get_managed_user_data_from_completed_item(got['items'][0]), {
+                        \   'server_name': 'dummy-server',
+                        \   'completion_item': item,
+                        \   'complete_position': { 'line': 1, 'character': 1 }
+                        \ })
         End
 
         It should return item with newlines in 'menu' replaced
@@ -102,19 +96,28 @@ Describe lsp#omni
             \ 'kind': '3'
             \}
 
-            let want = {
-            \ 'word': 'my-label',
-            \ 'abbr': 'my-label',
-            \ 'info': 'my documentation.',
-            \ 'icase': 1,
-            \ 'dup': 1,
-            \ 'empty': 1,
-            \ 'kind': 'function',
-            \ 'menu': 'my-detail more-detail'
+            let options = {
+            \ 'server': { 'name': 'dummy-server' },
+            \ 'position': lsp#get_position(),
+            \ 'response': { 'result': [item] },
             \}
-            let got = lsp#omni#get_vim_completion_item(item)
 
-            Assert Equals(got, want)
+            let want = {
+            \ 'items': [{
+            \  'word': 'my-label',
+            \  'abbr': 'my-label',
+            \  'info': 'my documentation.',
+            \  'icase': 1,
+            \  'dup': 1,
+            \  'empty': 1,
+            \  'kind': 'function',
+            \  'menu': 'my-detail more-detail',
+            \  'user_data': '{"vim-lsp/key":"0"}',
+            \  }],
+            \  'incomplete': 0,
+            \}
+
+            Assert Equals(lsp#omni#get_vim_completion_items(options), want)
         End
     End
 End

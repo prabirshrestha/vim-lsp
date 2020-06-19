@@ -1,0 +1,52 @@
+name: windows_vim
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest]
+        name: [vim-v82-x64, vim-v81-x64, vim-v80-x64]
+        include:
+          - name: vim-v82-x64
+            os: windows-latest
+            vim_version: 8.2.0813
+            vim_arch: x64
+            vim_ver_path: vim82
+          - name: vim-v81-x64
+            os: windows-latest
+            vim_version: 8.1.2414
+            vim_arch: x64
+            vim_ver_path: vim81
+          - name: vim-v80-x64
+            os: windows-latest
+            vim_version: 8.0.1567
+            vim_arch: x64
+            vim_ver_path: vim80
+    runs-on: ${{matrix.os}}
+    steps:
+      - uses: actions/checkout@v1
+      - name: Download vim
+        shell: PowerShell
+        run: Invoke-WebRequest -Uri https://github.com/vim/vim-win32-installer/releases/download/v${{matrix.vim_version}}/gvim_${{matrix.vim_version}}_${{matrix.vim_arch}}.zip -OutFile vim.zip
+      - name: Extract vim
+        shell: PowerShell
+        run: Expand-Archive -Path vim.zip -DestinationPath $env:USERPROFILE
+      - name: Download test runner
+        shell: PowerShell
+        run: git clone --depth 1 --branch v1.5.4 --single-branch https://github.com/thinca/vim-themis $env:USERPROFILE\themis
+      - name: Run tests
+        shell: cmd
+        run: |
+          SET PATH=%USERPROFILE%\vim\${{matrix.vim_ver_path}};%PATH%;
+          SET PATH=%USERPROFILE%\themis\bin;%PATH%;
+          vim --version
+          themis --reporter spec

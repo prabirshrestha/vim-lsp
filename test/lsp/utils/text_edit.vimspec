@@ -527,6 +527,121 @@ Describe lsp#utils#text_edit
             " Make sure v:completed_item is not changed
             Assert Equals(v:completed_item, l:old_completed_item)
         End
+
+        It replaces entire buffer correctly when end column is 1
+            call s:set_text(['foo', 'b'])
+
+            call lsp#utils#text_edit#apply_text_edits(
+                    \ expand('%'),
+                    \ [{
+                    \   'range': {
+                    \       'start': {
+                    \           'line': 0,
+                    \           'character': 0
+                    \       },
+                    \       'end': {
+                    \           'line': 1,
+                    \           'character': 1
+                    \       }
+                    \   },
+                    \   'newText': "x\ny\nz\n"
+                    \ }])
+
+            let l:buffer_text = s:get_text()
+            Assert Equals(l:buffer_text, ['x', 'y', 'z', '', ''])
+        End
+
+        It should apply edit that contains \r\n
+            call s:set_text(['foo', 'b'])
+
+            call lsp#utils#text_edit#apply_text_edits(
+                    \ expand('%'),
+                    \ [{
+                    \   'range': {
+                    \       'start': {
+                    \           'line': 0,
+                    \           'character': 0
+                    \       },
+                    \       'end': {
+                    \           'line': 1,
+                    \           'character': 1
+                    \       }
+                    \   },
+                    \   'newText': "x\r\ny\r\nz\r\n"
+                    \ }])
+
+            let l:buffer_text = s:get_text()
+            Assert Equals(l:buffer_text, ['x', 'y', 'z', '', ''])
+        End
+
+        It adds imports correctly
+            call s:set_text(['package main', '', 'import java.util.ArrayList;', '', 'public class Main {}'])
+
+            call lsp#utils#text_edit#apply_text_edits(
+                \ expand('%'),
+                \ [{
+                \     "range": {
+                \       "start": {
+                \         "character": 0,
+                \         "line": 2
+                \       },
+                \       "end": {
+                \         "character": 0,
+                \         "line": 3
+                \       }
+                \     },
+                \     "newText": ""
+                \   },
+                \   {
+                \     "range": {
+                \       "start": {
+                \         "character": 0,
+                \         "line": 2
+                \       },
+                \       "end": {
+                \         "character": 0,
+                \         "line": 2
+                \       }
+                \     },
+                \     "newText": "import java.util.ArrayList;\n"
+                \   }
+                \ ])
+
+            let l:buffer_text = s:get_text()
+            Assert Equals(l:buffer_text, ['package main', '', 'import java.util.ArrayList;', '', 'public class Main {}', ''])
+        End
+
+        It adds null
+            let l:text = ['package main', '', 'import java.util.ArrayList;', '', 'public class Main {}']
+            call s:set_text(l:text)
+
+            call lsp#utils#text_edit#apply_text_edits(
+                \ expand('%'),
+                \ v:null)
+
+            let l:buffer_text = s:get_text()
+            Assert Equals(l:buffer_text, l:text + [''])
+        End
+
+        It should apply edits to unloaded file
+            let l:target = globpath(&runtimepath, 'test/lsp/utils/text_edit.vimspec')
+            call themis#log(l:target)
+            call lsp#utils#text_edit#apply_text_edits(lsp#utils#path_to_uri(l:target), [{
+            \   'range': {
+            \     'start': {
+            \       'line': 0,
+            \       'character': 0,
+            \     },
+            \     'end': {
+            \       'line': 0,
+            \       'character': 0,
+            \     }
+            \   },
+            \   'newText': "aiueo\n"
+            \ }])
+
+            Assert Equals(getbufline(l:target, 1), ['aiueo'])
+        End
     End
 End
 

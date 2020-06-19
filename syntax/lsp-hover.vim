@@ -33,4 +33,18 @@ function! s:do_highlight() abort
     endif
 endfunction
 
+function! s:cleanup_markdown() abort
+    " Don't highlight _ in words
+    syntax match markdownError "\w\@<=\w\@="
+
+    " Conceal escaped characters
+    " Workaround for: https://github.com/palantir/python-language-server/issues/386
+    if has('conceal')
+        for l:escaped_char in ['`', '*', '_', '{', '}', '(', ')', '<', '>', '#', '+', '.', '!', '-']
+            execute printf('syntax region vimLspMarkdownEscape matchgroup=Conceal start="\\\ze[%s]" end="[%s]\zs" concealends', l:escaped_char, l:escaped_char)
+        endfor
+    end
+endfunction
+
 call s:do_highlight()
+call s:cleanup_markdown()

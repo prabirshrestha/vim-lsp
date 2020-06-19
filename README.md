@@ -1,4 +1,4 @@
-# vim-lsp
+# vim-lsp [![Gitter](https://badges.gitter.im/vimlsp/community.svg)](https://gitter.im/vimlsp/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 
 Async [Language Server Protocol](https://github.com/Microsoft/language-server-protocol) plugin for vim8 and neovim.
 
@@ -11,9 +11,12 @@ Plug 'prabirshrestha/vim-lsp'
 
 _Note: [async.vim](https://github.com/prabirshrestha/async.vim) is required and is used to normalize jobs between vim8 and neovim._
 
-## Registering servers
+__Performance__
 
-**For other languages please refer to the [wiki](https://github.com/prabirshrestha/vim-lsp/wiki/Servers).**
+Certain bottlenecks in Vim script have been implemented in lua. If you would like to take advantage of these performance gains
+use vim compiled with lua or neovim v0.4.0+
+
+## Registering servers
 
 ```viml
 if executable('pyls')
@@ -24,22 +27,30 @@ if executable('pyls')
         \ 'whitelist': ['python'],
         \ })
 endif
+
+function! s:on_lsp_buffer_enabled() abort
+    setlocal omnifunc=lsp#complete
+    setlocal signcolumn=yes
+    if exists('+tagfunc') | setlocal tagfunc=lsp#tagfunc | endif
+    nmap <buffer> gd <plug>(lsp-definition)
+    nmap <buffer> <f2> <plug>(lsp-rename)
+    " refer to doc to add more commands
+endfunction
+
+augroup lsp_install
+    au!
+    " call s:on_lsp_buffer_enabled only for languages that has the server registered.
+    autocmd User lsp_buffer_enabled call s:on_lsp_buffer_enabled()
+augroup END
 ```
 
-While most of the time it is ok to just set the `name`, `cmd` and `whitelist` there are times when you need to get more control of the `root_uri`. By default `root_uri` for the buffer can be found using `lsp#utils#get_default_root_uri()` which internaly uses `getcwd()`. Here is an example that sets the `root_uri` to the directory where it contains `tsconfig.json` and traverses up the directories automatically, if it isn't found it returns empty string which tells `vim-lsp` to start the server but don't initialize the server. If you would like to avoid starting the server you can return empty array for `cmd`.
+Refer to [vim-lsp-settings](https://github.com/mattn/vim-lsp-settings) on how to easily setup language servers using vim-lsp automatically.
 
-```vim
-if executable('typescript-language-server')
-    au User lsp_setup call lsp#register_server({
-        \ 'name': 'typescript-language-server',
-        \ 'cmd': {server_info->[&shell, &shellcmdflag, 'typescript-language-server --stdio']},
-        \ 'root_uri':{server_info->lsp#utils#path_to_uri(lsp#utils#find_nearest_parent_file_directory(lsp#utils#get_buffer_path(), 'tsconfig.json'))},
-        \ 'whitelist': ['typescript'],
-        \ })
-endif
+```viml
+Plug 'prabirshrestha/async.vim'
+Plug 'prabirshrestha/vim-lsp'
+Plug 'mattn/vim-lsp-settings'
 ```
-
-vim-lsp supports incremental changes of Language Server Protocol.
 
 ## auto-complete
 
@@ -47,9 +58,10 @@ Refer to docs on configuring omnifunc or [asyncomplete.vim](https://github.com/p
 
 ## Snippets
 vim-lsp does not support snippets by default. If you want snippet integration, you will first have to install a third-party snippet plugin and a plugin that integrates it in vim-lsp.
-At the moment, you have two options:
-1. [UltiSnips](https://github.com/SirVer/ultisnips) together with [vim-lsp-ultisnips](https://github.com/thomasfaingnaert/vim-lsp-ultisnips)
-2. [neosnippet.vim](https://github.com/Shougo/neosnippet.vim) together with [vim-lsp-neosnippet](https://github.com/thomasfaingnaert/vim-lsp-neosnippet)
+At the moment, you have following options:
+1. [vim-vsnip](https://github.com/hrsh7th/vim-vsnip) together with [vim-vsnip-integ](https://github.com/hrsh7th/vim-vsnip-integ)
+2. [UltiSnips](https://github.com/SirVer/ultisnips) together with [vim-lsp-ultisnips](https://github.com/thomasfaingnaert/vim-lsp-ultisnips)
+3. [neosnippet.vim](https://github.com/Shougo/neosnippet.vim) together with [vim-lsp-neosnippet](https://github.com/thomasfaingnaert/vim-lsp-neosnippet)
 
 For more information, refer to the readme and documentation of the respective plugins.
 
@@ -71,6 +83,12 @@ let g:lsp_fold_enabled = 0
 
 Also see `:h vim-lsp-folding`.
 
+## Semantic highlighting
+vim-lsp supports the unofficial extension to the LSP protocol for semantic highlighting (https://github.com/microsoft/vscode-languageserver-node/pull/367).
+This feature requires Neovim highlights, or Vim with the `textprop` feature enabled.
+You will also need to link language server semantic scopes to Vim highlight groups.
+Refer to `:h vim-lsp-semantic` for more info.
+
 ## Supported commands
 
 **Note:**
@@ -80,6 +98,7 @@ Also see `:h vim-lsp-folding`.
 | Command | Description|
 |--|--|
 |`:LspCodeAction`| Gets a list of possible commands that can be applied to a file so it can be fixed (quick fix) |
+|`:LspCodeLens`| Gets a list of possible commands that can be executed on the current document |
 |`:LspDeclaration`| Go to the declaration of the word under the cursor, and open in the current window |
 |`:LspDefinition`| Go to the definition of the word under the cursor, and open in the current window |
 |`:LspDocumentDiagnostics`| Get current document diagnostics information |
@@ -88,18 +107,23 @@ Also see `:h vim-lsp-folding`.
 |`:LspDocumentSymbol`| Show document symbols |
 |`:LspHover`| Show hover information |
 |`:LspImplementation` | Show implementation of interface in the current window |
+|`:LspNextDiagnostic`| jump to next diagnostic (all of error, warning, information, hint) |
 |`:LspNextError`| jump to next error |
 |`:LspNextReference`| jump to next reference to the symbol under cursor |
+|`:LspNextWarning`| jump to next warning |
 |`:LspPeekDeclaration`| Go to the declaration of the word under the cursor, but open in preview window |
 |`:LspPeekDefinition`| Go to the definition of the word under the cursor, but open in preview window |
 |`:LspPeekImplementation`| Go to the implementation of an interface, but open in preview window |
 |`:LspPeekTypeDefinition`| Go to the type definition of the word under the cursor, but open in preview window |
+|`:LspPreviousDiagnostic`| jump to previous diagnostic (all of error, warning, information, hint) |
 |`:LspPreviousError`| jump to previous error |
 |`:LspPreviousReference`| jump to previous reference to the symbol under cursor |
+|`:LspPreviousWarning`| jump to previous warning |
 |`:LspReferences`| Find references |
 |`:LspRename`| Rename symbol |
 |`:LspStatus` | Show the status of the language server |
 |`:LspTypeDefinition`| Go to the type definition of the word under the cursor, and open in the current window |
+|`:LspTypeHierarchy`| View type hierarchy of the symbol under the cursor |
 |`:LspWorkspaceSymbol`| Search/Show workspace symbol |
 
 ### Diagnostics
@@ -129,7 +153,7 @@ let g:lsp_signs_warning = {'text': '‼', 'icon': '/path/to/some/icon'} " icons 
 let g:lsp_signs_hint = {'icon': '/path/to/some/other/icon'} " icons require GUI
 ```
 
-Also two highlight groups for every sign group are defined (for example for LspError these are LspErrorText and LspErrorLine). By default, LspError text is highlighted using Error group, LspWarning is highlighted as Todo, others use Normal group. Line highlighting is not set by default. If your colorscheme of choise does not provide any of these, it is possible to clear them or link to some other group, like so:
+Also three highlight groups for every sign group are defined (for example for LspError these are LspErrorText, LspErrorVirtual, and LspErrorHighlight). By default, LspError text is highlighted using Error group, LspWarning is highlighted as Todo, others use Normal group. Virtual text will by default use the Text highlight group, for example for LspErrorVirtual will default to LspErrorText. Line highlighting is not set by default. If your colorscheme of choice does not provide any of these, it is possible to clear them or link to some other group, like so:
 
 ```viml
 highlight link LspErrorText GruvboxRedSign " requires gruvbox

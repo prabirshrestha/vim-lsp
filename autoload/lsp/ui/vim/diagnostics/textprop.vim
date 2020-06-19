@@ -78,12 +78,16 @@ function! s:clear_all_highlights() abort
         endif
 
         for l:bufnr in range(1, bufnr('$'))
-            if bufexists(l:bufnr)
-                call prop_remove({
-                    \ 'type': l:prop_type,
-                    \ 'bufnr': l:bufnr,
-                    \ 'all': v:true,
-                    \ })
+            if bufexists(l:bufnr) && bufloaded(l:bufnr)
+                try
+                    call prop_remove({
+                        \ 'type': l:prop_type,
+                        \ 'bufnr': l:bufnr,
+                        \ 'all': v:true,
+                        \ }, 1, len(getbufline(l:bufnr, 1, '$')))
+                catch
+                    call lsp#log('clear_all_highlights', v:exception)
+                endtry
             endif
         endfor
 
@@ -103,11 +107,15 @@ function! s:clear_highlights(server_name, path) abort
 
     for l:severity in keys(s:severity_sign_names_mapping)
         let l:prop_type = s:get_prop_type(a:server_name, l:severity)
-        call prop_remove({
-            \ 'type': l:prop_type,
-            \ 'bufnr': l:bufnr,
-            \ 'all': v:true,
-            \ })
+        try
+            call prop_remove({
+                \ 'type': l:prop_type,
+                \ 'bufnr': l:bufnr,
+                \ 'all': v:true,
+                \ }, 1, len(getbufline(l:bufnr, 1, '$')))
+        catch
+            call lsp#log('clear_highlights', v:exception)
+        endtry
     endfor
 endfunction
 
@@ -117,20 +125,20 @@ function! s:place_highlights(server_name, path, diagnostics) abort
     let l:bufnr = bufnr(a:path)
     if !empty(a:diagnostics) && l:bufnr >= 0
         for l:item in a:diagnostics
-            let l:start_line = l:item['range']['start']['line'] + 1
-            let l:start_char = l:item['range']['start']['character']
-            let l:start_col = lsp#utils#to_col(l:bufnr, l:start_line, l:start_char)
-            let l:end_line = l:item['range']['end']['line'] + 1
-            let l:end_char = l:item['range']['end']['character']
-            let l:end_col = lsp#utils#to_col(l:bufnr, l:end_line, l:end_char)
+            let [l:start_line, l:start_col] = lsp#utils#position#lsp_to_vim(l:bufnr, l:item['range']['start'])
+            let [l:end_line, l:end_col] = lsp#utils#position#lsp_to_vim(l:bufnr, l:item['range']['end'])
 
-            let l:prop_type = s:get_prop_type(a:server_name, l:item['severity'])
-            call prop_add(l:start_line, l:start_col, {
-                \ 'end_lnum': l:end_line,
-                \ 'end_col': l:end_col,
-                \ 'bufnr': l:bufnr,
-                \ 'type': l:prop_type,
-                \ })
+            let l:prop_type = s:get_prop_type(a:server_name, get(l:item, 'severity', 1))
+            try
+                call prop_add(l:start_line, l:start_col, {
+                    \ 'end_lnum': l:end_line,
+                    \ 'end_col': l:end_col,
+                    \ 'bufnr': l:bufnr,
+                    \ 'type': l:prop_type,
+                    \ })
+            catch
+                call lsp#log('place_highlights', v:exception)
+            endtry
         endfor
     endif
 endfunction
