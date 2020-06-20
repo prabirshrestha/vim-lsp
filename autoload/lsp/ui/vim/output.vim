@@ -394,7 +394,7 @@ endfunction
 function! lsp#ui#vim#output#append(data, lines, syntax_lines) abort
     if type(a:data) == type([])
         for l:entry in a:data
-            call lsp#ui#vim#output#append(entry, a:lines, a:syntax_lines)
+            call lsp#ui#vim#output#append(l:entry, a:lines, a:syntax_lines)
         endfor
 
         return 'markdown'
