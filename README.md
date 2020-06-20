@@ -5,11 +5,8 @@ Async [Language Server Protocol](https://github.com/Microsoft/language-server-pr
 # Installing
 
 ```viml
-Plug 'prabirshrestha/async.vim'
 Plug 'prabirshrestha/vim-lsp'
 ```
-
-_Note: [async.vim](https://github.com/prabirshrestha/async.vim) is required and is used to normalize jobs between vim8 and neovim._
 
 __Performance__
 
@@ -47,7 +44,6 @@ augroup END
 Refer to [vim-lsp-settings](https://github.com/mattn/vim-lsp-settings) on how to easily setup language servers using vim-lsp automatically.
 
 ```viml
-Plug 'prabirshrestha/async.vim'
 Plug 'prabirshrestha/vim-lsp'
 Plug 'mattn/vim-lsp-settings'
 ```
