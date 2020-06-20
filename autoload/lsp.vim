@@ -802,6 +802,8 @@ function! s:handle_initialize(server_name, data) abort
         call l:Init_callback(a:data)
     endfor
 
+    call lsp#ui#vim#documentation#setup()
+
     doautocmd User lsp_server_init
 endfunction
 

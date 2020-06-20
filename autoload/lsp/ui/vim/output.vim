@@ -149,10 +149,10 @@ function! lsp#ui#vim#output#floatingpreview(data) abort
     return s:winid
 endfunction
 
-function! s:setcontent(lines, ft) abort
+function! lsp#ui#vim#output#setcontent(winid, lines, ft) abort
     if s:use_vim_popup
         " vim popup
-        call setbufline(winbufnr(s:winid), 1, a:lines)
+        call setbufline(winbufnr(a:winid), 1, a:lines)
         call win_execute(s:winid, 'setlocal filetype=' . a:ft . '.lsp-hover')
     else
         " nvim floating or preview
@@ -162,7 +162,7 @@ function! s:setcontent(lines, ft) abort
     endif
 endfunction
 
-function! s:adjust_float_placement(bufferlines, maxwidth) abort
+function! lsp#ui#vim#output#adjust_float_placement(bufferlines, maxwidth) abort
     if s:use_nvim_float
         let l:win_config = {}
         let l:height = min([winheight(s:winid), a:bufferlines])
@@ -279,6 +279,27 @@ function! s:align_preview(options) abort
     endif
 endfunction
 
+function! lsp#ui#vim#output#get_size_info() abort
+    " Get size information while still having the buffer active
+    let l:maxwidth = max(map(getline(1, '$'), 'strdisplaywidth(v:val)'))
+    if g:lsp_preview_max_width > 0
+      let l:bufferlines = 0
+      let l:maxwidth = min([g:lsp_preview_max_width, l:maxwidth])
+
+      " Determine, for each line, how many "virtual" lines it spans, and add
+      " these together for all lines in the buffer
+      for l:line in getline(1, '$')
+        let l:num_lines = str2nr(string(ceil(strdisplaywidth(l:line) * 1.0 / g:lsp_preview_max_width)))
+        let l:bufferlines += max([l:num_lines, 1])
+      endfor
+    else
+      let l:bufferlines = line('$')
+    endif
+
+    return [l:bufferlines, l:maxwidth]
+  return [l:bufferlines, l:maxwidth]
+endfunction
+
 function! lsp#ui#vim#output#float_supported() abort
     return s:use_vim_popup || s:use_nvim_float
 endfunction
@@ -307,7 +328,7 @@ function! lsp#ui#vim#output#preview(server, data, options) abort
     let s:preview_data = a:data
     let l:lines = []
     let l:syntax_lines = []
-    let l:ft = s:append(a:data, l:lines, l:syntax_lines)
+    let l:ft = lsp#ui#vim#output#append(a:data, l:lines, l:syntax_lines)
 
     " If the server response is empty content, we don't display anything.
     if empty(l:lines) && empty(l:syntax_lines)
@@ -328,23 +349,9 @@ function! lsp#ui#vim#output#preview(server, data, options) abort
 
     call setbufvar(winbufnr(s:winid), 'lsp_syntax_highlights', l:syntax_lines)
     call setbufvar(winbufnr(s:winid), 'lsp_do_conceal', l:do_conceal)
-    call s:setcontent(l:lines, l:ft)
+    call lsp#ui#vim#output#setcontent(s:winid, l:lines, l:ft)
 
-    " Get size information while still having the buffer active
-    let l:maxwidth = max(map(getline(1, '$'), 'strdisplaywidth(v:val)'))
-    if g:lsp_preview_max_width > 0
-        let l:bufferlines = 0
-        let l:maxwidth = min([g:lsp_preview_max_width, l:maxwidth])
-
-        " Determine, for each line, how many "virtual" lines it spans, and add
-        " these together for all lines in the buffer
-        for l:line in getline(1, '$')
-            let l:num_lines = str2nr(string(ceil(strdisplaywidth(l:line) * 1.0 / g:lsp_preview_max_width)))
-            let l:bufferlines += max([l:num_lines, 1])
-        endfor
-    else
-        let l:bufferlines = line('$')
-    endif
+    let [l:bufferlines, l:maxwidth] = lsp#ui#vim#output#get_size_info()
 
     if s:use_preview
         " Set statusline
@@ -361,17 +368,16 @@ function! lsp#ui#vim#output#preview(server, data, options) abort
     echo ''
 
     if s:winid && (s:use_vim_popup || s:use_nvim_float)
-        if s:use_nvim_float
-            " Neovim floats
-            call s:adjust_float_placement(l:bufferlines, l:maxwidth)
-            call s:set_cursor(l:current_window_id, a:options)
-            call s:add_float_closing_hooks()
-        elseif s:use_vim_popup
-            " Vim popups
-            call s:set_cursor(l:current_window_id, a:options)
-        endif
-
-        doautocmd User lsp_float_opened
+      if s:use_nvim_float
+        " Neovim floats
+        call lsp#ui#vim#output#adjust_float_placement(l:bufferlines, l:maxwidth)
+        call s:set_cursor(l:current_window_id, a:options)
+        call s:add_float_closing_hooks()
+      elseif s:use_vim_popup
+        " Vim popups
+        call s:set_cursor(l:current_window_id, a:options)
+      endif
+	  doautocmd User lsp_float_opened
     endif
 
     if !g:lsp_preview_keep_focus
@@ -385,10 +391,10 @@ function! s:escape_string_for_display(str) abort
     return substitute(substitute(a:str, '\r\n', '\n', 'g'), '\r', '\n', 'g')
 endfunction
 
-function! s:append(data, lines, syntax_lines) abort
-    if type(a:data) ==# type([])
+function! lsp#ui#vim#output#append(data, lines, syntax_lines) abort
+    if type(a:data) == type([])
         for l:entry in a:data
-            call s:append(l:entry, a:lines, a:syntax_lines)
+            call lsp#ui#vim#output#append(l:entry, a:lines, a:syntax_lines)
         endfor
 
         return 'markdown'
