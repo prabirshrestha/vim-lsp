@@ -155,7 +155,7 @@ function! lsp#ui#vim#output#setcontent(winid, lines, ft) abort
     if s:use_vim_popup
         " vim popup
         call setbufline(winbufnr(a:winid), 1, a:lines)
-        call win_execute(s:winid, 'setlocal filetype=' . a:ft . '.lsp-hover')
+        noautocmd call win_execute(s:winid, 'setlocal filetype=' . a:ft . '.lsp-hover')
     else
         " nvim floating or preview
         call setline(1, a:lines)
