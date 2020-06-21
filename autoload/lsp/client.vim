@@ -187,7 +187,7 @@ function! s:lsp_start(opts) abort
         return -1
     endif
 
-    let l:client_id = async#job#start(a:opts.cmd, {
+    let l:client_id = lsp#utils#job#start(a:opts.cmd, {
         \ 'on_stdout': function('s:on_stdout'),
         \ 'on_stderr': function('s:on_stderr'),
         \ 'on_exit': function('s:on_exit'),
@@ -200,7 +200,7 @@ function! s:lsp_start(opts) abort
 endfunction
 
 function! s:lsp_stop(id) abort
-    call async#job#stop(a:id)
+    call lsp#utils#job#stop(a:id)
 endfunction
 
 let s:send_type_request = 1
@@ -242,7 +242,7 @@ function! s:lsp_send(id, opts, type) abort " opts = { id?, method?, result?, par
     let l:json = json_encode(l:request)
     let l:payload = 'Content-Length: ' . len(l:json) . "\r\n\r\n" . l:json
 
-    call async#job#send(a:id, l:payload)
+    call lsp#utils#job#send(a:id, l:payload)
 
     if (a:type == s:send_type_request)
         let l:id = l:request['id']
