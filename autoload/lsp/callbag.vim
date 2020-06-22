@@ -1,4 +1,4 @@
-" https://github.com/prabirshrestha/callbag.vim#37077311c0083c688299d94514956ff364d036f1
+" https://github.com/prabirshrestha/callbag.vim#af60e83b1e6f5aa86b551f37cd971f09f3733435 (dirty)
 "    :CallbagEmbed path=autoload/lsp/callbag.vim namespace=lsp#callbag
 
 function! lsp#callbag#undefined() abort
@@ -752,6 +752,46 @@ function! s:combineSourceCallback(data, i, t, d) abort
     else
         call a:data['sink'](a:t, a:d)
     endif
+endfunction
+" }}}
+
+" distinctUntilChanged {{{
+function! s:distinctUntilChangedDefaultCompare(a, b) abort
+    return a:a == a:b
+endfunction
+
+function! lsp#callbag#distinctUntilChanged(...) abort
+    let l:data = { 'compare': a:0 == 0 ? function('s:distinctUntilChangedDefaultCompare') : a:1 }
+    return function('s:distinctUntilChangedSourceFactory', [l:data])
+endfunction
+
+function! s:distinctUntilChangedSourceFactory(data, source) abort
+    let a:data['source'] = a:source
+    return function('s:distinctUntilChangedSinkFactory', [a:data])
+endfunction
+
+function! s:distinctUntilChangedSinkFactory(data, start, sink) abort
+    if a:start != 0 | return | endif
+    let a:data['sink'] = a:sink
+    let a:data['inited'] = 0
+    call a:data['source'](0, function('s:distinctUntilChangedSourceCallback', [a:data]))
+endfunction
+
+function! s:distinctUntilChangedSourceCallback(data, t, d) abort
+    if a:t == 0 | let a:data['talkback'] = a:d | endif
+    if a:t != 1
+        call a:data['sink'](a:t, a:d)
+        return
+    endif
+
+    if a:data['inited'] && has_key(a:data, 'prev') && a:data['compare'](a:data['prev'], a:d)
+        call a:data['talkback'](1, lsp#callbag#undefined())
+        return
+    endif
+
+    let a:data['inited'] = 1
+    let a:data['prev'] = a:d
+    call a:data['sink'](1, a:d)
 endfunction
 " }}}
 

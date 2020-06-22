@@ -63,6 +63,7 @@ function! lsp#enable() abort
         call lsp#ui#vim#signature_help#setup()
     endif
     call lsp#ui#vim#completion#_setup()
+    call lsp#diagnostics#_setup()
     call s:register_events()
 endfunction
 
@@ -74,6 +75,7 @@ function! lsp#disable() abort
     call lsp#ui#vim#virtual#disable()
     call lsp#ui#vim#highlights#disable()
     call lsp#ui#vim#diagnostics#textprop#disable()
+    call lsp#diagnostics#_uninstall()
     call s:unregister_events()
     let s:enabled = 0
 endfunction
