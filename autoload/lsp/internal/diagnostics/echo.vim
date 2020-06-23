@@ -3,9 +3,10 @@ function! lsp#internal#diagnostics#echo#_enable() abort
         \ lsp#callbag#fromEvent('CursorMoved'),
         \ lsp#callbag#filter({_->g:lsp_diagnostics_echo_cursor}),
         \ lsp#callbag#debounceTime(g:lsp_diagnostics_echo_delay),
-        \ lsp#callbag#filter({_->mode() is# 'n'}),
         \ lsp#callbag#map({_->{'bufnr': bufnr('%'), 'curpos': getcurpos()[0:2], 'changedtick': b:changedtick }}),
         \ lsp#callbag#distinctUntilChanged({a,b -> a['bufnr'] == b['bufnr'] && a['curpos'] == b['curpos'] && a['changedtick'] == b['changedtick']}),
+        \ lsp#callbag#filter({_->mode() is# 'n'}),
+        \ lsp#callbag#filter({_->getbufvar(bufnr('%'), '&buftype') !=# 'terminal' }),
         \ lsp#callbag#map({_->lsp#ui#vim#diagnostics#get_diagnostics_under_cursor()}),
         \ lsp#callbag#subscribe({x->s:echo(x)}),
         \ )
