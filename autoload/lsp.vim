@@ -696,7 +696,7 @@ function! s:send_request(server_name, data) abort
         let l:data['on_notification'] = '---funcref---'
     endif
     call lsp#log_verbose('--->', l:lsp_id, a:server_name, l:data)
-    call lsp#client#send_request(l:lsp_id, a:data)
+    return lsp#client#send_request(l:lsp_id, a:data)
 endfunction
 
 function! s:send_notification(server_name, data) abort
@@ -892,7 +892,12 @@ function! s:get_versioned_text_document_identifier(buf, buffer_info) abort
 endfunction
 
 function! lsp#request(server_name, request) abort
-    let l:ctx = { 'server_name': a:server_name, 'request': copy(a:request) }
+    let l:ctx = {
+        \ 'server_name': a:server_name,
+        \ 'request': copy(a:request),
+        \ 'request_id': -1,
+        \ 'done': -1,
+        \ }
     return lsp#callbag#create(function('s:request_create', [l:ctx]))
 endfunction
 
@@ -904,23 +909,40 @@ function! s:request_create(ctx, next, error, complete) abort
     let a:ctx['request']['on_notification'] = function('s:request_on_notification', [a:ctx])
     call lsp#utils#step#start([
         \ {s->s:ensure_flush(a:ctx['bufnr'], a:ctx['server_name'], s.callback)},
-        \ {s->s:is_step_error(s) ? s:request_error(a:ctx, s.result[0]) : s:send_request(a:ctx['server_name'], a:ctx['request']) },
+        \ {s->s:is_step_error(s) ? s:request_error(a:ctx, s.result[0]) : s:request_send(a:ctx) },
         \ ])
     return function('s:request_cancel', [a:ctx])
 endfunction
 
+function! s:request_send(ctx) abort
+    let a:ctx['request_id'] = s:send_request(a:ctx['server_name'], a:ctx['request'])
+endfunction
+
 function! s:request_error(ctx, error) abort
+    let a:ctx['done'] = 1
     call a:ctx['error'](a:error)
 endfunction
 
 function! s:request_on_notification(ctx, id, data, event) abort
+    let a:ctx['done'] = 1
     call a:ctx['next'](a:data)
     call a:ctx['complete']()
 endfunction
 
 function! s:request_cancel(ctx) abort
-    if lsp#get_server_status(a:ctx['server_name']) != 'running' | return | endif
-    " TODO: cancel request
+    if a:ctx['request_id'] <= 0 || a:ctx['done'] | return | endif " we have not made the request yet or request is complete, so nothing to cancel
+    if lsp#get_server_status(a:ctx['server_name']) != 'running' | return | endif " server is dead
+    " send the actual cancel request
+    let l:Dispose = lsp#callbag#pipe(
+        \ lsp#request(a:ctx['server_name'], {
+        \   'method': '$/cancelRequest',
+        \   'params': { 'id': a:ctx['request_id'] },
+        \ }),
+        \ lsp#callbag#subscribe({
+        \   'error':{e->l:Dispose()},
+        \   'complete':{->l:Dispose()},
+        \ })
+        \)
 endfunction
 
 function! lsp#send_request(server_name, request) abort
