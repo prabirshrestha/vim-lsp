@@ -1,4 +1,4 @@
-function! lsp#diagnostics#echo#_enable() abort
+function! lsp#internal#diagnostics#echo#_enable() abort
     let s:Dispose = lsp#callbag#pipe(
         \ lsp#callbag#fromEvent('CursorMoved'),
         \ lsp#callbag#filter({_->g:lsp_diagnostics_echo_cursor}),
@@ -11,7 +11,7 @@ function! lsp#diagnostics#echo#_enable() abort
         \ )
 endfunction
 
-function! lsp#diagnostics#echo#_disable() abort
+function! lsp#internal#diagnostics#echo#_disable() abort
     if exists('s:Dispose') | call s:Dispose() | endif
 endfunction
 
