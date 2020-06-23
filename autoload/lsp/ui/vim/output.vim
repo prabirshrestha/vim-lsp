@@ -15,10 +15,12 @@ function! lsp#ui#vim#output#closepreview() abort
         " Don't close if window got focus
         return
     endif
-    "closing floats in vim8.1 must use popup_close() (nvim could use nvim_win_close but pclose
-    "works)
+    "closing floats in vim8.1 must use popup_close()
+    "nvim must use nvim_win_close. pclose is not reliable and does not always work
     if s:use_vim_popup && s:winid
         call popup_close(s:winid)
+    elseif s:use_nvim_float && s:winid
+        call nvim_win_close(s:winid, 0)
     else
         pclose
     endif
