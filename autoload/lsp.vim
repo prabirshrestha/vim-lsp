@@ -921,11 +921,13 @@ function! s:request_send(ctx) abort
 endfunction
 
 function! s:request_error(ctx, error) abort
+    if a:ctx['cancelled'] | return | endif " caller already unsubscribed so don't bother notifying
     let a:ctx['done'] = 1
     call a:ctx['error'](a:error)
 endfunction
 
 function! s:request_on_notification(ctx, id, data, event) abort
+    if a:ctx['cancelled'] | return | endif " caller already unsubscribed so don't bother notifying
     let a:ctx['done'] = 1
     call a:ctx['next'](a:data)
     call a:ctx['complete']()
@@ -935,7 +937,7 @@ function! s:request_cancel(ctx) abort
     if a:ctx['cancelled'] | return | endif
     let a:ctx['cancelled'] = 1
     if a:ctx['request_id'] <= 0 || a:ctx['done'] | return | endif " we have not made the request yet or request is complete, so nothing to cancel
-    if lsp#get_server_status(a:ctx['server_name']) != 'running' | return | endif " server is dead
+    if lsp#get_server_status(a:ctx['server_name']) != 'running' | return | endif " if server is not running we cant send the request
     " send the actual cancel request
     let l:Dispose = lsp#callbag#pipe(
         \ lsp#request(a:ctx['server_name'], {
@@ -949,6 +951,7 @@ function! s:request_cancel(ctx) abort
         \)
 endfunction
 
+" depreacted: use lsp#request() instead
 function! lsp#send_request(server_name, request) abort
     " While it is possible to not introduce a new lsp#request() api and make
     " this return a callbag, we cannot implement features such as cancellation
@@ -969,7 +972,7 @@ function! lsp#send_request(server_name, request) abort
 endfunction
 
 function! s:send_request_error(ctx, error) abort
-    call a:ctx['callback'](a:error)
+    call a:ctx['cb'](a:error)
     call l:ctx['dispose']()
 endfunction
 
