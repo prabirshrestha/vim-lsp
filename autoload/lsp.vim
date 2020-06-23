@@ -891,15 +891,60 @@ function! s:get_versioned_text_document_identifier(buf, buffer_info) abort
         \ }
 endfunction
 
-function! lsp#send_request(server_name, request) abort
-    let l:bufnr = get(a:request, 'bufnr', bufnr('%'))
-    let l:Cb = has_key(a:request, 'on_notification') ? a:request['on_notification'] : function('s:Noop')
-    let l:request = copy(a:request)
-    let l:request['on_notification'] = {id, data, event->l:Cb(data)}
+function! lsp#request(server_name, request) abort
+    let l:ctx = { 'server_name': a:server_name, 'request': copy(a:request) }
+    return lsp#callbag#create(function('s:request_create', [l:ctx]))
+endfunction
+
+function! s:request_create(ctx, next, error, complete) abort
+    let a:ctx['next'] = a:next
+    let a:ctx['error'] = a:error
+    let a:ctx['complete'] = a:complete
+    let a:ctx['bufnr'] = get(a:ctx['request'], 'bufnr', bufnr('%'))
+    let a:ctx['request']['on_notification'] = function('s:request_on_notification', [a:ctx])
     call lsp#utils#step#start([
-        \ {s->s:ensure_flush(l:bufnr, a:server_name, s.callback)},
-        \ {s->s:is_step_error(s) ? l:Cb(s.result[0]) : s:send_request(a:server_name, l:request) },
+        \ {s->s:ensure_flush(a:ctx['bufnr'], a:ctx['server_name'], s.callback)},
+        \ {s->s:is_step_error(s) ? s:request_error(a:ctx, s.result[0]) : s:send_request(a:ctx['server_name'], a:ctx['request']) },
         \ ])
+    return function('s:request_cancel', [a:ctx])
+endfunction
+
+function! s:request_error(ctx, error) abort
+    call a:ctx['error'](a:error)
+endfunction
+
+function! s:request_on_notification(ctx, id, data, event) abort
+    call a:ctx['next'](a:data)
+    call a:ctx['complete']()
+endfunction
+
+function! s:request_cancel(ctx) abort
+    if lsp#get_server_status(a:ctx['server_name']) != 'running' | return | endif
+    " TODO: cancel request
+endfunction
+
+function! lsp#send_request(server_name, request) abort
+    " While it is possible to not introduce a new lsp#request() api and make
+    " this return a callbag, we cannot implement features such as cancellation
+    " hence explicitly adding lsp#request() which is more powerful
+    let l:ctx = {
+        \ 'server_name': a:server_name,
+        \ 'request': copy(a:request),
+        \ 'cb': has_key(a:request, 'on_notification') ? a:request['on_notification'] : function('s:Noop'),
+        \ }
+    let l:ctx['dispose'] = lsp#callbag#pipe(
+        \ lsp#request(a:server_name, a:request),
+        \ lsp#callbag#subscribe({
+        \   'next':{d->l:ctx['cb'](d)},
+        \   'error':{e->s:send_request_error(l:ctx, e)},
+        \   'complete':{->l:ctx['dispose']()},
+        \ })
+        \)
+endfunction
+
+function! s:send_request_error(ctx, error) abort
+    call a:ctx['callback'](a:error)
+    call l:ctx['dispose']()
 endfunction
 
 " omnicompletion
