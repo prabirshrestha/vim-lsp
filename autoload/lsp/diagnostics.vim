@@ -1,7 +1,7 @@
-function! lsp#diagnostics#_setup() abort
-    call lsp#diagnostics#echo#_setup()
+function! lsp#diagnostics#_enable() abort
+    call lsp#diagnostics#echo#_enable()
 endfunction
 
-function! lsp#diagnostics#_uninstall() abort
-    call lsp#diagnostics#echo#l_uninstall()
+function! lsp#diagnostics#_disable() abort
+    call lsp#diagnostics#echo#l_disable()
 endfunction
