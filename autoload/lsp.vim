@@ -888,6 +888,8 @@ function! s:get_versioned_text_document_identifier(buf, buffer_info) abort
         \ }
 endfunction
 
+" lsp#request {{{
+
 function! lsp#request(server_name, request) abort
     let l:ctx = {
         \ 'server_name': a:server_name,
@@ -972,6 +974,7 @@ function! s:send_request_error(ctx, error) abort
     call a:ctx['cb'](a:error)
     call l:ctx['dispose']()
 endfunction
+" }}}
 
 " omnicompletion
 function! lsp#complete(...) abort
