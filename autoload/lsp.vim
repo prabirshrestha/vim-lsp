@@ -895,8 +895,9 @@ function! lsp#request(server_name, request) abort
     let l:ctx = {
         \ 'server_name': a:server_name,
         \ 'request': copy(a:request),
-        \ 'request_id': -1,
-        \ 'done': -1,
+        \ 'request_id': 0,
+        \ 'done': 0,
+        \ 'cancelled': 0,
         \ }
     return lsp#callbag#create(function('s:request_create', [l:ctx]))
 endfunction
@@ -915,6 +916,7 @@ function! s:request_create(ctx, next, error, complete) abort
 endfunction
 
 function! s:request_send(ctx) abort
+    if a:ctx['cancelled'] | return | endif " caller already unsubscribed so don't bother sending request
     let a:ctx['request_id'] = s:send_request(a:ctx['server_name'], a:ctx['request'])
 endfunction
 
@@ -930,6 +932,8 @@ function! s:request_on_notification(ctx, id, data, event) abort
 endfunction
 
 function! s:request_cancel(ctx) abort
+    if a:ctx['cancelled'] | return | endif
+    let a:ctx['cancelled'] = 1
     if a:ctx['request_id'] <= 0 || a:ctx['done'] | return | endif " we have not made the request yet or request is complete, so nothing to cancel
     if lsp#get_server_status(a:ctx['server_name']) != 'running' | return | endif " server is dead
     " send the actual cancel request
