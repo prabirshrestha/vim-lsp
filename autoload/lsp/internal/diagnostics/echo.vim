@@ -1,4 +1,5 @@
 function! lsp#internal#diagnostics#echo#_enable() abort
+    if !g:lsp_diagnostics_echo_delay | return | endif " don't even bother registering if the feature is disabled
     let s:Dispose = lsp#callbag#pipe(
         \ lsp#callbag#fromEvent('CursorMoved'),
         \ lsp#callbag#filter({_->g:lsp_diagnostics_echo_cursor}),
