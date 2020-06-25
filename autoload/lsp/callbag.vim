@@ -1,4 +1,4 @@
-" https://github.com/prabirshrestha/callbag.vim#af60e83b1e6f5aa86b551f37cd971f09f3733435 (dirty)
+" https://github.com/prabirshrestha/callbag.vim#d0d8c3faa9b2877603b3d137a153e1a8acc463ec
 "    :CallbagEmbed path=autoload/lsp/callbag.vim namespace=lsp#callbag
 
 function! lsp#callbag#undefined() abort
@@ -138,7 +138,7 @@ function! s:createNext(data, d) abort
 endfunction
 
 function! s:createError(data, e) abort
-    if !a:data['end'] && e != lsp#callbag#undefined()
+    if !a:data['end'] && a:e != lsp#callbag#undefined()
         let a:data['end'] = 1
         call a:data['sink'](2, a:e)
     endif
@@ -302,7 +302,7 @@ endfunction
 
 function! s:takeTalkback(data, t, d) abort
     if a:t == 2
-        let a:data['end'] = true
+        let a:data['end'] = 1
         call a:data['sourceTalkback'](a:t, a:d)
     elseif a:data['taken'] < a:data['max']
         call a:data['sourceTalkback'](a:t, a:d)
@@ -609,7 +609,7 @@ function! s:mergeSourceCallback(data, i, t, d) abort
         let a:data['ended'] = 1
         let l:j = 0
         while l:j < a:data['n']
-            if l:j != l:i && l:j < len(a:data['sourceTalkbacks']) && a:data['sourceTalkbacks'][l:j] != 0
+            if l:j != a:i && l:j < len(a:data['sourceTalkbacks']) && a:data['sourceTalkbacks'][l:j] != 0
                 call a:data['sourceTalkbacks'][l:j](2, lsp#callbag#undefined())
             endif
             let l:j += 1
