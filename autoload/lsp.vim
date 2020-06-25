@@ -950,11 +950,7 @@ function! s:request_cancel(ctx) abort
         \)
 endfunction
 
-" depreacted: use lsp#request() instead
 function! lsp#send_request(server_name, request) abort
-    " While it is possible to not introduce a new lsp#request() api and make
-    " this return a callbag, we cannot implement features such as cancellation
-    " hence explicitly adding lsp#request() which is more powerful
     let l:ctx = {
         \ 'server_name': a:server_name,
         \ 'request': copy(a:request),
