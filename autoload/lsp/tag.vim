@@ -77,7 +77,7 @@ function! s:tag_view_sub(ctx, method, params) abort
     let l:operation = substitute(a:method, '\u', ' \l\0', 'g')
 
     let l:capabilities_func = printf('lsp#capabilities#has_%s_provider(v:val)', substitute(l:operation, ' ', '_', 'g'))
-    let l:servers = filter(lsp#get_whitelisted_servers(), l:capabilities_func)
+    let l:servers = filter(lsp#get_allowed_servers(), l:capabilities_func)
     if empty(l:servers)
         call s:not_supported('retrieving ' . l:operation)
         return v:false
@@ -104,7 +104,7 @@ function! s:tag_view(ctx) abort
 endfunction
 
 function! s:tag_search(ctx) abort
-    let l:servers = filter(lsp#get_whitelisted_servers(), 'lsp#capabilities#has_workspace_symbol_provider(v:val)')
+    let l:servers = filter(lsp#get_allowed_servers(), 'lsp#capabilities#has_workspace_symbol_provider(v:val)')
     if empty(l:servers)
         call s:not_supported('retrieving workspace symbols')
         return v:false

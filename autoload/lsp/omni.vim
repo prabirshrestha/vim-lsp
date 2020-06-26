@@ -216,7 +216,7 @@ endfunction
 
 function! s:find_complete_servers() abort
     let l:server_names = []
-    for l:server_name in lsp#get_whitelisted_servers()
+    for l:server_name in lsp#get_allowed_servers()
         let l:init_capabilities = lsp#get_server_capabilities(l:server_name)
         if has_key(l:init_capabilities, 'completionProvider')
             " TODO: support triggerCharacters

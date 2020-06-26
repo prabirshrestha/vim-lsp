@@ -150,7 +150,7 @@ function! lsp#ui#vim#references#highlight(force_refresh) abort
 
     " Check if any server provides document highlight
     let l:capability = 'lsp#capabilities#has_document_highlight_provider(v:val)'
-    let l:servers = filter(lsp#get_whitelisted_servers(), l:capability)
+    let l:servers = filter(lsp#get_allowed_servers(), l:capability)
 
     if len(l:servers) == 0
         return

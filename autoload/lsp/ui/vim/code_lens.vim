@@ -8,7 +8,7 @@
 function! lsp#ui#vim#code_lens#do(option) abort
     let l:sync = get(a:option, 'sync', v:false)
 
-    let l:server_names = filter(lsp#get_whitelisted_servers(), 'lsp#capabilities#has_code_lens_provider(v:val)')
+    let l:server_names = filter(lsp#get_allowed_servers(), 'lsp#capabilities#has_code_lens_provider(v:val)')
     if len(l:server_names) == 0
         return lsp#utils#error('Code lens not supported for ' . &filetype)
     endif

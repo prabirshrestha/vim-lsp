@@ -180,7 +180,7 @@ endfunction
 
 " Display scope tree {{{1
 function! lsp#ui#vim#semantic#display_scope_tree(...) abort
-    let l:servers = filter(lsp#get_whitelisted_servers(), 'lsp#capabilities#has_semantic_highlight(v:val)')
+    let l:servers = filter(lsp#get_allowed_servers(), 'lsp#capabilities#has_semantic_highlight(v:val)')
 
     if len(l:servers) == 0
         call lsp#utils#error('Semantic highlighting not supported for ' . &filetype)
