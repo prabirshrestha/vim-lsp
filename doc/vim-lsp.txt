@@ -175,7 +175,7 @@ on pyls (https://github.com/palantir/python-language-server)
 	    au User lsp_setup call lsp#register_server({
 		\ 'name': 'pyls',
 		\ 'cmd': {server_info->['pyls']},
-		\ 'whitelist': ['python']
+		\ 'allowlist': ['python']
 		\ })
 	endif
 <
@@ -705,8 +705,8 @@ one parameter which is a vim |dict| and is refered to as |vim-lsp-server_info|
 	    au User lsp_setup call lsp#register_server({
 		\ 'name': 'name-of-server',
 		\ 'cmd': {server_info->['server-exectuable']},
-		\ 'whitelist': ['filetype to whitelist'],
-		\ 'blacklist': ['filetype to blacklist'],
+		\ 'allowlist': ['filetype to allowlist'],
+		\ 'blocklist': ['filetype to blocklist'],
 		\ 'config': {},
 		\ 'workspace_config': {'param': {'enabled': v:true}},
 		\ })
@@ -725,8 +725,8 @@ The vim |dict| containing information about the server.
     {
 	'name': 'name of the server',
 	'cmd': {server_info->['server_executable']},
-	'whitelist': ['filetype'],
-	'blacklist': ['filetype'],
+	'allowlist': ['filetype'],
+	'blocklist': ['filetype'],
 	'config': {},
 	'workspace_config': {},
     }
@@ -773,30 +773,30 @@ The vim |dict| containing information about the server.
 	'cmd': {server_info->
 	    \ [&shell, &shellcmdflag, 'typescript-language-server --stdio']}
 <
- * whitelist:
+ * allowlist:
     optional
     String array of filetypes to run the language server.
 
     Example: >
-	'whitelist': ['javascript', 'typescript']
+	'allowlist': ['javascript', 'typescript']
 <
     '*' is treated as any filetype.
 
- * blacklist:
+ * blocklist:
     optional
     String array of filetypes not to run the language server.
 
     Example: >
-	'blacklist': ['javascript', 'typescript']
+	'blocklist': ['javascript', 'typescript']
 <
     '*' is treated as any filetype.
 
-    whitelist and blacklist can be used together. The following example
+    allowlist and blocklist can be used together. The following example
     says to run the language server for all filetypes except javascript
-    and typescript. blacklist always takes higher priority over whitelist.
+    and typescript. blocklist always takes higher priority over allowlist.
 >
-	'whitelist': ['*']
-	'blacklist': ['javascript', 'typescript']
+	'allowlist': ['*']
+	'blocklist': ['javascript', 'typescript']
 <
   * workspace_config:
     optional vim |dict|
@@ -1022,7 +1022,7 @@ This method is mainly used to generate 'root_uri' when registering server.
 		\		['.ccls', 'compile_commands.json', '.git/']
 		\	))},
 		\ 'initialization_options': {},
-		\ 'whitelist': ['c', 'cpp', 'objc', 'objcpp', 'cc'],
+		\ 'allowlist': ['c', 'cpp', 'objc', 'objcpp', 'cc'],
 		\ })
 	endif
 <
@@ -1519,7 +1519,7 @@ Suppose we want to highlight classes using |Identifier| and functions using
     autocmd User lsp_setup call lsp#register_server({
         \ 'name': 'eclipse.jdt.ls',
         \ 'cmd': {server_info->[...]},
-        \ 'whitelist': ['java'],
+        \ 'allowlist': ['java'],
         \ 'semantic_highlight': {
         \       'entity.name.type.class.java': 'Identifier',
         \       'entity.name.function.java': 'Label'
@@ -1533,7 +1533,7 @@ want function calls to still use the |Label| group, but use |Identifier| for
     autocmd User lsp_setup call lsp#register_server({
         \ 'name': 'eclipse.jdt.ls',
         \ 'cmd': {server_info->[...]},
-        \ 'whitelist': ['java'],
+        \ 'allowlist': ['java'],
         \ 'semantic_highlight': {
         \       'entity.name.type.class.java': 'Identifier',
         \       'entity.name.function.java': {

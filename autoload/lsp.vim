@@ -151,8 +151,8 @@ endfunction
 
 " @params {server_info} = {
 "   'name': 'go-langserver',        " requried, must be unique
-"   'whitelist': ['go'],            " optional, array of filetypes to whitelist, * for all filetypes
-"   'blacklist': [],                " optional, array of filetypes to blacklist, * for all filetypes,
+"   'allowlist': ['go'],            " optional, array of filetypes to allow, * for all filetypes
+"   'blocklist': [],                " optional, array of filetypes to block, * for all filetypes,
 "   'cmd': {server_info->['go-langserver]} " function that takes server_info and returns array of cmd and args, return empty if you don't want to start the server
 " }
 function! lsp#register_server(server_info) abort
@@ -232,7 +232,7 @@ function! s:on_text_document_did_open() abort
     " So we should refresh highlights when buffer opened.
     call lsp#ui#vim#diagnostics#force_refresh(l:buf)
 
-    for l:server_name in lsp#get_whitelisted_servers(l:buf)
+    for l:server_name in lsp#get_allowed_servers(l:buf)
         call s:ensure_flush(l:buf, l:server_name, function('s:fire_lsp_buffer_enabled', [l:server_name, l:buf]))
     endfor
 endfunction
@@ -245,7 +245,7 @@ function! s:on_text_document_did_save() abort
     let l:buf = bufnr('%')
     if getbufvar(l:buf, '&buftype') ==# 'terminal' | return | endif
     call lsp#log('s:on_text_document_did_save()', l:buf)
-    for l:server_name in lsp#get_whitelisted_servers(l:buf)
+    for l:server_name in lsp#get_allowed_servers(l:buf)
         if g:lsp_text_document_did_save_delay >= 0
             " We delay the callback by one loop iteration as calls to ensure_flush
             " can introduce mmap'd file locks that linger on Windows and collide
@@ -802,10 +802,14 @@ function! s:handle_initialize(server_name, data) abort
     doautocmd User lsp_server_init
 endfunction
 
-" call lsp#get_whitelisted_servers()
-" call lsp#get_whitelisted_servers(bufnr('%'))
-" call lsp#get_whitelisted_servers('typescript')
 function! lsp#get_whitelisted_servers(...) abort
+    return call(function('lsp#get_allowed_servers'), a:000)
+endfunction
+
+" call lsp#get_allowed_servers()
+" call lsp#get_allowed_servers(bufnr('%'))
+" call lsp#get_allowed_servers('typescript')
+function! lsp#get_allowed_servers(...) abort
     if a:0 == 0
         let l:buffer_filetype = &filetype
     else
@@ -821,23 +825,33 @@ function! lsp#get_whitelisted_servers(...) abort
 
     for l:server_name in keys(s:servers)
         let l:server_info = s:servers[l:server_name]['server_info']
-        let l:blacklisted = 0
+        let l:blocked = 0
 
-        if has_key(l:server_info, 'blacklist')
-            for l:filetype in l:server_info['blacklist']
+        if has_key(l:server_info, 'blocklist')
+            let l:blocklistkey = 'blocklist'
+        else
+            let l:blocklistkey = 'blacklist'
+        endif
+        if has_key(l:server_info, l:blocklistkey)
+            for l:filetype in l:server_info[l:blocklistkey]
                 if l:filetype ==? l:buffer_filetype || l:filetype ==# '*'
-                    let l:blacklisted = 1
+                    let l:blocked = 1
                     break
                 endif
             endfor
         endif
 
-        if l:blacklisted
+        if l:blocked
             continue
         endif
 
-        if has_key(l:server_info, 'whitelist')
-            for l:filetype in l:server_info['whitelist']
+        if has_key(l:server_info, 'allowlist')
+            let l:allowlistkey = 'allowlist'
+        else
+            let l:allowlistkey = 'whitelist'
+        endif
+        if has_key(l:server_info, l:allowlistkey)
+            for l:filetype in l:server_info[l:allowlistkey]
                 if l:filetype ==? l:buffer_filetype || l:filetype ==# '*'
                     let l:active_servers += [l:server_name]
                     break
@@ -982,7 +996,7 @@ let s:didchange_timer = -1
 
 function! s:add_didchange_queue(buf) abort
     if g:lsp_use_event_queue == 0
-        for l:server_name in lsp#get_whitelisted_servers(a:buf)
+        for l:server_name in lsp#get_allowed_servers(a:buf)
             call s:ensure_flush(a:buf, l:server_name, function('s:Noop'))
         endfor
         return
@@ -1003,7 +1017,7 @@ function! s:send_didchange_queue(...) abort
         if !bufexists(l:buf)
             continue
         endif
-        for l:server_name in lsp#get_whitelisted_servers(l:buf)
+        for l:server_name in lsp#get_allowed_servers(l:buf)
             call s:ensure_flush(l:buf, l:server_name, function('s:Noop'))
         endfor
     endfor
