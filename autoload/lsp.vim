@@ -206,7 +206,7 @@ function! s:register_events() abort
         if exists('##TextChangedP')
             autocmd TextChangedP * call s:on_text_document_did_change()
         endif
-        if g:lsp_diagnostics_float_cursor || g:lsp_highlight_references_enabled
+        if g:lsp_highlight_references_enabled
             autocmd CursorMoved * call s:on_cursor_moved()
         endif
         autocmd BufWinEnter,BufWinLeave,InsertEnter * call lsp#ui#vim#references#clean_references()
@@ -267,10 +267,6 @@ endfunction
 function! s:on_cursor_moved() abort
     let l:buf = bufnr('%')
     if getbufvar(l:buf, '&buftype') ==# 'terminal' | return | endif
-
-    if g:lsp_diagnostics_float_cursor && lsp#ui#vim#output#float_supported()
-        call lsp#ui#vim#diagnostics#float#cursor_moved()
-    endif
 
     if g:lsp_highlight_references_enabled
         call lsp#ui#vim#references#highlight(v:false)
