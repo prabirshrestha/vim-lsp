@@ -7,6 +7,9 @@
 "
 " Finds a single change between the common prefix, and common postfix.
 let s:has_lua = has('nvim-0.4.0') || (has('lua') && has('patch-8.2.0775'))
+" lua array and neovim vim list index starts with 1 while vim lists starts with 0.
+" starting patch-8.2.1066 vim lists array index was changed to start with 1.
+let s:lua_array_start_index = has('nvim-0.4.0') || has('patch-8.2.1066')
 
 function! s:init_lua() abort
   lua <<EOF
@@ -68,7 +71,7 @@ function! s:FirstDifference(old, new) abort
   if g:lsp_use_lua && s:has_lua
     let l:eval = has('nvim') ? 'vim.api.nvim_eval' : 'vim.eval'
     let l:i = luaeval('vimlsp_first_difference('
-        \.l:eval.'("a:old"),'.l:eval.'("a:new"),'.l:eval.'("has(\"nvim\")"),'.l:line_count.')')
+        \.l:eval.'("a:old"),'.l:eval.'("a:new"),'.s:lua_array_start_index.','.l:line_count.')')
   else
 	for l:i in range(l:line_count)
 	  if a:old[l:i] !=# a:new[l:i] | break | endif
