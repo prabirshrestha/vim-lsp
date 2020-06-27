@@ -41,6 +41,9 @@ function! s:show_documentation(event) abort
     elseif s:use_nvim_float
         let l:height = winheight(0) - l:line + 1
         let l:width = l:right ? winwidth(0) - l:col + 1 : l:col
+        if l:width <= 0
+          let l:width = 1
+        endif
         let s:last_popup_id = lsp#ui#vim#output#floatingpreview([])
         call nvim_win_set_config(s:last_popup_id, {'relative': 'win', 'anchor': l:right ? 'NW' : 'NE', 'row': l:line - 1, 'col': l:col - 1, 'height': l:height, 'width': l:width})
     endif
