@@ -3,6 +3,7 @@ if exists('g:lsp_loaded') || !exists('*json_encode') || !has('timers') || !has('
 endif
 let g:lsp_loaded = 1
 
+let g:lsp_use_lua = get(g:, 'lsp_use_lua', has('nvim-0.4.0') || (has('lua') && has('patch-8.2.0775')))
 let g:lsp_auto_enable = get(g:, 'lsp_auto_enable', 1)
 let g:lsp_async_completion = get(g:, 'lsp_async_completion', 0)
 let g:lsp_log_file = get(g:, 'lsp_log_file', '')
@@ -20,6 +21,7 @@ let g:lsp_signs_information = get(g:, 'lsp_signs_information', {})
 let g:lsp_signs_hint = get(g:, 'lsp_signs_hint', {})
 let g:lsp_signs_priority = get(g:, 'lsp_signs_priority', 10)
 let g:lsp_signs_priority_map = get(g:, 'lsp_signs_priority_map', {})
+let g:lsp_documentation_float = get(g:, 'lsp_documentation_float', 1)
 let g:lsp_diagnostics_enabled = get(g:, 'lsp_diagnostics_enabled', 1)
 let g:lsp_diagnostics_echo_cursor = get(g:, 'lsp_diagnostics_echo_cursor', 0)
 let g:lsp_diagnostics_echo_delay = get(g:, 'lsp_diagnostics_echo_delay', 500)
@@ -44,8 +46,8 @@ let g:lsp_ignorecase = get(g:, 'lsp_ignorecase', &ignorecase)
 let g:lsp_semantic_enabled = get(g:, 'lsp_semantic_enabled', 0)
 let g:lsp_text_document_did_save_delay = get(g:, 'lsp_text_document_did_save_delay', -1)
 let g:lsp_completion_resolve_timeout = get(g:, 'lsp_completion_resolve_timeout', 200)
+let g:lsp_tagfunc_source_methods = get(g:, 'lsp_tagfunc_source_methods', ['definition', 'declaration', 'implementation', 'typeDefinition'])
 
-let g:lsp_get_vim_completion_item = get(g:, 'lsp_get_vim_completion_item', [function('lsp#omni#default_get_vim_completion_item')])
 let g:lsp_get_supported_capabilities = get(g:, 'lsp_get_supported_capabilities', [function('lsp#default_get_supported_capabilities')])
 
 if g:lsp_auto_enable
@@ -64,6 +66,12 @@ command! -range -nargs=* -complete=customlist,lsp#ui#vim#code_action#complete Ls
       \   'sync': v:true,
       \   'selection': <range> != 0,
       \   'query': '<args>'
+      \ })
+command! LspCodeLens call lsp#ui#vim#code_lens#do({
+      \   'sync': v:false,
+      \ })
+command! LspCodeLensSync call lsp#ui#vim#code_lens#do({
+      \   'sync': v:true,
       \ })
 command! LspDeclaration call lsp#ui#vim#declaration(0, <q-mods>)
 command! LspPeekDeclaration call lsp#ui#vim#declaration(1)
@@ -100,6 +108,7 @@ command! LspDocumentFoldSync call lsp#ui#vim#folding#fold(1)
 command! -nargs=? LspSemanticScopes call lsp#ui#vim#semantic#display_scope_tree(<args>)
 
 nnoremap <plug>(lsp-code-action) :<c-u>call lsp#ui#vim#code_action()<cr>
+nnoremap <plug>(lsp-code-lens) :<c-u>call lsp#ui#vim#code_lens()<cr>
 nnoremap <plug>(lsp-declaration) :<c-u>call lsp#ui#vim#declaration(0)<cr>
 nnoremap <plug>(lsp-peek-declaration) :<c-u>call lsp#ui#vim#declaration(1)<cr>
 nnoremap <plug>(lsp-definition) :<c-u>call lsp#ui#vim#definition(0)<cr>

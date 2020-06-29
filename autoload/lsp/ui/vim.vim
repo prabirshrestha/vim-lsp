@@ -19,7 +19,7 @@ function! lsp#ui#vim#type_definition(in_preview, ...) abort
 endfunction
 
 function! lsp#ui#vim#type_hierarchy() abort
-    let l:servers = filter(lsp#get_whitelisted_servers(), 'lsp#capabilities#has_type_hierarchy_provider(v:val)')
+    let l:servers = filter(lsp#get_allowed_servers(), 'lsp#capabilities#has_type_hierarchy_provider(v:val)')
     let l:command_id = lsp#_new_command()
 
     if len(l:servers) == 0
@@ -71,10 +71,9 @@ function! s:list_location(method, ctx, ...) abort
     let l:operation = substitute(a:method, '\u', ' \l\0', 'g')
 
     let l:capabilities_func = printf('lsp#capabilities#has_%s_provider(v:val)', substitute(l:operation, ' ', '_', 'g'))
-    let l:servers = filter(lsp#get_whitelisted_servers(), l:capabilities_func)
+    let l:servers = filter(lsp#get_allowed_servers(), l:capabilities_func)
     let l:command_id = lsp#_new_command()
 
-    call setqflist([])
 
     let l:ctx = extend({ 'counter': len(l:servers), 'list':[], 'last_command_id': l:command_id, 'jump_if_one': 1, 'mods': '', 'in_preview': 0 }, a:ctx)
     if len(l:servers) == 0
@@ -121,10 +120,10 @@ function! s:rename(server, new_name, pos) abort
 endfunction
 
 function! lsp#ui#vim#rename() abort
-    let l:servers = filter(lsp#get_whitelisted_servers(), 'lsp#capabilities#has_rename_prepare_provider(v:val)')
+    let l:servers = filter(lsp#get_allowed_servers(), 'lsp#capabilities#has_rename_prepare_provider(v:val)')
     let l:prepare_support = 1
     if len(l:servers) == 0
-        let l:servers = filter(lsp#get_whitelisted_servers(), 'lsp#capabilities#has_rename_provider(v:val)')
+        let l:servers = filter(lsp#get_allowed_servers(), 'lsp#capabilities#has_rename_provider(v:val)')
         let l:prepare_support = 0
     endif
 
@@ -154,7 +153,7 @@ function! lsp#ui#vim#rename() abort
 endfunction
 
 function! s:document_format(sync) abort
-    let l:servers = filter(lsp#get_whitelisted_servers(), 'lsp#capabilities#has_document_formatting_provider(v:val)')
+    let l:servers = filter(lsp#get_allowed_servers(), 'lsp#capabilities#has_document_formatting_provider(v:val)')
     let l:command_id = lsp#_new_command()
 
     if len(l:servers) == 0
@@ -197,7 +196,7 @@ endfunction
 
 function! lsp#ui#vim#stop_server(...) abort
     let l:name = get(a:000, 0, '')
-    for l:server in lsp#get_whitelisted_servers()
+    for l:server in lsp#get_allowed_servers()
         if !empty(l:name) && l:server != l:name
             continue
         endif
@@ -234,7 +233,7 @@ function! s:get_selection_pos(type) abort
 endfunction
 
 function! s:document_format_range(sync, type) abort
-    let l:servers = filter(lsp#get_whitelisted_servers(), 'lsp#capabilities#has_document_range_formatting_provider(v:val)')
+    let l:servers = filter(lsp#get_allowed_servers(), 'lsp#capabilities#has_document_range_formatting_provider(v:val)')
     let l:command_id = lsp#_new_command()
 
     if len(l:servers) == 0
@@ -280,10 +279,8 @@ function! lsp#ui#vim#document_range_format_opfunc(type) abort
 endfunction
 
 function! lsp#ui#vim#workspace_symbol() abort
-    let l:servers = filter(lsp#get_whitelisted_servers(), 'lsp#capabilities#has_workspace_symbol_provider(v:val)')
+    let l:servers = filter(lsp#get_allowed_servers(), 'lsp#capabilities#has_workspace_symbol_provider(v:val)')
     let l:command_id = lsp#_new_command()
-
-    call setqflist([])
 
     if len(l:servers) == 0
         call s:not_supported('Retrieving workspace symbols')
@@ -310,10 +307,8 @@ function! lsp#ui#vim#workspace_symbol() abort
 endfunction
 
 function! lsp#ui#vim#document_symbol() abort
-    let l:servers = filter(lsp#get_whitelisted_servers(), 'lsp#capabilities#has_document_symbol_provider(v:val)')
+    let l:servers = filter(lsp#get_allowed_servers(), 'lsp#capabilities#has_document_symbol_provider(v:val)')
     let l:command_id = lsp#_new_command()
-
-    call setqflist([])
 
     if len(l:servers) == 0
         call s:not_supported('Retrieving symbols')
@@ -345,6 +340,7 @@ function! s:handle_symbol(server, last_command_id, type, data) abort
 
     let l:list = lsp#ui#vim#utils#symbols_to_loc_list(a:server, a:data)
 
+    call setqflist([])
     call setqflist(l:list)
 
     if empty(l:list)
@@ -381,11 +377,12 @@ function! s:handle_location(ctx, server, type, data) abort "ctx = {counter, list
                 echo 'Retrieved ' . a:type
                 redraw
             elseif !a:ctx['in_preview']
+                call setqflist([])
                 call setqflist(a:ctx['list'])
                 echo 'Retrieved ' . a:type
                 botright copen
             else
-                let l:lines = readfile(fnameescape(l:loc['filename']))
+                let l:lines = readfile(l:loc['filename'])
                 if has_key(l:loc,'viewstart') " showing a locationLink
                     let l:view = l:lines[l:loc['viewstart'] : l:loc['viewend']]
                     call lsp#ui#vim#output#preview(a:server, l:view, {
@@ -536,5 +533,11 @@ function! lsp#ui#vim#code_action() abort
         \   'sync': v:false,
         \   'selection': v:false,
         \   'query': '',
+        \ })
+endfunction
+
+function! lsp#ui#vim#code_lens() abort
+    call lsp#ui#vim#code_lens#do({
+        \   'sync': v:false,
         \ })
 endfunction

@@ -2,7 +2,7 @@ let s:folding_ranges = {}
 let s:textprop_name = 'vim-lsp-folding-linenr'
 
 function! s:find_servers() abort
-    return filter(lsp#get_whitelisted_servers(), 'lsp#capabilities#has_folding_range_provider(v:val)')
+    return filter(lsp#get_allowed_servers(), 'lsp#capabilities#has_folding_range_provider(v:val)')
 endfunction
 
 function! lsp#ui#vim#folding#fold(sync) abort

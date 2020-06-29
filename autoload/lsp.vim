@@ -63,6 +63,7 @@ function! lsp#enable() abort
         call lsp#ui#vim#signature_help#setup()
     endif
     call lsp#ui#vim#completion#_setup()
+    call lsp#internal#diagnostics#_enable()
     call s:register_events()
 endfunction
 
@@ -74,6 +75,7 @@ function! lsp#disable() abort
     call lsp#ui#vim#virtual#disable()
     call lsp#ui#vim#highlights#disable()
     call lsp#ui#vim#diagnostics#textprop#disable()
+    call lsp#internal#diagnostics#_disable()
     call s:unregister_events()
     let s:enabled = 0
 endfunction
@@ -149,8 +151,8 @@ endfunction
 
 " @params {server_info} = {
 "   'name': 'go-langserver',        " requried, must be unique
-"   'whitelist': ['go'],            " optional, array of filetypes to whitelist, * for all filetypes
-"   'blacklist': [],                " optional, array of filetypes to blacklist, * for all filetypes,
+"   'allowlist': ['go'],            " optional, array of filetypes to allow, * for all filetypes
+"   'blocklist': [],                " optional, array of filetypes to block, * for all filetypes,
 "   'cmd': {server_info->['go-langserver]} " function that takes server_info and returns array of cmd and args, return empty if you don't want to start the server
 " }
 function! lsp#register_server(server_info) abort
@@ -204,7 +206,7 @@ function! s:register_events() abort
         if exists('##TextChangedP')
             autocmd TextChangedP * call s:on_text_document_did_change()
         endif
-        if g:lsp_diagnostics_echo_cursor || g:lsp_diagnostics_float_cursor || g:lsp_highlight_references_enabled
+        if g:lsp_highlight_references_enabled
             autocmd CursorMoved * call s:on_cursor_moved()
         endif
         autocmd BufWinEnter,BufWinLeave,InsertEnter * call lsp#ui#vim#references#clean_references()
@@ -230,7 +232,7 @@ function! s:on_text_document_did_open() abort
     " So we should refresh highlights when buffer opened.
     call lsp#ui#vim#diagnostics#force_refresh(l:buf)
 
-    for l:server_name in lsp#get_whitelisted_servers(l:buf)
+    for l:server_name in lsp#get_allowed_servers(l:buf)
         call s:ensure_flush(l:buf, l:server_name, function('s:fire_lsp_buffer_enabled', [l:server_name, l:buf]))
     endfor
 endfunction
@@ -243,7 +245,7 @@ function! s:on_text_document_did_save() abort
     let l:buf = bufnr('%')
     if getbufvar(l:buf, '&buftype') ==# 'terminal' | return | endif
     call lsp#log('s:on_text_document_did_save()', l:buf)
-    for l:server_name in lsp#get_whitelisted_servers(l:buf)
+    for l:server_name in lsp#get_allowed_servers(l:buf)
         if g:lsp_text_document_did_save_delay >= 0
             " We delay the callback by one loop iteration as calls to ensure_flush
             " can introduce mmap'd file locks that linger on Windows and collide
@@ -265,13 +267,6 @@ endfunction
 function! s:on_cursor_moved() abort
     let l:buf = bufnr('%')
     if getbufvar(l:buf, '&buftype') ==# 'terminal' | return | endif
-
-    if g:lsp_diagnostics_echo_cursor
-        call lsp#ui#vim#diagnostics#echo#cursor_moved()
-    endif
-    if g:lsp_diagnostics_float_cursor && lsp#ui#vim#output#float_supported()
-        call lsp#ui#vim#diagnostics#float#cursor_moved()
-    endif
 
     if g:lsp_highlight_references_enabled
         call lsp#ui#vim#references#highlight(v:false)
@@ -694,7 +689,7 @@ function! s:send_request(server_name, data) abort
         let l:data['on_notification'] = '---funcref---'
     endif
     call lsp#log_verbose('--->', l:lsp_id, a:server_name, l:data)
-    call lsp#client#send_request(l:lsp_id, a:data)
+    return lsp#client#send_request(l:lsp_id, a:data)
 endfunction
 
 function! s:send_notification(server_name, data) abort
@@ -736,10 +731,12 @@ function! s:on_notification(server_name, id, data, event) abort
     call lsp#log_verbose('<---', a:id, a:server_name, a:data)
     let l:response = a:data['response']
     let l:server = s:servers[a:server_name]
+    let l:server_info = l:server['server_info']
+    let l:lsp_diagnostics_config_enabled = get(get(l:server_info, 'config', {}), 'diagnostics', v:true)
 
     if lsp#client#is_server_instantiated_notification(a:data)
         if has_key(l:response, 'method')
-            if g:lsp_diagnostics_enabled && l:response['method'] ==# 'textDocument/publishDiagnostics'
+            if g:lsp_diagnostics_enabled && l:lsp_diagnostics_config_enabled && l:response['method'] ==# 'textDocument/publishDiagnostics'
                 call lsp#ui#vim#diagnostics#handle_text_document_publish_diagnostics(a:server_name, a:data)
             elseif l:response['method'] ==# 'textDocument/semanticHighlighting'
                 call lsp#ui#vim#semantic#handle_semantic(a:server_name, a:data)
@@ -800,13 +797,19 @@ function! s:handle_initialize(server_name, data) abort
         call l:Init_callback(a:data)
     endfor
 
+    call lsp#ui#vim#documentation#setup()
+
     doautocmd User lsp_server_init
 endfunction
 
-" call lsp#get_whitelisted_servers()
-" call lsp#get_whitelisted_servers(bufnr('%'))
-" call lsp#get_whitelisted_servers('typescript')
 function! lsp#get_whitelisted_servers(...) abort
+    return call(function('lsp#get_allowed_servers'), a:000)
+endfunction
+
+" call lsp#get_allowed_servers()
+" call lsp#get_allowed_servers(bufnr('%'))
+" call lsp#get_allowed_servers('typescript')
+function! lsp#get_allowed_servers(...) abort
     if a:0 == 0
         let l:buffer_filetype = &filetype
     else
@@ -822,23 +825,33 @@ function! lsp#get_whitelisted_servers(...) abort
 
     for l:server_name in keys(s:servers)
         let l:server_info = s:servers[l:server_name]['server_info']
-        let l:blacklisted = 0
+        let l:blocked = 0
 
-        if has_key(l:server_info, 'blacklist')
-            for l:filetype in l:server_info['blacklist']
+        if has_key(l:server_info, 'blocklist')
+            let l:blocklistkey = 'blocklist'
+        else
+            let l:blocklistkey = 'blacklist'
+        endif
+        if has_key(l:server_info, l:blocklistkey)
+            for l:filetype in l:server_info[l:blocklistkey]
                 if l:filetype ==? l:buffer_filetype || l:filetype ==# '*'
-                    let l:blacklisted = 1
+                    let l:blocked = 1
                     break
                 endif
             endfor
         endif
 
-        if l:blacklisted
+        if l:blocked
             continue
         endif
 
-        if has_key(l:server_info, 'whitelist')
-            for l:filetype in l:server_info['whitelist']
+        if has_key(l:server_info, 'allowlist')
+            let l:allowlistkey = 'allowlist'
+        else
+            let l:allowlistkey = 'whitelist'
+        endif
+        if has_key(l:server_info, l:allowlistkey)
+            for l:filetype in l:server_info[l:allowlistkey]
                 if l:filetype ==? l:buffer_filetype || l:filetype ==# '*'
                     let l:active_servers += [l:server_name]
                     break
@@ -885,20 +898,97 @@ function! s:get_versioned_text_document_identifier(buf, buffer_info) abort
         \ }
 endfunction
 
-function! lsp#send_request(server_name, request) abort
-    let l:bufnr = get(a:request, 'bufnr', bufnr('%'))
-    let l:Cb = has_key(a:request, 'on_notification') ? a:request['on_notification'] : function('s:Noop')
-    let l:request = copy(a:request)
-    let l:request['on_notification'] = {id, data, event->l:Cb(data)}
-    call lsp#utils#step#start([
-        \ {s->s:ensure_flush(l:bufnr, a:server_name, s.callback)},
-        \ {s->s:is_step_error(s) ? l:Cb(s.result[0]) : s:send_request(a:server_name, l:request) },
-        \ ])
+" lsp#request {{{
+
+function! lsp#request(server_name, request) abort
+    let l:ctx = {
+        \ 'server_name': a:server_name,
+        \ 'request': copy(a:request),
+        \ 'request_id': 0,
+        \ 'done': 0,
+        \ 'cancelled': 0,
+        \ }
+    return lsp#callbag#create(function('s:request_create', [l:ctx]))
 endfunction
+
+function! s:request_create(ctx, next, error, complete) abort
+    let a:ctx['next'] = a:next
+    let a:ctx['error'] = a:error
+    let a:ctx['complete'] = a:complete
+    let a:ctx['bufnr'] = get(a:ctx['request'], 'bufnr', bufnr('%'))
+    let a:ctx['request']['on_notification'] = function('s:request_on_notification', [a:ctx])
+    call lsp#utils#step#start([
+        \ {s->s:ensure_flush(a:ctx['bufnr'], a:ctx['server_name'], s.callback)},
+        \ {s->s:is_step_error(s) ? s:request_error(a:ctx, s.result[0]) : s:request_send(a:ctx) },
+        \ ])
+    return function('s:request_cancel', [a:ctx])
+endfunction
+
+function! s:request_send(ctx) abort
+    if a:ctx['cancelled'] | return | endif " caller already unsubscribed so don't bother sending request
+    let a:ctx['request_id'] = s:send_request(a:ctx['server_name'], a:ctx['request'])
+endfunction
+
+function! s:request_error(ctx, error) abort
+    if a:ctx['cancelled'] | return | endif " caller already unsubscribed so don't bother notifying
+    let a:ctx['done'] = 1
+    call a:ctx['error'](a:error)
+endfunction
+
+function! s:request_on_notification(ctx, id, data, event) abort
+    if a:ctx['cancelled'] | return | endif " caller already unsubscribed so don't bother notifying
+    let a:ctx['done'] = 1
+    call a:ctx['next'](a:data)
+    call a:ctx['complete']()
+endfunction
+
+function! s:request_cancel(ctx) abort
+    if a:ctx['cancelled'] | return | endif
+    let a:ctx['cancelled'] = 1
+    if a:ctx['request_id'] <= 0 || a:ctx['done'] | return | endif " we have not made the request yet or request is complete, so nothing to cancel
+    if lsp#get_server_status(a:ctx['server_name']) !=# 'running' | return | endif " if server is not running we cant send the request
+    " send the actual cancel request
+    let l:Dispose = lsp#callbag#pipe(
+        \ lsp#request(a:ctx['server_name'], {
+        \   'method': '$/cancelRequest',
+        \   'params': { 'id': a:ctx['request_id'] },
+        \ }),
+        \ lsp#callbag#subscribe({
+        \   'error':{e->l:Dispose()},
+        \   'complete':{->l:Dispose()},
+        \ })
+        \)
+endfunction
+
+function! lsp#send_request(server_name, request) abort
+    let l:ctx = {
+        \ 'server_name': a:server_name,
+        \ 'request': copy(a:request),
+        \ 'cb': has_key(a:request, 'on_notification') ? a:request['on_notification'] : function('s:Noop'),
+        \ }
+    let l:ctx['dispose'] = lsp#callbag#pipe(
+        \ lsp#request(a:server_name, a:request),
+        \ lsp#callbag#subscribe({
+        \   'next':{d->l:ctx['cb'](d)},
+        \   'error':{e->s:send_request_error(l:ctx, e)},
+        \   'complete':{->l:ctx['dispose']()},
+        \ })
+        \)
+endfunction
+
+function! s:send_request_error(ctx, error) abort
+    call a:ctx['cb'](a:error)
+    call a:ctx['dispose']()
+endfunction
+" }}}
 
 " omnicompletion
 function! lsp#complete(...) abort
     return call('lsp#omni#complete', a:000)
+endfunction
+
+function! lsp#tagfunc(...) abort
+    return call('lsp#tag#tagfunc', a:000)
 endfunction
 
 let s:didchange_queue = []
@@ -906,7 +996,7 @@ let s:didchange_timer = -1
 
 function! s:add_didchange_queue(buf) abort
     if g:lsp_use_event_queue == 0
-        for l:server_name in lsp#get_whitelisted_servers(a:buf)
+        for l:server_name in lsp#get_allowed_servers(a:buf)
             call s:ensure_flush(a:buf, l:server_name, function('s:Noop'))
         endfor
         return
@@ -927,7 +1017,7 @@ function! s:send_didchange_queue(...) abort
         if !bufexists(l:buf)
             continue
         endif
-        for l:server_name in lsp#get_whitelisted_servers(l:buf)
+        for l:server_name in lsp#get_allowed_servers(l:buf)
             call s:ensure_flush(l:buf, l:server_name, function('s:Noop'))
         endfor
     endfor
