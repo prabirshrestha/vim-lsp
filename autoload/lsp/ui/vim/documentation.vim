@@ -39,8 +39,8 @@ function! s:show_documentation(event) abort
     if s:use_vim_popup
         let s:last_popup_id = popup_create('(no documentation available)', {'line': l:line, 'col': l:col, 'pos': l:right ? 'topleft' : 'topright', 'padding': [0, 1, 0, 1]})
     elseif s:use_nvim_float
-        let l:height = winheight(0) - l:line + 1
-        let l:width = l:right ? winwidth(0) - l:col + 1 : l:col
+        let l:height = float2nr(winheight(0) - l:line + 1)
+        let l:width = float2nr(l:right ? winwidth(0) - l:col + 1 : l:col)
         if l:width <= 0
           let l:width = 1
         endif
