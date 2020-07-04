@@ -5,7 +5,6 @@
 " - folders stores per server.
 " - support one only workspace
 "
-"
 
 "
 " {
@@ -58,7 +57,7 @@ function! lsp#ui#vim#workspace#_ensure_workspace(server_name) abort
   \ }
   call add(l:workspace['folders'], l:folder)
 
-  call lsp#send_request(a:server_name, {
+  call lsp#send_notification(a:server_name, {
   \   'method': 'workspace/didChangeWorkspaceFolders',
   \   'params': {
   \     'event': {
@@ -70,17 +69,19 @@ function! lsp#ui#vim#workspace#_ensure_workspace(server_name) abort
 endfunction
 
 "
-" lsp#ui#vim#workspace#_update_workspace_config
+" lsp#ui#vim#workspace#_get_config
 "
-function! lsp#ui#vim#workspace#_update_workspace_config(server_name, config) abort
+function! lsp#ui#vim#workspace#_get_config(server_name, item) abort
   let l:workspace = s:init_workspace(a:server_name)
-  call lsp#utils#merge_dict(l:workspace['config'], a:config)
-  call lsp#send_request(a:server_name, {
-  \   'method': 'workspace/didChangeConfiguration',
-  \   'params': {
-  \     'settings': l:workspace['config']
-  \   }
-  \ })
+  try
+    let l:config = l:workspace['config']
+    for l:section in split(a:item['section'], '\.')
+      let l:config = l:config[l:section]
+    endfor
+    return l:config
+  catch /.*/
+    return v:null
+  endtry
 endfunction
 
 "
@@ -89,6 +90,20 @@ endfunction
 function! lsp#ui#vim#workspace#_get_folders(server_name) abort
   let l:workspace = s:init_workspace(a:server_name)
   return l:workspace['folders']
+endfunction
+
+"
+" lsp#ui#vim#workspace#_update_workspace_config
+"
+function! lsp#ui#vim#workspace#_update_workspace_config(server_name, config) abort
+  let l:workspace = s:init_workspace(a:server_name)
+  call lsp#utils#merge_dict(l:workspace['config'], a:config)
+  call lsp#send_notification(a:server_name, {
+  \   'method': 'workspace/didChangeConfiguration',
+  \   'params': {
+  \     'settings': l:workspace['config']
+  \   }
+  \ })
 endfunction
 
 "

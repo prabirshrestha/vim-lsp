@@ -752,7 +752,7 @@ function! s:on_request(server_name, id, request) abort
         call lsp#utils#workspace_edit#apply_workspace_edit(a:request['params']['edit'])
         call s:send_response(a:server_name, { 'id': a:request['id'], 'result': { 'applied': v:true } })
     elseif a:request['method'] ==# 'workspace/configuration'
-        let l:response_items = map(a:request['params']['items'], { key, val -> lsp#utils#workspace_config#get_value(a:server_name, val) })
+        let l:response_items = map(a:request['params']['items'], { key, item -> lsp#ui#vim#workspace#_get_config(a:server_name, item) })
         call s:send_response(a:server_name, { 'id': a:request['id'], 'result': l:response_items })
     elseif a:request['method'] ==# 'workspace/workspaceFolders'
         let l:response_folders = lsp#ui#vim#workspace#_get_folders(a:server_name)
@@ -968,6 +968,13 @@ function! lsp#send_request(server_name, request) abort
         \   'complete':{->l:ctx['dispose']()},
         \ })
         \)
+endfunction
+
+function! lsp#send_notification(server_name, params) abort
+    call s:send_notification(a:server_name, {
+    \   'method': a:params['method'],
+    \   'params': a:params['params'],
+    \ })
 endfunction
 
 function! s:send_request_error(ctx, error) abort
