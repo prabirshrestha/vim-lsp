@@ -141,7 +141,7 @@ like to improve performance make sure you have vim/neovim with lua support.
 Currently only diff algorithm uses lua internally if available.
 Following is th default value used to detect lua.
 >
-    let g:lsp_enable_lua = has('nvim-0.4.0') || (has('lua') && has('patch-8.2.0775'))
+    let g:lsp_use_lua = has('nvim-0.4.0') || (has('lua') && has('patch-8.2.0775'))
 
 Windows users can download the binaries from the following url and place
 lua53.dll in the `PATH` or besides `vim.exe` or `gvim.exe` executables.
