@@ -48,7 +48,7 @@ function! s:show_documentation(event) abort
           let l:height = 1
         endif
         let s:last_popup_id = lsp#ui#vim#output#floatingpreview([])
-        call nvim_win_set_config(s:last_popup_id, {'relative': 'win', 'anchor': l:right ? 'NW' : 'NE', 'row': l:line - 1, 'col': l:col - 1, 'height': float2nr(l:height), 'width': float2nr(l:width)})
+        call nvim_win_set_config(s:last_popup_id, {'relative': 'win', 'anchor': l:right ? 'NW' : 'NE', 'row': l:line - 1, 'col': l:col - 1, 'height': l:height, 'width': l:width})
     endif
 
     call setbufvar(winbufnr(s:last_popup_id), 'lsp_syntax_highlights', l:syntax_lines)
