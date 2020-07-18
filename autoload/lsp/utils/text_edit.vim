@@ -29,6 +29,10 @@ function! s:_apply(bufnr, text_edit, cursor_position) abort
     let l:new_lines[0] = l:before_line . l:new_lines[0]
     let l:new_lines[-1] = l:new_lines[-1] . l:after_line
 
+  " save length.
+    let l:new_lines_len = len(l:new_lines)
+    let l:range_len = (a:text_edit['range']['end']['line'] - a:text_edit['range']['start']['line']) + 1
+
     " fixendofline
     let l:buffer_length = len(getbufline(a:bufnr, '^', '$'))
     let l:should_fixendofline = lsp#utils#buffer#_get_fixendofline(a:bufnr)
@@ -39,17 +43,16 @@ function! s:_apply(bufnr, text_edit, cursor_position) abort
         call remove(l:new_lines, -1)
     endif
 
-    let l:new_lines_len = len(l:new_lines)
-    let l:range_len = (a:text_edit['range']['end']['line'] - a:text_edit['range']['start']['line']) + 1
-
     " fix cursor pos
-    if a:text_edit['range']['end']['line'] <= a:cursor_position['line'] && a:text_edit['range']['end']['character'] <= a:cursor_position['character']
-        if a:text_edit['range']['end']['line'] == a:cursor_position['line']
-            let l:end_character = strchars(l:new_lines[-1]) - strchars(l:after_line)
-            let l:end_offset = a:cursor_position['character'] - a:text_edit['range']['end']['character']
-            let a:cursor_position['character'] = l:end_character + l:end_offset
-        endif
+    if a:text_edit['range']['end']['line'] < a:cursor_position['line']
+        " fix cursor line
         let a:cursor_position['line'] += l:new_lines_len - l:range_len
+    elseif a:text_edit['range']['end']['line'] == a:cursor_position['line'] && a:text_edit['range']['end']['character'] <= a:cursor_position['character']
+        " fix cursor line and col
+        let a:cursor_position['line'] += l:new_lines_len - l:range_len
+        let l:end_character = strchars(l:new_lines[-1]) - strchars(l:after_line)
+        let l:end_offset = a:cursor_position['character'] - a:text_edit['range']['end']['character']
+        let a:cursor_position['character'] = l:end_character + l:end_offset
     endif
 
     " append or delete lines.
