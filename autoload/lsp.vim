@@ -211,7 +211,12 @@ function! s:register_events() abort
         endif
         autocmd BufWinEnter,BufWinLeave,InsertEnter * call lsp#ui#vim#references#clean_references()
     augroup END
-    call s:on_text_document_did_open()
+
+    for l:bufnr in range(1, bufnr('$'))
+        if bufexists(l:bufnr) && bufloaded(l:bufnr)
+            call s:on_text_document_did_open(l:bufnr)
+        endif
+    endfor
 endfunction
 
 function! s:unregister_events() abort
@@ -221,8 +226,8 @@ function! s:unregister_events() abort
     doautocmd User lsp_unregister_server
 endfunction
 
-function! s:on_text_document_did_open() abort
-    let l:buf = bufnr('%')
+function! s:on_text_document_did_open(...) abort
+    let l:buf = a:0 > 0 ? a:1 : bufnr('%')
     if getbufvar(l:buf, '&buftype') ==# 'terminal' | return | endif
     if getcmdwintype() !=# '' | return | endif
     call lsp#log('s:on_text_document_did_open()', l:buf, &filetype, getcwd(), lsp#utils#get_buffer_uri(l:buf))
