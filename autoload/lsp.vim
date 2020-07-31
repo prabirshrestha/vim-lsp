@@ -76,6 +76,8 @@ function! lsp#disable() abort
     call lsp#ui#vim#virtual#disable()
     call lsp#ui#vim#highlights#disable()
     call lsp#ui#vim#diagnostics#textprop#disable()
+    call lsp#ui#vim#signature_help#teardown()
+    call lsp#ui#vim#completion#_teardown()
     call lsp#internal#diagnostics#_disable()
     call s:unregister_events()
     let s:enabled = 0
