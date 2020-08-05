@@ -67,7 +67,7 @@ endfunction
 function! s:close_popup() abort
     if s:last_popup_id >= 0
         if s:use_vim_popup | call popup_close(s:last_popup_id) | endif
-        if s:use_nvim_float | call nvim_win_close(s:last_popup_id, 1) | endif
+        if s:use_nvim_float && nvim_win_is_valid(s:last_popup_id) | call nvim_win_close(s:last_popup_id, 1) | endif
 
         let s:last_popup_id = -1
     endif
