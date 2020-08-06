@@ -80,11 +80,11 @@ function! s:lsp_location_item_to_vim(loc, cache) abort
     else
         let l:contents = getbufline(l:path, 1, '$')
         if !empty(l:contents)
-            let l:text = l:contents[l:index]
+            let l:text = get(l:contents, l:index, '')
         else
             let l:contents = readfile(l:path)
             let a:cache[l:path] = l:contents
-            let l:text = l:contents[l:index]
+            let l:text = get(l:contents, l:index, '')
         endif
     endif
 
