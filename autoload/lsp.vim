@@ -1,5 +1,6 @@
 let s:enabled = 0
 let s:already_setup = 0
+let s:Stream = lsp#callbag#makeSubject()
 let s:servers = {} " { lsp_id, server_info, init_callbacks, init_result, buffers: { path: { changed_tick } }
 let s:last_command_id = 0
 let s:notification_callbacks = [] " { name, callback }
@@ -739,6 +740,12 @@ function! s:on_notification(server_name, id, data, event) abort
     let l:server_info = l:server['server_info']
     let l:lsp_diagnostics_config_enabled = get(get(l:server_info, 'config', {}), 'diagnostics', v:true)
 
+    let l:stream_data = { 'server': a:server_name, 'response': l:response }
+    if has_key(a:data, 'request')
+        let l:stream_data['request'] = a:data['request']
+    endif
+    call s:Stream(1, l:stream_data) " notify stream before callbacks
+
     if lsp#client#is_server_instantiated_notification(a:data)
         if has_key(l:response, 'method')
             if g:lsp_diagnostics_enabled && l:lsp_diagnostics_config_enabled && l:response['method'] ==# 'textDocument/publishDiagnostics'
@@ -903,8 +910,26 @@ function! s:get_versioned_text_document_identifier(buf, buffer_info) abort
         \ }
 endfunction
 
-" lsp#request {{{
+" lsp#stream {{{
+"
+" example:
+"
+" function! s:on_textDocumentDiagnostics(x) abort
+"   echom 'Diagnostics for ' . a:x['server'] . ' ' . json_encode(a:x['response'])
+" endfunction
+"
+" au User lsp_setup call lsp#callbag#pipe(
+"    \ lsp#stream(),
+"    \ lsp#callbag#filter({x-> has_key(x, 'response') && !has_key(x['response'], 'error') && get(x['response'], 'method', '') == 'textDocument/publishDiagnostics'}),
+"    \ lsp#callbag#subscribe({ 'next':{x->s:on_textDocumentDiagnostics(x)} }),
+"    \ )
+"
+function! lsp#stream() abort
+    return s:Stream
+endfunction
+" }}}
 
+" lsp#request {{{
 function! lsp#request(server_name, request) abort
     let l:ctx = {
         \ 'server_name': a:server_name,
