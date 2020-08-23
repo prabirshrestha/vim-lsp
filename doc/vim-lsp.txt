@@ -52,6 +52,7 @@ CONTENTS                                                  *vim-lsp-contents*
       lsp#disable                           |lsp#disable()|
       lsp#register_server                   |lsp#register_server()|
       lsp#register_command                  |lsp#register_command()|
+      lsp#stream			    |lsp#stream()|
       lsp#stop_server                       |lsp#stop_server()|
       lsp#utils#find_nearest_parent_file_directory()
                               |lsp#utils#find_nearest_parent_file_directory()|
@@ -961,6 +962,22 @@ For example, the rust-analyzer expects the client handles some custom command as
       endif
   endfunction
   call lsp#register_command('rust-analyzer.applySourceChange', function('s:rust_analyzer_apply_source_change'))
+<
+lsp#stream()						*lsp#stream()*
+
+Stream api to listen to responses and notifications from language server or
+vim-lsp. Always verify the existence of request, response and server before
+accessing. Subscribing to stream should never throw an error.
+>
+function! s:on_textDocumentDiagnostics(x) abort
+    echom 'Diagnostics for ' . a:x['server'] . ' ' . json_encode(a:x['response'])
+endfunction
+
+au User lsp_setup call lsp#callbag#pipe(
+    \ lsp#stream(),
+    \ lsp#callbag#filter({x-> has_key(x, 'response') && !has_key(x['response'], 'error') && get(x['response'], 'method', '') == 'textDocument/publishDiagnostics'}),
+    \ lsp#callbag#subscribe({ 'next':{x->s:on_textDocumentDiagnostics(x)} }),
+    \ )
 <
 
 lsp#stop_server({name-of-server})                        *lsp#stop_server()*
