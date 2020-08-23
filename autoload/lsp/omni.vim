@@ -270,9 +270,9 @@ function! s:get_vim_completion_item(item, options) abort
     elseif !empty(get(a:item, 'insertText', ''))
         " if plain-text insertText, use it.
         let l:word = a:item['insertText']
-    elseif has_key(a:item, 'textEdit')
+    elseif has_key(a:item, 'textEdit') && type(a:item['textEdit']) ==# v:t_dict
         let l:word = lsp#utils#make_valid_word(a:item['label'])
-        let l:expandable = l:word !=# a:item['textEdit']['newText']
+        let l:expandable = l:word !=# get(a:item['textEdit'], 'newText', '')
     endif
     if !empty(l:word)
         let l:word = split(l:word, '\n')[0]

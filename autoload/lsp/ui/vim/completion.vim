@@ -187,7 +187,7 @@ function! s:clear_inserted_text(line, done_position, complete_position, complete
         \ }
 
   " Expand remove range to textEdit.
-  if has_key(a:completion_item, 'textEdit')
+  if has_key(a:completion_item, 'textEdit') && type(a:completion_item['textEdit']) ==# v:t_dict
     let l:range = {
     \   'start': {
     \     'line': a:completion_item['textEdit']['range']['start']['line'],
@@ -216,11 +216,11 @@ endfunction
 function! s:get_expand_text(completed_item, completion_item) abort
   let l:text = a:completed_item['word']
   if has_key(a:completion_item, 'textEdit') && type(a:completion_item['textEdit']) == v:t_dict
-    let l:text = a:completion_item['textEdit']['newText']
+    let l:text = get(a:completion_item['textEdit'], 'newText', '')
   elseif has_key(a:completion_item, 'insertText')
-    let l:text = a:completion_item['insertText']
+    let l:text = get(a:completion_item, 'insertText', '')
   endif
-  return l:text != a:completed_item['word'] ? l:text : ''
+  return type(l:text) ==# v:t_string && l:text != a:completed_item['word'] ? l:text : ''
 endfunction
 
 "
