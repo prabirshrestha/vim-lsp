@@ -881,12 +881,12 @@ endfunction
 
 function! s:get_text_document(buf, server_name, buffer_info) abort
     if has_key(s:servers, a:server_name)
-        let server_info = get(s:servers, a:server_name).server_info
-        let language_id = get(server_info, 'languageId', &filetype)
+        let l:server_info = get(s:servers, a:server_name).server_info
+        let l:language_id = get(l:server_info, 'languageId', &filetype)
     endif
     return {
         \ 'uri': lsp#utils#get_buffer_uri(a:buf),
-        \ 'languageId': language_id,
+        \ 'languageId': l:language_id,
         \ 'version': a:buffer_info['version'],
         \ 'text': s:get_text_document_text(a:buf, a:server_name),
         \ }
