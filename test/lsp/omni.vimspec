@@ -119,5 +119,66 @@ Describe lsp#omni
 
             Assert Equals(lsp#omni#get_vim_completion_items(options), want)
         End
+
+        It should not raise errors
+            let item = {
+            \ 'label': 'my-label',
+            \ 'textEdit': v:null,
+            \}
+
+            let options = {
+            \ 'server': { 'name': 'dummy-server' },
+            \ 'position': lsp#get_position(),
+            \ 'response': { 'result': [item] },
+            \}
+
+            let want = {
+            \ 'items': [{
+            \  'word': 'my-label',
+            \  'abbr': 'my-label',
+            \  'info': '',
+            \  'icase': 1,
+            \  'dup': 1,
+            \  'empty': 1,
+            \  'kind': '',
+            \  'menu': '',
+            \  'user_data': '{"vim-lsp/key":"0"}',
+            \  }],
+            \  'incomplete': 0,
+            \}
+
+            let got = lsp#omni#get_vim_completion_items(options)
+            Assert Equals(got, want)
+
+            let item = {
+            \ 'label': 'my-label',
+            \ 'textEdit': v:null,
+            \ 'insertText': v:null,
+            \}
+
+            let options = {
+            \ 'server': { 'name': 'dummy-server' },
+            \ 'position': lsp#get_position(),
+            \ 'response': { 'result': [item] },
+            \}
+
+            let want = {
+            \ 'items': [{
+            \  'word': 'my-label',
+            \  'abbr': 'my-label',
+            \  'info': '',
+            \  'icase': 1,
+            \  'dup': 1,
+            \  'empty': 1,
+            \  'kind': '',
+            \  'menu': '',
+            \  'user_data': '{"vim-lsp/key":"1"}',
+            \  }],
+            \  'incomplete': 0,
+            \}
+
+            let got = lsp#omni#get_vim_completion_items(options)
+            Assert Equals(got, want)
+        End
     End
 End
