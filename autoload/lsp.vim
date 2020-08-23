@@ -880,9 +880,12 @@ function! s:get_text_document_text(buf, server_name) abort
 endfunction
 
 function! s:get_text_document(buf, server_name, buffer_info) abort
+    let l:server = s:servers[a:server_name]
+    let l:server_info = l:server['server_info']
+    let l:language_id = has_key(l:server_info, 'languageId') ?  l:server_info['languageId'](l:server_info) : &filetype
     return {
         \ 'uri': lsp#utils#get_buffer_uri(a:buf),
-        \ 'languageId': &filetype,
+        \ 'languageId': l:language_id,
         \ 'version': a:buffer_info['version'],
         \ 'text': s:get_text_document_text(a:buf, a:server_name),
         \ }
