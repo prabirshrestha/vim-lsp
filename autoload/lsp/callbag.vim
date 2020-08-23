@@ -1,4 +1,4 @@
-" https://github.com/prabirshrestha/callbag.vim#d0d8c3faa9b2877603b3d137a153e1a8acc463ec
+" https://github.com/prabirshrestha/callbag.vim#9ef556bce269
 "    :CallbagEmbed path=autoload/lsp/callbag.vim namespace=lsp#callbag
 
 function! lsp#callbag#undefined() abort
@@ -221,6 +221,46 @@ function! s:forEachOperationSource(data, t, d) abort
     if a:t == 0 | let a:data['talkback'] = a:d | endif
     if a:t == 1 | call a:data['operation'](a:d) | endif
     if (a:t == 1 || a:t == 0) | call a:data['talkback'](1, lsp#callbag#undefined()) | endif
+endfunction
+" }}}
+
+" tap() {{{
+function! lsp#callbag#tap(...) abort
+    let l:data = {}
+    if a:0 > 0 && type(a:1) == type({}) " a:1 { next, error, complete }
+        if has_key(a:1, 'next') | let l:data['next'] = a:1['next'] | endif
+        if has_key(a:1, 'error') | let l:data['error'] = a:1['error'] | endif
+        if has_key(a:1, 'complete') | let l:data['complete'] = a:1['complete'] | endif
+    else " a:1 = next, a:2 = error, a:3 = complete
+        if a:0 >= 1 | let l:data['next'] = a:1 | endif
+        if a:0 >= 2 | let l:data['error'] = a:2 | endif
+        if a:0 >= 3 | let l:data['complete'] = a:3 | endif
+    endif
+    return function('s:tapFactory', [l:data])
+endfunction
+
+function! s:tapFactory(data, source) abort
+    let a:data['source'] = a:source
+    return function('s:tapSouceFactory', [a:data])
+endfunction
+
+function! s:tapSouceFactory(data, start, sink) abort
+    if a:start != 0 | return | endif
+    let a:data['sink'] = a:sink
+    call a:data['source'](0, function('s:tapSourceCallback', [a:data]))
+endfunction
+
+function! s:tapSourceCallback(data, t, d) abort
+    if a:t == 1 && a:d != lsp#callbag#undefined() && has_key(a:data, 'next')
+        call a:data['next'](a:d)
+    elseif a:t == 2
+        if a:d == lsp#callbag#undefined()
+            if has_key(a:data, 'complete') | call a:data['complete']() | endif
+        else
+            if has_key(a:data, 'error') | call a:data['error'](a:d) | endif
+        endif
+    endif
+    call a:data['sink'](a:t, a:d)
 endfunction
 " }}}
 
@@ -481,7 +521,7 @@ endfunction
 " subscribe() {{{
 function! lsp#callbag#subscribe(...) abort
     let l:data = {}
-    if type(a:1) == type({}) " a:1 { next, error, complete }
+    if a:0 > 0 && type(a:1) == type({}) " a:1 { next, error, complete }
         if has_key(a:1, 'next') | let l:data['next'] = a:1['next'] | endif
         if has_key(a:1, 'error') | let l:data['error'] = a:1['error'] | endif
         if has_key(a:1, 'complete') | let l:data['complete'] = a:1['complete'] | endif
@@ -1031,6 +1071,62 @@ function! s:scanSourceCallback(data, t, d) abort
         call a:data['sink'](1, a:data['acc'])
     else
         call a:data['sink'](a:t, a:d)
+    endif
+endfunction
+" }}}
+
+" switchMap() {{{
+function! lsp#callbag#switchMap(makeSource, ...) abort
+    let l:data = { 'makeSource': a:makeSource }
+    if a:0 == 1
+        let l:data['combineResults'] = a:1
+    else
+        let l:data['combineResults'] = function('s:switchMapDefaultCombineResults')
+    endif
+    return function('s:switchMapSourceCallback', [l:data])
+endfunction
+
+function! s:switchMapDefaultCombineResults(a, b) abort
+    return a:b
+endfunction
+
+function! s:switchMapSourceCallback(data, inputSource) abort
+    let a:data['inputSource'] = a:inputSource
+    return function('s:switchMapFactory', [a:data])
+endfunction
+
+function! s:switchMapFactory(data, start, outputSink) abort
+    if a:start != 0 | return | endif
+    let a:data['outputSink'] = a:outputSink
+    let a:data['sourceEnded'] = 0
+    call a:data['inputSource'](0, function('s:switchMapInputSourceCallback', [a:data]))
+endfunction
+
+function! s:switchMapInputSourceCallback(data, t, d) abort
+    if a:t == 0 | call a:data['outputSink'](a:t, a:d) | endif
+    if a:t == 1
+        if has_key(a:data, 'currSourceTalkback')
+            call a:data['currSourceTalkback'](2, lsp#callbag#undefined())
+            call remove(a:data, 'currSourceTalkback')
+        endif
+        let l:CurrSource = a:data['makeSource'](a:d)
+        call l:CurrSource(0, function('s:switchMapCurrSourceCallback', [a:data, a:t, a:d]))
+    endif
+    if a:t == 2
+        let a:data['sourceEnded'] = 1
+        if !has_key(a:data, 'currSourceTalkback') | call a:data['outputSink'](a:t, a:d) | endif
+    endif
+endfunction
+
+function! s:switchMapCurrSourceCallback(data, t, d, currT, currD) abort
+    if a:currT == 0 | let a:data['currSourceTalkback'] = a:currD | endif
+    if a:currT == 1 | call a:data['outputSink'](a:t, a:data['combineResults'](a:d, a:currD)) | endif
+    if (a:currT == 0 || a:currT == 1) && has_key(a:data, 'currSourceTalkback')
+        call a:data['currSourceTalkback'](1, lsp#callbag#undefined())
+    endif
+    if a:currT == 2
+        call remove(a:data, 'currSourceTalkback')
+        if a:data['sourceEnded'] | call a:data['outputSink'](a:currT, a:currD) | endif
     endif
 endfunction
 " }}}
