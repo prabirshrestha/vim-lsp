@@ -71,7 +71,7 @@ function! s:set_highlights(data) abort
 
     call s:clear_highlights()
 
-    if mode() != 'n' | return | endif
+    if mode() !=# 'n' | return | endif
 
     if lsp#client#is_error(a:data) | return | endif
 
@@ -113,9 +113,6 @@ function! s:set_highlights(data) abort
             call add(b:lsp_reference_matches, l:match)
         endfor
     endif
-
-    " Get references from the response
-    echom 'highlight' . s:i . json_encode(l:position_list)
 endfunction
 
 function! s:clear_highlights() abort
