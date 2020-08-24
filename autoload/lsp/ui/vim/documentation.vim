@@ -76,7 +76,9 @@ endfunction
 function! lsp#ui#vim#documentation#setup() abort
     augroup lsp_documentation_popup
         autocmd!
-        autocmd CompleteChanged * call s:complete_done()
+        if exists('##CompleteChanged')
+            autocmd CompleteChanged * call s:complete_done()
+        endif
         autocmd CompleteDone * call s:close_popup()
     augroup end
 endfunction
