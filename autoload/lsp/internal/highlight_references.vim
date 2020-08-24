@@ -28,7 +28,7 @@ function! lsp#internal#highlight_references#_enable() abort
         \ lsp#callbag#debounceTime(g:lsp_highlight_references_delay),
         \ lsp#callbag#map({_->{'bufnr': bufnr('%'), 'curpos': getcurpos()[0:2], 'changedtick': b:changedtick }}),
         \ lsp#callbag#distinctUntilChanged({a,b -> a['bufnr'] == b['bufnr'] && a['curpos'] == b['curpos'] && a['changedtick'] == b['changedtick']}),
-        \ lsp#callbag#filter({_->mode() is# 'n'}),
+        \ lsp#callbag#filter({_->mode() is# 'n' && getbufvar(bufnr('%'), '&buftype') !=# 'terminal' }),
         \ lsp#callbag#switchMap({_->
         \   lsp#callbag#pipe(
         \       s:send_highlight_request(),
@@ -207,7 +207,7 @@ function! lsp#internal#highlight_references#jump(offset) abort
         echom 'search hit TOP, continuing at BOTTOM'
         echohl None
     elseif l:index >= len(b:lsp_reference_positions)
-        echohl WarningMsg
+        echohl WarningMsgand send 
         echom 'search hit BOTTOM, continuing at TOP'
         echohl None
     endif

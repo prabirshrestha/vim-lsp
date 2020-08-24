@@ -33,6 +33,7 @@ CONTENTS                                                  *vim-lsp-contents*
       g:lsp_textprop_enabled                |g:lsp_textprop_enabled|
       g:lsp_use_event_queue                 |g:lsp_use_event_queue|
       g:lsp_highlight_references_enabled    |g:lsp_highlight_references_enabled|
+      g:lsp_highlight_references_delay      |g:lsp_highlight_references_delay|
       g:lsp_get_supported_capabilities      |g:lsp_get_supported_capabilities|
       g:lsp_peek_alignment                  |g:lsp_peek_alignment|
       g:lsp_preview_max_width               |g:lsp_preview_max_width|
@@ -542,7 +543,7 @@ g:lsp_use_event_queue                               *g:lsp_use_event_queue*
 
 g:lsp_highlight_references_enabled      *g:lsp_highlight_references_enabled*
     Type: |Number|
-    Default: `0`
+    Default: `1`
 
     Enable highlighting of the references to the symbol under the cursor.
 
@@ -556,6 +557,17 @@ g:lsp_highlight_references_enabled      *g:lsp_highlight_references_enabled*
 
     Example: >
     highlight lspReference ctermfg=red guifg=red ctermbg=green guibg=green
+
+g:lsp_highlight_references_delay            *g:lsp_highlight_references_delay*
+    Type: |Number|
+    Default: `350`
+
+    Delay milliseconds to highlight references. Requires
+    |g:lsp_highlight_references_enabled| set to 1.
+
+    Example: >
+	let g:lsp_highlight_references_delay = 200
+	let g:lsp_highlight_references_delay = 1000
 
 g:lsp_get_supported_capabilities         *g:lsp_get_supported_capabilities*
     Type: |List|
