@@ -9,7 +9,7 @@ function! lsp#ui#vim#completion#_setup() abort
   augroup END
 endfunction
 
-function! lsp#ui#vim#completion#_teardown() abort
+function! lsp#ui#vim#completion#_disable() abort
   augroup lsp_ui_vim_completion
     autocmd!
   augroup END
