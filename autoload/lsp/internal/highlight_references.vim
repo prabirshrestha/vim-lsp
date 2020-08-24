@@ -10,6 +10,12 @@ function! lsp#internal#highlight_references#_enable() abort
         highlight link lspReference CursorColumn
     endif
 
+    " Note:
+    " - update highlight refrences when CusorMoved or CursorHold
+    " - clear highlights when InsertEnter
+    " - debounce highlight request
+    " - automatically switch to latest highlight request via switchMap()
+    " - cancel highlight request via takeUntil() when BufLeave
     let s:Dispose = lsp#callbag#pipe(
         \ lsp#callbag#merge(
         \   lsp#callbag#fromEvent(['CursorMoved', 'CursorHold']),
@@ -23,7 +29,17 @@ function! lsp#internal#highlight_references#_enable() abort
         \ lsp#callbag#map({_->{'bufnr': bufnr('%'), 'curpos': getcurpos()[0:2], 'changedtick': b:changedtick }}),
         \ lsp#callbag#distinctUntilChanged({a,b -> a['bufnr'] == b['bufnr'] && a['curpos'] == b['curpos'] && a['changedtick'] == b['changedtick']}),
         \ lsp#callbag#filter({_->mode() is# 'n'}),
-        \ lsp#callbag#switchMap({_ -> s:send_highlight_request()}),
+        \ lsp#callbag#switchMap({_->
+        \   lsp#callbag#pipe(
+        \       s:send_highlight_request(),
+        \       lsp#callbag#takeUntil(
+        \           lsp#callbag#pipe(
+        \               lsp#callbag#fromEvent('BufLeave'),
+        \               lsp#callbag#tap({_->s:clear_highlights()}),
+        \           )
+        \       )
+        \   )
+        \ }),
         \ lsp#callbag#filter({_->mode() is# 'n'}),
         \ lsp#callbag#subscribe({x->s:set_highlights(x)}),
         \)
@@ -77,8 +93,8 @@ function! s:set_highlights(data) abort
     if s:in_reference(l:position_list) == -1 | return | endif
 
     " Store references
-    let w:lsp_reference_positions = l:position_list
-    let w:lsp_reference_matches = []
+    let b:lsp_reference_positions = l:position_list
+    let b:lsp_reference_matches = []
 
     " Apply highlights to the buffer
     call s:init_reference_highlight(l:bufnr)
@@ -89,12 +105,12 @@ function! s:set_highlights(data) abort
             \    'bufnr': l:bufnr,
             \    'length': l:position[2],
             \    'type': 'vim-lsp-reference-highlight'})
-            call add(w:lsp_reference_matches, l:position[0])
+            call add(b:lsp_reference_matches, l:position[0])
         endfor
     else
         for l:position in l:position_list
             let l:match = matchaddpos('lspReference', [l:position], -5)
-            call add(w:lsp_reference_matches, l:match)
+            call add(b:lsp_reference_matches, l:match)
         endfor
     endif
 
@@ -103,22 +119,22 @@ function! s:set_highlights(data) abort
 endfunction
 
 function! s:clear_highlights() abort
-    if exists('w:lsp_reference_matches')
+    if exists('b:lsp_reference_matches')
         if s:use_vim_textprops
             let l:bufnr = bufnr()
-            for l:line in w:lsp_reference_matches
+            for l:line in b:lsp_reference_matches
                 silent! call prop_remove(
                 \   {'id': s:prop_id,
                 \    'bufnr': l:bufnr,
                 \    'all': v:true}, l:line)
             endfor
         else
-            for l:match in w:lsp_reference_matches
+            for l:match in b:lsp_reference_matches
                 silent! call matchdelete(l:match)
             endfor
         endif
-        unlet w:lsp_reference_matches
-        unlet w:lsp_reference_positions
+        unlet b:lsp_reference_matches
+        unlet b:lsp_reference_positions
     endif
 endfunction
 
@@ -169,7 +185,7 @@ endfunction
 
 " Cyclically move between references by `offset` occurrences.
 function! lsp#internal#highlight_references#jump(offset) abort
-    if !exists('w:lsp_reference_positions')
+    if !exists('b:lsp_reference_positions')
         echohl WarningMsg
         echom 'References not available'
         echohl None
@@ -177,12 +193,12 @@ function! lsp#internal#highlight_references#jump(offset) abort
     endif
 
     " Get index of reference under cursor
-    let l:index = s:in_reference(w:lsp_reference_positions)
+    let l:index = s:in_reference(b:lsp_reference_positions)
     if l:index < 0
         return
     endif
 
-    let l:n = len(w:lsp_reference_positions)
+    let l:n = len(b:lsp_reference_positions)
     let l:index += a:offset
 
     " Show a message when reaching TOP/BOTTOM of the file
@@ -190,19 +206,19 @@ function! lsp#internal#highlight_references#jump(offset) abort
         echohl WarningMsg
         echom 'search hit TOP, continuing at BOTTOM'
         echohl None
-    elseif l:index >= len(w:lsp_reference_positions)
+    elseif l:index >= len(b:lsp_reference_positions)
         echohl WarningMsg
         echom 'search hit BOTTOM, continuing at TOP'
         echohl None
     endif
 
     " Wrap index
-    if l:index < 0 || l:index >= len(w:lsp_reference_positions)
+    if l:index < 0 || l:index >= len(b:lsp_reference_positions)
         let l:index = (l:index % l:n + l:n) % l:n
     endif
 
     " Jump
-    let l:target = w:lsp_reference_positions[l:index][0:1]
+    let l:target = b:lsp_reference_positions[l:index][0:1]
     normal! m`
     call cursor(l:target[0], l:target[1])
 endfunction
