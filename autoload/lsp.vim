@@ -211,10 +211,6 @@ function! s:register_events() abort
         if exists('##TextChangedP')
             autocmd TextChangedP * call s:on_text_document_did_change()
         endif
-        " if g:lsp_highlight_references_enabled
-        "     autocmd CursorMoved * call s:on_cursor_moved()
-        " endif
-        " autocmd BufWinEnter,BufWinLeave,InsertEnter * call lsp#ui#vim#references#clean_references()
     augroup END
 
     for l:bufnr in range(1, bufnr('$'))
@@ -272,15 +268,6 @@ function! s:on_text_document_did_change() abort
     if getbufvar(l:buf, '&buftype') ==# 'terminal' | return | endif
     call lsp#log('s:on_text_document_did_change()', l:buf)
     call s:add_didchange_queue(l:buf)
-endfunction
-
-function! s:on_cursor_moved() abort
-    let l:buf = bufnr('%')
-    if getbufvar(l:buf, '&buftype') ==# 'terminal' | return | endif
-
-    " if g:lsp_highlight_references_enabled
-    "     call lsp#ui#vim#references#highlight(v:false)
-    " endif
 endfunction
 
 function! s:call_did_save(buf, server_name, result, cb) abort
