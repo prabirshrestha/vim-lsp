@@ -11,9 +11,9 @@ function! lsp#internal#highlight_references#_enable() abort
     endif
 
     " Note:
-    " - update highlight refrences when CusorMoved or CursorHold
+    " - update highlight references when CusorMoved or CursorHold
     " - clear highlights when InsertEnter
-    " - debounce highlight request
+    " - debounce highlight requests
     " - automatically switch to latest highlight request via switchMap()
     " - cancel highlight request via takeUntil() when BufLeave
     let s:Dispose = lsp#callbag#pipe(
