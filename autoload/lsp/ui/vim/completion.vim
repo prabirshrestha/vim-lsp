@@ -9,6 +9,12 @@ function! lsp#ui#vim#completion#_setup() abort
   augroup END
 endfunction
 
+function! lsp#ui#vim#completion#_disable() abort
+  augroup lsp_ui_vim_completion
+    autocmd!
+  augroup END
+endfunction
+
 "
 " After CompleteDone, v:complete_item's word has been inserted into the line.
 " Yet not inserted commit characters.

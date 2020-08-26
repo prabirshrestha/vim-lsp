@@ -150,3 +150,9 @@ function! lsp#ui#vim#signature_help#setup() abort
     augroup END
 endfunction
 
+function! lsp#ui#vim#signature_help#_disable() abort
+    augroup _lsp_signature_help_
+        autocmd!
+    augroup END
+endfunction
+
