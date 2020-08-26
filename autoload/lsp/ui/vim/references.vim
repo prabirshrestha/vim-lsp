@@ -128,7 +128,7 @@ function! s:handle_references(ctx, data) abort
 
     " Apply highlights to the buffer
     if g:lsp_highlight_references_enabled
-        let l:bufnr = bufnr()
+        let l:bufnr = bufnr('%')
         call s:init_reference_highlight(l:bufnr)
         if s:use_vim_textprops
             for l:position in l:position_list
@@ -155,7 +155,7 @@ function! s:init_reference_highlight(buf) abort
 
     if s:use_vim_textprops
         call prop_type_add('vim-lsp-reference-highlight',
-        \   {'bufnr': bufnr(),
+        \   {'bufnr': bufnr('%'),
         \    'highlight': 'lspReference',
         \    'combine': v:true})
     endif
@@ -210,7 +210,7 @@ function! lsp#ui#vim#references#clean_references() abort
     let s:pending[&filetype] = v:false
     if exists('w:lsp_reference_matches')
         if s:use_vim_textprops
-            let l:bufnr = bufnr()
+            let l:bufnr = bufnr('%')
             for l:line in w:lsp_reference_matches
                 silent! call prop_remove(
                 \   {'id': s:prop_id,
