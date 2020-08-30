@@ -20,7 +20,7 @@ function! lsp#internal#highlight_references#_enable() abort
         \ lsp#callbag#merge(
         \   lsp#callbag#fromEvent(['CursorMoved', 'CursorHold']),
         \   lsp#callbag#pipe(
-        \       lsp#callbag#fromEvent('InsertEnter'),
+        \       lsp#callbag#fromEvent(['InsertEnter', 'BufLeave']),
         \       lsp#callbag#tap({_ -> s:clear_highlights() }),
         \   )
         \ ),
@@ -33,10 +33,7 @@ function! lsp#internal#highlight_references#_enable() abort
         \   lsp#callbag#pipe(
         \       s:send_highlight_request(),
         \       lsp#callbag#takeUntil(
-        \           lsp#callbag#pipe(
-        \               lsp#callbag#fromEvent('BufLeave'),
-        \               lsp#callbag#tap({_->s:clear_highlights()}),
-        \           )
+        \           lsp#callbag#fromEvent('BufLeave')
         \       )
         \   )
         \ }),
@@ -118,7 +115,7 @@ endfunction
 function! s:clear_highlights() abort
     if exists('b:lsp_reference_matches')
         if s:use_vim_textprops
-            let l:bufnr = bufnr()
+            let l:bufnr = bufnr(bufnr('%'))
             for l:line in b:lsp_reference_matches
                 silent! call prop_remove(
                 \   {'id': s:prop_id,
