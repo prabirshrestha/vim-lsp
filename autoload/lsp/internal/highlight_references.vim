@@ -115,7 +115,7 @@ endfunction
 function! s:clear_highlights() abort
     if exists('b:lsp_reference_matches')
         if s:use_vim_textprops
-            let l:bufnr = bufnr(bufnr('%'))
+            let l:bufnr = bufnr('%')
             for l:line in b:lsp_reference_matches
                 silent! call prop_remove(
                 \   {'id': s:prop_id,
