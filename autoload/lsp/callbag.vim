@@ -5,6 +5,11 @@ function! lsp#callbag#undefined() abort
     return '__callback_undefined__'
 endfunction
 
+function! lsp#callbag#isUndefined(d) abort
+    let l:undefined = lsp#callbag#undefined()
+    return type(a:d) == type(l:undefined) && a:d ==# l:undefined
+endfunction
+
 function! s:noop(...) abort
 endfunction
 
@@ -138,7 +143,7 @@ function! s:createNext(data, d) abort
 endfunction
 
 function! s:createError(data, e) abort
-    if !a:data['end'] && a:e != lsp#callbag#undefined()
+    if !a:data['end'] && !lsp#callbag#isUndefined(a:e)
         let a:data['end'] = 1
         call a:data['sink'](2, a:e)
     endif
@@ -252,8 +257,8 @@ endfunction
 
 function! s:tapSourceCallback(data, t, d) abort
     if a:t == 1 && has_key(a:data, 'next') | call a:data['next'](a:d) | endif
-    if a:t == 2 && a:d == lsp#callbag#undefined() && has_key(a:data, 'complete') | call a:data['complete']() | endif
-    if a:t == 2 && a:d != lsp#callbag#undefined() && has_key(a:data, 'error') | call a:data['error'](a:d) | endif
+    if a:t == 2 && lsp#callbag#isUndefined(a:d) && has_key(a:data, 'complete') | call a:data['complete']() | endif
+    if a:t == 2 && !lsp#callbag#isUndefined(a:d) && has_key(a:data, 'error') | call a:data['error'](a:d) | endif
     call a:data['sink'](a:t, a:d)
 endfunction
 " }}}
@@ -570,8 +575,8 @@ function! s:subscribeSourceCallback(data, t, d) abort
     if a:t == 0 | let a:data['talkback'] = a:d | endif
     if a:t == 1 && has_key(a:data, 'next') | call a:data['next'](a:d) | endif
     if a:t == 1 || a:t == 0 | call a:data['talkback'](1, lsp#callbag#undefined()) | endif
-    if a:t == 2 && a:d == lsp#callbag#undefined() && has_key(a:data, 'complete') | call a:data['complete']() | endif
-    if a:t == 2 && a:d != lsp#callbag#undefined() && has_key(a:data, 'error') | call a:data['error'](a:d) | endif
+    if a:t == 2 && lsp#callbag#isUndefined(a:d) && has_key(a:data, 'complete') | call a:data['complete']() | endif
+    if a:t == 2 && !lsp#callbag#isUndefined(a:d) && has_key(a:data, 'error') | call a:data['error'](a:d) | endif
 endfunction
 
 function! s:subscribeDispose(data, ...) abort
@@ -1331,7 +1336,7 @@ function! s:materializeFSourceCallback(data, t, d) abort
     if a:t == 1
         call a:data['sink'](1, lsp#callbag#createNextNotification(a:d))
     elseif a:t == 2
-        call a:data['sink'](1, a:d == lsp#callbag#undefined()
+        call a:data['sink'](1, lsp#callbag#isUndefined(a:d)
                     \ ? lsp#callbag#createCompleteNotification()
                     \ : lsp#callbag#createErrorNotification(a:d))
         call a:data['sink'](2, lsp#callbag#undefined())
