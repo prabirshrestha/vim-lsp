@@ -1,4 +1,4 @@
-" https://github.com/prabirshrestha/callbag.vim#fea76e5ac47c195da
+" https://github.com/prabirshrestha/callbag.vim#1d6a
 "    :CallbagEmbed path=autoload/lsp/callbag.vim namespace=lsp#callbag
 
 function! lsp#callbag#undefined() abort
@@ -1307,6 +1307,63 @@ function! s:shareSourceCallback(data, sink, t, d) abort
     if a:t == 2
         let a:data['sinks'] = []
     endif
+endfunction
+" }}}
+
+" materialize() {{{
+function! lsp#callbag#materialize() abort
+    let l:data = {}
+    return function('s:materializeF', [l:data])
+endfunction
+
+function! s:materializeF(data, source) abort
+    let a:data['source'] = a:source
+    return function('s:materializeFSource', [a:data])
+endfunction
+
+function! s:materializeFSource(data, start, sink) abort
+    if a:start != 0 | return | endif
+    let a:data['sink'] = a:sink
+    call a:data['source'](0, function('s:materializeFSourceCallback', [a:data]))
+endfunction
+
+function! s:materializeFSourceCallback(data, t, d) abort
+    if a:t == 1
+        call a:data['sink'](1, lsp#callbag#createNextNotification(a:d))
+    elseif a:t == 2
+        call a:data['sink'](1, a:d == lsp#callbag#undefined()
+                    \ ? lsp#callbag#createCompleteNotification()
+                    \ : lsp#callbag#createErrorNotification(a:d))
+        call a:data['sink'](2, lsp#callbag#undefined())
+    else
+        call a:data['sink'](a:t, a:d)
+    endif
+endfunction
+" }}}
+
+" Notifications {{{
+function! lsp#callbag#createNextNotification(d) abort
+    return { 'kind': 'N', 'value': a:d }
+endfunction
+
+function! lsp#callbag#createCompleteNotification() abort
+    return { 'kind': 'C' }
+endfunction
+
+function! lsp#callbag#createErrorNotification(d) abort
+    return { 'kind': 'E', 'error': a:d }
+endfunction
+
+function! lsp#callbag#isNextNotification(d) abort
+    return a:d['kind'] ==# 'N'
+endfunction
+
+function! lsp#callbag#isCompleteNotification(d) abort
+    return a:d['kind'] ==# 'C'
+endfunction
+
+function! lsp#callbag#isErrorNotification(d) abort
+    return a:d['kind'] ==# 'E'
 endfunction
 " }}}
 

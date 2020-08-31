@@ -32,6 +32,9 @@ function! lsp#internal#highlight_references#_enable() abort
         \ lsp#callbag#switchMap({_->
         \   lsp#callbag#pipe(
         \       s:send_highlight_request(),
+        \       lsp#callbag#materialize(),
+        \       lsp#callbag#filter({x->lsp#callbag#isNextNotification(x)}),
+        \       lsp#callbag#map({x->x['value']}),
         \       lsp#callbag#takeUntil(
         \           lsp#callbag#fromEvent('BufLeave')
         \       )
