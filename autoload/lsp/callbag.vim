@@ -1,4 +1,4 @@
-" https://github.com/prabirshrestha/callbag.vim#e8598fe3fcbd74bfee21
+" https://github.com/prabirshrestha/callbag.vim#fea76e5ac47c195da
 "    :CallbagEmbed path=autoload/lsp/callbag.vim namespace=lsp#callbag
 
 function! lsp#callbag#undefined() abort
@@ -252,8 +252,8 @@ endfunction
 
 function! s:tapSourceCallback(data, t, d) abort
     if a:t == 1 && has_key(a:data, 'next') | call a:data['next'](a:d) | endif
-    if a:t == 2 && a:d == lsp#lsp#callbag#undefined() && has_key(a:data, 'complete') | call a:data['complete']() | endif
-    if a:t == 2 && a:d != lsp#lsp#callbag#undefined() && has_key(a:data, 'error') | call a:data['error'](a:d) | endif
+    if a:t == 2 && a:d == lsp#callbag#undefined() && has_key(a:data, 'complete') | call a:data['complete']() | endif
+    if a:t == 2 && a:d != lsp#callbag#undefined() && has_key(a:data, 'error') | call a:data['error'](a:d) | endif
     call a:data['sink'](a:t, a:d)
 endfunction
 " }}}
@@ -481,6 +481,40 @@ function! s:notify_event_handler(index) abort
 endfunction
 " }}}
 
+" fromPromise() {{{
+function! lsp#callbag#fromPromise(promise) abort
+    let l:data = { 'promise': a:promise }
+    return function('s:fromPromiseFactory', [l:data])
+endfunction
+
+function! s:fromPromiseFactory(data, start, sink) abort
+    if a:start != 0 | return | endif
+    let a:data['sink'] = a:sink
+    let a:data['ended'] = 0
+    call a:data['promise'].then(
+        \ function('s:fromPromiseOnFulfilledCallback', [a:data]),
+        \ function('s:fromPromiseOnRejectedCallback', [a:data]),
+        \ )
+    call a:sink(0, function('s:fromPromiseSinkCallback', [a:data]))
+endfunction
+
+function! s:fromPromiseOnFulfilledCallback(data, ...) abort
+    if a:data['ended'] | return | endif
+    call a:data['sink'](1, a:0 > 0 ? a:1 : lsp#callbag#undefined())
+    if a:data['ended'] | return | endif
+    call a:data['sink'](2, lsp#callbag#undefined())
+endfunction
+
+function! s:fromPromiseOnRejectedCallback(data, err) abort
+    if a:data['ended'] | return | endif
+    call a:data['sink'](2, a:err)
+endfunction
+
+function! s:fromPromiseSinkCallback(data, t, ...) abort
+    if a:t == 2 | let a:data['ended'] = 1 | endif
+endfunction
+" }}}
+
 " debounceTime() {{{
 function! lsp#callbag#debounceTime(duration) abort
     let l:data = { 'duration': a:duration }
@@ -545,6 +579,98 @@ function! s:subscribeDispose(data, ...) abort
 endfunction
 " }}}
 
+" toList() {{{
+function! lsp#callbag#toList() abort
+    let l:data = { 'done': 0, 'items': [], 'unsubscribed': 0 }
+    return function('s:toListFactory', [l:data])
+endfunction
+
+function! s:toListFactory(data, source) abort
+    let a:data['unsubscribe'] = lsp#callbag#subscribe(
+        \ function('s:toListOnNext', [a:data]),
+        \ function('s:toListOnError', [a:data]),
+        \ function('s:toListOnComplete', [a:data])
+        \ )(a:source)
+    if a:data['done'] | call s:toListUnsubscribe(a:data) | endif
+    return {
+        \ 'unsubscribe': function('s:toListUnsubscribe', [a:data]),
+        \ 'wait': function('s:toListWait', [a:data])
+        \ }
+endfunction
+
+function! s:toListUnsubscribe(data) abort
+    if !has_key(a:data, 'unsubscribe') | return | endif
+    if !a:data['unsubscribed']
+        call a:data['unsubscribe']()
+        let a:data['unsubscribed'] = 1
+        if !a:data['done']
+            let a:data['done'] = 1
+            try
+                throw 'lsp#callbag toList() is already unsubscribed.'
+            catch
+                let a:data['error'] = v:exception . ' ' . v:throwpoint
+            endtry
+        endif
+    endif
+endfunction
+
+function! s:toListOnNext(data, item) abort
+    call add(a:data['items'], a:item)
+endfunction
+
+function! s:toListOnError(data, error) abort
+    let a:data['done'] = 1
+    let a:data['error'] = a:error
+    call s:toListUnsubscribe(a:data)
+endfunction
+
+function! s:toListOnComplete(data) abort
+    let a:data['done'] = 1
+    call s:toListUnsubscribe(a:data)
+endfunction
+
+function! s:toListWait(data, ...) abort
+    if a:data['done']
+        if has_key(a:data, 'error')
+            throw a:data['error']
+        else
+            return a:data['items']
+        endif
+    else
+        let l:opt = a:0 > 0 ? copy(a:1) : {}
+        let l:opt['timedout'] = 0
+        let l:opt['sleep'] = get(l:opt, 'sleep', 1)
+        let l:opt['timeout'] = get(l:opt, 'timeout', -1)
+
+        if l:opt['timeout'] > -1
+            let l:opt['timer'] = timer_start(l:opt['timeout'], function('s:toListTimeoutCallback', [l:opt]))
+        endif
+
+        while !a:data['done'] && !l:opt['timedout']
+            exec 'sleep ' . l:opt['sleep'] . 'm'
+        endwhile
+
+        if has_key(l:opt, 'timer')
+            silent! call timer_stop(l:opt['timer'])
+        endif
+
+        if l:opt['timedout']
+            throw 'lsp#callbag toList().wait() timedout.'
+        endif
+
+        if has_key(a:data, 'error')
+            throw a:data['error']
+        else
+            return a:data['items']
+        endif
+    endif
+endfunction
+
+function! s:toListTimeoutCallback(opt, ...) abort
+    let a:opt['timedout'] = 1
+endfunction
+" }}}
+
 " throwError() {{{
 function! lsp#callbag#throwError(error) abort
     let l:data = { 'error': a:error }
@@ -568,20 +694,20 @@ endfunction
 " of() {{{
 function! lsp#callbag#of(...) abort
     let l:data = { 'values': a:000 }
-    return function('s:arrayFactory', [l:data])
+    return function('s:listFactory', [l:data])
 endfunction
 " }}}
 
-" fromArray() {{{
-function! lsp#callbag#fromArray(array) abort
-    let l:data = { 'values': a:array }
-    return function('s:arrayFactory', [l:data])
+" fromList() {{{
+function! lsp#callbag#fromList(list) abort
+    let l:data = { 'values': a:list }
+    return function('s:listFactory', [l:data])
 endfunction
 
-function! s:arrayFactory(data, start, sink) abort
+function! s:listFactory(data, start, sink) abort
     if a:start != 0 | return | endif
     let a:data['disposed'] = 0
-    call a:sink(0, function('s:arraySinkCallback', [a:data]))
+    call a:sink(0, function('s:listSinkCallback', [a:data]))
     let l:i = 0
     let l:n = len(a:data['values'])
     while l:i < l:n
@@ -594,7 +720,7 @@ function! s:arrayFactory(data, start, sink) abort
 endfunction
 
 
-function! s:arraySinkCallback(data, t, ...) abort
+function! s:listSinkCallback(data, t, ...) abort
     if a:t != 2 | return | endif
     let a:data['disposed'] = 1
 endfunction
