@@ -144,6 +144,6 @@ xnoremap <plug>(lsp-document-range-format) :<Home>silent <End>call lsp#ui#vim#do
 nnoremap <plug>(lsp-implementation) :<c-u>call lsp#ui#vim#implementation(0)<cr>
 nnoremap <plug>(lsp-peek-implementation) :<c-u>call lsp#ui#vim#implementation(1)<cr>
 nnoremap <plug>(lsp-status) :<c-u>echo lsp#get_server_status()<cr>
-nnoremap <plug>(lsp-next-reference) :<c-u>call lsp#ui#vim#references#jump(+1)<cr>
-nnoremap <plug>(lsp-previous-reference) :<c-u>call lsp#ui#vim#references#jump(-1)<cr>
+nnoremap <plug>(lsp-next-reference) :<c-u>call lsp#internal#highlight_references#jump(+1)<cr>
+nnoremap <plug>(lsp-previous-reference) :<c-u>call lsp#internal#highlight_references#jump(-1)<cr>
 nnoremap <plug>(lsp-signature-help) :<c-u>call lsp#ui#vim#signature_help#get_signature_help_under_cursor()<cr>
