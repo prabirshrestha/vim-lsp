@@ -1001,7 +1001,7 @@ function! lsp#send_request(server_name, request) abort
 endfunction
 
 function! s:send_request_dispose(ctx) abort
-    " dispose may function may not have been created so check before calling
+    " dispose function may not have been created so check before calling
     if has_key(a:ctx, 'dispose')
         call a:ctx['dispose']()
     endif
