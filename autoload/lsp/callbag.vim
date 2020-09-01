@@ -1,13 +1,15 @@
-" https://github.com/prabirshrestha/callbag.vim#1d6a
+" https://github.com/prabirshrestha/callbag.vim#11a4c28e2d905ebb5ae82b2ebe80ed8f86ddec22
 "    :CallbagEmbed path=autoload/lsp/callbag.vim namespace=lsp#callbag
 
+let s:undefined_token = '__callbag_undefined__'
+let s:str_type = type('')
+
 function! lsp#callbag#undefined() abort
-    return '__callback_undefined__'
+    return s:undefined_token
 endfunction
 
 function! lsp#callbag#isUndefined(d) abort
-    let l:undefined = lsp#callbag#undefined()
-    return type(a:d) == type(l:undefined) && a:d ==# l:undefined
+    return type(a:d) == s:str_type && a:d ==# s:undefined_token
 endfunction
 
 function! s:noop(...) abort
@@ -770,7 +772,7 @@ function! s:mergeSourceCallback(data, i, t, d) abort
         call insert(a:data['sourceTalkbacks'], a:d, a:i)
         let a:data['startCount'] += 1
         if a:data['startCount'] == 1 | call a:data['sink'](0, a:data['talkback']) | endif
-    elseif a:t == 2 && a:d != lsp#callbag#undefined()
+    elseif a:t == 2 && !lsp#callbag#isUndefined(a:d)
         let a:data['ended'] = 1
         let l:j = 0
         while l:j < a:data['n']
@@ -1140,7 +1142,7 @@ function! s:flattenSourceCallback(data, t, d) abort
         let l:InnerSource = a:d
         if a:data['innerTalkback'] != 0 | call a:data['innerTalkback'](2, lsp#callbag#undefined()) | endif
         call l:InnerSource(0, function('s:flattenInnerSourceCallback', [a:data]))
-    elseif a:t == 2 && a:d != lsp#callbag#undefined()
+    elseif a:t == 2 && !lsp#callbag#isUndefined(a:d)
         if a:data['innerTalkback'] != 0 | call a:data['innerTalkback'](2, lsp#callbag#undefined()) | endif
         call a:data['outerTalkback'](1, a:d)
     elseif a:t == 2
@@ -1158,7 +1160,7 @@ function! s:flattenInnerSourceCallback(data, t, d) abort
         call a:data['innerTalkback'](1, lsp#callbag#undefined())
     elseif a:t == 1
         call a:data['sink'](1, a:d)
-    elseif a:t == 2 && a:d != lsp#callbag#undefined()
+    elseif a:t == 2 && !lsp#callbag#isUndefined(a:d)
         call a:data['outerTalkback'](2, lsp#callbag#undefined())
         call a:data['sink'](2, a:d)
     elseif a:t == 2
