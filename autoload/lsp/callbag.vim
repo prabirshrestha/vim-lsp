@@ -1,8 +1,15 @@
-" https://github.com/prabirshrestha/callbag.vim#fea76e5ac47c195da
+" https://github.com/prabirshrestha/callbag.vim#11a4c28e2d905ebb5ae82b2ebe80ed8f86ddec22
 "    :CallbagEmbed path=autoload/lsp/callbag.vim namespace=lsp#callbag
 
+let s:undefined_token = '__callbag_undefined__'
+let s:str_type = type('')
+
 function! lsp#callbag#undefined() abort
-    return '__callback_undefined__'
+    return s:undefined_token
+endfunction
+
+function! lsp#callbag#isUndefined(d) abort
+    return type(a:d) == s:str_type && a:d ==# s:undefined_token
 endfunction
 
 function! s:noop(...) abort
@@ -138,7 +145,7 @@ function! s:createNext(data, d) abort
 endfunction
 
 function! s:createError(data, e) abort
-    if !a:data['end'] && a:e != lsp#callbag#undefined()
+    if !a:data['end'] && !lsp#callbag#isUndefined(a:e)
         let a:data['end'] = 1
         call a:data['sink'](2, a:e)
     endif
@@ -252,8 +259,8 @@ endfunction
 
 function! s:tapSourceCallback(data, t, d) abort
     if a:t == 1 && has_key(a:data, 'next') | call a:data['next'](a:d) | endif
-    if a:t == 2 && a:d == lsp#callbag#undefined() && has_key(a:data, 'complete') | call a:data['complete']() | endif
-    if a:t == 2 && a:d != lsp#callbag#undefined() && has_key(a:data, 'error') | call a:data['error'](a:d) | endif
+    if a:t == 2 && lsp#callbag#isUndefined(a:d) && has_key(a:data, 'complete') | call a:data['complete']() | endif
+    if a:t == 2 && !lsp#callbag#isUndefined(a:d) && has_key(a:data, 'error') | call a:data['error'](a:d) | endif
     call a:data['sink'](a:t, a:d)
 endfunction
 " }}}
@@ -570,8 +577,8 @@ function! s:subscribeSourceCallback(data, t, d) abort
     if a:t == 0 | let a:data['talkback'] = a:d | endif
     if a:t == 1 && has_key(a:data, 'next') | call a:data['next'](a:d) | endif
     if a:t == 1 || a:t == 0 | call a:data['talkback'](1, lsp#callbag#undefined()) | endif
-    if a:t == 2 && a:d == lsp#callbag#undefined() && has_key(a:data, 'complete') | call a:data['complete']() | endif
-    if a:t == 2 && a:d != lsp#callbag#undefined() && has_key(a:data, 'error') | call a:data['error'](a:d) | endif
+    if a:t == 2 && lsp#callbag#isUndefined(a:d) && has_key(a:data, 'complete') | call a:data['complete']() | endif
+    if a:t == 2 && !lsp#callbag#isUndefined(a:d) && has_key(a:data, 'error') | call a:data['error'](a:d) | endif
 endfunction
 
 function! s:subscribeDispose(data, ...) abort
@@ -765,7 +772,7 @@ function! s:mergeSourceCallback(data, i, t, d) abort
         call insert(a:data['sourceTalkbacks'], a:d, a:i)
         let a:data['startCount'] += 1
         if a:data['startCount'] == 1 | call a:data['sink'](0, a:data['talkback']) | endif
-    elseif a:t == 2 && a:d != lsp#callbag#undefined()
+    elseif a:t == 2 && !lsp#callbag#isUndefined(a:d)
         let a:data['ended'] = 1
         let l:j = 0
         while l:j < a:data['n']
@@ -1135,7 +1142,7 @@ function! s:flattenSourceCallback(data, t, d) abort
         let l:InnerSource = a:d
         if a:data['innerTalkback'] != 0 | call a:data['innerTalkback'](2, lsp#callbag#undefined()) | endif
         call l:InnerSource(0, function('s:flattenInnerSourceCallback', [a:data]))
-    elseif a:t == 2 && a:d != lsp#callbag#undefined()
+    elseif a:t == 2 && !lsp#callbag#isUndefined(a:d)
         if a:data['innerTalkback'] != 0 | call a:data['innerTalkback'](2, lsp#callbag#undefined()) | endif
         call a:data['outerTalkback'](1, a:d)
     elseif a:t == 2
@@ -1153,7 +1160,7 @@ function! s:flattenInnerSourceCallback(data, t, d) abort
         call a:data['innerTalkback'](1, lsp#callbag#undefined())
     elseif a:t == 1
         call a:data['sink'](1, a:d)
-    elseif a:t == 2 && a:d != lsp#callbag#undefined()
+    elseif a:t == 2 && !lsp#callbag#isUndefined(a:d)
         call a:data['outerTalkback'](2, lsp#callbag#undefined())
         call a:data['sink'](2, a:d)
     elseif a:t == 2
@@ -1307,6 +1314,63 @@ function! s:shareSourceCallback(data, sink, t, d) abort
     if a:t == 2
         let a:data['sinks'] = []
     endif
+endfunction
+" }}}
+
+" materialize() {{{
+function! lsp#callbag#materialize() abort
+    let l:data = {}
+    return function('s:materializeF', [l:data])
+endfunction
+
+function! s:materializeF(data, source) abort
+    let a:data['source'] = a:source
+    return function('s:materializeFSource', [a:data])
+endfunction
+
+function! s:materializeFSource(data, start, sink) abort
+    if a:start != 0 | return | endif
+    let a:data['sink'] = a:sink
+    call a:data['source'](0, function('s:materializeFSourceCallback', [a:data]))
+endfunction
+
+function! s:materializeFSourceCallback(data, t, d) abort
+    if a:t == 1
+        call a:data['sink'](1, lsp#callbag#createNextNotification(a:d))
+    elseif a:t == 2
+        call a:data['sink'](1, lsp#callbag#isUndefined(a:d)
+                    \ ? lsp#callbag#createCompleteNotification()
+                    \ : lsp#callbag#createErrorNotification(a:d))
+        call a:data['sink'](2, lsp#callbag#undefined())
+    else
+        call a:data['sink'](a:t, a:d)
+    endif
+endfunction
+" }}}
+
+" Notifications {{{
+function! lsp#callbag#createNextNotification(d) abort
+    return { 'kind': 'N', 'value': a:d }
+endfunction
+
+function! lsp#callbag#createCompleteNotification() abort
+    return { 'kind': 'C' }
+endfunction
+
+function! lsp#callbag#createErrorNotification(d) abort
+    return { 'kind': 'E', 'error': a:d }
+endfunction
+
+function! lsp#callbag#isNextNotification(d) abort
+    return a:d['kind'] ==# 'N'
+endfunction
+
+function! lsp#callbag#isCompleteNotification(d) abort
+    return a:d['kind'] ==# 'C'
+endfunction
+
+function! lsp#callbag#isErrorNotification(d) abort
+    return a:d['kind'] ==# 'E'
 endfunction
 " }}}
 

@@ -17,7 +17,10 @@ function! lsp#internal#diagnostics#float#_enable() abort
 endfunction
 
 function! lsp#internal#diagnostics#float#_disable() abort
-    if exists('s:Dispose') | call s:Dispose() | endif
+    if exists('s:Dispose')
+        call s:Dispose()
+        unlet s:Dispose
+    endif
 endfunction
 
 function! s:show_float(diagnostic) abort

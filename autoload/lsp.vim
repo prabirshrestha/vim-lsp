@@ -972,14 +972,14 @@ function! s:request_cancel(ctx) abort
     if a:ctx['request_id'] <= 0 || a:ctx['done'] | return | endif " we have not made the request yet or request is complete, so nothing to cancel
     if lsp#get_server_status(a:ctx['server_name']) !=# 'running' | return | endif " if server is not running we cant send the request
     " send the actual cancel request
-    let l:Dispose = lsp#callbag#pipe(
+    let a:ctx['dispose'] = lsp#callbag#pipe(
         \ lsp#request(a:ctx['server_name'], {
         \   'method': '$/cancelRequest',
         \   'params': { 'id': a:ctx['request_id'] },
         \ }),
         \ lsp#callbag#subscribe({
-        \   'error':{e->l:Dispose()},
-        \   'complete':{->l:Dispose()},
+        \   'error':{e->s:send_request_dispose(a:ctx)},
+        \   'complete':{->s:send_request_dispose(a:ctx)},
         \ })
         \)
 endfunction
@@ -995,14 +995,21 @@ function! lsp#send_request(server_name, request) abort
         \ lsp#callbag#subscribe({
         \   'next':{d->l:ctx['cb'](d)},
         \   'error':{e->s:send_request_error(l:ctx, e)},
-        \   'complete':{->l:ctx['dispose']()},
+        \   'complete':{->s:send_request_dispose(l:ctx)},
         \ })
         \)
 endfunction
 
+function! s:send_request_dispose(ctx) abort
+    " dispose may function may not have been created so check before calling
+    if has_key(a:ctx, 'dispose')
+        call a:ctx['dispose']()
+    endif
+endfunction
+
 function! s:send_request_error(ctx, error) abort
     call a:ctx['cb'](a:error)
-    call a:ctx['dispose']()
+    call s:send_request_dispose(a:ctx)
 endfunction
 " }}}
 

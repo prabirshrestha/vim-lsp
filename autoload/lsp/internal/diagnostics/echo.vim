@@ -16,7 +16,10 @@ function! lsp#internal#diagnostics#echo#_enable() abort
 endfunction
 
 function! lsp#internal#diagnostics#echo#_disable() abort
-    if exists('s:Dispose') | call s:Dispose() | endif
+    if exists('s:Dispose')
+        call s:Dispose()
+        unlet s:Dispose
+    endif
 endfunction
 
 function! s:echo(diagnostic) abort
