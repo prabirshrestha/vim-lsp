@@ -29,7 +29,7 @@ function! lsp#ui#vim#output#closepreview() abort
     augroup lsp_float_preview_close
     augroup end
     autocmd! lsp_float_preview_close CursorMoved,CursorMovedI,VimResized *
-    doautocmd User lsp_float_closed
+    doautocmd <nomodeline> User lsp_float_closed
 endfunction
 
 function! lsp#ui#vim#output#focuspreview() abort
@@ -379,7 +379,7 @@ function! lsp#ui#vim#output#preview(server, data, options) abort
         " Vim popups
         call s:set_cursor(l:current_window_id, a:options)
       endif
-	  doautocmd User lsp_float_opened
+	  doautocmd <nomodeline> User lsp_float_opened
     endif
 
     if !g:lsp_preview_keep_focus

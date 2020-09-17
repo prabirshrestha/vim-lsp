@@ -32,7 +32,7 @@ function! s:on_complete_done() abort
   " Somtimes, vim occurs `CompleteDone` unexpectedly.
   " We try to detect it by checking empty completed_item.
   if empty(v:completed_item) || get(v:completed_item, 'word', '') ==# '' && get(v:completed_item, 'abbr', '') ==# ''
-    doautocmd User lsp_complete_done
+    doautocmd <nomodeline> User lsp_complete_done
     return
   endif
 
@@ -44,7 +44,7 @@ function! s:on_complete_done() abort
 
   " If managed user_data does not exists, skip it.
   if empty(l:managed_user_data)
-    doautocmd User lsp_complete_done
+    doautocmd <nomodeline> User lsp_complete_done
     return
   endif
 
@@ -73,13 +73,13 @@ function! s:on_complete_done_after() abort
 
   " check the commit characters are <BS> or <C-w>.
   if strlen(getline('.')) < strlen(l:line)
-    doautocmd User lsp_complete_done
+    doautocmd <nomodeline> User lsp_complete_done
     return ''
   endif
 
   " Do nothing if text_edit is disabled.
   if !g:lsp_text_edit_enabled
-    doautocmd User lsp_complete_done
+    doautocmd <nomodeline> User lsp_complete_done
     return ''
   endif
 
@@ -118,7 +118,7 @@ function! s:on_complete_done_after() abort
     endif
   endif
 
-  doautocmd User lsp_complete_done
+  doautocmd <nomodeline> User lsp_complete_done
   return ''
 endfunction
 
