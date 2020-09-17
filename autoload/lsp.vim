@@ -50,7 +50,7 @@ function! lsp#enable() abort
         return
     endif
     if !s:already_setup
-        doautocmd User lsp_setup
+        doautocmd <nomodeline> User lsp_setup
         let s:already_setup = 1
     endif
     let s:enabled = 1
@@ -171,7 +171,7 @@ function! lsp#register_server(server_info) abort
         \ 'buffers': {},
         \ }
     call lsp#log('lsp#register_server', 'server registered', l:server_name)
-    doautocmd User lsp_register_server
+    doautocmd <nomodeline> User lsp_register_server
 endfunction
 
 "
@@ -224,7 +224,7 @@ function! s:unregister_events() abort
     augroup lsp
         autocmd!
     augroup END
-    doautocmd User lsp_unregister_server
+    doautocmd <nomodeline> User lsp_unregister_server
 endfunction
 
 function! s:on_text_document_did_open(...) abort
@@ -343,10 +343,10 @@ endfunction
 
 function! s:fire_lsp_buffer_enabled(server_name, buf, ...) abort
     if a:buf == bufnr('%')
-        doautocmd User lsp_buffer_enabled
+        doautocmd <nomodeline> User lsp_buffer_enabled
     else
         " Not using ++once in autocmd for compatibility of VIM8.0
-        let l:cmd = printf('autocmd BufEnter <buffer=%d> doautocmd User lsp_buffer_enabled', a:buf)
+        let l:cmd = printf('autocmd BufEnter <buffer=%d> doautocmd <nomodeline> User lsp_buffer_enabled', a:buf)
         exec printf('augroup _lsp_fire_buffer_enabled | exec "%s | autocmd! _lsp_fire_buffer_enabled BufEnter <buffer>" | augroup END', l:cmd)
     endif
 endfunction
@@ -720,7 +720,7 @@ function! s:on_exit(server_name, id, data, event) abort
         if has_key(l:server, 'init_result')
             unlet l:server['init_result']
         endif
-        doautocmd User lsp_server_exit
+        doautocmd <nomodeline> User lsp_server_exit
     endif
 endfunction
 
@@ -802,7 +802,7 @@ function! s:handle_initialize(server_name, data) abort
 
     call lsp#ui#vim#documentation#setup()
 
-    doautocmd User lsp_server_init
+    doautocmd <nomodeline> User lsp_server_init
 endfunction
 
 function! lsp#get_whitelisted_servers(...) abort
