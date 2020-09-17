@@ -160,10 +160,16 @@ endfunction
 function! lsp#capabilities#get_signature_help_trigger_characters(server_name) abort
     let l:capabilities = lsp#get_server_capabilities(a:server_name)
     if !empty(l:capabilities) && has_key(l:capabilities, 'signatureHelpProvider')
+		let l:trigger_chars = []
         if type(l:capabilities['signatureHelpProvider']) == type({})
             if  has_key(l:capabilities['signatureHelpProvider'], 'triggerCharacters')
-                return l:capabilities['signatureHelpProvider']['triggerCharacters']
+                let l:trigger_chars = l:capabilities['signatureHelpProvider']['triggerCharacters']
             endif
+			" If retriggerChars exist, just treat them like triggerChars.
+            if  has_key(l:capabilities['signatureHelpProvider'], 'retriggerCharacters')
+                let l:trigger_chars += l:capabilities['signatureHelpProvider']['retriggerCharacters']
+            endif
+            return l:trigger_chars
         endif
     endif
     return []
