@@ -110,6 +110,17 @@ function! lsp#utils#find_nearest_parent_file(path, filename) abort
     endif
 endfunction
 
+function! s:compare_nearest(m, a, b)
+  let l:la = len(a:a)
+  let l:lb = len(a:b)
+  if l:la ># l:lb
+    return 1
+  elseif l:la <=# l:lb
+    return -1
+  endif
+  return a:m[a:a] ># a:m[a:b]
+endfunction
+
 " Find a nearest to a `path` parent filename `filename` by traversing the filesystem upwards
 " The filename ending with '/' or '\' will be regarded as directory name,
 " otherwith as file name
@@ -127,9 +138,10 @@ function! lsp#utils#find_nearest_parent_file_directory(path, filename) abort
                 endif
             endif
         endfor
+
         return empty(l:matched_paths) ?
                     \ '' :
-                    \ keys(l:matched_paths)[index(values(l:matched_paths), max(values(l:matched_paths)))]
+                    \ sort(keys(l:matched_paths), function('s:compare_nearest', [l:matched_paths]))[0]
 
     elseif type(a:filename) == 1
         if a:filename[-1:] ==# '/' || a:filename[-1:] ==# '\'
