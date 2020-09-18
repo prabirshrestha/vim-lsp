@@ -110,17 +110,17 @@ function! lsp#utils#find_nearest_parent_file(path, filename) abort
     endif
 endfunction
 
-function! lsp#utils#_compare_nearest_path(m, a, b) abort
-  let l:la = len(a:a)
-  let l:lb = len(a:b)
-  if l:la ># l:lb
+function! lsp#utils#_compare_nearest_path(matches, lhs, rhs) abort
+  let l:llhs = len(a:lhs)
+  let l:lrhs = len(a:rhs)
+  if l:llhs ># l:lrhs
     return -1
-  elseif l:la <# l:lb
+  elseif l:llhs <# l:lrhs
     return 1
   endif
-  if a:m[a:a] ># a:m[a:b]
+  if a:matches[a:lhs] ># a:matches[a:rhs]
     return -1
-  elseif a:m[a:a] <# a:m[a:b]
+  elseif a:matches[a:lhs] <# a:matches[a:rhs]
     return 1
   endif
   return 0
