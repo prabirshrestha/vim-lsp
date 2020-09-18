@@ -110,7 +110,7 @@ function! lsp#utils#find_nearest_parent_file(path, filename) abort
     endif
 endfunction
 
-function! lsp#utils#_compare_nearest_path(m, a, b)
+function! lsp#utils#_compare_nearest_path(m, a, b) abort
   let l:la = len(a:a)
   let l:lb = len(a:b)
   if l:la ># l:lb
@@ -126,7 +126,7 @@ function! lsp#utils#_compare_nearest_path(m, a, b)
   return 0
 endfunction
 
-function! lsp#utils#_nearest_path(matches)
+function! lsp#utils#_nearest_path(matches) abort
   return empty(a:matches) ?
               \ '' :
               \ sort(keys(a:matches), function('lsp#utils#_compare_nearest_path', [a:matches]))[0]
