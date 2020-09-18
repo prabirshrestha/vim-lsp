@@ -84,7 +84,7 @@ Describe lsp#utils
         It should return the root directory if it is found
             let tests = [
             \  {'from': './test/testproject/src/main.cpp', 'target': ['.ccls', 'compile_commands.json', 'README.md', 'git/'], 'root': './test/testproject'},
-            \  {'from': './test/testproject/src/main.cpp', 'target': ['.ccls', 'build/', 'CMakeLists.txt', 'git/'], 'root': './test/testproject'},
+            \  {'from': './test/testproject/src/main.cpp', 'target': ['.ccls', 'build/', 'CMakeLists.txt', 'git/'], 'root': './test/testproject/src'},
             \  {'from': './test/testproject/src/main.cpp', 'target': '.ccls', 'root': './test/testproject'},
             \  {'from': './test/testproject/src/main.cpp', 'target': 'git/', 'root': './test/testproject'},
             \  {'from': './test/testproject/src/main.cpp', 'target': 'CMakeLists.txt', 'root': './test/testproject/src'},
@@ -245,5 +245,25 @@ Describe lsp#utils
           Assert Equals(lsp#utils#_split_by_eol("あいうえお\r\n\n\r\r\nかきくけこ"), ['あいうえお', '', '', '', 'かきくけこ'])
         End
 
+    End
+
+    Describe lsp#utils#_compare_nearest_path
+        It should return looong since it is longest
+          Assert Equals(lsp#utils#_nearest_path(
+          \  {'/path/to/looong': 1, '/path/to/short': 1,}
+          \), '/path/to/looong')
+        End
+
+        It should return loong since they are both longest but loong matches mostly
+          Assert Equals(lsp#utils#_nearest_path(
+          \  {'/path/to/loong': 2, '/path/to/short': 1,}
+          \), '/path/to/loong')
+        End
+
+        It should return not long since it is not longest
+          Assert Equals(lsp#utils#_nearest_path(
+          \  {'/path/to/long': 2, '/path/to/short': 1,}
+          \), '/path/to/short')
+        End
     End
 End
