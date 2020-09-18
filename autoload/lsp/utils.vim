@@ -113,7 +113,6 @@ endfunction
 function! lsp#utils#_compare_nearest_path(m, a, b)
   let l:la = len(a:a)
   let l:lb = len(a:b)
-  echo a:a a:b l:la l:lb
   if l:la ># l:lb
     return -1
   elseif l:la <# l:lb
