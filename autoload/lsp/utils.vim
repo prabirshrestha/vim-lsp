@@ -110,6 +110,28 @@ function! lsp#utils#find_nearest_parent_file(path, filename) abort
     endif
 endfunction
 
+function! lsp#utils#_compare_nearest_path(matches, lhs, rhs) abort
+  let l:llhs = len(a:lhs)
+  let l:lrhs = len(a:rhs)
+  if l:llhs ># l:lrhs
+    return -1
+  elseif l:llhs <# l:lrhs
+    return 1
+  endif
+  if a:matches[a:lhs] ># a:matches[a:rhs]
+    return -1
+  elseif a:matches[a:lhs] <# a:matches[a:rhs]
+    return 1
+  endif
+  return 0
+endfunction
+
+function! lsp#utils#_nearest_path(matches) abort
+  return empty(a:matches) ?
+              \ '' :
+              \ sort(keys(a:matches), function('lsp#utils#_compare_nearest_path', [a:matches]))[0]
+endfunction
+
 " Find a nearest to a `path` parent filename `filename` by traversing the filesystem upwards
 " The filename ending with '/' or '\' will be regarded as directory name,
 " otherwith as file name
@@ -127,10 +149,8 @@ function! lsp#utils#find_nearest_parent_file_directory(path, filename) abort
                 endif
             endif
         endfor
-        return empty(l:matched_paths) ?
-                    \ '' :
-                    \ keys(l:matched_paths)[index(values(l:matched_paths), max(values(l:matched_paths)))]
 
+        return lsp#utils#_nearest_path(l:matched_paths)
     elseif type(a:filename) == 1
         if a:filename[-1:] ==# '/' || a:filename[-1:] ==# '\'
             let l:modify_str = ':p:h:h'
