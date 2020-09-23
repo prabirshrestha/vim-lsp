@@ -97,7 +97,7 @@ function! s:on_complete_done_after() abort
 
   " snippet or textEdit.
   if l:is_expandable
-    " create text_edit
+    " At this timing, the cursor may have been moved by additionalTextEdit, so we use overflow information instead of textEdit itself.
     if type(get(l:completion_item, 'textEdit', v:null)) == type({})
       let l:overflow_before = max([0, (l:done_position['character'] - strchars(l:completed_item['word'])) - l:completion_item['textEdit']['range']['start']['character']])
       let l:overflow_after = max([0, l:done_position['character'] - l:completion_item['textEdit']['range']['end']['character']])
