@@ -99,33 +99,36 @@ function! s:on_complete_done_after() abort
   if l:is_expandable
     " create text_edit
     if type(get(l:completion_item, 'textEdit', v:null)) == type({})
-      let l:text_edit = l:completion_item['textEdit']
+      let l:overflow_before = max([0, (l:done_position['character'] - strchars(l:completed_item['word'])) - l:completion_item['textEdit']['range']['start']['character']])
+      let l:overflow_after = max([0, l:done_position['character'] - l:completion_item['textEdit']['range']['end']['character']])
+      let l:text = l:completion_item['textEdit']['newText']
     else
-      " At this time, the line was changed to the line when the completion request was sent by s:clear_auto_inserted_text.
-      " So we should create range between completion-start-offset and cursor-pos.
-      let l:text_edit = {
-      \   'range': {
-      \     'start': {
-      \       'line': l:done_position['line'],
-      \       'character': l:done_position['character'] - strchars(l:completed_item['word'])
-      \     },
-      \     'end': lsp#utils#position#vim_to_lsp('%', getpos('.')[1 : 2]),
-      \   },
-      \   'newText': get(l:completion_item, 'insertText', '')
-      \ }
+      let l:overflow_before = 0
+      let l:overflow_after = 0
+      let l:text = get(l:completion_item, 'insertText', l:completed_item['word'])
     endif
 
     " apply snipept or text_edit
+    let l:position = lsp#utils#position#vim_to_lsp('%', getpos('.')[1 : 2])
+    let l:range = {
+    \   'start': {
+    \     'line': l:position['line'],
+    \     'character': (l:done_position['character'] - strchars(l:completed_item['word'])) - l:overflow_before,
+    \   },
+    \   'end': {
+    \     'line': l:position['line'],
+    \     'character': l:done_position['character'] + l:overflow_after,
+    \   }
+    \ }
     if get(l:completion_item, 'insertTextFormat', 1) == 2
-      call lsp#utils#text_edit#apply_text_edits('%', [{ 'range': l:text_edit['range'], 'newText': '' }])
-      call cursor(lsp#utils#position#lsp_to_vim('%', l:text_edit['range']['start']))
+      call lsp#utils#text_edit#apply_text_edits('%', [{ 'range': l:range, 'newText': '' }])
       if exists('g:lsp_snippet_expand') && len(g:lsp_snippet_expand) > 0
-        call g:lsp_snippet_expand[0]({ 'snippet': l:text_edit['newText'] })
+        call g:lsp_snippet_expand[0]({ 'snippet': l:text })
       else
-        call s:simple_expand_text(l:text_edit['newText'])
+        call s:simple_expand_text(l:text)
       endif
     else
-      call lsp#utils#text_edit#apply_text_edits('%', [l:text_edit])
+      call lsp#utils#text_edit#apply_text_edits('%', [{ 'range': l:range, 'newText': l:text }])
     endif
   endif
 
