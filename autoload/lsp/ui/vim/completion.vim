@@ -69,6 +69,7 @@ function! s:on_complete_done_after() abort
   let l:complete_position = s:context['complete_position']
   let l:server_name = s:context['server_name']
   let l:completion_item = s:context['completion_item']
+  let l:complete_start_character = l:done_position['character'] - strchars(l:completed_item['word'])
 
   " check the commit characters are <BS> or <C-w>.
   if strlen(getline('.')) < strlen(l:done_line)
@@ -99,8 +100,8 @@ function! s:on_complete_done_after() abort
   if l:is_expandable
     " At this timing, the cursor may have been moved by additionalTextEdit, so we use overflow information instead of textEdit itself.
     if type(get(l:completion_item, 'textEdit', v:null)) == type({})
-      let l:overflow_before = max([0, (l:done_position['character'] - strchars(l:completed_item['word'])) - l:completion_item['textEdit']['range']['start']['character']])
-      let l:overflow_after = max([0, l:done_position['character'] - l:completion_item['textEdit']['range']['end']['character']])
+      let l:overflow_before = max([0, l:complete_start_character - l:completion_item['textEdit']['range']['start']['character']])
+      let l:overflow_after = max([0, l:completion_item['textEdit']['range']['end']['character'] - l:complete_position['character']])
       let l:text = l:completion_item['textEdit']['newText']
     else
       let l:overflow_before = 0
@@ -113,11 +114,11 @@ function! s:on_complete_done_after() abort
     let l:range = {
     \   'start': {
     \     'line': l:position['line'],
-    \     'character': (l:done_position['character'] - strchars(l:completed_item['word'])) - l:overflow_before,
+    \     'character': l:position['character'] - (l:complete_position['character'] - l:complete_start_character) - l:overflow_before,
     \   },
     \   'end': {
     \     'line': l:position['line'],
-    \     'character': l:done_position['character'] + l:overflow_after,
+    \     'character': l:position['character'] + l:overflow_after,
     \   }
     \ }
     if get(l:completion_item, 'insertTextFormat', 1) == 2
