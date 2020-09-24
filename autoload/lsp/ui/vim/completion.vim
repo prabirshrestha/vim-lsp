@@ -48,9 +48,9 @@ function! s:on_complete_done() abort
     return
   endif
 
-  let s:context['line'] = getline('.')
+  let s:context['done_line'] = getline('.')
   let s:context['completed_item'] = copy(v:completed_item)
-  let s:context['done_position'] = getpos('.')
+  let s:context['done_position'] = lsp#utils#position#vim_to_lsp('%', getpos('.')[1 : 2])
   let s:context['complete_position'] = l:managed_user_data['complete_position']
   let s:context['server_name'] = l:managed_user_data['server_name']
   let s:context['completion_item'] = l:managed_user_data['completion_item']
@@ -62,17 +62,17 @@ endfunction
 "
 function! s:on_complete_done_after() abort
   " Clear message line. feedkeys above leave garbage on message line.
-  echo ''
 
-  let l:line = s:context['line']
+  let l:done_line = s:context['done_line']
   let l:completed_item = s:context['completed_item']
   let l:done_position = s:context['done_position']
   let l:complete_position = s:context['complete_position']
   let l:server_name = s:context['server_name']
   let l:completion_item = s:context['completion_item']
+  let l:complete_start_character = l:done_position['character'] - strchars(l:completed_item['word'])
 
   " check the commit characters are <BS> or <C-w>.
-  if strlen(getline('.')) < strlen(l:line)
+  if strlen(getline('.')) < strlen(l:done_line)
     doautocmd <nomodeline> User lsp_complete_done
     return ''
   endif
@@ -86,40 +86,82 @@ function! s:on_complete_done_after() abort
   let l:completion_item = s:resolve_completion_item(l:completion_item, l:server_name)
 
   " clear completed string if need.
-  let l:expand_text = s:get_expand_text(l:completed_item, l:completion_item)
-  if strlen(l:expand_text) > 0
-    call s:clear_inserted_text(
-          \   l:line,
-          \   l:done_position,
-          \   l:complete_position,
-          \   l:completed_item,
-          \   l:completion_item,
-          \ )
+  let l:is_expandable = s:is_expandable(l:done_line, l:done_position, l:complete_position, l:completion_item, l:completed_item)
+  if l:is_expandable
+    call s:clear_auto_inserted_text(l:done_line, l:done_position, l:complete_position)
   endif
 
   " apply additionalTextEdits.
   if has_key(l:completion_item, 'additionalTextEdits') && !empty(l:completion_item['additionalTextEdits'])
-    call lsp#utils#text_edit#apply_text_edits(
-          \ lsp#utils#get_buffer_uri(bufnr('%')),
-          \ l:completion_item['additionalTextEdits']
-          \ )
+    call lsp#utils#text_edit#apply_text_edits(lsp#utils#get_buffer_uri(bufnr('%')), l:completion_item['additionalTextEdits'])
   endif
 
-  " expand textEdit or insertText.
-  if strlen(l:expand_text) > 0
-    if exists('g:lsp_snippet_expand') && len(g:lsp_snippet_expand) > 0
-      " other snippet integartion point.
-      call g:lsp_snippet_expand[0]({
-            \   'snippet': l:expand_text
-            \ })
+  " snippet or textEdit.
+  if l:is_expandable
+    " At this timing, the cursor may have been moved by additionalTextEdit, so we use overflow information instead of textEdit itself.
+    if type(get(l:completion_item, 'textEdit', v:null)) == type({})
+      let l:overflow_before = max([0, l:complete_start_character - l:completion_item['textEdit']['range']['start']['character']])
+      let l:overflow_after = max([0, l:completion_item['textEdit']['range']['end']['character'] - l:complete_position['character']])
+      let l:text = l:completion_item['textEdit']['newText']
     else
-      " expand text simply.
-      call s:simple_expand_text(l:expand_text)
+      let l:overflow_before = 0
+      let l:overflow_after = 0
+      let l:text = get(l:completion_item, 'insertText', l:completed_item['word'])
+    endif
+
+    " apply snipept or text_edit
+    let l:position = lsp#utils#position#vim_to_lsp('%', getpos('.')[1 : 2])
+    let l:range = {
+    \   'start': {
+    \     'line': l:position['line'],
+    \     'character': l:position['character'] - (l:complete_position['character'] - l:complete_start_character) - l:overflow_before,
+    \   },
+    \   'end': {
+    \     'line': l:position['line'],
+    \     'character': l:position['character'] + l:overflow_after,
+    \   }
+    \ }
+    if get(l:completion_item, 'insertTextFormat', 1) == 2
+      call lsp#utils#text_edit#apply_text_edits('%', [{ 'range': l:range, 'newText': '' }])
+      if exists('g:lsp_snippet_expand') && len(g:lsp_snippet_expand) > 0
+        call g:lsp_snippet_expand[0]({ 'snippet': l:text })
+      else
+        call s:simple_expand_text(l:text)
+      endif
+    else
+      call lsp#utils#text_edit#apply_text_edits('%', [{ 'range': l:range, 'newText': l:text }])
     endif
   endif
 
   doautocmd <nomodeline> User lsp_complete_done
   return ''
+endfunction
+
+"
+" is_expandable
+"
+function! s:is_expandable(done_line, done_position, complete_position, completion_item, completed_item) abort
+  if get(a:completion_item, 'textEdit', v:null) isnot# v:null
+    if a:completion_item['textEdit']['range']['start']['line'] != a:completion_item['textEdit']['range']['end']['line']
+      return v:true
+    endif
+
+    " compute if textEdit will change text.
+    let l:completed_before = strcharpart(a:done_line, 0, a:complete_position['character'])
+    let l:completed_after = strcharpart(a:done_line, a:done_position['character'], strchars(a:done_line) - a:done_position['character'])
+    let l:completed_line = l:completed_before . l:completed_after
+    let l:text_edit_before = strcharpart(l:completed_line, 0, a:completion_item['textEdit']['range']['start']['line'])
+    let l:text_edit_after = strcharpart(l:completed_line, a:completion_item['textEdit']['range']['end']['line'], strchars(l:completed_line) - a:completion_item['textEdit']['range']['end']['line'])
+    return a:done_line !=# l:text_edit_before . s:trim_unmeaning_tabstop(a:completion_item['textEdit']['newText']) . l:text_edit_after
+  endif
+  return get(a:completion_item, 'insertText', a:completed_item['word']) !=# s:trim_unmeaning_tabstop(a:completed_item['word'])
+endfunction
+
+"
+" trim_unmeaning_tabstop
+"
+function! s:trim_unmeaning_tabstop(text) abort
+  return substitute(a:text, '\%(\$0\|\${0}\)$', '', 'g')
 endfunction
 
 "
@@ -174,59 +216,15 @@ function! s:resolve_completion_item(completion_item, server_name) abort
 endfunction
 
 "
-" Remove inserted text during completion.
+" Remove additional inserted text
 "
-function! s:clear_inserted_text(line, done_position, complete_position, completed_item, completion_item) abort
-  " Remove commit characters.
-  call setline('.', a:line)
-
-  " Create range to remove v:completed_item.
-  let l:range = {
-        \   'start': {
-        \     'line': a:done_position[1] - 1,
-        \     'character': lsp#utils#to_char('%', a:done_position[1], a:done_position[2] + a:done_position[3]) - strchars(a:completed_item['word'])
-        \   },
-        \   'end': {
-        \     'line': a:done_position[1] - 1,
-        \     'character': lsp#utils#to_char('%', a:done_position[1], a:done_position[2] + a:done_position[3])
-        \   }
-        \ }
-
-  " Expand remove range to textEdit.
-  if has_key(a:completion_item, 'textEdit') && type(a:completion_item['textEdit']) ==# v:t_dict
-    let l:range = {
-    \   'start': {
-    \     'line': a:completion_item['textEdit']['range']['start']['line'],
-    \     'character': a:completion_item['textEdit']['range']['start']['character'],
-    \   },
-    \   'end': {
-    \     'line': a:completion_item['textEdit']['range']['end']['line'],
-    \     'character': a:completion_item['textEdit']['range']['end']['character'] + strchars(a:completed_item['word']) - (a:complete_position['character'] - l:range['start']['character'])
-    \   }
-    \ }
-  endif
-
-  " Remove v:completed_item.word (and textEdit range if need).
-  call lsp#utils#text_edit#apply_text_edits(lsp#utils#get_buffer_uri(bufnr('%')), [{
-        \   'range': l:range,
-        \   'newText': ''
-        \ }])
-
-  " Move to complete start position.
-  call cursor(lsp#utils#position#lsp_to_vim('%', l:range['start']))
-endfunction
-
+" LSP server knows only `complete_position` so we should remove inserted text until complete_position.
 "
-" Get textEdit.newText or insertText when the text is not same to v:completed_item.word.
-"
-function! s:get_expand_text(completed_item, completion_item) abort
-  let l:text = a:completed_item['word']
-  if has_key(a:completion_item, 'textEdit') && type(a:completion_item['textEdit']) == v:t_dict
-    let l:text = get(a:completion_item['textEdit'], 'newText', '')
-  elseif has_key(a:completion_item, 'insertText')
-    let l:text = get(a:completion_item, 'insertText', '')
-  endif
-  return type(l:text) ==# v:t_string && l:text != a:completed_item['word'] ? l:text : ''
+function! s:clear_auto_inserted_text(done_line, done_position, complete_position) abort
+  let l:before = strcharpart(a:done_line, 0, a:complete_position['character'])
+  let l:after = strcharpart(a:done_line, a:done_position['character'], (strchars(a:done_line) - a:done_position['character']))
+  call setline('.', l:before . l:after)
+  call cursor([a:done_position['line'] + 1, strlen(l:before) + 1])
 endfunction
 
 "
