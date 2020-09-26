@@ -298,8 +298,8 @@ g:lsp_preview_float                         *g:lsp_preview_float*
 	    autocmd!
 	    if !has('nvim')
 		autocmd User lsp_float_opened
-		    \ call win_execute(lsp#ui#vim#output#getpreviewwinid(),
-		    \		       'setlocal wincolor=PopupWindow')
+		    \ call setwinvar(lsp#ui#vim#output#getpreviewwinid(),
+		    \		       '&wincolor', 'PopupWindow')
 	    else
 		autocmd User lsp_float_opened
 		    \ call nvim_win_set_option(
