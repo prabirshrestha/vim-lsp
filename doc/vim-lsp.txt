@@ -392,7 +392,6 @@ g:lsp_diagnostics_echo_delay                *g:lsp_diagnostics_echo_delay*
     Default: `500`
 
     Delay milliseconds to echo diagnostic error for the current line to status. Requires
-    Enables echo of diagnostic error for the current line to status. Requires
     |g:lsp_diagnostics_enabled| and |g:lsp_diagnostics_echo_cursor| set to 1.
 
     Example: >
