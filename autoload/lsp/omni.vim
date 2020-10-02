@@ -236,6 +236,7 @@ function! s:send_completion_request(info) abort
                 \ 'params': {
                 \   'textDocument': lsp#get_text_document_identifier(),
                 \   'position': lsp#get_position(),
+                \   'context': { 'triggerKind': 1 },
                 \ },
                 \ 'on_notification': function('s:handle_omnicompletion', [l:server_name, s:completion['counter'], a:info]),
                 \ })
