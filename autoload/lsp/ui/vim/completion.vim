@@ -62,6 +62,7 @@ endfunction
 "
 function! s:on_complete_done_after() abort
   " Clear message line. feedkeys above leave garbage on message line.
+  echo ''
 
   let l:done_line = s:context['done_line']
   let l:completed_item = s:context['completed_item']
