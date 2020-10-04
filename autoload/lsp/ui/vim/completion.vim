@@ -150,8 +150,8 @@ function! s:is_expandable(done_line, done_position, complete_position, completio
     let l:completed_before = strcharpart(a:done_line, 0, a:complete_position['character'])
     let l:completed_after = strcharpart(a:done_line, a:done_position['character'], strchars(a:done_line) - a:done_position['character'])
     let l:completed_line = l:completed_before . l:completed_after
-    let l:text_edit_before = strcharpart(l:completed_line, 0, a:completion_item['textEdit']['range']['start']['line'])
-    let l:text_edit_after = strcharpart(l:completed_line, a:completion_item['textEdit']['range']['end']['line'], strchars(l:completed_line) - a:completion_item['textEdit']['range']['end']['line'])
+    let l:text_edit_before = strcharpart(l:completed_line, 0, a:completion_item['textEdit']['range']['start']['character'])
+    let l:text_edit_after = strcharpart(l:completed_line, a:completion_item['textEdit']['range']['end']['character'], strchars(l:completed_line) - a:completion_item['textEdit']['range']['end']['character'])
     return a:done_line !=# l:text_edit_before . s:trim_unmeaning_tabstop(a:completion_item['textEdit']['newText']) . l:text_edit_after
   endif
   return get(a:completion_item, 'insertText', a:completed_item['word']) !=# s:trim_unmeaning_tabstop(a:completed_item['word'])
