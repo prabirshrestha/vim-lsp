@@ -19,12 +19,12 @@ let s:default_symbol_kinds = {
     \ '18': 'array',
     \ '19': 'object',
     \ '20': 'key',
-    \ '21': 'null',    
-    \ '22': 'enum member',    
-    \ '23': 'struct',    
-    \ '24': 'event',    
-    \ '25': 'operator',    
-    \ '26': 'type parameter',    
+    \ '21': 'null',
+    \ '22': 'enum member',
+    \ '23': 'struct',
+    \ '24': 'event',
+    \ '25': 'operator',
+    \ '26': 'type parameter',
     \ }
 
 let s:symbol_kinds = {}
@@ -38,13 +38,13 @@ let s:diagnostic_severity = {
 
 function! s:symbols_to_loc_list_children(server, path, list, symbols, depth) abort
     for l:symbol in a:symbols
-        let [l:line, l:col] = lsp#utils#position#_lsp_to_vim(a:path, l:symbol['range']['start'])
+        let [l:line, l:col] = lsp#utils#position#lsp_to_vim(a:path, l:symbol['range']['start'])
 
         call add(a:list, {
             \ 'filename': a:path,
             \ 'lnum': l:line,
             \ 'col': l:col,
-            \ 'text': s:get_symbol_text_from_kind(a:server, l:symbol['kind']) . ' : ' . printf('%' . a:depth. 's', '  ') . l:symbol['name'],
+            \ 'text': lsp#ui#vim#utils#_get_symbol_text_from_kind(a:server, l:symbol['kind']) . ' : ' . printf('%' . a:depth. 's', '  ') . l:symbol['name'],
             \ })
         if has_key(l:symbol, 'children') && !empty(l:symbol['children'])
             call s:symbols_to_loc_list_children(a:server, a:path, a:list, l:symbol['children'], a:depth + 1)
@@ -67,24 +67,24 @@ function! lsp#ui#vim#utils#symbols_to_loc_list(server, result) abort
                 let l:location = l:symbol['location']
                 if lsp#utils#is_file_uri(l:location['uri'])
                     let l:path = lsp#utils#uri_to_path(l:location['uri'])
-                    let [l:line, l:col] = lsp#utils#position#_lsp_to_vim(l:path, l:location['range']['start'])
+                    let [l:line, l:col] = lsp#utils#position#lsp_to_vim(l:path, l:location['range']['start'])
                     call add(l:list, {
                         \ 'filename': l:path,
                         \ 'lnum': l:line,
                         \ 'col': l:col,
-                        \ 'text': s:get_symbol_text_from_kind(a:server, l:symbol['kind']) . ' : ' . l:symbol['name'],
+                        \ 'text': lsp#ui#vim#utils#_get_symbol_text_from_kind(a:server, l:symbol['kind']) . ' : ' . l:symbol['name'],
                         \ })
                 endif
             else
                 let l:location = a:result['request']['params']['textDocument']['uri']
                 if lsp#utils#is_file_uri(l:location)
                     let l:path = lsp#utils#uri_to_path(l:location)
-                    let [l:line, l:col] = lsp#utils#position#_lsp_to_vim(l:path, l:symbol['range']['start'])
+                    let [l:line, l:col] = lsp#utils#position#lsp_to_vim(l:path, l:symbol['range']['start'])
                     call add(l:list, {
                         \ 'filename': l:path,
                         \ 'lnum': l:line,
                         \ 'col': l:col,
-                        \ 'text': s:get_symbol_text_from_kind(a:server, l:symbol['kind']) . ' : ' . l:symbol['name'],
+                        \ 'text': lsp#ui#vim#utils#_get_symbol_text_from_kind(a:server, l:symbol['kind']) . ' : ' . l:symbol['name'],
                         \ })
                     if has_key(l:symbol, 'children') && !empty(l:symbol['children'])
                         call s:symbols_to_loc_list_children(a:server, l:path, l:list, l:symbol['children'], 1)
@@ -121,7 +121,7 @@ function! lsp#ui#vim#utils#diagnostics_to_loc_list(result) abort
                 let l:text .= l:item['code'] . ':'
             endif
             let l:text .= l:item['message']
-            let [l:line, l:col] = lsp#utils#position#_lsp_to_vim(l:path, l:item['range']['start'])
+            let [l:line, l:col] = lsp#utils#position#lsp_to_vim(l:path, l:item['range']['start'])
             call add(l:list, {
                 \ 'filename': l:path,
                 \ 'lnum': l:line,
@@ -135,7 +135,7 @@ function! lsp#ui#vim#utils#diagnostics_to_loc_list(result) abort
     return l:list
 endfunction
 
-function! s:get_symbol_text_from_kind(server, kind) abort
+function! lsp#ui#vim#utils#_get_symbol_text_from_kind(server, kind) abort
     if !has_key(s:symbol_kinds, a:server)
         let l:server_info = lsp#get_server_info(a:server)
         if has_key (l:server_info, 'config') && has_key(l:server_info['config'], 'symbol_kinds')
@@ -144,8 +144,7 @@ function! s:get_symbol_text_from_kind(server, kind) abort
             let s:symbol_kinds[a:server] = s:default_symbol_kinds
         endif
     endif
-    let l:symbol_kinds = s:symbol_kinds[a:server]
-    return has_key(l:symbol_kinds, a:kind) ? l:symbol_kinds[a:kind] : 'unknown symbol ' . a:kind
+    return get(s:symbol_kinds[a:server], a:kind, 'unknown symbol ' . a:kind)
 endfunction
 
 function! lsp#ui#vim#utils#get_symbol_kinds() abort

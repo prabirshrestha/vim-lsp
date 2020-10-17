@@ -83,7 +83,9 @@ function! s:clear_highlights(server_name, path) abort
     let l:ns = s:get_highlight_group(a:server_name)
     let l:bufnr = bufnr(a:path)
 
-    call nvim_buf_clear_namespace(l:bufnr, l:ns, 0, -1)
+    if l:bufnr != -1
+        call nvim_buf_clear_namespace(l:bufnr, l:ns, 0, -1)
+    endif
 endfunction
 
 function! s:place_highlights(server_name, path, diagnostics) abort
@@ -95,8 +97,8 @@ function! s:place_highlights(server_name, path, diagnostics) abort
 
     if !empty(a:diagnostics) && l:bufnr >= 0
         for l:item in a:diagnostics
-            let [l:line, l:start_col] = lsp#utils#position#_lsp_to_vim(l:bufnr, l:item['range']['start'])
-            let [l:_, l:end_col] = lsp#utils#position#_lsp_to_vim(l:bufnr, l:item['range']['end'])
+            let [l:line, l:start_col] = lsp#utils#position#lsp_to_vim(l:bufnr, l:item['range']['start'])
+            let [l:_, l:end_col] = lsp#utils#position#lsp_to_vim(l:bufnr, l:item['range']['end'])
 
             let l:name = get(s:severity_sign_names_mapping, l:item['severity'], 'LspError')
             let l:hl_name = l:name . 'Highlight'

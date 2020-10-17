@@ -111,7 +111,11 @@ function! s:add_highlight(server, buf, line, tokens) abort
         call prop_add(a:line + 1, 1, {'bufnr': a:buf, 'type': s:textprop_cache, 'id': l:hash})
 
         for l:highlight in l:highlights
-            call prop_add(a:line + 1, l:highlight['char'] + 1, { 'length': l:highlight['length'], 'bufnr': a:buf, 'type': s:get_textprop_name(a:server, l:highlight['scope'])})
+            try
+                call prop_add(a:line + 1, l:highlight['char'] + 1, { 'length': l:highlight['length'], 'bufnr': a:buf, 'type': s:get_textprop_name(a:server, l:highlight['scope'])})
+            catch
+                call lsp#log('SemanticHighlight: error while adding prop on line ' . (a:line + 1), v:exception)
+            endtry
         endfor
     elseif s:use_nvim_highlight
         " Clear text properties from the previous run
@@ -180,7 +184,7 @@ endfunction
 
 " Display scope tree {{{1
 function! lsp#ui#vim#semantic#display_scope_tree(...) abort
-    let l:servers = filter(lsp#get_whitelisted_servers(), 'lsp#capabilities#has_semantic_highlight(v:val)')
+    let l:servers = filter(lsp#get_allowed_servers(), 'lsp#capabilities#has_semantic_highlight(v:val)')
 
     if len(l:servers) == 0
         call lsp#utils#error('Semantic highlighting not supported for ' . &filetype)

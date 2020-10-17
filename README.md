@@ -5,11 +5,13 @@ Async [Language Server Protocol](https://github.com/Microsoft/language-server-pr
 # Installing
 
 ```viml
-Plug 'prabirshrestha/async.vim'
 Plug 'prabirshrestha/vim-lsp'
 ```
 
-_Note: [async.vim](https://github.com/prabirshrestha/async.vim) is required and is used to normalize jobs between vim8 and neovim._
+__Performance__
+
+Certain bottlenecks in Vim script have been implemented in lua. If you would like to take advantage of these performance gains
+use vim compiled with lua or neovim v0.4.0+
 
 ## Registering servers
 
@@ -19,15 +21,23 @@ if executable('pyls')
     au User lsp_setup call lsp#register_server({
         \ 'name': 'pyls',
         \ 'cmd': {server_info->['pyls']},
-        \ 'whitelist': ['python'],
+        \ 'allowlist': ['python'],
         \ })
 endif
 
 function! s:on_lsp_buffer_enabled() abort
     setlocal omnifunc=lsp#complete
     setlocal signcolumn=yes
+    if exists('+tagfunc') | setlocal tagfunc=lsp#tagfunc | endif
     nmap <buffer> gd <plug>(lsp-definition)
-    nmap <buffer> <f2> <plug>(lsp-rename)
+    nmap <buffer> gr <plug>(lsp-references)
+    nmap <buffer> gi <plug>(lsp-implementation)
+    nmap <buffer> gt <plug>(lsp-type-definition)
+    nmap <buffer> <leader>rn <plug>(lsp-rename)
+    nmap <buffer> [g <Plug>(lsp-previous-diagnostic)
+    nmap <buffer> ]g <Plug>(lsp-next-diagnostic)
+    nmap <buffer> K <plug>(lsp-hover)
+    
     " refer to doc to add more commands
 endfunction
 
@@ -41,7 +51,6 @@ augroup END
 Refer to [vim-lsp-settings](https://github.com/mattn/vim-lsp-settings) on how to easily setup language servers using vim-lsp automatically.
 
 ```viml
-Plug 'prabirshrestha/async.vim'
 Plug 'prabirshrestha/vim-lsp'
 Plug 'mattn/vim-lsp-settings'
 ```
@@ -52,9 +61,10 @@ Refer to docs on configuring omnifunc or [asyncomplete.vim](https://github.com/p
 
 ## Snippets
 vim-lsp does not support snippets by default. If you want snippet integration, you will first have to install a third-party snippet plugin and a plugin that integrates it in vim-lsp.
-At the moment, you have two options:
-1. [UltiSnips](https://github.com/SirVer/ultisnips) together with [vim-lsp-ultisnips](https://github.com/thomasfaingnaert/vim-lsp-ultisnips)
-2. [neosnippet.vim](https://github.com/Shougo/neosnippet.vim) together with [vim-lsp-neosnippet](https://github.com/thomasfaingnaert/vim-lsp-neosnippet)
+At the moment, you have following options:
+1. [vim-vsnip](https://github.com/hrsh7th/vim-vsnip) together with [vim-vsnip-integ](https://github.com/hrsh7th/vim-vsnip-integ)
+2. [UltiSnips](https://github.com/SirVer/ultisnips) together with [vim-lsp-ultisnips](https://github.com/thomasfaingnaert/vim-lsp-ultisnips)
+3. [neosnippet.vim](https://github.com/Shougo/neosnippet.vim) together with [vim-lsp-neosnippet](https://github.com/thomasfaingnaert/vim-lsp-neosnippet)
 
 For more information, refer to the readme and documentation of the respective plugins.
 
@@ -91,6 +101,7 @@ Refer to `:h vim-lsp-semantic` for more info.
 | Command | Description|
 |--|--|
 |`:LspCodeAction`| Gets a list of possible commands that can be applied to a file so it can be fixed (quick fix) |
+|`:LspCodeLens`| Gets a list of possible commands that can be executed on the current document |
 |`:LspDeclaration`| Go to the declaration of the word under the cursor, and open in the current window |
 |`:LspDefinition`| Go to the definition of the word under the cursor, and open in the current window |
 |`:LspDocumentDiagnostics`| Get current document diagnostics information |
@@ -145,7 +156,7 @@ let g:lsp_signs_warning = {'text': '‼', 'icon': '/path/to/some/icon'} " icons 
 let g:lsp_signs_hint = {'icon': '/path/to/some/other/icon'} " icons require GUI
 ```
 
-Also two highlight groups for every sign group are defined (for example for LspError these are LspErrorText and LspErrorLine). By default, LspError text is highlighted using Error group, LspWarning is highlighted as Todo, others use Normal group. Line highlighting is not set by default. If your colorscheme of choise does not provide any of these, it is possible to clear them or link to some other group, like so:
+Also three highlight groups for every sign group are defined (for example for LspError these are LspErrorText, LspErrorVirtual, and LspErrorHighlight). By default, LspError text is highlighted using Error group, LspWarning is highlighted as Todo, others use Normal group. Virtual text will by default use the Text highlight group, for example for LspErrorVirtual will default to LspErrorText. Line highlighting is not set by default. If your colorscheme of choice does not provide any of these, it is possible to clear them or link to some other group, like so:
 
 ```viml
 highlight link LspErrorText GruvboxRedSign " requires gruvbox

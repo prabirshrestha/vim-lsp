@@ -46,11 +46,45 @@ Describe lsp#utils
         End
     End
 
+    Describe lsp#utils#path_to_uri
+        It should return uri from path (Windows)
+            if !has('win32')
+              Skip This tests is not for UNIX
+            endif
+            let tests = [
+            \  {'path': 'C:\path\to\the\file.txt', 'uri': 'file:///C:/path/to/the/file.txt'},
+            \  {'path': 'C:\path\to\the\file+name.txt', 'uri': 'file:///C:/path/to/the/file%2Bname.txt'},
+            \  {'path': 'C:\path\to\the\file name.txt', 'uri': 'file:///C:/path/to/the/file%20name.txt'},
+            \  {'path': 'http://foo/bar.txt', 'uri': 'http://foo/bar.txt'},
+            \]
+            for test in tests
+                let uri = lsp#utils#path_to_uri(test.path)
+                Assert Equals(uri, test.uri)
+            endfor
+        End
+
+        It should return uri from path (UNIX)
+            if has('win32')
+              Skip This tests is not for Windows
+            endif
+            let tests = [
+            \  {'path': '/path/to/the/file.txt', 'uri': 'file:///path/to/the/file.txt'},
+            \  {'path': '/path/to/the/file+name.txt', 'uri': 'file:///path/to/the/file%2Bname.txt'},
+            \  {'path': '/path/to/the/file name.txt', 'uri': 'file:///path/to/the/file%20name.txt'},
+            \  {'path': 'http://foo/bar.txt', 'uri': 'http://foo/bar.txt'},
+            \]
+            for test in tests
+                let uri = lsp#utils#path_to_uri(test.path)
+                Assert Equals(uri, test.uri)
+            endfor
+        End
+    End
+
     Describe lsp#utils#find_nearest_parent_file_directory
         It should return the root directory if it is found
             let tests = [
             \  {'from': './test/testproject/src/main.cpp', 'target': ['.ccls', 'compile_commands.json', 'README.md', 'git/'], 'root': './test/testproject'},
-            \  {'from': './test/testproject/src/main.cpp', 'target': ['.ccls', 'build/', 'CMakeLists.txt', 'git/'], 'root': './test/testproject'},
+            \  {'from': './test/testproject/src/main.cpp', 'target': ['.ccls', 'build/', 'CMakeLists.txt', 'git/'], 'root': './test/testproject/src'},
             \  {'from': './test/testproject/src/main.cpp', 'target': '.ccls', 'root': './test/testproject'},
             \  {'from': './test/testproject/src/main.cpp', 'target': 'git/', 'root': './test/testproject'},
             \  {'from': './test/testproject/src/main.cpp', 'target': 'CMakeLists.txt', 'root': './test/testproject/src'},
@@ -170,6 +204,66 @@ Describe lsp#utils
 
         It should handle more complex string
             Assert Equals(lsp#utils#base64_decode('AAAAEgAJABYAAAAIAAQAFw=='), [0, 0, 0, 18, 0, 9, 0, 22, 0, 0, 0, 8, 0, 4, 0, 23])
+        End
+    End
+
+    Describe lsp#utils#make_valid_word
+        It should make valid word
+            Assert Equals(lsp#utils#make_valid_word('my-word'), 'my-word')
+            Assert Equals(lsp#utils#make_valid_word("my\nword"), 'my')
+            Assert Equals(lsp#utils#make_valid_word('my-word: description'), 'my-word')
+            Assert Equals(lsp#utils#make_valid_word('my-word : description'), 'my-word')
+            Assert Equals(lsp#utils#make_valid_word('my-word is word'), 'my-word')
+            Assert Equals(lsp#utils#make_valid_word('my-func()'), 'my-func')
+            Assert Equals(lsp#utils#make_valid_word('my-name::space'), 'my-name::space')
+            Assert Equals(lsp#utils#make_valid_word('my-name#space'), 'my-name#space')
+            Assert Equals(lsp#utils#make_valid_word('my-name.space'), 'my-name.space')
+            Assert Equals(lsp#utils#make_valid_word('my-name.space: foo'), 'my-name.space')
+            Assert Equals(lsp#utils#make_valid_word('my-name%space: foo'), 'my-name%space')
+            Assert Equals(lsp#utils#make_valid_word('my-name&space: foo'), 'my-name&space')
+            Assert Equals(lsp#utils#make_valid_word('my-array[0]'), 'my-array')
+            Assert Equals(lsp#utils#make_valid_word('my-array<string>'), 'my-array')
+            Assert Equals(lsp#utils#make_valid_word("my-name\tdescription"), 'my-name')
+        End
+    End
+
+    Describe lsp#utils#_split_by_eol
+
+        It should split text by \r\n
+          Assert Equals(lsp#utils#_split_by_eol("あいうえお\r\nかきくけこ"), ['あいうえお', 'かきくけこ'])
+        End
+
+        It should split text by \r
+          Assert Equals(lsp#utils#_split_by_eol("あいうえお\rかきくけこ"), ['あいうえお', 'かきくけこ'])
+        End
+
+        It should split text by \r\n\r
+          Assert Equals(lsp#utils#_split_by_eol("あいうえお\r\n\rかきくけこ"), ['あいうえお', '', 'かきくけこ'])
+        End
+
+        It should split text by \r\n\n\r\r\n
+          Assert Equals(lsp#utils#_split_by_eol("あいうえお\r\n\n\r\r\nかきくけこ"), ['あいうえお', '', '', '', 'かきくけこ'])
+        End
+
+    End
+
+    Describe lsp#utils#_compare_nearest_path
+        It should return looong since it is longest
+          Assert Equals(lsp#utils#_nearest_path(
+          \  {'/path/to/looong': 1, '/path/to/short': 1,}
+          \), '/path/to/looong')
+        End
+
+        It should return loong since they are both longest but loong matches mostly
+          Assert Equals(lsp#utils#_nearest_path(
+          \  {'/path/to/loong': 2, '/path/to/short': 1,}
+          \), '/path/to/loong')
+        End
+
+        It should return not long since it is not longest
+          Assert Equals(lsp#utils#_nearest_path(
+          \  {'/path/to/long': 2, '/path/to/short': 1,}
+          \), '/path/to/short')
         End
     End
 End

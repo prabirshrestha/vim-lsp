@@ -3,7 +3,7 @@ function! s:not_supported(what) abort
 endfunction
 
 function! lsp#ui#vim#hover#get_hover_under_cursor() abort
-    let l:servers = filter(lsp#get_whitelisted_servers(), 'lsp#capabilities#has_hover_provider(v:val)')
+    let l:servers = filter(lsp#get_allowed_servers(), 'lsp#capabilities#has_hover_provider(v:val)')
 
     if len(l:servers) == 0
         call s:not_supported('Retrieving hover')

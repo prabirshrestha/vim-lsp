@@ -6,9 +6,10 @@ CONTENTS                                                  *vim-lsp-contents*
 
     Introduction                          |vim-lsp-introduction|
     Install                               |vim-lsp-install|
+    Performance                           |vim-lsp-performance|
     Language Servers                      |vim-lsp-language-servers|
       Configure                             |vim-lsp-configure|
-      vim-lsp-settings                      |vim-lsp-settings|
+      vim-lsp-settings                      |vim-lsp-settings_plugin|
       Wiki                                  |vim-lsp-configure-wiki|
     Options                               |vim-lsp-options|
       g:lsp_diagnostics_enabled             |g:lsp_diagnostics_enabled|
@@ -19,7 +20,11 @@ CONTENTS                                                  *vim-lsp-contents*
       g:lsp_preview_doubletap               |g:lsp_preview_doubletap|
       g:lsp_insert_text_enabled             |g:lsp_insert_text_enabled|
       g:lsp_text_edit_enabled               |g:lsp_text_edit_enabled|
+      g:lsp_documentation_float             |g:lsp_documentation_float|
       g:lsp_diagnostics_echo_cursor         |g:lsp_diagnostics_echo_cursor|
+      g:lsp_diagnostics_echo_delay          |g:lsp_diagnostics_echo_delay|
+      g:lsp_diagnostics_float_cursor        |g:lsp_diagnostics_float_cursor|
+      g:lsp_diagnostics_float_delay         |g:lsp_diagnostics_float_delay|
       g:lsp_signs_enabled                   |g:lsp_signs_enabled|
       g:lsp_signs_priority                  |g:lsp_signs_priority|
       g:lsp_signs_priority_map              |g:lsp_signs_priority_map|
@@ -28,7 +33,7 @@ CONTENTS                                                  *vim-lsp-contents*
       g:lsp_textprop_enabled                |g:lsp_textprop_enabled|
       g:lsp_use_event_queue                 |g:lsp_use_event_queue|
       g:lsp_highlight_references_enabled    |g:lsp_highlight_references_enabled|
-      g:lsp_get_vim_completion_item         |g:lsp_get_vim_completion_item|
+      g:lsp_highlight_references_delay      |g:lsp_highlight_references_delay|
       g:lsp_get_supported_capabilities      |g:lsp_get_supported_capabilities|
       g:lsp_peek_alignment                  |g:lsp_peek_alignment|
       g:lsp_preview_max_width               |g:lsp_preview_max_width|
@@ -42,10 +47,13 @@ CONTENTS                                                  *vim-lsp-contents*
       g:lsp_text_document_did_save_delay    |g:lsp_text_document_did_save_delay|
       g:lsp_snippet_expand                  |g:lsp_snippet_expand|
       g:lsp_completion_resolve_timeout      |g:lsp_completion_resolve_timeout|
+      g:lsp_tagfunc_source_methods          |g:lsp_tagfunc_source_methods|
     Functions                             |vim-lsp-functions|
       lsp#enable                            |lsp#enable()|
       lsp#disable                           |lsp#disable()|
       lsp#register_server                   |lsp#register_server()|
+      lsp#register_command                  |lsp#register_command()|
+      lsp#stream			    |lsp#stream()|
       lsp#stop_server                       |lsp#stop_server()|
       lsp#utils#find_nearest_parent_file_directory()
                               |lsp#utils#find_nearest_parent_file_directory()|
@@ -54,6 +62,8 @@ CONTENTS                                                  *vim-lsp-contents*
     Commands                              |vim-lsp-commands|
       LspCodeAction                         |:LspCodeAction|
       LspCodeActionSync                     |:LspCodeActionSync|
+      LspCodeLens                           |:LspCodeLens|
+      LspCodeLensSync                       |:LspCodeLensSync|
       LspDocumentDiagnostics                |:LspDocumentDiagnostics|
       LspDeclaration                        |:LspDeclaration|
       LspDefinition                         |:LspDefinition|
@@ -95,6 +105,7 @@ CONTENTS                                                  *vim-lsp-contents*
       lsp_server_init                       |lsp_server_init|
       lsp_server_exit                       |lsp_server_exit|
       lsp_buffer_enabled                    |lsp_buffer_enabled|
+      lsp_diagnostics_updated               |lsp_diagnostics_updated|
     Mappings                              |vim-lsp-mappings|
        <plug>(lsp-preview-close)            |<plug>(lsp-preview-close)|
        <plug>(lsp-preview-focus)            |<plug>(lsp-preview-focus)|
@@ -102,6 +113,7 @@ CONTENTS                                                  *vim-lsp-contents*
     Autocomplete                          |vim-lsp-autocomplete|
       omnifunc                              |vim-lsp-omnifunc|
       asyncomplete.vim                      |vim-lsp-asyncomplete|
+    Tagfunc                               |vim-lsp-tagfunc|
     Snippets                              |vim-lsp-snippets|
     Folding                               |vim-lsp-folding|
     Semantic highlighting                 |vim-lsp-semantic|
@@ -119,13 +131,30 @@ https://microsoft.github.io/language-server-protocol/
 ==============================================================================
 INSTALL                                                    *vim-lsp-install*
 
-Install the async.vim and vim-lsp plugins. Below is a sample using plug.vim
+Install vim-lsp plugin. Below is a sample using plug.vim
 >
-    Plug 'prabirshrestha/async.vim'
     Plug 'prabirshrestha/vim-lsp'
 
-Note:  async.vim (https://github.com/prabirshrestha/async.vim) is required to
-use vim-lsp. It is used to normalize the jobs api between Vim 8 and Neovim.
+==============================================================================
+PERFORMANCE                                          *vim-lsp-performance*
+
+While Vim script is very portable it has performance implications. If you would
+like to improve performance make sure you have vim/neovim with lua support.
+Currently only diff algorithm uses lua internally if available.
+Following is th default value used to detect lua.
+>
+    let g:lsp_use_lua = has('nvim-0.4.0') || (has('lua') && has('patch-8.2.0775'))
+
+Windows users can download the binaries from the following url and place
+lua53.dll in the `PATH` or besides `vim.exe` or `gvim.exe` executables.
+
+32 bit:
+http://downloads.sourceforge.net/luabinaries/lua-5.3.2_Win32_dllw4_lib.zip
+
+64bit:
+http://downloads.sourceforge.net/luabinaries/lua-5.3.2_Win64_dllw4_lib.zip
+
+Set |g:lsp_semantic_enabled| to 0.
 
 ==============================================================================
 LANGUAGE SERVERS                                 *vim-lsp-language-servers*
@@ -148,7 +177,7 @@ on pyls (https://github.com/palantir/python-language-server)
 	    au User lsp_setup call lsp#register_server({
 		\ 'name': 'pyls',
 		\ 'cmd': {server_info->['pyls']},
-		\ 'whitelist': ['python']
+		\ 'allowlist': ['python']
 		\ })
 	endif
 <
@@ -169,11 +198,10 @@ on pyls (https://github.com/palantir/python-language-server)
             autocmd User lsp_buffer_enabled call s:on_lsp_buffer_enabled()
        augroup END
 <
-VIM-LSP-SETTINGS                                         *vim-lsp-settings*
+VIM-LSP-SETTINGS                                         *vim-lsp-settings_plugin*
 Refer to [vim-lsp-settings](https://github.com/mattn/vim-lsp-settings) on how
 to automatically register various language servers.
 >
-	Plug 'prabirshrestha/async.vim'
 	Plug 'prabirshrestha/vim-lsp'
 	Plug 'mattn/vim-lsp-settings'
 
@@ -225,7 +253,12 @@ g:lsp_preview_keep_focus                         *g:lsp_preview_keep_focus*
 	let g:lsp_preview_keep_focus = 0
 <
     * |preview-window| can be closed using the default vim mapping - `<c-w><c-z>`.
-
+    * |preview-window| can be also automatically closed after completion with
+    the following auto command: >
+	autocmd! CompleteDone * if pumvisible() == 0 | pclose | endif
+<    * |preview-window| can be supressed with: >
+	set completeopt-=preview
+<
 g:lsp_preview_float                         *g:lsp_preview_float*
     Type: |Number|
     Default: `1`
@@ -265,8 +298,8 @@ g:lsp_preview_float                         *g:lsp_preview_float*
 	    autocmd!
 	    if !has('nvim')
 		autocmd User lsp_float_opened
-		    \ call win_execute(lsp#ui#vim#output#getpreviewwinid(),
-		    \		       'setlocal wincolor=PopupWindow')
+		    \ call setwinvar(lsp#ui#vim#output#getpreviewwinid(),
+		    \		       '&wincolor', 'PopupWindow')
 	    else
 		autocmd User lsp_float_opened
 		    \ call nvim_win_set_option(
@@ -333,6 +366,16 @@ g:lsp_text_edit_enabled                           *g:lsp_text_edit_enabled*
 	let g:lsp_text_edit_enabled = 1
 	let g:lsp_text_edit_enabled = 0
 
+g:lsp_documentation_float                      *g:lsp_documentation_float*
+    Type: |Number|
+    Default: `1`
+
+    Enables floating window documentation for complete items.
+
+    Example: >
+	let g:lsp_documentation_float = 1
+	let g:lsp_documentation_float = 0
+
 g:lsp_diagnostics_echo_cursor                *g:lsp_diagnostics_echo_cursor*
     Type: |Number|
     Default: `0`
@@ -343,6 +386,41 @@ g:lsp_diagnostics_echo_cursor                *g:lsp_diagnostics_echo_cursor*
     Example: >
 	let g:lsp_diagnostics_echo_cursor = 1
 	let g:lsp_diagnostics_echo_cursor = 0
+
+g:lsp_diagnostics_echo_delay                *g:lsp_diagnostics_echo_delay*
+    Type: |Number|
+    Default: `500`
+
+    Delay milliseconds to echo diagnostic error for the current line to status. Requires
+    |g:lsp_diagnostics_enabled| and |g:lsp_diagnostics_echo_cursor| set to 1.
+
+    Example: >
+	let g:lsp_diagnostics_echo_delay = 200
+	let g:lsp_diagnostics_echo_delay = 1000
+
+g:lsp_diagnostics_float_cursor                *g:lsp_diagnostics_float_cursor*
+    Type: |Number|
+    Default: `0`
+
+    Enables a floating window of diagnostic error for the current line to status. Requires
+    nvim_win_open() or popup_create is available, and |g:lsp_diagnostics_enabled| set to 1.
+
+    Example: >
+	let g:lsp_diagnostics_float_cursor = 1
+	let g:lsp_diagnostics_float_cursor = 0
+
+g:lsp_diagnostics_float_delay                *g:lsp_diagnostics_float_delay*
+    Type: |Number|
+    Default: `500`
+
+    Delay milliseconds to show diagnostic error for the current line to status
+    in a float window. Requires Enables float of diagnostic error for the
+    current line to status. Requires |g:lsp_diagnostics_enabled| and
+    |g:lsp_diagnostics_float_cursor| set to 1.
+
+    Example: >
+	let g:lsp_diagnostics_float_delay = 200
+	let g:lsp_diagnostics_float_delay = 1000
 
 g:lsp_signs_enabled                                   *g:lsp_signs_enabled*
     Type: |Number|
@@ -387,7 +465,12 @@ g:lsp_virtual_text_enabled                      *g:lsp_virtual_text_enabled*
     Default: `1` for neovim 0.3+
 
     Enables virtual text to be shown next to diagnostic errors. Requires
-    NeoVim with version 0.3 or newer.
+    NeoVim with version 0.3 or newer.  Virtual text uses the same highlight
+    groups used for signs (eg LspErrorText), but can be uniquely defined if
+    you want to have different highlight groups for signs and virtual text.
+    To set unique virtual text highlighting, you can set or link
+    `LspErrorVirtual`, `LspWarningVirtual`, `LspInformationVirtual` and
+    `LspHintVirtual` highlight groups.
 
     Example: >
 	let g:lsp_virtual_text_enabled = 1
@@ -459,7 +542,7 @@ g:lsp_use_event_queue                               *g:lsp_use_event_queue*
 
 g:lsp_highlight_references_enabled      *g:lsp_highlight_references_enabled*
     Type: |Number|
-    Default: `0`
+    Default: `1`
 
     Enable highlighting of the references to the symbol under the cursor.
 
@@ -474,19 +557,16 @@ g:lsp_highlight_references_enabled      *g:lsp_highlight_references_enabled*
     Example: >
     highlight lspReference ctermfg=red guifg=red ctermbg=green guibg=green
 
+g:lsp_highlight_references_delay            *g:lsp_highlight_references_delay*
+    Type: |Number|
+    Default: `350`
 
-g:lsp_get_vim_completion_item               *g:lsp_get_vim_completion_item*
-    Type: |List|
-    Default: `[function('lsp#omni#default_get_vim_completion_item')]`
+    Delay milliseconds to highlight references. Requires
+    |g:lsp_highlight_references_enabled| set to 1.
 
-    A |List| containing one element of type |Funcref|. This element is a
-    reference to the function that vim-lsp should use to produce the items in
-    the completion menu. Changing this variable allows customizing how items
-    are displayed in the completion menu, or adding custom `user_data` to
-    items (see |complete-items|).
-
-    Note: You can reuse functionality provided by vim-lsp by calling
-    `lsp#omni#default_get_vim_completion_item` from within your function.
+    Example: >
+	let g:lsp_highlight_references_delay = 200
+	let g:lsp_highlight_references_delay = 1000
 
 g:lsp_get_supported_capabilities         *g:lsp_get_supported_capabilities*
     Type: |List|
@@ -603,6 +683,13 @@ g:lsp_completion_resolve_timeout         *g:lsp_completion_resolve_timeout*
     The `completionItem/resolve` request's timeout value.
     If your vim freeze at `CompleteDone`, you can set this value to 0.
 
+g:lsp_tagfunc_source_methods                 *g:lsp_tagfunc_source_methods*
+    Type: |List|
+    Default: `['definition', 'declaration', 'implementation', 'typeDefinition']`
+
+    The LSP methods to call to get symbols for tag lookup. See
+    |vim-lsp-tagfunc|.
+
 ==============================================================================
 FUNCTIONS                                               *vim-lsp-functions*
 
@@ -630,10 +717,11 @@ one parameter which is a vim |dict| and is refered to as |vim-lsp-server_info|
 	    au User lsp_setup call lsp#register_server({
 		\ 'name': 'name-of-server',
 		\ 'cmd': {server_info->['server-exectuable']},
-		\ 'whitelist': ['filetype to whitelist'],
-		\ 'blacklist': ['filetype to blacklist'],
+		\ 'allowlist': ['filetype to allowlist'],
+		\ 'blocklist': ['filetype to blocklist'],
 		\ 'config': {},
 		\ 'workspace_config': {'param': {'enabled': v:true}},
+		\ 'languageId': {server_info->'python'},
 		\ })
 	endif
 <
@@ -650,10 +738,11 @@ The vim |dict| containing information about the server.
     {
 	'name': 'name of the server',
 	'cmd': {server_info->['server_executable']},
-	'whitelist': ['filetype'],
-	'blacklist': ['filetype'],
+	'allowlist': ['filetype'],
+	'blocklist': ['filetype'],
 	'config': {},
 	'workspace_config': {},
+	'languageId': {server_info->'filetype'},
     }
 <
  * name:
@@ -698,30 +787,30 @@ The vim |dict| containing information about the server.
 	'cmd': {server_info->
 	    \ [&shell, &shellcmdflag, 'typescript-language-server --stdio']}
 <
- * whitelist:
+ * allowlist:
     optional
     String array of filetypes to run the language server.
 
     Example: >
-	'whitelist': ['javascript', 'typescript']
+	'allowlist': ['javascript', 'typescript']
 <
     '*' is treated as any filetype.
 
- * blacklist:
+ * blocklist:
     optional
-    String array of filetypes to run the language server.
+    String array of filetypes not to run the language server.
 
     Example: >
-	'blacklist': ['javascript', 'typescript']
+	'blocklist': ['javascript', 'typescript']
 <
     '*' is treated as any filetype.
 
-    whitelist and blacklist can be used together. The following example
+    allowlist and blocklist can be used together. The following example
     says to run the language server for all filetypes except javascript
-    and typescript. blacklist always takes higher priority over whitelist.
+    and typescript. blocklist always takes higher priority over allowlist.
 >
-	'whitelist': ['*']
-	'blacklist': ['javascript', 'typescript']
+	'allowlist': ['*']
+	'blocklist': ['javascript', 'typescript']
 <
   * workspace_config:
     optional vim |dict|
@@ -731,6 +820,16 @@ The vim |dict| containing information about the server.
     Example: >
 	'workspace_config': {'pyls': {'plugins': \
 		{'pydocstyle': {'enabled': v:true}}}}
+<
+  * languageId:
+    optional function returning |string|
+    By default the languageId is the current filetype. If you're using a sub
+    filetype like 'ios.swift' your language server may not return anything
+    because it does not know this language.
+    In this case you might want to overwrite the languageId with this key.
+
+    Example: >
+	'languageId': {server_info->'typescript'}
 <
   * config:
     optional vim |dict|
@@ -755,7 +854,7 @@ The vim |dict| containing information about the server.
 <
     Using the `config` key, you can also specify a custom 'typed word
     pattern', or a custom filter for completion items, see
-    |vim-lsp-typed_pattern| and |vim-lsp-completion-filter|.
+    |vim-lsp-completion-filter|.
 
     The following per-server configuration options are supported by vim-lsp.
 
@@ -791,28 +890,38 @@ The vim |dict| containing information about the server.
 	    Example: >
 		'config': { 'completion_item_kinds': {'26': 'type' } }
 <
-typed_pattern                                        *vim-lsp-typed_pattern*
+	* diagnostics
+	    Type: |Boolean|
+	    Default: |v:true|
+
+	    This allows disablingdiagnostics per server. Useful when dealing
+	    with multiple servers (One for diagnostic only)
+
+	    Example: >
+		'config': { 'diagnostics': v:false }
+<
+refresh_pattern                                    *vim-lsp-refresh_pattern*
     Type: |String| (|pattern|)
     Default: `'\k*$'`
 
-Vim-lsp will automatically detect the text you have typed so far when invoking
-completion. It does this by checking the textEdit's range of each completion
-item.
+Vim-lsp will automatically detect start column of completion so far when
+invoking completion. It does this by checking the textEdit's range of each
+completion item.
 
-If the language server doesn't use textEdits, you can use a |regexp| to
-determine what you have typed so far. The pattern is matched against the
-current line, from column 0 up until the cursor's position. Thus, |/$| means
-"current cursor position" in this context.
+You can use a |regexp| to determine what you want to start completion with
+matched text so far. The pattern is matched against the current line, from
+column 0 up until the cursor's position. Thus, |/$| means "current cursor
+position" in this context.
 
 For example: >
-	'config': { 'typed_pattern': '\k*$' }
+	'config': { 'refresh_pattern': '\k*$' }
 <
 This uses all characters in `'iskeyword'` in front of the cursor as typed
 word.
 
 This key is also used to align the completion menu: the completion menu is
 placed so its left border is at the column that matches the start of the
-`typed_pattern`.
+`refresh_pattern`.
 
 filter                                           *vim-lsp-completion-filter*
 
@@ -821,9 +930,7 @@ completion filter using the `filter` key in the server info's `config` |dict|.
 The value of the `filter` key is itself a |dict| containing at least a key
 `name`, which specifies which filter to use.
 
-For the meaning of "already typed text" in the remainder of this section, see
-|vim-lsp-typed_pattern|. The case (in)sensitivity of the matching is
-determined by |g:lsp_ignorecase|.
+The case (in)sensitivity of the matching is determined by |g:lsp_ignorecase|.
 
     Example: >
         'config': { 'filter': { 'name': 'none' } }
@@ -844,6 +951,57 @@ Note: After triggering completion with |i_CTRL-X_CTRL-O|, further filtering is
 only possible by adding to the already typed prefix (even if you're using the
 `contains` filter). If you'd like to retrigger the filtering, you will have to
 press CTRL-X CTRL-O again.
+
+
+lsp#register_command({command-name}, {callback})     *lsp#register_command()*
+
+Some language server expects handling custom command in the client.
+You can use this function to add custom command handler.
+
+{command-name} is unique id to specify command.
+{callback} is funcref that accepts below argument.
+>
+  callback({
+      'command': {
+          'command': string,
+          'arguments':  [...]
+      }
+  })
+<
+
+For example, the rust-analyzer expects the client handles some custom command as below example.
+>
+  function! s:rust_analyzer_apply_source_change(context)
+      let l:command = get(a:context, 'command', {})
+
+      let l:workspace_edit = get(l:command['arguments'][0], 'workspaceEdit', {})
+      if !empty(l:workspace_edit)
+          call lsp#utils#workspace_edit#apply_workspace_edit(l:workspace_edit)
+      endif
+
+      let l:cursor_position = get(l:command['arguments'][0], 'cursorPosition', {})
+      if !empty(l:cursor_position)
+          call cursor(lsp#utils#position#lsp_to_vim('%', l:cursor_position))
+      endif
+  endfunction
+  call lsp#register_command('rust-analyzer.applySourceChange', function('s:rust_analyzer_apply_source_change'))
+<
+lsp#stream()						*lsp#stream()*
+
+Stream api to listen to responses and notifications from language server or
+vim-lsp. Always verify the existence of request, response and server before
+accessing. Subscribing to stream should never throw an error.
+>
+function! s:on_textDocumentDiagnostics(x) abort
+    echom 'Diagnostics for ' . a:x['server'] . ' ' . json_encode(a:x['response'])
+endfunction
+
+au User lsp_setup call lsp#callbag#pipe(
+    \ lsp#stream(),
+    \ lsp#callbag#filter({x-> has_key(x, 'response') && !has_key(x['response'], 'error') && get(x['response'], 'method', '') == 'textDocument/publishDiagnostics'}),
+    \ lsp#callbag#subscribe({ 'next':{x->s:on_textDocumentDiagnostics(x)} }),
+    \ )
+<
 
 lsp#stop_server({name-of-server})                        *lsp#stop_server()*
 
@@ -867,6 +1025,22 @@ Get the status of a server.
     Returns one of "unknown server", " "exited", "starting", "failed",
     "running", "not running".
 
+
+lsp#utils#position#lsp_to_vim({expr}, {position})  *lsp#utils#position#lsp_to_vim()*
+
+Convert LSP's positon to vim's pos ([lnum, col]).
+
+{expr} is same of bufname argument.
+{position} is LSP's position params.
+
+
+lsp#utils#position#vim_to_lsp({expr}, {pos})       *lsp#utils#position#vim_to_lsp()*
+
+Convert vim's pos to LSP's position ({ 'line': ..., 'character': ... }).
+
+{expr} is same of bufname argument.
+{pos} is vim's position params.
+
                             *lsp#utils#find_nearest_parent_file_directory()*
 lsp#utils#find_nearest_parent_file_directory({path}, {filename})
 
@@ -888,7 +1062,7 @@ This method is mainly used to generate 'root_uri' when registering server.
 		\		['.ccls', 'compile_commands.json', '.git/']
 		\	))},
 		\ 'initialization_options': {},
-		\ 'whitelist': ['c', 'cpp', 'objc', 'objcpp', 'cc'],
+		\ 'allowlist': ['c', 'cpp', 'objc', 'objcpp', 'cc'],
 		\ })
 	endif
 <
@@ -932,6 +1106,14 @@ commands such as organize imports before save.
         autocmd BufWritePre <buffer>
                 \ call execute('LspCodeActionSync source.organizeImports')
 
+LspCodeLens                                                   *:LspCodeLens*
+
+Gets a list of possible commands that can be executed on the current document.
+
+LspCodeLensSync                                           *:LspCodeLensSync*
+
+Same as |:LspCodeLens| but synchronous.
+
 LspDocumentDiagnostics                             *:LspDocumentDiagnostics*
 
 Gets the current document diagnostics.
@@ -940,12 +1122,14 @@ LspDeclaration                                             *:LspDeclaration*
 
 Go to declaration. Useful for languages such as C/C++ where there is a clear
 distinction between declaration and definition.
+This accepts |<mods>|.
 
 Also see |:LspPeekDeclaration|.
 
 LspDefinition                                               *:LspDefinition*
 
 Go to definition.
+This accepts |<mods>|.
 
 Also see |:LspPeekDefinition|.
 
@@ -991,21 +1175,24 @@ Gets the hover information and displays it in the |preview-window|.
    automatically on cursormove if not focused and can be closed with <esc> if
    focused.
 
-LspNextDiagnostic                                       *:LspNextDiagnostic*
+LspNextDiagnostic [-wrap=0]                              *:LspNextDiagnostic*
 
 Jump to Next diagnostics including error, warning, information, hint.
+With '-wrap=0', stop wrapping around the end of file.
 
-LspNextError                                                 *:LspNextError*
+LspNextError [-wrap=0]                                 *:LspNextError*
 
 Jump to Next err diagnostics
+With '-wrap=0', stop wrapping around the end of file.
 
 LspNextReference                                         *:LspNextReference*
 
 Jump to the next reference of the symbol under cursor.
 
-LspNextWarning                                              :LspNextWarning*
+LspNextWarning [-wrap=0]                              :LspNextWarning*
 
 Jump to Next warning diagnostics
+With '-wrap=0', stop wrapping around the end of file.
 
 LspPeekDeclaration                                     *:LspPeekDeclaration*
 
@@ -1035,25 +1222,29 @@ Like |:LspTypeDefinition|, but opens the type definition in the
 
 Also see |g:lsp_peek_alignment| and |g:lsp_preview_float|.
 
-LspPreviousDiagnostic                               *:LspPreviousDiagnostic*
+LspPreviousDiagnostic [-wrap=0]               *:LspPreviousDiagnostic*
 
 Jump to Previous diagnostics including error, warning, information, hint.
+With '-wrap=0', stop wrapping around the top of file.
 
-LspPreviousError                                         *:LspPreviousError*
+LspPreviousError [-wrap=0]                         *:LspPreviousError*
 
 Jump to Previous err diagnostics
+With '-wrap=0', stop wrapping around the top of file.
 
 LspPreviousReference                                 *:LspPreviousReference*
 
 Jump to the previous reference of the symbol under cursor.
 
-LspPreviousWarning                                     *:LspPreviousWarning*
+LspPreviousWarning [-wrap=0]                     *:LspPreviousWarning*
 
 Jump to Previous warning diagnostics
+With '-wrap=0', stop wrapping around the top of file.
 
 LspImplementation                                       *:LspImplementation*
 
 Find all implementation of interface.
+This accepts |<mods>|.
 
 Also see |:LspPeekImplementation|.
 
@@ -1076,6 +1267,7 @@ Also see |vim-lsp-semantic|.
 LspTypeDefinition                                       *:LspTypeDefinition*
 
 Go to the type definition.
+This accepts |<mods>|.
 
 LspTypeHierarchy                                       *:LspTypeHierarchy*
 
@@ -1146,6 +1338,20 @@ This autocommand is run after vim-lsp is enabled for the buffer. This event is
 triggered imediately when the buffer is currently active. If the buffer is not
 current active, the event will be triggered when the buffer will be active.
 
+lsp_diagnostics_updated                            *lsp_diagnostics_updated*
+
+This autocommand us run after every time after new diagnostics received and
+processed by vim-lsp.
+>
+  function! DoSomething
+    echo lsp#get_buffer_diagnostics_counts()
+  endfunction
+
+  augroup OnLSP
+    autocmd!
+    autocmd User lsp_diagnostics_updated call DoSomething()
+  augroup END
+<
 
 ==============================================================================
 Mappings                                                  *vim-lsp-mappings*
@@ -1157,6 +1363,7 @@ To map keys to the feature of vim-lsp, use <plug> mappings:
 Available plug mappings are following:
 
   nnoremap <plug>(lsp-code-action)
+  nnoremap <plug>(lsp-code-lens)
   nnoremap <plug>(lsp-declaration)
   nnoremap <plug>(lsp-peek-declaration)
   nnoremap <plug>(lsp-definition)
@@ -1165,15 +1372,21 @@ Available plug mappings are following:
   nnoremap <plug>(lsp-document-diagnostics)
   nnoremap <plug>(lsp-hover)
   nnoremap <plug>(lsp-next-diagnostic)
+  nnoremap <plug>(lsp-next-diagnostic-nowrap)
   nnoremap <plug>(lsp-next-error)
+  nnoremap <plug>(lsp-next-error-nowrap)
   nnoremap <plug>(lsp-next-reference)
   nnoremap <plug>(lsp-next-warning)
+  nnoremap <plug>(lsp-next-warning-nowrap)
   nnoremap <plug>(lsp-preview-close)
   nnoremap <plug>(lsp-preview-focus)
   nnoremap <plug>(lsp-previous-diagnostic)
+  nnoremap <plug>(lsp-previous-diagnostic-nowrap)
   nnoremap <plug>(lsp-previous-error)
+  nnoremap <plug>(lsp-previous-error-nowrap)
   nnoremap <plug>(lsp-previous-reference)
   nnoremap <plug>(lsp-previous-warning)
+  nnoremap <plug>(lsp-previous-warning-nowrap)
   nnoremap <plug>(lsp-references)
   nnoremap <plug>(lsp-rename)
   nnoremap <plug>(lsp-workspace-symbol)
@@ -1224,12 +1437,20 @@ asyncomplete.vim is a async auto complete plugin for vim8 and neovim written
 in pure vim script. https://github.com/prabirshrestha/asyncomplete.vim
 
 Example: >
-    Plug 'prabirshrestha/async.vim'
     Plug 'prabirshrestha/vim-lsp'
     Plug 'prabirshrestha/asyncomplete.vim'
     Plug 'prabirshrestha/asyncomplete-lsp.vim'
 
 For additional configuration refer to asyncomplete.vim docs.
+
+==============================================================================
+Tagfunc                                                    *vim-lsp-tagfunc*
+
+vim-lsp can integrate with vim's native tag functionality for navigating code
+using the |'tagfunc'| option (requires vim/neovim with patch-8.1.1228).
+
+    Example: >
+	autocmd FileType typescript setlocal tagfunc=lsp#tagfunc
 
 ==============================================================================
 Snippets                                                  *vim-lsp-snippets*
@@ -1238,16 +1459,20 @@ To integrate snippets in vim-lsp, you will first have to install a third-party
 snippet plugin, and a plugin that integrates it in vim-lsp. At the moment,
 you have two options:
 
-1. UltiSnips and vim-lsp-ultisnips
+1. vim-vsnip
+https://github.com/hrsh7th/vim-vsnip
+https://github.com/hrsh7th/vim-vsnip-integ
+
+2. UltiSnips and vim-lsp-ultisnips
 https://github.com/SirVer/ultisnips
 https://github.com/thomasfaingnaert/vim-lsp-ultisnips
 
-2. neosnippet.vim and vim-lsp-neosnippet
+3. neosnippet.vim and vim-lsp-neosnippet
 https://github.com/Shougo/neosnippet.vim
 https://github.com/thomasfaingnaert/vim-lsp-neosnippet
 
-Refer to the readme and docs of vim-lsp-ultisnips and vim-lsp-neosnippet for
-more information and configuration options.
+Refer to the readme and docs of vim-vsnip, vim-lsp-ultisnips and vim-lsp-neosnippet
+for more information and configuration options.
 
 ==============================================================================
 Folding                                                    *vim-lsp-folding*
@@ -1334,7 +1559,7 @@ Suppose we want to highlight classes using |Identifier| and functions using
     autocmd User lsp_setup call lsp#register_server({
         \ 'name': 'eclipse.jdt.ls',
         \ 'cmd': {server_info->[...]},
-        \ 'whitelist': ['java'],
+        \ 'allowlist': ['java'],
         \ 'semantic_highlight': {
         \       'entity.name.type.class.java': 'Identifier',
         \       'entity.name.function.java': 'Label'
@@ -1348,7 +1573,7 @@ want function calls to still use the |Label| group, but use |Identifier| for
     autocmd User lsp_setup call lsp#register_server({
         \ 'name': 'eclipse.jdt.ls',
         \ 'cmd': {server_info->[...]},
-        \ 'whitelist': ['java'],
+        \ 'allowlist': ['java'],
         \ 'semantic_highlight': {
         \       'entity.name.type.class.java': 'Identifier',
         \       'entity.name.function.java': {
