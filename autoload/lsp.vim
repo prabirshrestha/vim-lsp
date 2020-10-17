@@ -760,6 +760,10 @@ endfunction
 
 function! s:on_request(server_name, id, request) abort
     call lsp#log_verbose('<---', a:id, a:request)
+
+    let l:stream_data = { 'server': a:server_name, 'request': a:request }
+    call s:Stream(1, l:stream_data) " notify stream before callbacks
+
     if a:request['method'] ==# 'workspace/applyEdit'
         call lsp#utils#workspace_edit#apply_workspace_edit(a:request['params']['edit'])
         call s:send_response(a:server_name, { 'id': a:request['id'], 'result': { 'applied': v:true } })
