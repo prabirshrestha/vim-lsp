@@ -11,37 +11,38 @@ function! lsp#internal#show_message_request#_enable()
             \ lsp#callbag#map({x->s:show_message_request(x['server'], x['request'])}),
             \ lsp#callbag#map({x->s:send_message_response(x['server'], x['request'], x['selected_action'])}),
             \ lsp#callbag#flatten(),
+            \ lsp#callbag#materialize(),
             \ lsp#callbag#subscribe({
             \   'error': function('s:on_error'),
             \ }),
             \ )
-    endfunction
+endfunction
 
-    function! lsp#internal#show_message_request#_disable()
-        if exists('s:Dispose')
-            call s:Dispose()
-            unlet s:Dispose
-        endif
-    endfunction
+function! lsp#internal#show_message_request#_disable()
+    if exists('s:Dispose')
+        call s:Dispose()
+        unlet s:Dispose
+    endif
+endfunction
 
-    function! s:on_error(e) abort
-        call lsp#log('lsp#internal#show_message_request error', a:e)
-        if exists('s:Dispose')
-            call s:Dispose()
-            unlet s:Dispose
-        endif
-    endfunction
+function! s:on_error(e) abort
+    call lsp#log('lsp#internal#show_message_request error', a:e)
+    if exists('s:Dispose')
+        call s:Dispose()
+        unlet s:Dispose
+    endif
+endfunction
 
-    function! s:show_message_request(server_name, request) abort
-        let l:params = a:request['params']
+function! s:show_message_request(server_name, request) abort
+    let l:params = a:request['params']
 
-        let l:selected_action = v:null
+    let l:selected_action = v:null
 
-        if has_key(l:params, 'actions') && !empty(l:params['actions'])
-            echom l:params['message']
-            let l:index = inputlist(map(copy(l:params['actions']), {i, action ->
-            \ printf('%d - [%s] %s', i + 1, a:server_name, action['title'])
-            \ }))
+    if has_key(l:params, 'actions') && !empty(l:params['actions'])
+        let l:options = map(copy(l:params['actions']), {i, action ->
+            \   printf('%d - [%s] %s', i + 1, a:server_name, action['title'])
+            \ })
+        let l:index = inputlist([l:params['message']] + l:options)
         if l:index > 0 && l:index <= len(l:index)
             let l:selected_action = l:params['actions'][l:index - 1]
         endif
