@@ -63,7 +63,7 @@ Describe lsp#utils#workspace_edit
             Assert Equals(l:loclist[1]['text'], 'import java.util.LinkedList;')
         end
 
-        It should not apply edits if disabled
+        It should not set location list if not enabled
             let g:lsp_show_workspace_edits = 0
 
             call lsp#utils#workspace_edit#apply_workspace_edit({
