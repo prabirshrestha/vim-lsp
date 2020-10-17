@@ -704,7 +704,14 @@ Describe lsp#utils#text_edit
 
             let l:loclist = getloclist(0)
             Assert Equals(len(l:loclist), 2)
-            Assert Equals(map(l:loclist, {_, locitem -> locitem['text']}), ['import java.util.ArrayList;', 'import java.util.LinkedList;'])
+
+            Assert Equals(l:loclist[0]['lnum'], 3)
+            Assert Equals(l:loclist[0]['col'], 1)
+            Assert Equals(l:loclist[0]['text'], 'import java.util.ArrayList;')
+
+            Assert Equals(l:loclist[1]['lnum'], 4)
+            Assert Equals(l:loclist[1]['col'], 1)
+            Assert Equals(l:loclist[1]['text'], 'import java.util.LinkedList;')
         end
     End
 End
