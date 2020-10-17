@@ -771,8 +771,11 @@ function! s:on_request(server_name, id, request) abort
         let l:response_items = map(a:request['params']['items'], { key, val -> lsp#utils#workspace_config#get_value(a:server_name, val) })
         call s:send_response(a:server_name, { 'id': a:request['id'], 'result': l:response_items })
     else
-        " Error returned according to json-rpc specification.
-        call s:send_response(a:server_name, { 'id': a:request['id'], 'error': { 'code': -32601, 'message': 'Method not found' } })
+        " TODO: for now comment this out until we figure out a better solution.
+        " We need to comment this out so that others outside of vim-lsp can
+        " hook into the stream and provide their own response.
+        " " Error returned according to json-rpc specification.
+        " call s:send_response(a:server_name, { 'id': a:request['id'], 'error': { 'code': -32601, 'message': 'Method not found' } })
     endif
 endfunction
 
