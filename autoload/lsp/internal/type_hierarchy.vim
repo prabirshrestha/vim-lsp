@@ -3,8 +3,7 @@ function! lsp#internal#type_hierarchy#show() abort
     let l:command_id = lsp#_new_command()
 
     if len(l:servers) == 0
-        call s:not_supported('Retrieving type hierarchy')
-        return
+        return lsp#utils#error('Retrieing type hierarchy not supported for ' . &filetype)
     endif
 
     let l:ctx = { 'counter': len(l:servers), 'list':[], 'last_command_id': l:command_id }
