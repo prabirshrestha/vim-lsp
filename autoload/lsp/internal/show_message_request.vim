@@ -1,8 +1,8 @@
-function! lsp#internal#show_message_request#_enable()
-    if !g:lsp_show_message_request_enable | return | endif
+function! lsp#internal#show_message_request#_enable() abort
+    if !g:lsp_show_message_request_enabled | return | endif
     let s:Dispose = lsp#callbag#pipe(
             \ lsp#stream(),
-            \ lsp#callbag#filter({_->g:lsp_show_message_request_enable}),
+            \ lsp#callbag#filter({_->g:lsp_show_message_request_enabled}),
             \ lsp#callbag#filter({x->
             \   has_key(x, 'server') &&
             \   has_key(x, 'request') && !lsp#client#is_error(x['request']) &&
@@ -18,7 +18,7 @@ function! lsp#internal#show_message_request#_enable()
             \ )
 endfunction
 
-function! lsp#internal#show_message_request#_disable()
+function! lsp#internal#show_message_request#_disable() abort
     if exists('s:Dispose')
         call s:Dispose()
         unlet s:Dispose
@@ -53,7 +53,7 @@ function! s:show_message_request(server_name, request) abort
     return { 'server': a:server_name, 'request': a:request, 'selected_action': l:selected_action }
 endfunction
 
-function! s:send_message_response(server_name, request, selected_action)
+function! s:send_message_response(server_name, request, selected_action) abort
     return lsp#request(a:server_name, {
         \ 'id': a:request['id'],
         \ 'result': a:selected_action
