@@ -1,0 +1,93 @@
+Describe lsp#utils#workspace_edit
+
+    Before all
+        let s:endofline_backup = &endofline
+        set endofline
+    End
+
+    After all
+        let &endofline = s:endofline_backup
+    End
+
+    Before each
+        enew!
+    End
+
+    Describe lsp#utils#text_edit#apply_workspace_edit
+        It populates location list with changes
+            let g:lsp_show_workspace_edits = 1
+
+            call lsp#utils#workspace_edit#apply_workspace_edit({
+                \ 'documentChanges': [{
+                \     'textDocument': { 'uri': expand('%') },
+                \     'edits': [
+                \         {
+                \           "range": {
+                \             "start": {
+                \               "character": 0,
+                \               "line": 3
+                \             },
+                \             "end": {
+                \               "character": 0,
+                \               "line": 3
+                \             }
+                \           },
+                \           "newText": "import java.util.LinkedList;"
+                \         },
+                \         {
+                \           "range": {
+                \             "start": {
+                \               "character": 0,
+                \               "line": 2
+                \             },
+                \             "end": {
+                \               "character": 0,
+                \               "line": 2
+                \             }
+                \           },
+                \           "newText": "import java.util.ArrayList;"
+                \         }
+                \     ]
+                \ }]})
+
+            let l:loclist = getloclist(0)
+
+            Assert Equals(len(l:loclist), 2)
+
+            Assert Equals(l:loclist[0]['lnum'], 3)
+            Assert Equals(l:loclist[0]['col'], 1)
+            Assert Equals(l:loclist[0]['text'], 'import java.util.ArrayList;')
+
+            Assert Equals(l:loclist[1]['lnum'], 4)
+            Assert Equals(l:loclist[1]['col'], 1)
+            Assert Equals(l:loclist[1]['text'], 'import java.util.LinkedList;')
+        end
+
+        It should not apply edits if disabled
+            let g:lsp_show_workspace_edits = 0
+
+            call lsp#utils#workspace_edit#apply_workspace_edit({
+                \ 'documentChanges': [{
+                \     'textDocument': { 'uri': expand('%') },
+                \     'edits': [
+                \         {
+                \           "range": {
+                \             "start": {
+                \               "character": 0,
+                \               "line": 3
+                \             },
+                \             "end": {
+                \               "character": 0,
+                \               "line": 3
+                \             }
+                \           },
+                \           "newText": "import java.util.LinkedList;"
+                \         }
+                \     ]
+                \ }]})
+
+            Assert Equals(len(getloclist(0)), 0)
+        End
+    End
+End
+

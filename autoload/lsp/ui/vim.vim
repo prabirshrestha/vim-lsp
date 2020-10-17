@@ -432,7 +432,7 @@ function! s:handle_text_edit(server, last_command_id, type, data) abort
         return
     endif
 
-    call lsp#utils#text_edit#apply_text_edits(a:data['request']['params']['textDocument']['uri'], a:data['response']['result'], {})
+    call lsp#utils#text_edit#apply_text_edits(a:data['request']['params']['textDocument']['uri'], a:data['response']['result'])
 
     redraw | echo 'Document formatted'
 endfunction

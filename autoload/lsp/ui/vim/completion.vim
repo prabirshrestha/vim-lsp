@@ -94,7 +94,7 @@ function! s:on_complete_done_after() abort
 
   " apply additionalTextEdits.
   if has_key(l:completion_item, 'additionalTextEdits') && !empty(l:completion_item['additionalTextEdits'])
-    call lsp#utils#text_edit#apply_text_edits(lsp#utils#get_buffer_uri(bufnr('%')), l:completion_item['additionalTextEdits'], {})
+    call lsp#utils#text_edit#apply_text_edits(lsp#utils#get_buffer_uri(bufnr('%')), l:completion_item['additionalTextEdits'])
   endif
 
   " snippet or textEdit.
@@ -123,14 +123,14 @@ function! s:on_complete_done_after() abort
     \   }
     \ }
     if get(l:completion_item, 'insertTextFormat', 1) == 2
-      call lsp#utils#text_edit#apply_text_edits('%', [{ 'range': l:range, 'newText': '' }], {})
+      call lsp#utils#text_edit#apply_text_edits('%', [{ 'range': l:range, 'newText': '' }])
       if exists('g:lsp_snippet_expand') && len(g:lsp_snippet_expand) > 0
         call g:lsp_snippet_expand[0]({ 'snippet': l:text })
       else
         call s:simple_expand_text(l:text)
       endif
     else
-      call lsp#utils#text_edit#apply_text_edits('%', [{ 'range': l:range, 'newText': l:text }], {})
+      call lsp#utils#text_edit#apply_text_edits('%', [{ 'range': l:range, 'newText': l:text }])
     endif
   endif
 
@@ -251,7 +251,7 @@ function! s:simple_expand_text(text) abort
         \     'end': l:pos
         \   },
         \   'newText': l:text
-        \ }], {})
+        \ }])
 
   let l:pos = lsp#utils#position#lsp_to_vim('%', {
         \   'line': l:pos['line'],

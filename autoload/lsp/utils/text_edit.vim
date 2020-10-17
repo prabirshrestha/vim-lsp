@@ -1,26 +1,35 @@
-function! lsp#utils#text_edit#apply_text_edits(uri, text_edits, options) abort
+function! lsp#utils#text_edit#apply_text_edits(uri, text_edits) abort
     let l:current_bufname = bufname('%')
     let l:target_bufname = lsp#utils#uri_to_path(a:uri)
     let l:cursor_position = lsp#get_position()
-    let l:loc_list = []
-    let l:show_edits = get(a:options, 'show_edits', 0)
 
     call s:_switch(l:target_bufname)
     for l:text_edit in s:_normalize(a:text_edits)
         call s:_apply(bufnr(l:target_bufname), l:text_edit, l:cursor_position)
-        if l:show_edits
-            call add(l:loc_list, s:_build_loclist_item(a:uri, l:text_edit))
-        endif
     endfor
     call s:_switch(l:current_bufname)
 
     if bufnr(l:current_bufname) == bufnr(l:target_bufname)
         call cursor(lsp#utils#position#lsp_to_vim('%', l:cursor_position))
     endif
+endfunction
 
-    if l:show_edits
-        call setloclist(0, reverse(l:loc_list), 'a')
-    endif
+function! lsp#utils#text_edit#build_loclist_items(uri, text_edits) abort
+    let l:loclist_items = []
+
+    for l:text_edit in a:text_edits
+        let l:path = lsp#utils#uri_to_path(a:uri)
+        let l:bufnr = bufnr(l:path)
+        let l:lnum = l:text_edit['range']['start']['line'] + 1
+        let l:col = l:text_edit['range']['start']['character'] + 1
+        let l:text = l:text_edit['newText']
+
+        let l:loclist_item = {'bufnr': l:bufnr, 'lnum': l:lnum, 'col': l:col, 'text': l:text}
+
+        call add(l:loclist_items, l:loclist_item)
+    endfor
+
+    return l:loclist_items
 endfunction
 
 "
@@ -74,20 +83,6 @@ function! s:_apply(bufnr, text_edit, cursor_position) abort
 
     " set lines.
     call setline(a:text_edit['range']['start']['line'] + 1, l:new_lines)
-endfunction
-
-function! s:_build_loclist_item(uri, text_edit) abort
-    let l:path = lsp#utils#uri_to_path(a:uri)
-    let l:bufnr = bufnr(l:path)
-    let l:lnum = a:text_edit['range']['start']['line'] + 1
-    let l:col = a:text_edit['range']['start']['character'] + 1
-    let l:text = a:text_edit['newText']
-
-    let l:loclist_item = {'bufnr': l:bufnr, 'lnum': l:lnum, 'col': l:col, 'text': l:text}
-
-    call lsp#log('s:_build_loclist_item', l:loclist_item)
-
-    return l:loclist_item
 endfunction
 
 "

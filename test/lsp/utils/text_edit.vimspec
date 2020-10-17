@@ -41,8 +41,7 @@ Describe lsp#utils#text_edit
                     \       }
                     \   },
                     \   'newText': 'baz'
-                    \ }],
-                    \ {})
+                    \ }])
 
             let l:buffer_text = s:get_text()
             Assert Equals(l:buffer_text, ['foo', 'bbazar', ''])
@@ -65,8 +64,7 @@ Describe lsp#utils#text_edit
                     \       }
                     \   },
                     \   'newText': ''
-                    \ }],
-                    \ {})
+                    \ }])
 
             let l:buffer_text = s:get_text()
             Assert Equals(l:buffer_text, ['foo', 'bar', ''])
@@ -89,8 +87,7 @@ Describe lsp#utils#text_edit
                     \       }
                     \   },
                     \   'newText': 'replaced'
-                    \ }],
-                    \ {})
+                    \ }])
 
             let l:buffer_text = s:get_text()
             Assert Equals(l:buffer_text, ['foo', 'replacedar', ''])
@@ -113,8 +110,7 @@ Describe lsp#utils#text_edit
                     \       }
                     \   },
                     \   'newText': ''
-                    \ }],
-                    \ {})
+                    \ }])
 
             let l:buffer_text = s:get_text()
             Assert Equals(l:buffer_text, ['foo', 'ar', ''])
@@ -137,8 +133,7 @@ Describe lsp#utils#text_edit
                     \       }
                     \   },
                     \   'newText': ''
-                    \ }],
-                    \ {})
+                    \ }])
 
             let l:buffer_text = s:get_text()
             Assert Equals(l:buffer_text, ['foo', '', ''])
@@ -161,8 +156,7 @@ Describe lsp#utils#text_edit
                     \       }
                     \   },
                     \   'newText': ''
-                    \ }],
-                    \ {})
+                    \ }])
 
             let l:buffer_text = s:get_text()
             Assert Equals(l:buffer_text, ['foo', '', ''])
@@ -185,8 +179,7 @@ Describe lsp#utils#text_edit
                     \       }
                     \   },
                     \   'newText': ''
-                    \ }],
-                    \ {})
+                    \ }])
 
             let l:buffer_text = s:get_text()
             Assert Equals(l:buffer_text, ['foo', 'b', ''])
@@ -209,8 +202,7 @@ Describe lsp#utils#text_edit
                     \       }
                     \   },
                     \   'newText': ''
-                    \ }],
-                    \ {})
+                    \ }])
 
             let l:buffer_text = s:get_text()
             Assert Equals(l:buffer_text, ['foo', 'r', ''])
@@ -233,8 +225,7 @@ Describe lsp#utils#text_edit
                     \       }
                     \   },
                     \   'newText': ''
-                    \ }],
-                    \ {})
+                    \ }])
 
             let l:buffer_text = s:get_text()
             Assert Equals(l:buffer_text, ['foo', '', ''])
@@ -257,8 +248,7 @@ Describe lsp#utils#text_edit
                     \       }
                     \   },
                     \   'newText': ''
-                    \ }],
-                    \ {})
+                    \ }])
 
             " if newline character deleting, need end position is next line zero character.
             let l:buffer_text = s:get_text()
@@ -282,8 +272,7 @@ Describe lsp#utils#text_edit
                     \       }
                     \   },
                     \   'newText': ''
-                    \ }],
-                    \ {})
+                    \ }])
 
             let l:buffer_text = s:get_text()
             Assert Equals(l:buffer_text, ['bar', 'baz', ''])
@@ -306,8 +295,7 @@ Describe lsp#utils#text_edit
                     \       }
                     \   },
                     \   'newText': ''
-                    \ }],
-                    \ {})
+                    \ }])
 
             let l:buffer_text = s:get_text()
             Assert Equals(l:buffer_text, ['r', 'baz', ''])
@@ -328,8 +316,7 @@ Describe lsp#utils#text_edit
                     \       }
                     \   },
                     \   'newText': ''
-                    \ }],
-                    \ {})
+                    \ }])
 
             let l:buffer_text = s:get_text()
             Assert Equals(l:buffer_text, ['', 'baz', ''])
@@ -350,8 +337,7 @@ Describe lsp#utils#text_edit
                     \       }
                     \   },
                     \   'newText': ''
-                    \ }],
-                    \ {})
+                    \ }])
 
             " if newline character deleting, need end position is next line zero character.
             let l:buffer_text = s:get_text()
@@ -375,8 +361,7 @@ Describe lsp#utils#text_edit
                     \       }
                     \   },
                     \   'newText': ''
-                    \ }],
-                    \ {})
+                    \ }])
 
             let l:buffer_text = s:get_text()
             Assert Equals(l:buffer_text, ['fr', 'baz', ''])
@@ -399,8 +384,7 @@ Describe lsp#utils#text_edit
                     \       }
                     \   },
                     \   'newText': "x\ny\nz\n"
-                    \ }],
-                    \ {})
+                    \ }])
 
             let l:buffer_text = s:get_text()
             Assert Equals(l:buffer_text, ['x', 'y', 'z', ''])
@@ -453,8 +437,7 @@ Describe lsp#utils#text_edit
                     \     },
                     \     "newText": "\n"
                     \   }
-                    \ ],
-                    \ {})
+                    \ ])
 
             let l:buffer_text = s:get_text()
             Assert Equals(l:buffer_text, ['class ABC {', 'private:', '  int a;', '};', ''])
@@ -488,8 +471,7 @@ Describe lsp#utils#text_edit
                     \       }
                     \   },
                     \   'newText': 'baz'
-                    \ }],
-                    \ {})
+                    \ }])
 
             " Insert empty
             call lsp#utils#text_edit#apply_text_edits(
@@ -506,8 +488,7 @@ Describe lsp#utils#text_edit
                     \       }
                     \   },
                     \   'newText': ''
-                    \ }],
-                    \ {})
+                    \ }])
 
             " Replace
             call lsp#utils#text_edit#apply_text_edits(
@@ -524,8 +505,7 @@ Describe lsp#utils#text_edit
                     \       }
                     \   },
                     \   'newText': 'replaced'
-                    \ }],
-                    \ {})
+                    \ }])
 
             " Delete
             call lsp#utils#text_edit#apply_text_edits(
@@ -542,8 +522,7 @@ Describe lsp#utils#text_edit
                     \       }
                     \   },
                     \   'newText': ''
-                    \ }],
-                    \ {})
+                    \ }])
 
             " Make sure v:completed_item is not changed
             Assert Equals(v:completed_item, l:old_completed_item)
@@ -566,8 +545,7 @@ Describe lsp#utils#text_edit
                     \       }
                     \   },
                     \   'newText': "x\ny\nz\n"
-                    \ }],
-                    \ {})
+                    \ }])
 
             let l:buffer_text = s:get_text()
             Assert Equals(l:buffer_text, ['x', 'y', 'z', '', ''])
@@ -590,8 +568,7 @@ Describe lsp#utils#text_edit
                     \       }
                     \   },
                     \   'newText': "x\r\ny\r\nz\r\n"
-                    \ }],
-                    \ {})
+                    \ }])
 
             let l:buffer_text = s:get_text()
             Assert Equals(l:buffer_text, ['x', 'y', 'z', '', ''])
@@ -628,8 +605,7 @@ Describe lsp#utils#text_edit
                 \     },
                 \     "newText": "import java.util.ArrayList;\n"
                 \   }
-                \ ],
-                \ {})
+                \ ])
 
             let l:buffer_text = s:get_text()
             Assert Equals(l:buffer_text, ['package main', '', 'import java.util.ArrayList;', '', 'public class Main {}', ''])
@@ -641,8 +617,7 @@ Describe lsp#utils#text_edit
 
             call lsp#utils#text_edit#apply_text_edits(
                 \ expand('%'),
-                \ v:null,
-                \ {})
+                \ v:null)
 
             let l:buffer_text = s:get_text()
             Assert Equals(l:buffer_text, l:text + [''])
@@ -663,56 +638,10 @@ Describe lsp#utils#text_edit
             \     }
             \   },
             \   'newText': "aiueo\n"
-            \ }],
-            \ {})
+            \ }])
 
             Assert Equals(getbufline(l:target, 1), ['aiueo'])
         End
-
-        It populates location list with changes
-            call lsp#utils#text_edit#apply_text_edits(
-                \ expand('%'),
-                \ [
-                \ {
-                \     "range": {
-                \       "start": {
-                \         "character": 0,
-                \         "line": 3
-                \       },
-                \       "end": {
-                \         "character": 0,
-                \         "line": 3
-                \       }
-                \     },
-                \     "newText": "import java.util.LinkedList;"
-                \   },
-                \   {
-                \     "range": {
-                \       "start": {
-                \         "character": 0,
-                \         "line": 2
-                \       },
-                \       "end": {
-                \         "character": 0,
-                \         "line": 2
-                \       }
-                \     },
-                \     "newText": "import java.util.ArrayList;"
-                \   }
-                \ ],
-                \ {'show_edits': 1})
-
-            let l:loclist = getloclist(0)
-            Assert Equals(len(l:loclist), 2)
-
-            Assert Equals(l:loclist[0]['lnum'], 3)
-            Assert Equals(l:loclist[0]['col'], 1)
-            Assert Equals(l:loclist[0]['text'], 'import java.util.ArrayList;')
-
-            Assert Equals(l:loclist[1]['lnum'], 4)
-            Assert Equals(l:loclist[1]['col'], 1)
-            Assert Equals(l:loclist[1]['text'], 'import java.util.LinkedList;')
-        end
     End
 End
 
