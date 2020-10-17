@@ -90,7 +90,7 @@ command! -nargs=* LspPreviousDiagnostic call lsp#ui#vim#diagnostics#previous_dia
 command! LspReferences call lsp#ui#vim#references()
 command! LspRename call lsp#ui#vim#rename()
 command! LspTypeDefinition call lsp#ui#vim#type_definition(0, <q-mods>)
-command! LspTypeHierarchy call lsp#ui#vim#type_hierarchy()
+command! LspTypeHierarchy call lsp#internal#type_hierarchy#show()
 command! LspPeekTypeDefinition call lsp#ui#vim#type_definition(1)
 command! LspWorkspaceSymbol call lsp#ui#vim#workspace_symbol()
 command! -range LspDocumentFormat call lsp#ui#vim#document_format()
