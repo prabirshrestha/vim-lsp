@@ -253,7 +253,7 @@ function! lsp#ui#vim#document_range_format_opfunc(type) abort
     return s:document_format_range(1, a:type)
 endfunction
 
-function! lsp#ui#vim#workspace_symbol() abort
+function! lsp#ui#vim#workspace_symbol(query) abort
     let l:servers = filter(lsp#get_allowed_servers(), 'lsp#capabilities#has_workspace_symbol_provider(v:val)')
     let l:command_id = lsp#_new_command()
 
@@ -262,9 +262,13 @@ function! lsp#ui#vim#workspace_symbol() abort
         return
     endif
 
-    let l:query = inputdialog('query>', '', "\<ESC>")
-    if l:query ==# "\<ESC>"
-        return
+    if !empty(a:query)
+        let l:query = a:query
+    else
+        let l:query = inputdialog('query>', '', "\<ESC>")
+        if l:query ==# "\<ESC>"
+            return
+        endif
     endif
 
     for l:server in l:servers
