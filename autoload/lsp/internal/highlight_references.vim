@@ -76,7 +76,7 @@ function! s:set_highlights(data) abort
 
     if mode() !=# 'n' | return | endif
 
-    if lsp#client#is_error(a:data) | return | endif
+    if lsp#client#is_error(a:data['response']) | return | endif
 
     " Get references from the response
     let l:reference_list = a:data['response']['result']
