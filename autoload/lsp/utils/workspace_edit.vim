@@ -21,7 +21,8 @@ endfunction
 "
 " _apply
 "
-function! s:_apply(uri, text_edits)
+function! s:_apply(uri, text_edits) abort
     call lsp#utils#text_edit#apply_text_edits(a:uri, a:text_edits)
-    return lsp#utils#text_edit#build_loclist_items(a:uri, reverse(a:text_edits))
+    let l:ret = lsp#utils#text_edit#_lsp_to_vim_list(a:uri, a:text_edits)
+    return l:ret
 endfunction
