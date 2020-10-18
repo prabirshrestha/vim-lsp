@@ -66,6 +66,7 @@ function! lsp#enable() abort
     call lsp#ui#vim#completion#_setup()
     call lsp#internal#diagnostics#_enable()
     call lsp#internal#highlight_references#_enable()
+    call lsp#internal#show_message_request#_enable()
     call s:register_events()
 endfunction
 
@@ -81,6 +82,7 @@ function! lsp#disable() abort
     call lsp#ui#vim#completion#_disable()
     call lsp#internal#diagnostics#_disable()
     call lsp#internal#highlight_references#_disable()
+    call lsp#internal#show_message_request#_disable()
     call s:unregister_events()
     let s:enabled = 0
 endfunction
@@ -759,7 +761,7 @@ function! s:on_notification(server_name, id, data, event) abort
 endfunction
 
 function! s:on_request(server_name, id, request) abort
-    call lsp#log_verbose('<---', a:id, a:request)
+    call lsp#log_verbose('<---', 's:on_request', a:id, a:request)
 
     let l:stream_data = { 'server': a:server_name, 'request': a:request }
     call s:Stream(1, l:stream_data) " notify stream before callbacks
