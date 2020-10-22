@@ -6,7 +6,7 @@ let s:last_popup_id = -1
 function! s:complete_done() abort
     if !g:lsp_documentation_float | return | endif
     " Use a timer to avoid textlock (see :h textlock).
-    let l:event = deepcopy(v:event)
+    let l:event = copy(v:event)
     call timer_start(0, {-> s:show_documentation(l:event)})
 endfunction
 
@@ -38,17 +38,51 @@ function! s:show_documentation(event) abort
 
     if s:use_vim_popup
         let s:last_popup_id = popup_create('(no documentation available)', {'line': l:line, 'col': l:col, 'pos': l:right ? 'topleft' : 'topright', 'padding': [0, 1, 0, 1]})
+
     elseif s:use_nvim_float
-        let l:height = float2nr(winheight(0) - l:line + 1)
-        let l:width = float2nr(l:right ? winwidth(0) - l:col + 1 : l:col)
-        if l:width <= 0
-          let l:width = 1
-        endif
-        if l:height <= 0
-          let l:height = 1
-        endif
         let s:last_popup_id = lsp#ui#vim#output#floatingpreview([])
-        call nvim_win_set_config(s:last_popup_id, {'relative': 'win', 'anchor': l:right ? 'NW' : 'NE', 'row': l:line - 1, 'col': l:col - 1, 'height': l:height, 'width': l:width})
+
+        let l:curpos = win_screenpos(nvim_get_current_win())[0] + winline() - 1
+        let g:lsp_documentation_float_docked = get(g:, 'lsp_documentation_float_docked', 0)
+
+        if g:lsp_documentation_float_docked
+            let g:lsp_documentation_float_docked_maxheight = get(g:, ':lsp_documentation_float_docked_maxheight', &previewheight)
+            let l:dock_downwards = max([screenrow(), l:curpos]) < (&lines / 2)
+            let l:height = min([len(l:data), g:lsp_documentation_float_docked_maxheight])
+            let l:width = &columns
+            let l:col = 0
+            if l:dock_downwards
+                let l:anchor = 'SW'
+                let l:row = &lines
+                let l:height = min([l:height, &lines - &cmdheight - a:event.row])
+            else " dock upwards
+                let l:anchor = 'NW'
+                let l:row = 0
+                let l:height = min([l:height, a:event.row - 1])
+            endif
+
+        else " not docked
+            let l:row = a:event['row'] + 1
+            let l:height = max([&lines - &cmdheight -l:row, &previewheight])
+
+            let l:right_area = &columns - a:event.col - a:event.width + 1   " 1 for the padding of popup
+            let l:left_area = a:event.col - 1
+            let l:right = l:right_area > l:left_area
+
+            if l:right
+                let l:anchor = 'NW'
+                let l:width = l:right_area - 1
+                let l:col = a:event.col + a:event.width + 1
+
+            else
+                let l:anchor = 'NE'
+                let l:width = l:left_area
+                let l:col = a:event.col
+            endif
+        endif
+
+
+        call nvim_win_set_config(s:last_popup_id, {'relative': 'editor', 'anchor': l:anchor, 'row': l:row, 'col': l:col, 'height': l:height, 'width': l:width})
     endif
 
     call setbufvar(winbufnr(s:last_popup_id), 'lsp_syntax_highlights', l:syntax_lines)
@@ -59,8 +93,10 @@ function! s:show_documentation(event) abort
     call win_gotoid(l:current_win_id)
 
     if s:use_nvim_float
-        call lsp#ui#vim#output#adjust_float_placement(l:bufferlines, l:maxwidth)
-        call nvim_win_set_config(s:last_popup_id, {'relative': 'win', 'row': l:line - 1, 'col': l:col - 1})
+        if !g:lsp_documentation_float_docked
+            call lsp#ui#vim#output#adjust_float_placement(l:bufferlines, l:maxwidth)
+        endif
+        call nvim_win_set_config(s:last_popup_id, {'relative': 'editor', 'row': l:row - 1, 'col': l:col - 1})
     endif
 endfunction
 

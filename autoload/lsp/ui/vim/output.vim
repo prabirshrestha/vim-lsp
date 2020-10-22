@@ -75,29 +75,24 @@ endfunction
 function! s:get_float_positioning(height, width) abort
     let l:height = a:height
     let l:width = a:width
-    " For a start show it below/above the cursor
     " TODO: add option to configure it 'docked' at the bottom/top/right
-    let l:y = winline()
-    if l:y + l:height >= winheight(0)
-        " Float does not fit
-        if l:y > l:height
-            " Fits above
-            let l:y = winline() - l:height - 1
-        elseif l:y - 2 > winheight(0) - l:y
-            " Take space above cursor
-            let l:y = 1
-            let l:height = winline()-2
-        else
-            " Take space below cursor
-            let l:height = winheight(0) -l:y
-        endif
-    endif
-    let l:col = col('.')
+
+    " NOTE: screencol() and screenrow() start from (1,1)
+    " but the popup window co-ordinates start from (0,0)
+    " Very convenient!
+    " For a simple single-line 'tooltip', the following
+    " two lines are enough to determine the position
+
+    let l:col = screencol()
+    let l:row = screenrow()
+
+    let l:height = min([l:height, max([&lines - &cmdheight - l:row, &previewheight])])
+
     let l:style = 'minimal'
     " Positioning is not window but screen relative
     let l:opts = {
-        \ 'relative': 'win',
-        \ 'row': l:y,
+        \ 'relative': 'editor',
+        \ 'row': l:row,
         \ 'col': l:col,
         \ 'width': l:width,
         \ 'height': l:height,
@@ -156,8 +151,17 @@ function! lsp#ui#vim#output#setcontent(winid, lines, ft) abort
         " vim popup
         call setbufline(winbufnr(a:winid), 1, a:lines)
         call setbufvar(winbufnr(a:winid), '&filetype', a:ft . '.lsp-hover')
+
     else
         " nvim floating or preview
+
+        " add padding on both sides of lines containing text
+        for l:index in range(len(a:lines))
+            if len(a:lines[l:index]) > 0
+                let a:lines[l:index] = ' ' . a:lines[l:index] . ' '
+            endif
+        endfor
+
         call setline(1, a:lines)
         setlocal readonly nomodifiable
         silent! let &l:filetype = a:ft . '.lsp-hover'
