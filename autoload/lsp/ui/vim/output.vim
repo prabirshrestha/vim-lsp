@@ -104,7 +104,6 @@ endfunction
 function! lsp#ui#vim#output#floatingpreview(data) abort
     if s:use_nvim_float
         let l:buf = nvim_create_buf(v:false, v:true)
-        call setbufvar(l:buf, '&signcolumn', 'no')
 
         " Try to get as much space around the cursor, but at least 10x10
         let l:width = max([s:bufwidth(), 10])
@@ -126,6 +125,7 @@ function! lsp#ui#vim#output#floatingpreview(data) abort
         call nvim_win_set_option(s:winid, 'cursorline', v:false)
         call nvim_win_set_option(s:winid, 'cursorcolumn', v:false)
         call nvim_win_set_option(s:winid, 'colorcolumn', '')
+        call nvim_win_set_option(s:winid, 'signcolumn', 'no')
         " Enable closing the preview with esc, but map only in the scratch buffer
         call nvim_buf_set_keymap(l:buf, 'n', '<esc>', ':pclose<cr>', {'silent': v:true})
     elseif s:use_vim_popup
@@ -156,13 +156,6 @@ function! lsp#ui#vim#output#setcontent(winid, lines, ft) abort
 
     else
         " nvim floating or preview
-
-        " add padding on both sides of lines containing text
-        for l:index in range(len(a:lines))
-            if len(a:lines[l:index]) > 0
-                let a:lines[l:index] = ' ' . a:lines[l:index] . ' '
-            endif
-        endfor
 
         call nvim_buf_set_lines(winbufnr(a:winid), 0, -1, v:false, a:lines)
         call nvim_buf_set_option(winbufnr(a:winid), 'readonly', v:true)
