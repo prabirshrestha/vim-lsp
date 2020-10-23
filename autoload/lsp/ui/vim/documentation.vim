@@ -17,16 +17,6 @@ function! s:show_documentation(event) abort
         return
     endif
 
-    let l:right = wincol() < winwidth(0) / 2
-
-    " TODO: Neovim
-    if l:right
-        let l:line = a:event['row'] + 1
-        let l:col = a:event['col'] + a:event['width'] + 1 + (a:event['scrollbar'] ? 1 : 0)
-    else
-        let l:line = a:event['row'] + 1
-        let l:col = a:event['col'] - 1
-    endif
 
     " TODO: Support markdown
     let l:data = split(a:event['completed_item']['info'], '\n')
@@ -34,14 +24,10 @@ function! s:show_documentation(event) abort
     let l:syntax_lines = []
     let l:ft = lsp#ui#vim#output#append(l:data, l:lines, l:syntax_lines)
 
-    let l:current_win_id = win_getid()
 
-    if s:use_vim_popup
-        let s:last_popup_id = popup_create('(no documentation available)', {'line': l:line, 'col': l:col, 'pos': l:right ? 'topleft' : 'topright', 'padding': [0, 1, 0, 1]})
-
-    elseif s:use_nvim_float
-        let s:last_popup_id = lsp#ui#vim#output#floatingpreview([])
-
+   " Neovim
+   if s:use_nvim_float
+        let l:buffer = nvim_create_buf(v:false, v:true)
         let l:curpos = win_screenpos(nvim_get_current_win())[0] + winline() - 1
         let g:lsp_documentation_float_docked = get(g:, 'lsp_documentation_float_docked', 0)
 
@@ -54,7 +40,7 @@ function! s:show_documentation(event) abort
             if l:dock_downwards
                 let l:anchor = 'SW'
                 let l:row = &lines
-                let l:height = min([l:height, &lines - &cmdheight - a:event.row])
+                let l:height = min([l:height, &lines - &cmdheight - a:event.row - a:event.height])
             else " dock upwards
                 let l:anchor = 'NW'
                 let l:row = 0
@@ -62,8 +48,8 @@ function! s:show_documentation(event) abort
             endif
 
         else " not docked
-            let l:row = a:event['row'] + 1
-            let l:height = max([&lines - &cmdheight -l:row, &previewheight])
+            let l:row = a:event['row']
+            let l:height = max([&lines - &cmdheight - l:row, &previewheight])
 
             let l:right_area = &columns - a:event.col - a:event.width + 1   " 1 for the padding of popup
             let l:left_area = a:event.col - 1
@@ -72,32 +58,67 @@ function! s:show_documentation(event) abort
             if l:right
                 let l:anchor = 'NW'
                 let l:width = l:right_area - 1
-                let l:col = a:event.col + a:event.width + 1
+                let l:col = a:event.col + a:event.width + (a:event.scrollbar ? 1 : 0)
 
             else
                 let l:anchor = 'NE'
                 let l:width = l:left_area
-                let l:col = a:event.col
+                let l:col = a:event.col - 1     " 1 due to padding of completion popup
             endif
         endif
 
+        call setbufvar(l:buffer, 'lsp_syntax_highlights', l:syntax_lines)
+        call setbufvar(l:buffer, 'lsp_do_conceal', 1)
 
-        call nvim_win_set_config(s:last_popup_id, {'relative': 'editor', 'anchor': l:anchor, 'row': l:row, 'col': l:col, 'height': l:height, 'width': l:width})
+        " add padding on both sides of lines containing text
+        for l:index in range(len(l:lines))
+            if len(l:lines[l:index]) > 0
+                let l:lines[l:index] = ' ' . l:lines[l:index] . ' '
+            endif
+        endfor
+
+        call nvim_buf_set_lines(l:buffer, 0, -1, v:false, l:lines)
+        call nvim_buf_set_option(l:buffer, 'readonly', v:true)
+        call nvim_buf_set_option(l:buffer, 'modifiable', v:false)
+        call nvim_buf_set_option(l:buffer, 'filetype', l:ft.'.lsp-hover')
+
+        if !g:lsp_documentation_float_docked
+            let l:bufferlines = nvim_buf_line_count(l:buffer)
+            let l:maxwidth = max(map(getbufline(l:buffer, 1, '$'), 'strdisplaywidth(v:val)'))
+            if g:lsp_preview_max_width > 0
+              let l:maxwidth = min([g:lsp_preview_max_width, l:maxwidth])
+            endif
+
+            let l:width = min([l:width, l:maxwidth])
+            let l:height = min([l:height, l:bufferlines])
+
+        endif
+		if g:lsp_preview_max_height > 0
+			let l:maxheight = g:lsp_preview_max_height
+			let l:height = min([l:height, l:maxheight])
+		endif
+
+        let s:last_popup_id = nvim_open_win(l:buffer, v:false, {'relative': 'editor', 'anchor': l:anchor, 'row': l:row, 'col': l:col, 'height': l:height, 'width': l:width, 'style': 'minimal'})
+        return
     endif
 
+    " Vim
+    let l:current_win_id = win_getid()
+
+    let l:right = wincol() < winwidth(0) / 2
+    if l:right
+        let l:line = a:event['row'] + 1
+        let l:col = a:event['col'] + a:event['width'] + 1 + (a:event['scrollbar'] ? 1 : 0)
+    else
+        let l:line = a:event['row'] + 1
+        let l:col = a:event['col'] - 1
+    endif
+    let s:last_popup_id = popup_create('(no documentation available)', {'line': l:line, 'col': l:col, 'pos': l:right ? 'topleft' : 'topright', 'padding': [0, 1, 0, 1]})
     call setbufvar(winbufnr(s:last_popup_id), 'lsp_syntax_highlights', l:syntax_lines)
     call setbufvar(winbufnr(s:last_popup_id), 'lsp_do_conceal', 1)
     call lsp#ui#vim#output#setcontent(s:last_popup_id, l:lines, l:ft)
-    let [l:bufferlines, l:maxwidth] = lsp#ui#vim#output#get_size_info()
-
+    let [l:bufferlines, l:maxwidth] = lsp#ui#vim#output#get_size_info(s:last_popup_id)
     call win_gotoid(l:current_win_id)
-
-    if s:use_nvim_float
-        if !g:lsp_documentation_float_docked
-            call lsp#ui#vim#output#adjust_float_placement(l:bufferlines, l:maxwidth)
-        endif
-        call nvim_win_set_config(s:last_popup_id, {'relative': 'editor', 'row': l:row - 1, 'col': l:col - 1})
-    endif
 endfunction
 
 function! s:close_popup() abort

@@ -116,7 +116,7 @@ function! lsp#ui#vim#output#floatingpreview(data) abort
 
         let l:opts = s:get_float_positioning(l:height, l:width)
 
-        let s:winid = nvim_open_win(l:buf, v:true, l:opts)
+        let s:winid = nvim_open_win(l:buf, v:false, l:opts)
         call nvim_win_set_option(s:winid, 'winhl', 'Normal:Pmenu,NormalNC:Pmenu')
         call nvim_win_set_option(s:winid, 'foldenable', v:false)
         call nvim_win_set_option(s:winid, 'wrap', v:true)
@@ -124,8 +124,10 @@ function! lsp#ui#vim#output#floatingpreview(data) abort
         call nvim_win_set_option(s:winid, 'number', v:false)
         call nvim_win_set_option(s:winid, 'relativenumber', v:false)
         call nvim_win_set_option(s:winid, 'cursorline', v:false)
+        call nvim_win_set_option(s:winid, 'cursorcolumn', v:false)
+        call nvim_win_set_option(s:winid, 'colorcolumn', '')
         " Enable closing the preview with esc, but map only in the scratch buffer
-        nmap <buffer><silent> <esc> :pclose<cr>
+        call nvim_buf_set_keymap(l:buf, 'n', '<esc>', ':pclose<cr>', {'silent': v:true})
     elseif s:use_vim_popup
         let l:options = {
             \ 'moved': 'any',
@@ -162,9 +164,11 @@ function! lsp#ui#vim#output#setcontent(winid, lines, ft) abort
             endif
         endfor
 
-        call setline(1, a:lines)
-        setlocal readonly nomodifiable
-        silent! let &l:filetype = a:ft . '.lsp-hover'
+        call nvim_buf_set_lines(winbufnr(a:winid), 0, -1, v:false, a:lines)
+        call nvim_buf_set_option(winbufnr(a:winid), 'readonly', v:true)
+        call nvim_buf_set_option(winbufnr(a:winid), 'modifiable', v:false)
+        call nvim_buf_set_option(winbufnr(a:winid), 'filetype', a:ft.'.lsp-hover')
+        call nvim_win_set_cursor(a:winid, [1, 0])
     endif
 endfunction
 
@@ -285,21 +289,26 @@ function! s:align_preview(options) abort
     endif
 endfunction
 
-function! lsp#ui#vim#output#get_size_info() abort
+function! lsp#ui#vim#output#get_size_info(winid) abort
     " Get size information while still having the buffer active
-    let l:maxwidth = max(map(getline(1, '$'), 'strdisplaywidth(v:val)'))
+    let l:buffer = winbufnr(a:winid)
+    let l:maxwidth = max(map(getbufline(l:buffer, 1, '$'), 'strdisplaywidth(v:val)'))
     if g:lsp_preview_max_width > 0
       let l:bufferlines = 0
       let l:maxwidth = min([g:lsp_preview_max_width, l:maxwidth])
 
       " Determine, for each line, how many "virtual" lines it spans, and add
       " these together for all lines in the buffer
-      for l:line in getline(1, '$')
+      for l:line in getbufline(l:buffer, 1, '$')
         let l:num_lines = str2nr(string(ceil(strdisplaywidth(l:line) * 1.0 / g:lsp_preview_max_width)))
         let l:bufferlines += max([l:num_lines, 1])
       endfor
     else
-      let l:bufferlines = line('$')
+        if s:use_vim_popup
+          let l:bufferlines = getbufinfo(l:buffer)[0].linecount
+      elseif s:use_nvim_float
+          let l:bufferlines = nvim_buf_line_count(winbufnr(a:winid))
+      endif
     endif
 
     return [l:bufferlines, l:maxwidth]
@@ -357,7 +366,7 @@ function! lsp#ui#vim#output#preview(server, data, options) abort
     call setbufvar(winbufnr(s:winid), 'lsp_do_conceal', l:do_conceal)
     call lsp#ui#vim#output#setcontent(s:winid, l:lines, l:ft)
 
-    let [l:bufferlines, l:maxwidth] = lsp#ui#vim#output#get_size_info()
+    let [l:bufferlines, l:maxwidth] = lsp#ui#vim#output#get_size_info(s:winid)
 
     if s:use_preview
         " Set statusline
