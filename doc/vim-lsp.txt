@@ -617,6 +617,17 @@ g:lsp_signature_help_enabled                *g:lsp_signature_help_enabled*
 	let g:lsp_signature_help_enabled = 1
 	let g:lsp_signature_help_enabled = 0
 
+g:lsp_show_workspace_edits                     *g:lsp_show_workspace_edits*
+    Type: |Boolean|
+    Default: `0`
+
+    Enable showing changes made in a workspace edit in the |location-list|.
+    Set to `0` to disable.
+
+    Example: >
+	let g:lsp_show_workspace_edits = 1
+	let g:lsp_show_workspace_edits = 0
+
 g:lsp_fold_enabled                                    *g:lsp_fold_enabled*
     Type: |Number|
     Default: `1`

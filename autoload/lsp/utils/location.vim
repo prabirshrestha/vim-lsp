@@ -53,6 +53,7 @@ endfunction
 "   'filename',
 "   'lnum',
 "   'col',
+"   'text',
 "   'viewstart?',
 "   'viewend?',
 " }
