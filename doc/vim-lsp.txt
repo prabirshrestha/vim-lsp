@@ -21,6 +21,9 @@ CONTENTS                                                  *vim-lsp-contents*
       g:lsp_insert_text_enabled             |g:lsp_insert_text_enabled|
       g:lsp_text_edit_enabled               |g:lsp_text_edit_enabled|
       g:lsp_documentation_float             |g:lsp_documentation_float|
+      g:lsp_documentation_float_docked      |g:lsp_documentation_float_docked|
+      g:lsp_documentation_float_docked_maxheight
+                              |g:lsp_documentation_float_docked_maxheight|
       g:lsp_diagnostics_echo_cursor         |g:lsp_diagnostics_echo_cursor|
       g:lsp_diagnostics_echo_delay          |g:lsp_diagnostics_echo_delay|
       g:lsp_diagnostics_float_cursor        |g:lsp_diagnostics_float_cursor|
@@ -376,6 +379,26 @@ g:lsp_documentation_float                      *g:lsp_documentation_float*
     Example: >
 	let g:lsp_documentation_float = 1
 	let g:lsp_documentation_float = 0
+
+g:lsp_documentation_float_docked               *g:lsp_documentation_float_docked*
+    Type: |Number|
+    Default: `0`
+
+    Dock the floating documentation window for complete items if enabled.
+
+    Example: >
+	let g:lsp_documentation_float_docked = 1
+	let g:lsp_documentation_float_docked = 0
+
+g:lsp_documentation_float_docked_maxheight     *g:lsp_documentation_float_docked_maxheight*
+    Type: |Number|
+    Default: `&previewheight`
+
+    The maximum height of the docked documentation window if enabled.
+
+    Example: >
+	let g:lsp_documentation_float_docked_maxheight = 1
+	let g:lsp_documentation_float_docked_maxheight = 0
 
 g:lsp_diagnostics_echo_cursor                *g:lsp_diagnostics_echo_cursor*
     Type: |Number|
