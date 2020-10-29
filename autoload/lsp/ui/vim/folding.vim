@@ -47,7 +47,8 @@ function! s:get_line_count_buf(buf) abort
     if !has('patch-8.1.1967')
         return line('$')
     endif
-    return line('$', win_findbuf(a:buf)[0])
+    let l:winids = win_findbuf(a:buf)
+    return empty(l:winids) ? line('$') : line('$', l:winids[0])
 endfunction
 
 function! lsp#ui#vim#folding#send_request(server_name, buf, sync) abort
