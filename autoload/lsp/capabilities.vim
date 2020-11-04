@@ -118,7 +118,7 @@ function! lsp#capabilities#get_text_document_save_registration_options(server_na
         if type(l:capabilities['textDocumentSync']) == type({})
             let l:save_options = get(l:capabilities['textDocumentSync'], 'save', 0)
             if type(l:save_options) == type({})
-              return [1, {'includeText': get(save_options, 'includeText', 0)}]
+              return [1, {'includeText': get(l:save_options, 'includeText', 0)}]
             else
               return [l:save_options ? 1 : 0, {'includeText': 0 }]
             endif
