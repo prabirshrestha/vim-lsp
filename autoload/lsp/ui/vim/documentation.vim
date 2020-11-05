@@ -88,17 +88,19 @@ function! s:show_documentation(event) abort
             let l:bufferlines = nvim_buf_line_count(l:buffer)
             let l:maxwidth = max(map(getbufline(l:buffer, 1, '$'), 'strdisplaywidth(v:val)'))
             if g:lsp_preview_max_width > 0
-              let l:maxwidth = min([g:lsp_preview_max_width, l:maxwidth])
+                let l:maxwidth = min([g:lsp_preview_max_width, l:maxwidth])
             endif
-
-            let l:width = min([l:width, l:maxwidth])
-            let l:height = min([l:height, l:bufferlines])
-
+            let l:width = min([float2nr(l:width), l:maxwidth])
+            let l:height = min([float2nr(l:height), l:bufferlines])
         endif
-		if g:lsp_preview_max_height > 0
-			let l:maxheight = g:lsp_preview_max_height
-			let l:height = min([l:height, l:maxheight])
-		endif
+        if g:lsp_preview_max_height > 0
+            let l:maxheight = g:lsp_preview_max_height
+            let l:height = min([l:height, l:maxheight])
+        endif
+
+        " Height and width must be atleast 1, otherwise error
+        let l:height = (l:height < 1 ? 1 : l:height)
+        let l:width = (l:width < 1 ? 1 : l:width)
 
         let s:last_popup_id = nvim_open_win(l:buffer, v:false, {'relative': 'editor', 'anchor': l:anchor, 'row': l:row, 'col': l:col, 'height': l:height, 'width': l:width, 'style': 'minimal'})
         return
@@ -119,7 +121,6 @@ function! s:show_documentation(event) abort
     call setbufvar(winbufnr(s:last_popup_id), 'lsp_syntax_highlights', l:syntax_lines)
     call setbufvar(winbufnr(s:last_popup_id), 'lsp_do_conceal', 1)
     call lsp#ui#vim#output#setcontent(s:last_popup_id, l:lines, l:ft)
-    let [l:bufferlines, l:maxwidth] = lsp#ui#vim#output#get_size_info(s:last_popup_id)
     call win_gotoid(l:current_win_id)
 endfunction
 
@@ -141,3 +142,5 @@ function! lsp#ui#vim#documentation#setup() abort
         autocmd CompleteDone * call s:close_popup()
     augroup end
 endfunction
+
+" vim: et ts=4
