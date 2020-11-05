@@ -27,6 +27,10 @@ function! s:show_documentation(event) abort
 
    " Neovim
    if s:use_nvim_float
+        let l:event = a:event
+        let l:event.row = float2nr(l:event.row)
+        let l:event.col = float2nr(l:event.col)
+
         let l:buffer = nvim_create_buf(v:false, v:true)
         let l:curpos = win_screenpos(nvim_get_current_win())[0] + winline() - 1
         let g:lsp_documentation_float_docked = get(g:, 'lsp_documentation_float_docked', 0)
@@ -39,31 +43,29 @@ function! s:show_documentation(event) abort
             let l:col = 0
             if l:dock_downwards
                 let l:anchor = 'SW'
-                let l:row = &lines
-                let l:height = min([l:height, &lines - &cmdheight - a:event.row - a:event.height])
+                let l:row = &lines - &cmdheight - 1
+                let l:height = min([l:height, &lines - &cmdheight - l:event.row - l:event.height])
             else " dock upwards
                 let l:anchor = 'NW'
                 let l:row = 0
-                let l:height = min([l:height, a:event.row - 1])
+                let l:height = min([l:height, l:event.row - 1])
             endif
 
         else " not docked
-            let l:row = a:event['row']
+            let l:row = l:event['row']
             let l:height = max([&lines - &cmdheight - l:row, &previewheight])
 
-            let l:right_area = &columns - a:event.col - a:event.width + 1   " 1 for the padding of popup
-            let l:left_area = a:event.col - 1
+            let l:right_area = &columns - l:event.col - l:event.width + 1   " 1 for the padding of popup
+            let l:left_area = l:event.col - 1
             let l:right = l:right_area > l:left_area
-
             if l:right
                 let l:anchor = 'NW'
                 let l:width = l:right_area - 1
-                let l:col = a:event.col + a:event.width + (a:event.scrollbar ? 1 : 0)
-
+                let l:col = l:event.col + l:event.width + (l:event.scrollbar ? 1 : 0)
             else
                 let l:anchor = 'NE'
                 let l:width = l:left_area
-                let l:col = a:event.col - 1     " 1 due to padding of completion popup
+                let l:col = l:event.col - 1     " 1 due to padding of completion popup
             endif
         endif
 
