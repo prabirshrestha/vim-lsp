@@ -20,6 +20,7 @@ CONTENTS                                                  *vim-lsp-contents*
       g:lsp_preview_doubletap               |g:lsp_preview_doubletap|
       g:lsp_insert_text_enabled             |g:lsp_insert_text_enabled|
       g:lsp_text_edit_enabled               |g:lsp_text_edit_enabled|
+      g:lsp_documentation_debounce          |g:lsp_documentation_debounce|
       g:lsp_documentation_float             |g:lsp_documentation_float|
       g:lsp_documentation_float_docked      |g:lsp_documentation_float_docked|
       g:lsp_documentation_float_docked_maxheight
@@ -369,6 +370,17 @@ g:lsp_text_edit_enabled                           *g:lsp_text_edit_enabled*
     Example: >
 	let g:lsp_text_edit_enabled = 1
 	let g:lsp_text_edit_enabled = 0
+
+g:lsp_documentation_debounce                      *g:lsp_documentation_debounce*
+    Type: |Number|
+    Default: `80`
+
+    Time in milliseconds to delay the completion documentation popup. Might
+    help with performance. Set this to `0` to disable debouncing.
+
+    Example: >
+	let g:lsp_documentation_debounce = 120
+	let g:lsp_documentation_debounce = 0
 
 g:lsp_documentation_float                      *g:lsp_documentation_float*
     Type: |Number|

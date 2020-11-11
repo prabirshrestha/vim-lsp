@@ -2,12 +2,17 @@ let s:use_vim_popup = has('patch-8.1.1517') && !has('nvim')
 let s:use_nvim_float = exists('*nvim_open_win') && has('nvim')
 
 let s:last_popup_id = -1
+let s:last_timer_id = v:false
 
 function! s:complete_done() abort
     if !g:lsp_documentation_float | return | endif
     " Use a timer to avoid textlock (see :h textlock).
     let l:event = copy(v:event)
-    call timer_start(0, {-> s:show_documentation(l:event)})
+    if s:last_timer_id
+        call timer_stop(s:last_timer_id)
+        let s:last_timer_id = v:false
+    endif
+    let s:last_timer_id = timer_start(g:lsp_documentation_debounce, {-> s:show_documentation(l:event)})
 endfunction
 
 function! s:show_documentation(event) abort
@@ -125,6 +130,10 @@ function! s:show_documentation(event) abort
 endfunction
 
 function! s:close_popup() abort
+    if s:last_timer_id
+        call timer_stop(s:last_timer_id)
+        let s:last_timer_id = v:false
+    endif
     if s:last_popup_id >= 0
         if s:use_vim_popup | call popup_close(s:last_popup_id) | endif
         if s:use_nvim_float && nvim_win_is_valid(s:last_popup_id) | call nvim_win_close(s:last_popup_id, 1) | endif
