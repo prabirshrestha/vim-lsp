@@ -199,6 +199,19 @@ on pyls (https://github.com/palantir/python-language-server)
             autocmd User lsp_buffer_enabled call s:on_lsp_buffer_enabled()
        augroup END
 <
+TCP SERVERS						*vim-lsp-tcp*
+You can use netcat to connect to LSP servers that don't support stdio, but do
+support TCP. Set your cmd to use your netcat executable (`nc` on unix-likes),
+localhost, and your server's port. The Godot game engine uses 6008 as its LSP
+port and godot ftplugins define gdscript or gdscript3 filetype: >
+
+	au User lsp_setup 
+	    \ call lsp#register_server({
+	    \     'name': 'godot',
+	    \     'cmd': ["nc", "localhost", "6008"],
+	    \     'allowlist': ['gdscript3', 'gdscript']
+	    \ })
+>
 VIM-LSP-SETTINGS                                         *vim-lsp-settings_plugin*
 Refer to [vim-lsp-settings](https://github.com/mattn/vim-lsp-settings) on how
 to automatically register various language servers.
