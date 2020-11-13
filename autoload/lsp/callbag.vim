@@ -1129,7 +1129,7 @@ function! s:flattenTalkbackCallback(data, t, d) abort
         endif
     endif
     if a:t == 2
-        if a:data['innertTalkback'] != 0 | call a:data['innerTalkback'](2, lsp#callbag#undefined()) | endif
+        if a:data['innerTalkback'] != 0 | call a:data['innerTalkback'](2, lsp#callbag#undefined()) | endif
         call a:data['outerTalkback'](2, lsp#callbag#undefined())
     endif
 endfunction
