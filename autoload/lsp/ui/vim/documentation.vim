@@ -4,7 +4,7 @@ let s:use_nvim_float = exists('*nvim_open_win') && has('nvim')
 let s:last_popup_id = -1
 let s:last_timer_id = v:false
 
-function! s:complete_done() abort
+function! s:complete_changed() abort
     if !g:lsp_documentation_float | return | endif
     " Use a timer to avoid textlock (see :h textlock).
     let l:event = copy(v:event)
@@ -146,7 +146,7 @@ function! lsp#ui#vim#documentation#setup() abort
     augroup lsp_documentation_popup
         autocmd!
         if exists('##CompleteChanged')
-            autocmd CompleteChanged * call s:complete_done()
+            autocmd CompleteChanged * call s:complete_changed()
         endif
         autocmd CompleteDone * call s:close_popup()
     augroup end
