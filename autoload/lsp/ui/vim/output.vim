@@ -327,9 +327,7 @@ function! lsp#ui#vim#output#preview(server, data, options) abort
         return call(g:lsp_preview_doubletap[0], [])
     endif
     " Close any previously opened preview window
-    if s:use_preview
-        pclose
-    endif
+    call lsp#ui#vim#output#closepreview()
 
     let l:current_window_id = win_getid()
 
@@ -385,7 +383,7 @@ function! lsp#ui#vim#output#preview(server, data, options) abort
         " Vim popups
         call s:set_cursor(l:current_window_id, a:options)
       endif
-	  doautocmd <nomodeline> User lsp_float_opened
+      doautocmd <nomodeline> User lsp_float_opened
     endif
 
     if !g:lsp_preview_keep_focus
