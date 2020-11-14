@@ -1,4 +1,4 @@
-" https://github.com/prabirshrestha/callbag.vim#11a4c28e2d905ebb5ae82b2ebe80ed8f86ddec22
+" https://github.com/prabirshrestha/callbag.vim#7648b131a2774505333aeb927ceeb778d780ae6d
 "    :CallbagEmbed path=autoload/lsp/callbag.vim namespace=lsp#callbag
 
 let s:undefined_token = '__callbag_undefined__'
@@ -1129,7 +1129,7 @@ function! s:flattenTalkbackCallback(data, t, d) abort
         endif
     endif
     if a:t == 2
-        if a:data['innertTalkback'] != 0 | call a:data['innerTalkback'](2, lsp#callbag#undefined()) | endif
+        if a:data['innerTalkback'] != 0 | call a:data['innerTalkback'](2, lsp#callbag#undefined()) | endif
         call a:data['outerTalkback'](2, lsp#callbag#undefined())
     endif
 endfunction
