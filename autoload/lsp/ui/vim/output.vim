@@ -75,29 +75,24 @@ endfunction
 function! s:get_float_positioning(height, width) abort
     let l:height = a:height
     let l:width = a:width
-    " For a start show it below/above the cursor
     " TODO: add option to configure it 'docked' at the bottom/top/right
-    let l:y = winline()
-    if l:y + l:height >= winheight(0)
-        " Float does not fit
-        if l:y > l:height
-            " Fits above
-            let l:y = winline() - l:height - 1
-        elseif l:y - 2 > winheight(0) - l:y
-            " Take space above cursor
-            let l:y = 1
-            let l:height = winline()-2
-        else
-            " Take space below cursor
-            let l:height = winheight(0) -l:y
-        endif
-    endif
-    let l:col = col('.')
+
+    " NOTE: screencol() and screenrow() start from (1,1)
+    " but the popup window co-ordinates start from (0,0)
+    " Very convenient!
+    " For a simple single-line 'tooltip', the following
+    " two lines are enough to determine the position
+
+    let l:col = screencol()
+    let l:row = screenrow()
+
+    let l:height = min([l:height, max([&lines - &cmdheight - l:row, &previewheight])])
+
     let l:style = 'minimal'
     " Positioning is not window but screen relative
     let l:opts = {
-        \ 'relative': 'win',
-        \ 'row': l:y,
+        \ 'relative': 'editor',
+        \ 'row': l:row,
         \ 'col': l:col,
         \ 'width': l:width,
         \ 'height': l:height,
@@ -109,7 +104,6 @@ endfunction
 function! lsp#ui#vim#output#floatingpreview(data) abort
     if s:use_nvim_float
         let l:buf = nvim_create_buf(v:false, v:true)
-        call setbufvar(l:buf, '&signcolumn', 'no')
 
         " Try to get as much space around the cursor, but at least 10x10
         let l:width = max([s:bufwidth(), 10])
@@ -121,7 +115,7 @@ function! lsp#ui#vim#output#floatingpreview(data) abort
 
         let l:opts = s:get_float_positioning(l:height, l:width)
 
-        let s:winid = nvim_open_win(l:buf, v:true, l:opts)
+        let s:winid = nvim_open_win(l:buf, v:false, l:opts)
         call nvim_win_set_option(s:winid, 'winhl', 'Normal:Pmenu,NormalNC:Pmenu')
         call nvim_win_set_option(s:winid, 'foldenable', v:false)
         call nvim_win_set_option(s:winid, 'wrap', v:true)
@@ -129,8 +123,11 @@ function! lsp#ui#vim#output#floatingpreview(data) abort
         call nvim_win_set_option(s:winid, 'number', v:false)
         call nvim_win_set_option(s:winid, 'relativenumber', v:false)
         call nvim_win_set_option(s:winid, 'cursorline', v:false)
+        call nvim_win_set_option(s:winid, 'cursorcolumn', v:false)
+        call nvim_win_set_option(s:winid, 'colorcolumn', '')
+        call nvim_win_set_option(s:winid, 'signcolumn', 'no')
         " Enable closing the preview with esc, but map only in the scratch buffer
-        nmap <buffer><silent> <esc> :pclose<cr>
+        call nvim_buf_set_keymap(l:buf, 'n', '<esc>', ':pclose<cr>', {'silent': v:true})
     elseif s:use_vim_popup
         let l:options = {
             \ 'moved': 'any',
@@ -156,11 +153,15 @@ function! lsp#ui#vim#output#setcontent(winid, lines, ft) abort
         " vim popup
         call setbufline(winbufnr(a:winid), 1, a:lines)
         call setbufvar(winbufnr(a:winid), '&filetype', a:ft . '.lsp-hover')
+
     else
         " nvim floating or preview
-        call setline(1, a:lines)
-        setlocal readonly nomodifiable
-        silent! let &l:filetype = a:ft . '.lsp-hover'
+
+        call nvim_buf_set_lines(winbufnr(a:winid), 0, -1, v:false, a:lines)
+        call nvim_buf_set_option(winbufnr(a:winid), 'readonly', v:true)
+        call nvim_buf_set_option(winbufnr(a:winid), 'modifiable', v:false)
+        call nvim_buf_set_option(winbufnr(a:winid), 'filetype', a:ft.'.lsp-hover')
+        call nvim_win_set_cursor(a:winid, [1, 0])
     endif
 endfunction
 
@@ -281,21 +282,26 @@ function! s:align_preview(options) abort
     endif
 endfunction
 
-function! lsp#ui#vim#output#get_size_info() abort
+function! lsp#ui#vim#output#get_size_info(winid) abort
     " Get size information while still having the buffer active
-    let l:maxwidth = max(map(getline(1, '$'), 'strdisplaywidth(v:val)'))
+    let l:buffer = winbufnr(a:winid)
+    let l:maxwidth = max(map(getbufline(l:buffer, 1, '$'), 'strdisplaywidth(v:val)'))
     if g:lsp_preview_max_width > 0
       let l:bufferlines = 0
       let l:maxwidth = min([g:lsp_preview_max_width, l:maxwidth])
 
       " Determine, for each line, how many "virtual" lines it spans, and add
       " these together for all lines in the buffer
-      for l:line in getline(1, '$')
+      for l:line in getbufline(l:buffer, 1, '$')
         let l:num_lines = str2nr(string(ceil(strdisplaywidth(l:line) * 1.0 / g:lsp_preview_max_width)))
         let l:bufferlines += max([l:num_lines, 1])
       endfor
     else
-      let l:bufferlines = line('$')
+        if s:use_vim_popup
+          let l:bufferlines = getbufinfo(l:buffer)[0].linecount
+      elseif s:use_nvim_float
+          let l:bufferlines = nvim_buf_line_count(winbufnr(a:winid))
+      endif
     endif
 
     return [l:bufferlines, l:maxwidth]
@@ -321,9 +327,7 @@ function! lsp#ui#vim#output#preview(server, data, options) abort
         return call(g:lsp_preview_doubletap[0], [])
     endif
     " Close any previously opened preview window
-    if s:use_preview
-        pclose
-    endif
+    call lsp#ui#vim#output#closepreview()
 
     let l:current_window_id = win_getid()
 
@@ -353,7 +357,7 @@ function! lsp#ui#vim#output#preview(server, data, options) abort
     call setbufvar(winbufnr(s:winid), 'lsp_do_conceal', l:do_conceal)
     call lsp#ui#vim#output#setcontent(s:winid, l:lines, l:ft)
 
-    let [l:bufferlines, l:maxwidth] = lsp#ui#vim#output#get_size_info()
+    let [l:bufferlines, l:maxwidth] = lsp#ui#vim#output#get_size_info(s:winid)
 
     if s:use_preview
         " Set statusline
@@ -379,7 +383,7 @@ function! lsp#ui#vim#output#preview(server, data, options) abort
         " Vim popups
         call s:set_cursor(l:current_window_id, a:options)
       endif
-	  doautocmd <nomodeline> User lsp_float_opened
+      doautocmd <nomodeline> User lsp_float_opened
     endif
 
     if !g:lsp_preview_keep_focus
