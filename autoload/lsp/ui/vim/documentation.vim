@@ -118,6 +118,9 @@ function! s:show_documentation(event) abort
     if l:right
         let l:line = a:event['row'] + 1
         let l:col = a:event['col'] + a:event['width'] + 1 + (a:event['scrollbar'] ? 1 : 0)
+        if l:col > &columns
+            let l:col -= winwidth(0) / 2
+        endif
     else
         let l:line = a:event['row'] + 1
         let l:col = a:event['col'] - 1
