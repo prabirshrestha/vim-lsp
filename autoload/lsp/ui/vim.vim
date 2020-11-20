@@ -204,8 +204,13 @@ function! s:handle_symbol(server, last_command_id, type, data) abort
 
     let l:list = lsp#ui#vim#utils#symbols_to_loc_list(a:server, a:data)
 
-    call setqflist([])
-    call setqflist(l:list)
+    if has('patch-8.2.2147')
+      call setqflist(l:list)
+      call setqflist([], 'a', {'title': a:type})
+    else
+      call setqflist([])
+      call setqflist(l:list)
+    endif
 
     if empty(l:list)
         call lsp#utils#error('No ' . a:type .' found')
