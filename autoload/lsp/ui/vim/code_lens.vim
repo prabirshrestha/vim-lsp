@@ -137,7 +137,6 @@ function! s:handle_code_lens_resolve(ctx, server_name, command_id, sync, bufnr, 
 endfunction
 
 function! s:handle_one_code_lens(server_name, sync, bufnr, code_lens) abort
-  let g:executed_code_lens = a:code_lens
     call lsp#ui#vim#execute_command#_execute({
     \   'server_name': a:server_name,
     \   'command_name': get(a:code_lens['command'], 'command', ''),
