@@ -298,15 +298,9 @@ function! lsp#ui#vim#output#get_size_info(winid) abort
       endfor
     else
       if s:use_vim_popup
-        let l:bufferlines = getbufinfo(l:buffer)[0].linecount
-        let l:info = getbufinfo(l:buffer)[0]
-        if has_key(l:info, 'linecount')
-          let l:bufferlines = l:info.linecount
-        else
-          let l:bufferlines = line('$', bufwinid(l:info))
-        endif
+        let l:bufferlines = line('$', a:winid)
       elseif s:use_nvim_float
-          let l:bufferlines = nvim_buf_line_count(winbufnr(a:winid))
+        let l:bufferlines = nvim_buf_line_count(winbufnr(a:winid))
       endif
     endif
 
