@@ -118,11 +118,14 @@ function! s:show_documentation(event) abort
     if l:right
         let l:line = a:event['row'] + 1
         let l:col = a:event['col'] + a:event['width'] + 1 + (a:event['scrollbar'] ? 1 : 0)
+        if l:col > &columns - 2
+            let l:col -= winwidth(0) / 2
+        endif
     else
         let l:line = a:event['row'] + 1
         let l:col = a:event['col'] - 1
     endif
-    let s:last_popup_id = popup_create('(no documentation available)', {'line': l:line, 'col': l:col, 'pos': l:right ? 'topleft' : 'topright', 'padding': [0, 1, 0, 1]})
+    let s:last_popup_id = popup_create('(no documentation available)', {'line': l:line, 'col': l:col, 'pos': l:right ? 'topleft' : 'topright', 'padding': [0, 1, 0, 1], 'border': [1, 1, 1, 1]})
     call setbufvar(winbufnr(s:last_popup_id), 'lsp_syntax_highlights', l:syntax_lines)
     call setbufvar(winbufnr(s:last_popup_id), 'lsp_do_conceal', 1)
     call lsp#ui#vim#output#setcontent(s:last_popup_id, l:lines, l:ft)
