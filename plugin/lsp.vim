@@ -82,6 +82,7 @@ command! LspCodeLensSync call lsp#ui#vim#code_lens#do({
 command! LspDeclaration call lsp#ui#vim#declaration(0, <q-mods>)
 command! LspPeekDeclaration call lsp#ui#vim#declaration(1)
 command! LspDefinition call lsp#ui#vim#definition(0, <q-mods>)
+command! LspSwitchSourceHeader call lsp#ui#vim#switch_source_header()
 command! LspPeekDefinition call lsp#ui#vim#definition(1)
 command! LspDocumentSymbol call lsp#ui#vim#document_symbol()
 command! LspDocumentDiagnostics call lsp#ui#vim#diagnostics#document_diagnostics()
@@ -118,6 +119,7 @@ nnoremap <plug>(lsp-code-lens) :<c-u>call lsp#ui#vim#code_lens()<cr>
 nnoremap <plug>(lsp-declaration) :<c-u>call lsp#ui#vim#declaration(0)<cr>
 nnoremap <plug>(lsp-peek-declaration) :<c-u>call lsp#ui#vim#declaration(1)<cr>
 nnoremap <plug>(lsp-definition) :<c-u>call lsp#ui#vim#definition(0)<cr>
+nnoremap <plug>(lsp-switch-source-header) :<c-u>call lsp#ui#vim#switch_source_header()<cr>
 nnoremap <plug>(lsp-peek-definition) :<c-u>call lsp#ui#vim#definition(1)<cr>
 nnoremap <plug>(lsp-document-symbol) :<c-u>call lsp#ui#vim#document_symbol()<cr>
 nnoremap <plug>(lsp-document-diagnostics) :<c-u>call lsp#ui#vim#diagnostics#document_diagnostics()<cr>

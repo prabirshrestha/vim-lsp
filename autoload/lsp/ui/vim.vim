@@ -35,6 +35,40 @@ function! lsp#ui#vim#definition(in_preview, ...) abort
     call s:list_location('definition', l:ctx)
 endfunction
 
+
+function! lsp#ui#vim#switch_source_header() abort
+    let l:servers = lsp#get_whitelisted_servers()
+
+    let l:has_extension = 0
+    for l:server in l:servers
+      if stridx(l:server, 'clangd') != -1
+        let l:has_extension = 1
+      endif
+    endfor
+
+    let l:command_id = lsp#_new_command()
+    call setqflist([])
+
+    if l:has_extension == 0
+        call s:not_supported('Switching between source/header')
+        return
+    endif
+
+    let l:ctx = { 'counter': len(l:servers), 'list':[], 'last_command_id': l:command_id }
+    for l:server in l:servers
+      echom "Sending;" . lsp#utils#get_buffer_uri()
+        call lsp#send_request(l:server, {
+            \ 'method': 'textDocument/switchSourceHeader',
+            \ 'params': {
+            \   'uri': lsp#utils#get_buffer_uri(),
+            \ },
+            \ 'on_notification': function('s:handle_switch_source_header', [l:ctx, l:server, 'header/source']),
+            \ })
+    endfor
+
+    echo 'Switching between source/header ...'
+endfunction
+
 function! lsp#ui#vim#references() abort
     let l:ctx = { 'jump_if_one': 0 }
     let l:request_params = { 'context': { 'includeDeclaration': v:false } }
@@ -376,6 +410,42 @@ function! s:handle_location(ctx, server, type, data) abort "ctx = {counter, list
                         \ })
                 endif
             endif
+        endif
+    endif
+endfunction
+
+
+
+function! s:handle_switch_source_header(ctx, server, type, data) abort "ctx = {counter, list, last_command_id}
+    if a:ctx['last_command_id'] != lsp#_last_command()
+        return
+    endif
+
+    let a:ctx['counter'] = a:ctx['counter'] - 1
+
+    if lsp#client#is_error(a:data['response']) || !has_key(a:data['response'], 'result')
+      echom "Is error"
+        call lsp#utils#error('Failed to retrieve '. a:type . ' for ' . a:server . ': ' . lsp#client#error_message(a:data['response']))
+    else
+        echo "not error: " . lsp#utils#uri_to_path(a:data['response']['result'])
+        let a:ctx['list'] = a:ctx['list'] + [lsp#utils#uri_to_path(a:data['response']['result'])]
+    endif
+
+    if a:ctx['counter'] == 0
+        if empty(a:ctx['list'])
+            call lsp#utils#error('No ' . a:type .' found')
+        else
+            call lsp#utils#tagstack#_update()
+
+            let l:loc = {
+                  \ 'filename': a:ctx['list'][0],
+                  \ 'lnum': 0,
+                  \ 'col': 0,
+                  \ }
+
+            call lsp#utils#location#_open_vim_list_item(l:loc, '')
+            echo 'Retrieved ' . a:type
+            redraw
         endif
     endif
 endfunction
