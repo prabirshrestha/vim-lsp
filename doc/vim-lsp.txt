@@ -146,7 +146,7 @@ PERFORMANCE                                          *vim-lsp-performance*
 While Vim script is very portable it has performance implications. If you would
 like to improve performance make sure you have vim/neovim with lua support.
 Currently only diff algorithm uses lua internally if available.
-Following is th default value used to detect lua.
+Following is the default value used to detect lua.
 >
     let g:lsp_use_lua = has('nvim-0.4.0') || (has('lua') && has('patch-8.2.0775'))
 
