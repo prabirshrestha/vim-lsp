@@ -1,4 +1,4 @@
-function! s:has_bool_provider(server_name, ...) abort
+function! s:has_provider(server_name, ...) abort
     let l:value = lsp#get_server_capabilities(a:server_name)
     for l:provider in a:000
         if empty(l:value) || type(l:value) != type({}) || !has_key(l:value, l:provider)
@@ -6,51 +6,51 @@ function! s:has_bool_provider(server_name, ...) abort
         endif
         let l:value = l:value[l:provider]
     endfor
-    return type(l:value) == type(v:true) && l:value == v:true
+    return (type(l:value) == type(v:true) && l:value == v:true) || type(l:value) == type({})
 endfunction
 
 function! lsp#capabilities#has_declaration_provider(server_name) abort
-    return s:has_bool_provider(a:server_name, 'declarationProvider')
+    return s:has_provider(a:server_name, 'declarationProvider')
 endfunction
 
 function! lsp#capabilities#has_definition_provider(server_name) abort
-    return s:has_bool_provider(a:server_name, 'definitionProvider')
+    return s:has_provider(a:server_name, 'definitionProvider')
 endfunction
 
 function! lsp#capabilities#has_references_provider(server_name) abort
-    return s:has_bool_provider(a:server_name, 'referencesProvider')
+    return s:has_provider(a:server_name, 'referencesProvider')
 endfunction
 
 function! lsp#capabilities#has_hover_provider(server_name) abort
-    return s:has_bool_provider(a:server_name, 'hoverProvider')
+    return s:has_provider(a:server_name, 'hoverProvider')
 endfunction
 
 function! lsp#capabilities#has_rename_provider(server_name) abort
-    return s:has_bool_provider(a:server_name, 'renameProvider')
+    return s:has_provider(a:server_name, 'renameProvider')
 endfunction
 
 function! lsp#capabilities#has_rename_prepare_provider(server_name) abort
-    return s:has_bool_provider(a:server_name, 'renameProvider', 'prepareProvider')
+    return s:has_provider(a:server_name, 'renameProvider', 'prepareProvider')
 endfunction
 
 function! lsp#capabilities#has_document_formatting_provider(server_name) abort
-    return s:has_bool_provider(a:server_name, 'documentFormattingProvider')
+    return s:has_provider(a:server_name, 'documentFormattingProvider')
 endfunction
 
 function! lsp#capabilities#has_document_range_formatting_provider(server_name) abort
-    return s:has_bool_provider(a:server_name, 'documentRangeFormattingProvider')
+    return s:has_provider(a:server_name, 'documentRangeFormattingProvider')
 endfunction
 
 function! lsp#capabilities#has_document_symbol_provider(server_name) abort
-    return s:has_bool_provider(a:server_name, 'documentSymbolProvider')
+    return s:has_provider(a:server_name, 'documentSymbolProvider')
 endfunction
 
 function! lsp#capabilities#has_workspace_symbol_provider(server_name) abort
-    return s:has_bool_provider(a:server_name, 'workspaceSymbolProvider')
+    return s:has_provider(a:server_name, 'workspaceSymbolProvider')
 endfunction
 
 function! lsp#capabilities#has_implementation_provider(server_name) abort
-    return s:has_bool_provider(a:server_name, 'implementationProvider')
+    return s:has_provider(a:server_name, 'implementationProvider')
 endfunction
 
 function! lsp#capabilities#has_code_action_provider(server_name) abort
@@ -62,7 +62,7 @@ function! lsp#capabilities#has_code_action_provider(server_name) abort
             endif
         endif
     endif
-    return s:has_bool_provider(a:server_name, 'codeActionProvider')
+    return s:has_provider(a:server_name, 'codeActionProvider')
 endfunction
 
 function! lsp#capabilities#has_code_lens_provider(server_name) abort
@@ -74,19 +74,19 @@ function! lsp#capabilities#has_code_lens_provider(server_name) abort
 endfunction
 
 function! lsp#capabilities#has_type_definition_provider(server_name) abort
-    return s:has_bool_provider(a:server_name, 'typeDefinitionProvider')
+    return s:has_provider(a:server_name, 'typeDefinitionProvider')
 endfunction
 
 function! lsp#capabilities#has_type_hierarchy_provider(server_name) abort
-    return s:has_bool_provider(a:server_name, 'typeHierarchyProvider')
+    return s:has_provider(a:server_name, 'typeHierarchyProvider')
 endfunction
 
 function! lsp#capabilities#has_document_highlight_provider(server_name) abort
-    return s:has_bool_provider(a:server_name, 'documentHighlightProvider')
+    return s:has_provider(a:server_name, 'documentHighlightProvider')
 endfunction
 
 function! lsp#capabilities#has_folding_range_provider(server_name) abort
-    return s:has_bool_provider(a:server_name, 'foldingRangeProvider')
+    return s:has_provider(a:server_name, 'foldingRangeProvider')
 endfunction
 
 function! lsp#capabilities#has_semantic_highlight(server_name) abort
