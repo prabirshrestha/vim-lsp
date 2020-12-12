@@ -96,8 +96,13 @@ function! s:set_highlights(data) abort
     if s:in_reference(l:position_list) == -1 | return | endif
 
     " Store references
-    let b:lsp_reference_positions = l:position_list
-    let b:lsp_reference_matches = []
+    if s:use_vim_textprops
+        let b:lsp_reference_positions = l:position_list
+        let b:lsp_reference_matches = []
+    else
+        let w:lsp_reference_positions = l:position_list
+        let w:lsp_reference_matches = []
+    endif
 
     " Apply highlights to the buffer
     call s:init_reference_highlight(l:bufnr)
@@ -113,14 +118,14 @@ function! s:set_highlights(data) abort
     else
         for l:position in l:position_list
             let l:match = matchaddpos('lspReference', [l:position], -5)
-            call add(b:lsp_reference_matches, l:match)
+            call add(w:lsp_reference_matches, l:match)
         endfor
     endif
 endfunction
 
 function! s:clear_highlights() abort
-    if exists('b:lsp_reference_matches')
-        if s:use_vim_textprops
+    if s:use_vim_textprops
+        if exists('b:lsp_reference_matches')
             let l:bufnr = bufnr('%')
             for l:line in b:lsp_reference_matches
                 silent! call prop_remove(
@@ -128,13 +133,17 @@ function! s:clear_highlights() abort
                 \    'bufnr': l:bufnr,
                 \    'all': v:true}, l:line)
             endfor
-        else
-            for l:match in b:lsp_reference_matches
+            unlet b:lsp_reference_matches
+            unlet b:lsp_reference_positions
+        endif
+    else
+        if exists('w:lsp_reference_matches')
+            for l:match in w:lsp_reference_matches
                 silent! call matchdelete(l:match)
             endfor
+            unlet w:lsp_reference_matches
+            unlet w:lsp_reference_positions
         endif
-        unlet b:lsp_reference_matches
-        unlet b:lsp_reference_positions
     endif
 endfunction
 
@@ -185,7 +194,7 @@ endfunction
 
 " Cyclically move between references by `offset` occurrences.
 function! lsp#internal#highlight_references#jump(offset) abort
-    if !exists('b:lsp_reference_positions')
+    if s:use_vim_textprops && !exists('b:lsp_reference_positions') || !exists('w:lsp_reference_positions')
         echohl WarningMsg
         echom 'References not available'
         echohl None
@@ -193,12 +202,12 @@ function! lsp#internal#highlight_references#jump(offset) abort
     endif
 
     " Get index of reference under cursor
-    let l:index = s:in_reference(b:lsp_reference_positions)
+    let l:index = s:use_vim_textprops ? s:in_reference(b:lsp_reference_positions) : s:in_reference(w:lsp_reference_positions)
     if l:index < 0
         return
     endif
 
-    let l:n = len(b:lsp_reference_positions)
+    let l:n = s:use_vim_textprops ? len(b:lsp_reference_positions) : len(w:lsp_reference_positions)
     let l:index += a:offset
 
     " Show a message when reaching TOP/BOTTOM of the file
@@ -206,19 +215,19 @@ function! lsp#internal#highlight_references#jump(offset) abort
         echohl WarningMsg
         echom 'search hit TOP, continuing at BOTTOM'
         echohl None
-    elseif l:index >= len(b:lsp_reference_positions)
-        echohl WarningMsgand send 
+    elseif l:index >= (s:use_vim_textprops ? len(b:lsp_reference_positions) : len(w:lsp_reference_positions))
+        echohl WarningMsg
         echom 'search hit BOTTOM, continuing at TOP'
         echohl None
     endif
 
     " Wrap index
-    if l:index < 0 || l:index >= len(b:lsp_reference_positions)
+    if l:index < 0 || l:index >= (s:use_vim_textprops ? len(b:lsp_reference_positions) : len(w:lsp_reference_positions))
         let l:index = (l:index % l:n + l:n) % l:n
     endif
 
     " Jump
-    let l:target = b:lsp_reference_positions[l:index][0:1]
+    let l:target = (s:use_vim_textprops ? b:lsp_reference_positions : w:lsp_reference_positions)[l:index][0:1]
     normal! m`
     call cursor(l:target[0], l:target[1])
 endfunction
