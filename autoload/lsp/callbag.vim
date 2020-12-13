@@ -1,4 +1,4 @@
-" https://github.com/prabirshrestha/callbag.vim#7648b131a2774505333aeb927ceeb778d780ae6d
+" https://github.com/prabirshrestha/callbag.vim#9108df10d721c04a8908a391dde14aeabacc422d
 "    :CallbagEmbed path=autoload/lsp/callbag.vim namespace=lsp#callbag
 
 let s:undefined_token = '__callbag_undefined__'
@@ -363,6 +363,41 @@ function! s:takeSourceCallback(data, t, d) abort
                 call a:data['sink'](2, lsp#callbag#undefined())
                 call a:data['sourceTalkback'](2, lsp#callbag#undefined())
             endif
+        endif
+    else
+        call a:data['sink'](a:t, a:d)
+    endif
+endfunction
+" }}}
+
+" skip() {{{
+function! lsp#callbag#skip(max) abort
+    let l:data = { 'max': a:max }
+    return function('s:skipMax', [l:data])
+endfunction
+
+function! s:skipMax(data, source) abort
+    let a:data['source'] = a:source
+    return function('s:skipMaxSource', [a:data])
+endfunction
+
+function! s:skipMaxSource(data, start, sink) abort
+    if a:start != 0 | return | endif
+    let a:data['sink'] = a:sink
+    let a:data['skipped'] = 0
+    call a:data['source'](0, function('s:skipSouceCallback', [a:data]))
+endfunction
+
+function! s:skipSouceCallback(data, t, d) abort
+    if a:t == 0
+        let a:data['talkback'] = a:d
+        call a:data['sink'](a:t, a:d)
+    elseif a:t == 1
+        if a:data['skipped'] < a:data['max']
+            let a:data['skipped'] = a:data['skipped'] + 1
+            call a:data['talkback'](1, lsp#callbag#undefined())
+        else
+            call a:data['sink'](a:t, a:d)
         endif
     else
         call a:data['sink'](a:t, a:d)
@@ -1371,6 +1406,255 @@ endfunction
 
 function! lsp#callbag#isErrorNotification(d) abort
     return a:d['kind'] ==# 'E'
+endfunction
+" }}}
+
+" spawn {{{
+" let s:Stdin = lsp#callbag#makeSubject()
+" call lsp#callbag#spawn(['bash', '-c', 'read i; echo $i'], {
+"   \ 'stdin': s:Stdin,
+"   \ 'stdout': 0,
+"   \ 'stderr': 0,
+"   \ 'exit': 0,
+"   \ 'start': 0, " when job starts before subscribing to stdin
+"   \ 'ready': 0, " when job starts and after subscribing to stdin
+"   \ 'pid': 0,
+"   \ 'failOnNonZeroExitCode': 1,
+"   \ 'failOnStdinError': 1,
+"   \ 'normalize': 'raw' | 'string' | 'array', (defaults to raw),
+"   \ 'env': {},
+"   \ })
+"   call s:Stdin(1, 'hi')
+"   call s:Stdin(2, lsp#callbag#undefined()) " requried to close stdin
+function! lsp#callbag#spawn(cmd, ...) abort
+    let l:data = { 'cmd': a:cmd, 'opt': a:0 > 0 ? copy(a:000[0]) : {} }
+    return lsp#callbag#create(function('s:spawnCreate', [l:data]))
+endfunction
+
+function! s:spawnCreate(data, next, error, complete) abort
+    let a:data['next'] = a:next
+    let a:data['error'] = a:error
+    let a:data['complete'] = a:complete
+    let a:data['state'] = {}
+    let a:data['dispose'] = 0
+    let a:data['exit'] = 0
+    let a:data['close'] = 0
+
+    let l:normalize = get(a:data['opt'], 'normalize', 'raw')
+
+    if has('nvim')
+        let a:data['jobopt'] = {
+            \ 'on_exit': function('s:spawnNeovimOnExit', [a:data]),
+            \ }
+        if l:normalize ==# 'string'
+            let a:data['normalize'] = function('s:spawnNormalizeNeovimString')
+        else
+            let a:data['normalize'] = function('s:spawnNormalizeRaw')
+        endif
+        if get(a:data['opt'], 'stdout', 0) | let a:data['jobopt']['on_stdout'] = function('s:spawnNeovimOnStdout', [a:data]) | endif
+        if get(a:data['opt'], 'stderr', 0) | let a:data['jobopt']['on_stderr'] = function('s:spawnNeovimOnStderr', [a:data]) | endif
+        if has_key(a:data['opt'], 'env') | let a:data['jobopt']['env'] = a:data['opt']['env'] | endif
+        let a:data['jobid'] = jobstart(a:data['cmd'], a:data['jobopt'])
+    else
+        let a:data['jobopt'] = {
+            \ 'exit_cb': function('s:spawnVimExitCb', [a:data]),
+            \ 'close_cb': function('s:spawnVimCloseCb', [a:data]),
+            \ }
+        if get(a:data['opt'], 'stdout', 0) | let a:data['jobopt']['out_cb'] = function('s:spawnVimOutCb', [a:data]) | endif
+        if get(a:data['opt'], 'stderr', 0) | let a:data['jobopt']['err_cb'] = function('s:spawnVimErrCb', [a:data]) | endif
+        if has_key(a:data['opt'], 'env') | let a:data['jobopt']['env'] = a:data['opt']['env'] | endif
+        if l:normalize ==# 'array'
+            let a:data['normalize'] = function('s:spawnNormalizeVimArray')
+        else
+            let a:data['normalize'] = function('s:spawnNormalizeRaw')
+        endif
+        if has('patch-8.1.350') | let a:data['jobopt']['noblock'] = 1 | endif
+        let a:data['stdinBuffer'] = ''
+        let a:data['job'] = job_start(a:data['cmd'], a:data['jobopt'])
+        let a:data['jobchannel'] = job_getchannel(a:data['job'])
+        let a:data['jobid'] = ch_info(a:data['jobchannel'])['id']
+    endif
+
+    if a:data['jobid'] < 0 | return | endif " jobstart failed. on_exit will notify with error
+
+    if get(a:data['opt'], 'pid', 0)
+        if has('nvim')
+            let a:data['pid'] = jobpid(a:data['jobid'])
+            let l:startdata['pid'] = a:data['pid']
+        else
+            let l:jobinfo = job_info(a:data['job'])
+            if type(l:jobinfo) == type({}) && has_key(l:jobinfo, 'process')
+                let a:data['pid'] = l:jobinfo['process']
+                let l:startdata['pid'] = a:data['pid']
+            endif
+        endif
+    endif
+
+    if get(a:data['opt'], 'start', 0)
+        let l:startdata = { 'id': a:data['jobid'], 'state': a:data['state'] }
+        call a:data['next']({ 'event': 'start', 'data': l:startdata })
+    endif
+
+    if has_key(a:data['opt'], 'stdin')
+        let a:data['stdinDispose'] = lsp#callbag#pipe(
+            \ a:data['opt']['stdin'],
+            \ lsp#callbag#subscribe({
+            \   'next': (has('nvim') ? function('s:spawnNeovimStdinNext', [a:data]) : function('s:spawnVimStdinNext', [a:data])),
+            \   'error': (has('nvim') ? function('s:spawnNeovimStdinError', [a:data]) : function('s:spawnVimStdinError', [a:data])),
+            \   'complete': (has('nvim') ? function('s:spawnNeovimStdinComplete', [a:data]) : function('s:spawnVimStdinComplete', [a:data])),
+            \ }),
+            \ )
+    endif
+
+    if get(a:data['opt'], 'ready', 0)
+        let l:readydata = { 'id': a:data['jobid'], 'state': a:data['state'] }
+        if has_key(a:data, 'pid') | let l:readydata['pid'] = a:data['pid'] | endif
+        call a:data['next']({ 'event': 'ready', 'data': l:readydata })
+    endif
+
+    return function('s:spawnDispose', [a:data])
+endfunction
+
+function! s:spawnJobStop(data) abort
+    if has('nvim')
+        try
+            call jobstop(a:data['jobid'])
+        catch /^Vim\%((\a\+)\)\=:E900/
+            " NOTE:
+            " Vim does not raise exception even the job has already closed so fail
+            " silently for 'E900: Invalid job id' exception
+        endtry
+    else
+        call job_stop(a:data['job'])
+    endif
+endfunction
+
+function! s:spawnDispose(data) abort
+    let a:data['dispose'] = 1
+    call s:spawnJobStop(a:data)
+endfunction
+
+function! s:spawnNeovimStdinNext(data, x) abort
+    call jobsend(a:data['jobid'], a:x)
+endfunction
+
+function! s:spawnVimStdinNext(data, x) abort
+    " Ref: https://groups.google.com/d/topic/vim_dev/UNNulkqb60k/discussion
+    let a:data['stdinBuffer'] .= a:x
+    call s:spawnVimStdinNextFlushBuffer(a:data)
+endfunction
+
+function! s:spawnVimStdinNextFlushBuffer(data) abort
+    " https://github.com/vim/vim/issues/2548
+    " https://github.com/natebosch/vim-lsc/issues/67#issuecomment-357469091
+    sleep 1m
+    if len(a:data['stdinBuffer']) <= 4096
+        call ch_sendraw(a:data['jobchannel'], a:data['stdinBuffer'])
+        let a:data['stdinBuffer'] = ''
+    else
+        let l:to_send = a:data['stdinBuffer'][:4095]
+        let a:data['stdinBuffer'] = a:data['stdinBuffer'][4096:]
+        call ch_sendraw(a:data['jobchannel'], l:to_send)
+        call timer_start(1, function('s:spawnVimStdinNextFlushBuffer', [a:data]))
+    endif
+endfunction
+
+function! s:spawnNeovimStdinError(data, x) abort
+    let a:data['stdinError'] = a:x
+    if get(a:data['opt'], 'failOnStdinError', 1) | call s:spawnJobStop(a:data) | endif
+endfunction
+
+function! s:spawnVimStdinError(data, x) abort
+    let a:data['stdinError'] = a:x
+    if get(a:data['opt'], 'failOnStdinError', 1) | call s:spawnJobStop(a:data) | endif
+endfunction
+
+function! s:spawnNeovimStdinComplete(data) abort
+    call chanclose(a:data['jobid'], 'stdin')
+endfunction
+
+function! s:spawnVimStdinComplete(data) abort
+   " There is no easy way to know when ch_sendraw() finishes writing data
+   " on a non-blocking channels -- has('patch-8.1.889') -- and because of
+   " this, we cannot safely call ch_close_in().
+    while len(a:data['stdinBuffer']) != 0
+        sleep 1m
+    endwhile
+    call ch_close_in(a:data['jobchannel'])
+endfunction
+
+function! s:spawnNormalizeRaw(data) abort
+    return a:data
+endfunction
+
+function! s:spawnNormalizeNeovimString(data) abort
+    " convert array to string since neovim uses array split by \n by default
+    return join(a:data, "\n")
+endfunction
+
+function! s:spawnNormalizeVimArray(data) abort
+    " convert string to array since vim uses string by default.
+    return split(a:data, "\n", 1)
+endfunction
+
+function! s:spawnNeovimOnStdout(data, id, d, event) abort
+    call a:data['next']({ 'event': 'stdout', 'data': a:data['normalize'](a:d), 'state': a:data['state'] })
+endfunction
+
+function! s:spawnNeovimOnStderr(data, id, d, event) abort
+    call a:data['next']({ 'event': 'stderr', 'data': a:data['normalize'](a:d), 'state': a:data['state'] })
+endfunction
+
+function! s:spawnNeovimOnExit(data, id, d, event) abort
+    let a:data['exit'] = 1
+    let a:data['close'] = 1
+    let a:data['exitcode'] = a:d
+    call s:spawnNotifyExit(a:data)
+endfunction
+
+function! s:spawnVimOutCb(data, id, d, ...) abort
+    call a:data['next']({ 'event': 'stdout', 'data': a:data['normalize'](a:d), 'state': a:data['state'] })
+endfunction
+
+function! s:spawnVimErrCb(data, id, d, ...) abort
+    call a:data['next']({ 'event': 'stderr', 'data': a:data['normalize'](a:d), 'state': a:data['state'] })
+endfunction
+
+function! s:spawnVimExitCb(data, id, d) abort
+    let a:data['exit'] = 1
+    let a:data['exitcode'] = a:d
+    " for more info refer to :h job-start
+    " job may exit before we read the output and output may be lost.
+    " in unix this happens because closing the write end of a pipe
+    " causes the read end to get EOF.
+    " close and exit has race condition, so wait for both to complete
+    if a:data['close'] && a:data['exit']
+        call s:spawnNotifyExit(a:data)
+    endif
+endfunction
+
+function! s:spawnVimCloseCb(data, id) abort
+    let a:data['close'] = 1
+    if a:data['close'] && a:data['exit']
+        call s:spawnNotifyExit(a:data)
+    endif
+endfunction
+
+function! s:spawnNotifyExit(data) abort
+    if a:data['dispose'] | return | end
+    if has_key(a:data, 'stdinDispose') | call a:data['stdinDispose']() | endif
+    if get(a:data['opt'], 'failOnStdinError', 1) && has_key(a:data, 'stdinError')
+        call a:data['error'](a:data['stdinError'])
+        return
+    endif
+    if get(a:data['opt'], 'exit', 0)
+        call a:data['next']({ 'event': 'exit', 'data': a:data['exitcode'], 'state': a:data['state'] })
+    endif
+    if get(a:data['opt'], 'failOnNonZeroExitCode', 1) && a:data['exitcode'] != 0
+        call a:data['error']('Spawn for job ' . a:data['jobid'] .' failed with exit code ' . a:data['exitcode'] . '. ')
+    else
+        call a:data['complete']()
+    endif
 endfunction
 " }}}
 
