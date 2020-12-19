@@ -47,13 +47,14 @@ if has('win32') || has('win64')
         else
             " You must not encode the volume information on the path if
             " present
-            let l:end_pos_volume = matchstrpos(a:path, '\c[A-Z]:')[2]
+            let l:path = substitute(a:path, '\(\c[A-Z]:\)', "\\=toupper(submatch(1))", '')
+            let l:end_pos_volume = matchstrpos(l:path, '\c[A-Z]:')[2]
 
             if l:end_pos_volume == -1
                 let l:end_pos_volume = 0
             endif
 
-            return s:encode_uri(substitute(a:path, '\', '/', 'g'), l:end_pos_volume, 'file:///')
+            return s:encode_uri(substitute(l:path, '\', '/', 'g'), l:end_pos_volume, 'file:///')
         endif
     endfunction
 else
