@@ -927,8 +927,12 @@ endfunction
 "    \ lsp#callbag#subscribe({ 'next':{x->s:on_textDocumentDiagnostics(x)} }),
 "    \ )
 "
-function! lsp#stream() abort
-    return s:Stream
+function! lsp#stream(...) abort
+    if a:0 == 0
+        return s:Stream
+    else
+        call s:Stream(a:1, a:2)
+    endif
 endfunction
 " }}}
 

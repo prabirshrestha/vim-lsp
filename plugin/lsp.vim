@@ -97,8 +97,12 @@ command! LspTypeDefinition call lsp#ui#vim#type_definition(0, <q-mods>)
 command! LspTypeHierarchy call lsp#internal#type_hierarchy#show()
 command! LspPeekTypeDefinition call lsp#ui#vim#type_definition(1)
 command! -nargs=? LspWorkspaceSymbol call lsp#ui#vim#workspace_symbol(<q-args>)
-command! -range LspDocumentFormat call lsp#ui#vim#document_format()
-command! -range LspDocumentFormatSync call lsp#ui#vim#document_format_sync()
+command! -range LspDocumentFormat call lsp#internal#document_format#format({ 'bufnr': bufnr('%') })
+command! -range -nargs=? LspDocumentFormatSync call lsp#internal#document_format#format(
+            \ extend({'bufnr': bufnr('%'), 'sync': 1 }, lsp#utils#args#_parse(<q-args>, {
+            \   'timeout': {'type': type(0)},
+            \   'sleep': {'type': type(0)},
+            \ })))
 command! -range LspDocumentRangeFormat call lsp#ui#vim#document_range_format()
 command! -range LspDocumentRangeFormatSync call lsp#ui#vim#document_range_format_sync()
 command! LspImplementation call lsp#ui#vim#implementation(0, <q-mods>)
