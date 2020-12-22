@@ -11,6 +11,48 @@ if !hlexists('LspUnknownScope')
 endif
 
 " Global functions {{{1
+function! lsp#ui#vim#semantic#get_default_supported_token_types() abort
+    return [
+    \   'namespace',
+    \   'type',
+    \   'class',
+    \   'enum',
+    \   'interface',
+    \   'struct',
+    \   'typeParameter',
+    \   'parameter',
+    \   'variable',
+    \   'property',
+    \   'enumMember',
+    \   'event',
+    \   'function',
+    \   'method',
+    \   'macro',
+    \   'keyword',
+    \   'modifier',
+    \   'comment',
+    \   'string',
+    \   'number',
+    \   'regexp',
+    \   'operator',
+    \ ]
+endfunction
+
+function! lsp#ui#vim#semantic#get_default_supported_token_modifiers() abort
+    return [
+    \   'declaration',
+    \   'definition',
+    \   'readonly',
+    \   'static',
+    \   'deprecated',
+    \   'abstract',
+    \   'async',
+    \   'modification',
+    \   'documentation',
+    \   'defaultLibrary',
+    \ ]
+endfunction
+
 function! lsp#ui#vim#semantic#is_enabled() abort
     return g:lsp_semantic_enabled && (s:use_vim_textprops || s:use_nvim_highlight) ? v:true : v:false
 endfunction
