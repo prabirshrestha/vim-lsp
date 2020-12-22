@@ -89,22 +89,40 @@ function! lsp#capabilities#has_folding_range_provider(server_name) abort
     return s:has_provider(a:server_name, 'foldingRangeProvider')
 endfunction
 
-function! lsp#capabilities#has_semantic_highlight(server_name) abort
+function! lsp#capabilities#has_semantic_tokens(server_name) abort
     let l:capabilities = lsp#get_server_capabilities(a:server_name)
-
-    if empty(l:capabilities) || type(l:capabilities) != type({}) || !has_key(l:capabilities, 'semanticHighlighting')
+    if empty(l:capabilities) || type(l:capabilities) != type({}) || !has_key(l:capabilities, 'semanticTokensProvider')
         return 0
     endif
 
-    let l:semantic_hl = l:capabilities['semanticHighlighting']
+    let l:capability = l:capabilities['semanticTokensProvider']
 
-    if type(l:semantic_hl) != type({}) || !has_key(l:semantic_hl, 'scopes')
+    if type(l:capability) != type({}) || !has_key(l:capability, 'legend')
         return 0
     endif
 
-    let l:scopes = l:semantic_hl['scopes']
+    " FIXME: only support 'full' for now
+    if !has_key(l:capability, 'full')
+        return 0
+    endif
 
-    if type(l:scopes) != type([]) || empty(l:scopes)
+    let l:full = l:capability['full']
+
+    if type(l:full) != type({}) && !l:full
+        return 0
+    endif
+
+    let l:legend = l:capability['legend']
+
+    if type(l:legend) != type({}) || !has_key(l:legend, 'tokenTypes') || !has_key(l:legend, 'tokenModifiers')
+        return 0
+    endif
+
+    let l:token_types = l:legend['tokenTypes']
+    let l:token_modifiers = l:legend['tokenModifiers']
+
+    if type(l:token_types) != type([]) || empty(l:token_types) || type(l:token_modifiers) != type([])
+        " FIXME: Is there any needs to check 'tokenModifiers' is not empty?
         return 0
     endif
 
