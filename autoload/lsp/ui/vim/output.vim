@@ -416,7 +416,6 @@ function! lsp#ui#vim#output#append(data, lines, syntax_lines) abort
         return 'markdown'
     elseif type(a:data) ==# type({}) && has_key(a:data, 'kind')
         call extend(a:lines, split(s:escape_string_for_display(a:data.value), '\n', v:true))
-
         return a:data.kind ==? 'plaintext' ? 'text' : a:data.kind
     endif
 endfunction

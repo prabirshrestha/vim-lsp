@@ -1,4 +1,4 @@
-let s:use_vim_popup = has('patch-8.1.1517') && !has('nvim')
+let s:use_vim_popup =  has('patch-8.1.1517') && !has('nvim')
 let s:use_nvim_float = exists('*nvim_open_win') && has('nvim')
 
 let s:last_popup_id = -1
@@ -22,13 +22,11 @@ function! s:show_documentation(event) abort
         return
     endif
 
-
     " TODO: Support markdown
     let l:data = split(a:event['completed_item']['info'], '\n')
     let l:lines = []
     let l:syntax_lines = []
     let l:ft = lsp#ui#vim#output#append(l:data, l:lines, l:syntax_lines)
-
 
    " Neovim
    if s:use_nvim_float
@@ -55,7 +53,6 @@ function! s:show_documentation(event) abort
                 let l:row = 0
                 let l:height = min([l:height, l:event.row - 1])
             endif
-
         else " not docked
             let l:row = l:event['row']
             let l:height = max([&lines - &cmdheight - l:row, &previewheight])
@@ -109,27 +106,29 @@ function! s:show_documentation(event) abort
 
         let s:last_popup_id = nvim_open_win(l:buffer, v:false, {'relative': 'editor', 'anchor': l:anchor, 'row': l:row, 'col': l:col, 'height': l:height, 'width': l:width, 'style': 'minimal'})
         return
-    endif
+    elseif s:use_vim_popup
+        " Vim
+        let l:current_win_id = win_getid()
 
-    " Vim
-    let l:current_win_id = win_getid()
-
-    let l:right = wincol() < winwidth(0) / 2
-    if l:right
-        let l:line = a:event['row'] + 1
-        let l:col = a:event['col'] + a:event['width'] + 1 + (a:event['scrollbar'] ? 1 : 0)
-        if l:col > &columns - 2
-            let l:col -= winwidth(0) / 2
+        let l:right = wincol() < winwidth(0) / 2
+        if l:right
+            let l:line = a:event['row'] + 1
+            let l:col = a:event['col'] + a:event['width'] + 1 + (a:event['scrollbar'] ? 1 : 0)
+            if l:col > &columns - 2
+                let l:col -= winwidth(0) / 2
+            endif
+        else
+            let l:line = a:event['row'] + 1
+            let l:col = a:event['col'] - 1
         endif
+        let s:last_popup_id = popup_create('(no documentation available)', {'line': l:line, 'col': l:col, 'pos': l:right ? 'topleft' : 'topright', 'padding': [0, 1, 0, 1], 'border': [1, 1, 1, 1]})
+        call setbufvar(winbufnr(s:last_popup_id), 'lsp_syntax_highlights', l:syntax_lines)
+        call setbufvar(winbufnr(s:last_popup_id), 'lsp_do_conceal', 1)
+        call lsp#ui#vim#output#setcontent(s:last_popup_id, l:lines, l:ft)
+        call win_gotoid(l:current_win_id)
     else
-        let l:line = a:event['row'] + 1
-        let l:col = a:event['col'] - 1
+        " TODO: use vim preview window
     endif
-    let s:last_popup_id = popup_create('(no documentation available)', {'line': l:line, 'col': l:col, 'pos': l:right ? 'topleft' : 'topright', 'padding': [0, 1, 0, 1], 'border': [1, 1, 1, 1]})
-    call setbufvar(winbufnr(s:last_popup_id), 'lsp_syntax_highlights', l:syntax_lines)
-    call setbufvar(winbufnr(s:last_popup_id), 'lsp_do_conceal', 1)
-    call lsp#ui#vim#output#setcontent(s:last_popup_id, l:lines, l:ft)
-    call win_gotoid(l:current_win_id)
 endfunction
 
 function! s:close_popup() abort
