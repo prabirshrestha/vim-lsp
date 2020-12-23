@@ -78,6 +78,7 @@ CONTENTS                                                  *vim-lsp-contents*
       LspDocumentFormat                     |:LspDocumentFormat|
       LspDocumentFormatSync                 |:LspDocumentFormatSync|
       LspDocumentRangeFormat                |:LspDocumentRangeFormat|
+      LspDocumentRangeFormatSync            |:LspDocumentRangeFormatSync|
       LspDocumentSymbol                     |:LspDocumentSymbol|
       LspHover                              |:LspHover|
       LspNextDiagnostic                     |:LspNextDiagnostic|
@@ -1243,6 +1244,13 @@ Note that this may slow down vim.
 LspDocumentRangeFormat                             *:LspDocumentRangeFormat*
 
 Format the current document selection.
+
+LspDocumentRangeFormatSync                     *:LspDocumentRangeFormatSync*
+
+Same as |:LspDocumentRangeFormat| but synchronous. Useful when running running
+:autocmd commands. Set |g:lsp_format_sync_timeout| to configure timeouts.
+
+Note that this may slow down vim.
 
 LspDocumentSymbol                                       *:LspDocumentSymbol*
 
