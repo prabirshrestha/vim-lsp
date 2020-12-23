@@ -129,16 +129,6 @@ function! lsp#capabilities#has_semantic_tokens(server_name) abort
     return 1
 endfunction
 
-function! lsp#capabilities#has_semantic_tokens_delta(server) abort
-    if !lsp#capabilities#has_semantic_tokens(a:server)
-        return 0
-    endif
-    let l:capabilities = lsp#get_server_capabilities(a:server)
-    return type(l:capabilities['semanticTokensProvider']['full']) == type({})
-    \   && has_key(l:capabilities['semanticTokensProvider']['full'], 'delta')
-    \   && l:capabilities['semanticTokensProvider']['full']['delta']
-endfunction
-
 " [supports_did_save (boolean), { 'includeText': boolean }]
 function! lsp#capabilities#get_text_document_save_registration_options(server_name) abort
     let l:capabilities = lsp#get_server_capabilities(a:server_name)
