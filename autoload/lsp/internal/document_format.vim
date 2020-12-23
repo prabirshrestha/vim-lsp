@@ -46,7 +46,7 @@ function! lsp#internal#document_format#format(options) abort
             call s:format_next(l:x[0])
             call s:format_complete()
         catch
-            call s:format_error([v:exception, v:throwpoint])
+            call s:format_error(v:exception . ' ' . v:throwpoint)
         endtry
     else
         return lsp#callbag#pipe(
