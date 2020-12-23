@@ -915,7 +915,7 @@ endfunction
 
 " lsp#stream {{{
 "
-" example:
+" example 1:
 "
 " function! s:on_textDocumentDiagnostics(x) abort
 "   echom 'Diagnostics for ' . a:x['server'] . ' ' . json_encode(a:x['response'])
@@ -927,8 +927,14 @@ endfunction
 "    \ lsp#callbag#subscribe({ 'next':{x->s:on_textDocumentDiagnostics(x)} }),
 "    \ )
 "
-function! lsp#stream() abort
-    return s:Stream
+" example 2:
+" call lsp#stream(1, { 'command': 'DocumentFormat' })
+function! lsp#stream(...) abort
+    if a:0 == 0
+        return s:Stream
+    else
+        call s:Stream(a:1, a:2)
+    endif
 endfunction
 " }}}
 
@@ -1102,6 +1108,7 @@ endfunction
 
 function! lsp#_new_command() abort
     let s:last_command_id += 1
+    call s:Stream(1, { 'command': 1 })
     return s:last_command_id
 endfunction
 

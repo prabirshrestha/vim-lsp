@@ -29,6 +29,7 @@ CONTENTS                                                  *vim-lsp-contents*
       g:lsp_diagnostics_echo_delay          |g:lsp_diagnostics_echo_delay|
       g:lsp_diagnostics_float_cursor        |g:lsp_diagnostics_float_cursor|
       g:lsp_diagnostics_float_delay         |g:lsp_diagnostics_float_delay|
+      g:lsp_format_sync_timeout             |g:lsp_format_sync_timeout|
       g:lsp_signs_enabled                   |g:lsp_signs_enabled|
       g:lsp_signs_priority                  |g:lsp_signs_priority|
       g:lsp_signs_priority_map              |g:lsp_signs_priority_map|
@@ -77,6 +78,7 @@ CONTENTS                                                  *vim-lsp-contents*
       LspDocumentFormat                     |:LspDocumentFormat|
       LspDocumentFormatSync                 |:LspDocumentFormatSync|
       LspDocumentRangeFormat                |:LspDocumentRangeFormat|
+      LspDocumentRangeFormatSync            |:LspDocumentRangeFormatSync|
       LspDocumentSymbol                     |:LspDocumentSymbol|
       LspHover                              |:LspHover|
       LspNextDiagnostic                     |:LspNextDiagnostic|
@@ -160,6 +162,8 @@ http://downloads.sourceforge.net/luabinaries/lua-5.3.2_Win32_dllw4_lib.zip
 http://downloads.sourceforge.net/luabinaries/lua-5.3.2_Win64_dllw4_lib.zip
 
 Set |g:lsp_semantic_enabled| to 0.
+
+Set |g:lsp_format_sync_timeout| to a reasonable value such as `1000`.
 
 ==============================================================================
 LANGUAGE SERVERS                                 *vim-lsp-language-servers*
@@ -470,6 +474,20 @@ g:lsp_diagnostics_float_delay                *g:lsp_diagnostics_float_delay*
     Example: >
 	let g:lsp_diagnostics_float_delay = 200
 	let g:lsp_diagnostics_float_delay = 1000
+
+g:lsp_format_sync_timeout                           *g:lsp_format_sync_timeout*
+    Type: |Number|
+    Default: `-1`
+
+    Timeout milliseconds to abort `:LspDocumentFormatSync` or
+    `:LspDocumentRangeFormatSync`. Set to `-1` to disable timeout. Using
+    `BufWritePre` to execute sync commands may cause vim to hang when using
+    some language servers as starting the language server may be slow. Set the
+    timeout value to cancel sync format.
+
+    Example: >
+	let g:lsp_format_sync_timeout = -1
+	let g:lsp_format_sync_timeout = 1000
 
 g:lsp_signs_enabled                                   *g:lsp_signs_enabled*
     Type: |Number|
@@ -1215,7 +1233,8 @@ Format the entire document.
 LspDocumentFormatSync                               *:LspDocumentFormatSync*
 
 Same as |:LspDocumentFormat| but synchronous. Useful when running |:autocmd|
-commands such as formatting before save.
+commands such as formatting before save. Set |g:lsp_format_sync_timeout| to
+configure timeouts.
 
     Example: >
         autocmd BufWritePre <buffer> LspDocumentFormatSync
@@ -1225,6 +1244,13 @@ Note that this may slow down vim.
 LspDocumentRangeFormat                             *:LspDocumentRangeFormat*
 
 Format the current document selection.
+
+LspDocumentRangeFormatSync                     *:LspDocumentRangeFormatSync*
+
+Same as |:LspDocumentRangeFormat| but synchronous. Useful when running running
+:autocmd commands. Set |g:lsp_format_sync_timeout| to configure timeouts.
+
+Note that this may slow down vim.
 
 LspDocumentSymbol                                       *:LspDocumentSymbol*
 

@@ -9,6 +9,7 @@ let g:lsp_async_completion = get(g:, 'lsp_async_completion', 0)
 let g:lsp_log_file = get(g:, 'lsp_log_file', '')
 let g:lsp_log_verbose = get(g:, 'lsp_log_verbose', 1)
 let g:lsp_debug_servers = get(g:, 'lsp_debug_servers', [])
+let g:lsp_format_sync_timeout = get(g:, 'lsp_format_sync_timeout', -1)
 let g:lsp_signs_enabled = get(g:, 'lsp_signs_enabled', exists('*sign_define') && (has('nvim') || has('patch-8.1.0772')))
 let g:lsp_virtual_text_enabled = get(g:, 'lsp_virtual_text_enabled', exists('*nvim_buf_set_virtual_text'))
 let g:lsp_virtual_text_prefix = get(g:, 'lsp_virtual_text_prefix', '')
@@ -97,10 +98,18 @@ command! LspTypeDefinition call lsp#ui#vim#type_definition(0, <q-mods>)
 command! LspTypeHierarchy call lsp#internal#type_hierarchy#show()
 command! LspPeekTypeDefinition call lsp#ui#vim#type_definition(1)
 command! -nargs=? LspWorkspaceSymbol call lsp#ui#vim#workspace_symbol(<q-args>)
-command! -range LspDocumentFormat call lsp#ui#vim#document_format()
-command! -range LspDocumentFormatSync call lsp#ui#vim#document_format_sync()
-command! -range LspDocumentRangeFormat call lsp#ui#vim#document_range_format()
-command! -range LspDocumentRangeFormatSync call lsp#ui#vim#document_range_format_sync()
+command! -range LspDocumentFormat call lsp#internal#document_formatting#format({ 'bufnr': bufnr('%') })
+command! -range -nargs=? LspDocumentFormatSync call lsp#internal#document_formatting#format(
+            \ extend({'bufnr': bufnr('%'), 'sync': 1 }, lsp#utils#args#_parse(<q-args>, {
+            \   'timeout': {'type': type(0)},
+            \   'sleep': {'type': type(0)},
+            \ })))
+command! -range LspDocumentRangeFormat call lsp#internal#document_range_formatting#format({ 'bufnr': bufnr('%') })
+command! -range -nargs=? LspDocumentRangeFormatSync call lsp#internal#document_range_formatting#format(
+            \ extend({'bufnr': bufnr('%'), 'sync': 1 }, lsp#utils#args#_parse(<q-args>, {
+            \   'timeout': {'type': type(0)},
+            \   'sleep': {'type': type(0)},
+            \ })))
 command! LspImplementation call lsp#ui#vim#implementation(0, <q-mods>)
 command! LspPeekImplementation call lsp#ui#vim#implementation(1)
 command! -nargs=0 LspStatus call lsp#print_server_status()
@@ -141,10 +150,10 @@ nnoremap <plug>(lsp-type-definition) :<c-u>call lsp#ui#vim#type_definition(0)<cr
 nnoremap <plug>(lsp-type-hierarchy) :<c-u>call lsp#internal#type_hierarchy#show()<cr>
 nnoremap <plug>(lsp-peek-type-definition) :<c-u>call lsp#ui#vim#type_definition(1)<cr>
 nnoremap <plug>(lsp-workspace-symbol) :<c-u>call lsp#ui#vim#workspace_symbol('')<cr>
-nnoremap <plug>(lsp-document-format) :<c-u>call lsp#ui#vim#document_format()<cr>
-vnoremap <plug>(lsp-document-format) :<Home>silent <End>call lsp#ui#vim#document_range_format()<cr>
-nnoremap <plug>(lsp-document-range-format) :<c-u>set opfunc=lsp#ui#vim#document_range_format_opfunc<cr>g@
-xnoremap <plug>(lsp-document-range-format) :<Home>silent <End>call lsp#ui#vim#document_range_format()<cr>
+nnoremap <plug>(lsp-document-format) :<c-u>call lsp#internal#document_formatting#format({ 'bufnr': bufnr('%') })<cr>
+vnoremap <plug>(lsp-document-format) :<Home>silent <End>call lsp#internal#document_range_formatting#format({ 'bufnr': bufnr('%') })<cr>
+nnoremap <plug>(lsp-document-range-format) :<c-u>set opfunc=lsp#internal#document_range_formatting#opfunc<cr>g@
+xnoremap <plug>(lsp-document-range-format) :<Home>silent <End>call lsp#internal#document_range_formatting#format({ 'bufnr': bufnr('%') })<cr>
 nnoremap <plug>(lsp-implementation) :<c-u>call lsp#ui#vim#implementation(0)<cr>
 nnoremap <plug>(lsp-peek-implementation) :<c-u>call lsp#ui#vim#implementation(1)<cr>
 nnoremap <plug>(lsp-status) :<c-u>echo lsp#get_server_status()<cr>

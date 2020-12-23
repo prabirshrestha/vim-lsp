@@ -127,48 +127,6 @@ function! lsp#ui#vim#rename() abort
     call s:rename(l:server, input('new name: ', expand('<cword>')), lsp#get_position())
 endfunction
 
-function! s:document_format(sync) abort
-    let l:servers = filter(lsp#get_allowed_servers(), 'lsp#capabilities#has_document_formatting_provider(v:val)')
-    let l:command_id = lsp#_new_command()
-
-    if len(l:servers) == 0
-        call s:not_supported('Document formatting')
-        return
-    endif
-
-    " TODO: ask user to select server for formatting
-    let l:server = l:servers[0]
-    redraw | echo 'Formatting document ...'
-    call lsp#send_request(l:server, {
-        \ 'method': 'textDocument/formatting',
-        \ 'params': {
-        \   'textDocument': lsp#get_text_document_identifier(),
-        \   'options': {
-        \       'tabSize': getbufvar(bufnr('%'), '&tabstop'),
-        \       'insertSpaces': getbufvar(bufnr('%'), '&expandtab') ? v:true : v:false,
-        \   },
-        \ },
-        \ 'sync': a:sync,
-        \ 'on_notification': function('s:handle_text_edit', [l:server, l:command_id, 'document format']),
-        \ })
-endfunction
-
-function! lsp#ui#vim#document_format_sync() abort
-    let l:mode = mode()
-    if l:mode =~# '[vV]' || l:mode ==# "\<C-V>"
-        return s:document_format_range(1)
-    endif
-    return s:document_format(1)
-endfunction
-
-function! lsp#ui#vim#document_format() abort
-    let l:mode = mode()
-    if l:mode =~# '[vV]' || l:mode ==# "\<C-V>"
-        return s:document_format_range(0)
-    endif
-    return s:document_format(0)
-endfunction
-
 function! lsp#ui#vim#stop_server(...) abort
     let l:name = get(a:000, 0, '')
     for l:server in lsp#get_allowed_servers()
@@ -178,79 +136,6 @@ function! lsp#ui#vim#stop_server(...) abort
         echo 'Stopping' l:server 'server ...'
         call lsp#stop_server(l:server)
     endfor
-endfunction
-
-function! s:get_selection_pos(type) abort
-    if a:type ==? 'v'
-        let l:start_pos = getpos("'<")[1:2]
-        let l:end_pos = getpos("'>")[1:2]
-        " fix end_pos column (see :h getpos() and :h 'selection')
-        let l:end_line = getline(l:end_pos[0])
-        let l:offset = (&selection ==# 'inclusive' ? 1 : 2)
-        let l:end_pos[1] = len(l:end_line[:l:end_pos[1]-l:offset])
-        " edge case: single character selected with selection=exclusive
-        if l:start_pos[0] == l:end_pos[0] && l:start_pos[1] > l:end_pos[1]
-            let l:end_pos[1] = l:start_pos[1]
-        endif
-    elseif a:type ==? 'line'
-        let l:start_pos = [line("'["), 1]
-        let l:end_lnum = line("']")
-        let l:end_pos = [line("']"), len(getline(l:end_lnum))]
-    elseif a:type ==? 'char'
-        let l:start_pos = getpos("'[")[1:2]
-        let l:end_pos = getpos("']")[1:2]
-    else
-        let l:start_pos = [0, 0]
-        let l:end_pos = [0, 0]
-    endif
-
-    return l:start_pos + l:end_pos
-endfunction
-
-function! s:document_format_range(sync, type) abort
-    let l:servers = filter(lsp#get_allowed_servers(), 'lsp#capabilities#has_document_range_formatting_provider(v:val)')
-    let l:command_id = lsp#_new_command()
-
-    if len(l:servers) == 0
-        call s:not_supported('Document range formatting')
-        return
-    endif
-
-    " TODO: ask user to select server for formatting
-    let l:server = l:servers[0]
-
-    let [l:start_lnum, l:start_col, l:end_lnum, l:end_col] = s:get_selection_pos(a:type)
-    let l:start_char = lsp#utils#to_char('%', l:start_lnum, l:start_col)
-    let l:end_char = lsp#utils#to_char('%', l:end_lnum, l:end_col)
-    redraw | echo 'Formatting document range ...'
-    call lsp#send_request(l:server, {
-        \ 'method': 'textDocument/rangeFormatting',
-        \ 'params': {
-        \   'textDocument': lsp#get_text_document_identifier(),
-        \   'range': {
-        \       'start': { 'line': l:start_lnum - 1, 'character': l:start_char },
-        \       'end': { 'line': l:end_lnum - 1, 'character': l:end_char },
-        \   },
-        \   'options': {
-        \       'tabSize': getbufvar(bufnr('%'), '&shiftwidth'),
-        \       'insertSpaces': getbufvar(bufnr('%'), '&expandtab') ? v:true : v:false,
-        \   },
-        \ },
-        \ 'sync': a:sync,
-        \ 'on_notification': function('s:handle_text_edit', [l:server, l:command_id, 'range format']),
-        \ })
-endfunction
-
-function! lsp#ui#vim#document_range_format_sync() abort
-    return s:document_format_range(1, visualmode())
-endfunction
-
-function! lsp#ui#vim#document_range_format() abort
-    return s:document_format_range(0, visualmode())
-endfunction
-
-function! lsp#ui#vim#document_range_format_opfunc(type) abort
-    return s:document_format_range(1, a:type)
 endfunction
 
 function! lsp#ui#vim#workspace_symbol(query) abort
