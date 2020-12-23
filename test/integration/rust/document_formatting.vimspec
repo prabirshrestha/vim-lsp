@@ -4,8 +4,8 @@ Describe integration#rust#document_formatting
 
     Before
         if executable('rust-analyzer')
-            exec 'cd ' . s:rust_project_dir
             call lsp#enable()
+            exec 'bufdo! bd!'
             call lsp#register_server({
                 \ 'name': s:server_name,
                 \ 'cmd': ['rust-analyzer'],
@@ -18,6 +18,7 @@ Describe integration#rust#document_formatting
     After
         if !executable('rust-analyzer')
             silent! call lsp#stop_server(s:server_name)
+            exec 'bufdo! bd!'
         endif
     End
 
