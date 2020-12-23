@@ -64,3 +64,11 @@ function! lsp#utils#buffer#_open_lsp_location(location) abort
     call setpos("'<", [l:bufnr, l:start_line, l:start_col])
     call setpos("'>", [l:bufnr, l:end_line, l:end_col])
 endfunction
+
+function! lsp#utils#buffer#get_indent_size(bufnr) abort
+    let l:shiftwidth = getbufvar(a:bufnr, '&shiftwidth')
+    if getbufvar(a:bufnr, '&shiftwidth')
+        return l:shiftwidth
+    endif
+    return getbufvar(a:bufnr, '&tabstop')
+endfunction

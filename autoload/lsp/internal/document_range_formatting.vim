@@ -37,7 +37,7 @@ function! lsp#internal#document_range_formatting#format(options) abort
         \       'end': { 'line': l:end_lnum - 1, 'character': l:end_char },
         \   },
         \   'options': {
-        \       'tabSize': getbufvar(a:options['bufnr'], '&tabstop'),
+        \       'tabSize': lsp#utils#buffer#get_indent_size(a:options['bufnr']),
         \       'insertSpaces': getbufvar(a:options['bufnr'], '&expandtab') ? v:true : v:false,
         \   }
         \ },
