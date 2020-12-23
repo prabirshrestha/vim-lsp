@@ -33,7 +33,7 @@ jobs:
         run: tar xzf ~/nvim.tar.gz -C ~/
       - name: Download test runner
         shell: bash
-        run: git clone --depth 1 --branch v1.5.4 --single-branch https://github.com/thinca/vim-themis ~/themis
+        run: git clone --depth 1 --branch v1.5.5 --single-branch https://github.com/thinca/vim-themis ~/themis
       - name: Run tests
         shell: bash
         run: |
