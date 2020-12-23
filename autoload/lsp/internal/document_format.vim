@@ -19,8 +19,7 @@ function! lsp#internal#document_format#format(options) abort
     " TODO: ask user to select server for formatting if there are multiple servers
     let l:server = l:servers[0]
 
-    call lsp#stream(1, { 'command': 'LspDocumentFormat' })
-    let l:command_id = lsp#_new_command() " TODO remove when everything moved to stream
+    call lsp#_new_command()
 
     let l:request = {
         \ 'method': 'textDocument/formatting',

@@ -1108,6 +1108,7 @@ endfunction
 
 function! lsp#_new_command() abort
     let s:last_command_id += 1
+    call s:Stream(1, { 'command': 1 })
     return s:last_command_id
 endfunction
 
