@@ -1,9 +1,14 @@
 " options - {
 "   bufnr: bufnr('%')       " required
 "   server - 'server_name'  " optional
-"   sync: 0                 " optional, async by default
+"   sync: 0                 " optional, defaults to 0 (async)
 " }
 function! lsp#internal#document_formatting#format(options) abort
+    let l:mode = mode()
+    if l:mode =~# '[vV]' || l:mode ==# "\<C-V>"
+        return lsp#internal#document_range_formatting#format(a:options)
+    endif
+
     if has_key(a:options, 'server')
         let l:servers = [a:options['server']]
     else
@@ -12,12 +17,14 @@ function! lsp#internal#document_formatting#format(options) abort
 
     if len(l:servers) == 0
         let l:filetype = getbufvar(a:options['bufnr'], '&filetype')
-        call lsp#utils#error('DocumentFormat not supported for ' . l:filetype)
+        call lsp#utils#error('textDocument/formatting not supported for ' . l:filetype)
         return
     endif
 
     " TODO: ask user to select server for formatting if there are multiple servers
     let l:server = l:servers[0]
+
+    redraw | echo 'Formatting Document ...'
 
     call lsp#_new_command()
 
@@ -69,10 +76,10 @@ function! s:format_next(x) abort
 endfunction
 
 function! s:format_error(e) abort
-    call lsp#log('DocumentFormat failed', a:e)
-    call lsp#utils#error('DocumentFormat failed.' . (type(a:e) == type('') ? a:e : ''))
+    call lsp#log('Formatting Document Failed', a:e)
+    call lsp#utils#error('Formatting Document Failed.' . (type(a:e) == type('') ? a:e : ''))
 endfunction
 
 function! s:format_complete() abort
-    redraw | echo 'DocumentFormat complete'
+    redraw | echo 'Formatting Document complete'
 endfunction
