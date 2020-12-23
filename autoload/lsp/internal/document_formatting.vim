@@ -33,7 +33,7 @@ function! lsp#internal#document_formatting#format(options) abort
         \ 'params': {
         \   'textDocument': lsp#get_text_document_identifier(a:options['bufnr']),
         \   'options': {
-        \       'tabSize': getbufvar(a:options['bufnr'], '&tabstop'),
+        \       'tabSize': lsp#utils#buffer#get_indent_size(a:options['bufnr']),
         \       'insertSpaces': getbufvar(a:options['bufnr'], '&expandtab') ? v:true : v:false,
         \   }
         \ },

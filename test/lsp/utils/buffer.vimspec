@@ -85,4 +85,17 @@ Describe lsp#utils#buffer
             Assert Equals(lsp#utils#buffer#_get_lines(bufnr('$')), ['foo', 'bar'])
         End
     End
+
+    Describe lsp#utils#buffer#get_indent_size
+        It gets shiftwidth if set
+            setl shiftwidth=4
+            setl tabstop=8
+            Assert Equals(lsp#utils#buffer#get_indent_size(bufnr('$')), 4)
+        End
+        It gets tabstop if shiftwidth not set
+            setl shiftwidth=0
+            setl tabstop=12
+            Assert Equals(lsp#utils#buffer#get_indent_size(bufnr('$')), 12)
+        End
+    End
 End
