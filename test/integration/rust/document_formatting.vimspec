@@ -50,7 +50,7 @@ Describe integration#rust#document_formatting
             call execute('LspDocumentFormatSync')
             let got = getline(1, "$")
             if got[0] != l:original[0] | break | endif
-            sleep 50m
+            sleep 100m
         endwhile
 
         let want = [
