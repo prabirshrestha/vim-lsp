@@ -3,7 +3,7 @@
 "   server - 'server_name'  " optional
 "   sync: 0                 " optional, async by default
 " }
-function! lsp#internal#document_format#format(options) abort
+function! lsp#internal#document_formatting#format(options) abort
     if has_key(a:options, 'server')
         let l:servers = [a:options['server']]
     else
@@ -70,7 +70,7 @@ endfunction
 
 function! s:format_error(e) abort
     call lsp#log('DocumentFormat failed', a:e)
-    call lsp#utils#error('DocumentFormat failed')
+    call lsp#utils#error('DocumentFormat failed.' . (type(a:e) == type('') ? a:e : ''))
 endfunction
 
 function! s:format_complete() abort
