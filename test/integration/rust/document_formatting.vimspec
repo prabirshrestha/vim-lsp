@@ -40,6 +40,9 @@ Describe integration#rust#document_formatting
             sleep 10m
         endwhile
 
+        setl shiftwidth=4
+        setl tabstop=4
+
         let l:counter = 0
         while 1
             if l:counter > 10 | break | endif
