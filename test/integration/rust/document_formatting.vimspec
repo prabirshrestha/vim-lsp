@@ -29,12 +29,10 @@ Describe integration#rust#document_formatting
         endif
 
         set shiftwidth=4
-        set tabstop=4
 
         normal! m'
         execute printf('keepalt keepjumps edit %s', s:rust_project_dir . '/src/documentformat.rs')
         let l:original = getline(1, "$")
-
 
         while 1
             let l:server_status = lsp#get_server_status(s:server_name)
@@ -44,7 +42,6 @@ Describe integration#rust#document_formatting
             endif
             sleep 10m
         endwhile
-
 
         let l:counter = 0
         while 1
