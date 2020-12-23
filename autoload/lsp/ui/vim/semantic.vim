@@ -70,7 +70,7 @@ endfunction
 
 function! lsp#ui#vim#semantic#do_semantic_highlight() abort
     let l:bufnr = bufnr('%')
-    let l:servers = filter(lsp#get_allowed_servers(), 'lsp#capabilities#has_semantic_tokens(v:val)')
+    let l:servers = s:get_supported_servers()
 
     if len(l:servers) == 0
         call lsp#utils#error('Semantic tokens not supported for ' . &filetype)
@@ -85,6 +85,10 @@ function! lsp#ui#vim#semantic#do_semantic_highlight() abort
     \   },
     \   'on_notification': function('s:handle_full_semantic_highlight', [l:server, l:bufnr]),
     \ })
+endfunction
+
+function! s:get_supported_servers() abort
+    return filter(lsp#get_allowed_servers(), 'lsp#capabilities#has_semantic_tokens(v:val)')
 endfunction
 
 function! s:handle_full_semantic_highlight(server, bufnr, data) abort
@@ -229,7 +233,7 @@ function! s:get_textprop_name(server, token_type_index) abort
 endfunction
 
 function! lsp#ui#vim#semantic#display_token_types() abort
-    let l:servers = filter(lsp#get_allowed_servers(), 'lsp#capabilities#has_semantic_tokens(v:val)')
+    let l:servers = s:get_supported_servers()
 
     if len(l:servers) == 0
         call lsp#utils#error('Semantic tokens not supported for ' . &filetype)
@@ -249,6 +253,21 @@ function! lsp#ui#vim#semantic#display_token_types() abort
         echo l:token_type
         echohl None
     endfor
+endfunction
+
+function! lsp#ui#vim#semantic#setup() abort
+    augroup _lsp_semantic_tokens
+        autocmd!
+        autocmd BufEnter,CursorHold,CursorHoldI * if len(s:get_supported_servers()) > 0 | call lsp#ui#vim#semantic#do_semantic_highlight() | endif
+    augroup END
+endfunction
+
+function! lsp#ui#vim#semantic#_disable() abort
+    augroup _lsp_semantic_tokens
+        autocmd!
+    augroup END
+
+    " TODO: remove all semantic highlighting --- but how?
 endfunction
 
 " vim: fdm=marker
