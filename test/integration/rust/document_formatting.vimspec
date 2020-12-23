@@ -58,7 +58,7 @@ Describe integration#rust#document_formatting
             \ '    unimplemented!();',
             \ '}'
             \ ]
-        Assert Equals(got, want)
+        Assert Equals(getline(1, "$"), want)
     End
 
 End
