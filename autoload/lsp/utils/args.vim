@@ -2,7 +2,7 @@ function! lsp#utils#args#_parse(args, opt) abort
     let l:result = {}
     for l:item in split(a:args, ' ')
         let [l:key, l:value] = split(l:item, '=')
-        let l:key = l:key[1:]
+        let l:key = l:key[2:]
         if has_key(a:opt, l:key)
             if has_key(a:opt[l:key], 'type')
                 let l:type = a:opt[l:key]['type']

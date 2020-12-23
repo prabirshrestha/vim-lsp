@@ -42,7 +42,7 @@ function! lsp#internal#document_format#format(options) abort
                 \   lsp#callbag#filter({x->has_key(x, 'command')}),
                 \ )),
                 \ lsp#callbag#toList(),
-                \ ).wait({ 'sleep': get(a:options, 'sleep', 1), 'timeout': get(a:options, 'timeout', -1) })
+                \ ).wait({ 'sleep': get(a:options, 'sleep', 1), 'timeout': get(a:options, 'timeout', g:lsp_document_format_sync_timeout) })
             call s:format_next(l:x[0])
             call s:format_complete()
         catch
