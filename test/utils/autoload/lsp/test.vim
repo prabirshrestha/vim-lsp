@@ -26,7 +26,6 @@ function! lsp#test#openproject(name, options) abort
         " wait for ready status from rust-analyzer
         call lsp#callbag#pipe(
             \ lsp#stream(),
-            \ lsp#callbag#tap({x->lsp#log('mylog', x)}),
             \ lsp#callbag#filter({x->has_key(x, 'response') && has_key(x['response'], 'method')
             \   && x['response']['method'] ==# 'rust-analyzer/status' && x['response']['params']['status'] ==# 'ready' }),
             \ lsp#callbag#take(1),
