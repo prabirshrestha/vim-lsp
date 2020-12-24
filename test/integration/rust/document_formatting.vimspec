@@ -28,7 +28,7 @@ Describe integration#rust#document_formatting
             Skip rust-analyzer not available
         endif
 
-        set shiftwidth=4
+        setl shiftwidth=4
 
         normal! m'
         execute printf('keepalt keepjumps edit %s', s:rust_project_dir . '/src/documentformat.rs')
