@@ -30,7 +30,7 @@ function! lsp#test#openproject(name, options) abort
             \   && x['response']['method'] ==# 'rust-analyzer/status' && x['response']['params']['status'] ==# 'ready' }),
             \ lsp#callbag#take(1),
             \ lsp#callbag#toList(),
-            \ ).wait({ 'timeout': 5000 })
+            \ ).wait({ 'timeout': 10000 })
     else
         throw 'open project not not supported for ' . a:name
     endif
