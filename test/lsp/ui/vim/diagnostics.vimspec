@@ -1,32 +1,33 @@
 Describe lsp#uivim#diagnostics
 
-  It should get diagnostics counts
-    let l:uri = lsp#utils#get_buffer_uri()
+    It should get diagnostics counts
+        let l:uri = lsp#utils#get_buffer_uri()
 
-    let l:range = { 'start': { 'line': 1, 'character': 1  }, 'end': { 'line': 1, 'character': 1 } }
+        let l:range = { 'start': { 'line': 1, 'character': 1  }, 'end': { 'line': 1, 'character': 1 } }
 
-    let l:tests = [
-	\{
-	\  'input': {'response': {'params': {'uri': l:uri, 'diagnostics': [{'severity': 1, 'range': l:range}]}}},
-	\  'want': {'information': 0, 'hint': 0, 'warning': 0, 'error': 1}
-    \},
-	\{
-	\  'input': {'response': {'params': {'uri': l:uri, 'diagnostics': [{'severity': 2, 'range': l:range}]}}},
-	\  'want': {'information': 0, 'hint': 0, 'warning': 1, 'error': 0}
-    \},
-	\{
-	\  'input': {'response': {'params': {'uri': l:uri, 'diagnostics': [{'severity': 1, 'range': l:range}, {'severity': 2, 'range': l:range}]}}},
-	\  'want': {'information': 0, 'hint': 0, 'warning': 1, 'error': 1}
-    \},
-	\{
-	\  'input': {'response': {'params': {'uri': l:uri, 'diagnostics': [{'severity': 1, 'range': l:range}, {'range': l:range}]}}},
-	\  'want': {'information': 0, 'hint': 0, 'warning': 0, 'error': 2}
-    \},
-    \]
-    for l:test in l:tests
-      call lsp#ui#vim#diagnostics#handle_text_document_publish_diagnostics('test', l:test.input)
-      Assert Equals(lsp#ui#vim#diagnostics#get_buffer_diagnostics_counts(), l:test.want)
-    endfor
-  End
+        let l:tests = [
+        \{
+        \  'input': {'response': {'params': {'uri': l:uri, 'diagnostics': [{'severity': 1, 'range': l:range}]}}},
+        \  'want': {'information': 0, 'hint': 0, 'warning': 0, 'error': 1}
+        \},
+        \{
+        \  'input': {'response': {'params': {'uri': l:uri, 'diagnostics': [{'severity': 2, 'range': l:range}]}}},
+        \  'want': {'information': 0, 'hint': 0, 'warning': 1, 'error': 0}
+        \},
+        \{
+        \  'input': {'response': {'params': {'uri': l:uri, 'diagnostics': [{'severity': 1, 'range': l:range}, {'severity': 2, 'range': l:range}]}}},
+        \  'want': {'information': 0, 'hint': 0, 'warning': 1, 'error': 1}
+        \},
+        \{
+        \  'input': {'response': {'params': {'uri': l:uri, 'diagnostics': [{'severity': 1, 'range': l:range}, {'range': l:range}]}}},
+        \  'want': {'information': 0, 'hint': 0, 'warning': 0, 'error': 2}
+        \},
+        \]
+
+        for l:test in l:tests
+            call lsp#ui#vim#diagnostics#handle_text_document_publish_diagnostics('test', l:test.input)
+            Assert Equals(lsp#ui#vim#diagnostics#get_buffer_diagnostics_counts(), l:test.want)
+        endfor
+    End
 
 End
