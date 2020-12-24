@@ -54,6 +54,7 @@ CONTENTS                                                  *vim-lsp-contents*
       g:lsp_completion_resolve_timeout      |g:lsp_completion_resolve_timeout|
       g:lsp_tagfunc_source_methods          |g:lsp_tagfunc_source_methods|
       g:lsp_show_message_request_enabled    |g:lsp_show_message_request_enabled|
+      g:lsp_work_done_progress_enabled      |g:lsp_work_done_progress_enabled|
     Functions                             |vim-lsp-functions|
       lsp#enable                            |lsp#enable()|
       lsp#disable                           |lsp#disable()|
@@ -774,6 +775,14 @@ g:lsp_show_message_request_enabled         *g:lsp_show_message_request_enabled*
 
     Determines whether or not `window/showMessageRequest` should show message to
     the user or if it should be ignored. Set to `1` to enable.
+
+g:lsp_work_done_progress_enabled         *g:lsp_work_done_progress_enabled*
+    Type: |Number|
+    Default: `0`
+
+    Determines whether or not to ask the server to send `$/progress`
+    notifications. This can be intercepted by listening to |lsp#stream()|.
+    Set to `1` to enable.
 
 ==============================================================================
 FUNCTIONS                                               *vim-lsp-functions*
