@@ -532,6 +532,9 @@ function! lsp#default_get_supported_capabilities(server_info) abort
     \           'linkSupport' : v:true
     \       },
     \   },
+    \   'window': {
+    \       'workDoneProgress': g:lsp_work_done_progress_enabled ? v:true : v:false,
+    \   },
     \   'workspace': {
     \       'applyEdit': v:true,
     \       'configuration': v:true
