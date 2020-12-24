@@ -56,7 +56,6 @@ Describe lsp#utils
             \  {'path': 'C:\path\to\the\file+name.txt', 'uri': 'file:///C:/path/to/the/file%2Bname.txt'},
             \  {'path': 'C:\path\to\the\file name.txt', 'uri': 'file:///C:/path/to/the/file%20name.txt'},
             \  {'path': 'http://foo/bar.txt', 'uri': 'http://foo/bar.txt'},
-            \  {'path': 'c:\path\to\the\file.txt', 'uri': 'file:///C:/path/to/the/file.txt'},
             \]
             for test in tests
                 let uri = lsp#utils#path_to_uri(test.path)
