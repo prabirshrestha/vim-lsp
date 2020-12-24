@@ -1,49 +1,28 @@
 Describe integration#rust#document_formatting
-    let s:rust_project_dir = expand("%:p:h") .'/test/testproject-rust'
-    let s:server_name = 'rust-analyzer'
-
     Before
         %bwipeout!
-        if executable('rust-analyzer')
-            call lsp#enable()
-            call lsp#register_server({
-                \ 'name': s:server_name,
-                \ 'cmd': ['rust-analyzer'],
-                \ 'allowlist': ['rust'],
-                \ 'root_uri':{server_info->lsp#utils#path_to_uri(lsp#utils#find_nearest_parent_file_directory(lsp#utils#get_buffer_path(), 'Cargo.toml'))},
-                \ })
+        if lsp#test#hasproject('rust')
+            call lsp#test#openproject('rust', {})
         endif
     End
 
     After all
         %bwipeout!
-        if !executable('rust-analyzer')
-            silent! call lsp#stop_server(s:server_name)
-        endif
+        call lsp#test#closeproject('rust')
     End
 
 
     It should correctly format document when using LspDocumentFormatSync
-        if !executable('rust-analyzer')
-            Skip rust-analyzer not available
+        if !lsp#test#hasproject('rust')
+            Skip rust project not supported
         endif
 
         setl shiftwidth=4
 
         normal! m'
-        execute printf('keepalt keepjumps edit %s', s:rust_project_dir . '/src/documentformat.rs')
+        execute printf('keepalt keepjumps edit %s', lsp#test#projectdir('rust') . '/src/documentformat.rs')
         let l:original = getline(1, "$")
 
-        while 1
-            let l:server_status = lsp#get_server_status(s:server_name)
-            call lsp#log(l:server_status)
-            if l:server_status == 'running'
-                break
-            endif
-            sleep 10m
-        endwhile
-
-        sleep 4000m
         call execute('LspDocumentFormatSync')
 
         let got = getline(1, "$")
