@@ -64,8 +64,8 @@ function! lsp#enable() abort
         call lsp#ui#vim#signature_help#setup()
     endif
     call lsp#ui#vim#completion#_setup()
+    call lsp#internal#document_highlight#_enable()
     call lsp#internal#diagnostics#_enable()
-    call lsp#internal#highlight_references#_enable()
     call lsp#internal#show_message_request#_enable()
     call s:register_events()
 endfunction
@@ -80,8 +80,8 @@ function! lsp#disable() abort
     call lsp#ui#vim#diagnostics#textprop#disable()
     call lsp#ui#vim#signature_help#_disable()
     call lsp#ui#vim#completion#_disable()
+    call lsp#internal#document_highlight#_disable()
     call lsp#internal#diagnostics#_disable()
-    call lsp#internal#highlight_references#_disable()
     call lsp#internal#show_message_request#_disable()
     call s:unregister_events()
     let s:enabled = 0
