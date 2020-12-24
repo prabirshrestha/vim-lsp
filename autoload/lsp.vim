@@ -581,6 +581,7 @@ function! s:ensure_init(buf, server_name, cb) abort
     \   'method': 'initialize',
     \   'params': {
     \     'processId': getpid(),
+    \     'clientInfo': { 'name': 'vim-lsp' },
     \     'capabilities': l:capabilities,
     \     'rootUri': l:root_uri,
     \     'rootPath': lsp#utils#uri_to_path(l:root_uri),
