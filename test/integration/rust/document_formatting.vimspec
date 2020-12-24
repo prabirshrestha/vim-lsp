@@ -3,10 +3,9 @@ Describe integration#rust#document_formatting
     let s:server_name = 'rust-analyzer'
 
     Before
-        % delete _
+        %bwipeout!
         if executable('rust-analyzer')
             call lsp#enable()
-            exec 'bufdo! bd!'
             call lsp#register_server({
                 \ 'name': s:server_name,
                 \ 'cmd': ['rust-analyzer'],
@@ -16,12 +15,13 @@ Describe integration#rust#document_formatting
         endif
     End
 
-    After
+    After all
+        %bwipeout!
         if !executable('rust-analyzer')
             silent! call lsp#stop_server(s:server_name)
         endif
-        % delete _
     End
+
 
     It should correctly format document when using LspDocumentFormatSync
         if !executable('rust-analyzer')
