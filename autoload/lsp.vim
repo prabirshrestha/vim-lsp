@@ -461,7 +461,10 @@ function! lsp#default_get_supported_capabilities(server_info) abort
     \       'completion': {
     \           'completionItem': {
     \              'documentationFormat': ['plaintext'],
-    \              'snippetSupport': v:false
+    \              'snippetSupport': v:false,
+    \              'resolveSupport': {
+    \                  'properties': ['additionalTextEdits']
+    \              }
     \           },
     \           'completionItemKind': {
     \              'valueSet': lsp#omni#get_completion_item_kinds()
