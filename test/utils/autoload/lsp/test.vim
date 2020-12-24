@@ -1,6 +1,6 @@
 function! lsp#test#projectdir(name) abort
     if a:name ==# 'rust'
-        return expand("%:p:h") .'/test/testproject-rust'
+        return expand('%:p:h') .'/test/testproject-rust'
     else
         throw 'projectdir not supported for ' . a:name
     endif
