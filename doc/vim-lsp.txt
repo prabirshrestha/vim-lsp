@@ -37,8 +37,8 @@ CONTENTS                                                  *vim-lsp-contents*
       g:lsp_highlights_enabled              |g:lsp_highlights_enabled|
       g:lsp_textprop_enabled                |g:lsp_textprop_enabled|
       g:lsp_use_event_queue                 |g:lsp_use_event_queue|
-      g:lsp_highlight_references_enabled    |g:lsp_highlight_references_enabled|
-      g:lsp_highlight_references_delay      |g:lsp_highlight_references_delay|
+      g:lsp_document_higlight_enabled       |g:lsp_document_highlight_enabled|
+      g:lsp_document_highlight_delay        |g:lsp_document_highlight_delay|
       g:lsp_get_supported_capabilities      |g:lsp_get_supported_capabilities|
       g:lsp_peek_alignment                  |g:lsp_peek_alignment|
       g:lsp_preview_max_width               |g:lsp_preview_max_width|
@@ -607,15 +607,15 @@ g:lsp_use_event_queue                               *g:lsp_use_event_queue*
 	let g:lsp_use_event_queue = 1
 	let g:lsp_use_event_queue = 0
 
-g:lsp_highlight_references_enabled      *g:lsp_highlight_references_enabled*
+g:lsp_document_highlight_enabled      *g:lsp_document_highlight_enabled*
     Type: |Number|
     Default: `1`
 
     Enable highlighting of the references to the symbol under the cursor.
 
     Example: >
-    let g:lsp_highlight_references_enabled = 1
-    let g:lsp_highlight_references_enabled = 0
+    let g:lsp_document_highlight_enabled = 1
+    let g:lsp_document_highlight_enabled = 0
 <
 
     To change the style of the highlighting, you can set or link the
@@ -624,16 +624,16 @@ g:lsp_highlight_references_enabled      *g:lsp_highlight_references_enabled*
     Example: >
     highlight lspReference ctermfg=red guifg=red ctermbg=green guibg=green
 
-g:lsp_highlight_references_delay            *g:lsp_highlight_references_delay*
+g:lsp_document_highlight_delay            *g:lsp_document_highlight_delay*
     Type: |Number|
     Default: `350`
 
     Delay milliseconds to highlight references. Requires
-    |g:lsp_highlight_references_enabled| set to 1.
+    |g:lsp_document_highlight_enabled| set to 1.
 
     Example: >
-	let g:lsp_highlight_references_delay = 200
-	let g:lsp_highlight_references_delay = 1000
+	let g:lsp_document_highlight_delay = 200
+	let g:lsp_document_highlight_delay = 1000
 
 g:lsp_get_supported_capabilities         *g:lsp_get_supported_capabilities*
     Type: |List|
