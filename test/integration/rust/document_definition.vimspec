@@ -11,7 +11,7 @@ Describe integration#rust#document_definition
         call lsp#test#closeproject('rust')
     End
 
-    It should correctly goto do definition for the samefile
+    It should correctly goto do definition for the same file
         if !lsp#test#hasproject('rust')
             Skip rust project not supported
         endif
