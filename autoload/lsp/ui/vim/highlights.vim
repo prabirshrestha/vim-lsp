@@ -100,7 +100,7 @@ function! s:place_highlights(server_name, path, diagnostics) abort
             let [l:line, l:start_col] = lsp#utils#position#lsp_to_vim(l:bufnr, l:item['range']['start'])
             let [l:_, l:end_col] = lsp#utils#position#lsp_to_vim(l:bufnr, l:item['range']['end'])
 
-            let l:name = get(s:severity_sign_names_mapping, l:item['severity'], 'LspError')
+            let l:name = get(s:severity_sign_names_mapping, get(l:item, 'severity', 3), 'LspError')
             let l:hl_name = l:name . 'Highlight'
             call nvim_buf_add_highlight(l:bufnr, l:ns, l:hl_name, l:line - 1, l:start_col - 1, l:end_col - 1)
         endfor
