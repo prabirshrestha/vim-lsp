@@ -219,3 +219,9 @@ let g:lsp_log_file = expand('~/vim-lsp.log')
 " for asyncomplete.vim log
 let g:asyncomplete_log_file = expand('~/asyncomplete.log')
 ```
+
+## Tests
+
+[vim-themis](https://github.com/thinca/vim-themis) is used for testing. To run
+integration tests [rust-analyzer](https://github.com/rust-analyzer/rust-analyzer) 
+exectuable must be in path.
