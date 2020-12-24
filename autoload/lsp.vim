@@ -484,6 +484,9 @@ function! lsp#default_get_supported_capabilities(server_info) abort
     \           'dynamicRegistration': v:false,
     \           'linkSupport' : v:true
     \       },
+    \       'documentHighlight': {
+    \           'dynamicRegistration': v:false,
+    \       },
     \       'documentSymbol': {
     \           'dynamicRegistration': v:false,
     \           'symbolKind': {
