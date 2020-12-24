@@ -503,6 +503,9 @@ function! lsp#default_get_supported_capabilities(server_info) abort
     \           'dynamicRegistration': v:false,
     \           'linkSupport' : v:true
     \       },
+    \       'references': {
+    \           'dynamicRegistration': v:false,
+    \       },
     \       'semanticHighlightingCapabilities': {
     \           'semanticHighlighting': lsp#ui#vim#semantic#is_enabled()
     \       },
