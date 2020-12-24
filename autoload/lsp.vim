@@ -484,6 +484,10 @@ function! lsp#default_get_supported_capabilities(server_info) abort
     \       'definition': {
     \           'linkSupport' : v:true
     \       },
+    \       'hover': {
+    \           'dynamicRegistration': v:true,
+    \           'contentFormat': ['markdown', 'plaintext'],
+    \       },
     \       'typeDefinition': {
     \           'linkSupport' : v:true
     \       },
