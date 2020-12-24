@@ -97,7 +97,7 @@ function! s:place_virtual(server_name, path, diagnostics) abort
         for l:item in a:diagnostics
             let l:line = l:item['range']['start']['line']
 
-            let l:name = get(s:severity_sign_names_mapping, l:item['severity'], 'LspError')
+            let l:name = get(s:severity_sign_names_mapping, get(l:item, 'severity', 3), 'LspError')
             let l:hl_name = l:name . 'Virtual'
             call nvim_buf_set_virtual_text(l:bufnr, l:ns, l:line,
                         \ [[g:lsp_virtual_text_prefix . l:item['message'], l:hl_name]], {})
