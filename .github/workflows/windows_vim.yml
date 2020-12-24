@@ -49,4 +49,4 @@ jobs:
           SET PATH=%USERPROFILE%\vim\${{matrix.vim_ver_path}};%PATH%;
           SET PATH=%USERPROFILE%\themis\bin;%PATH%;
           vim --version
-          themis --reporter spec
+          themis

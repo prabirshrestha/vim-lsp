@@ -43,4 +43,4 @@ jobs:
           SET PATH=%USERPROFILE%\themis\bin;%PATH%;
           SET THEMIS_VIM=nvim
           nvim --version
-          themis --reporter spec
+          themis

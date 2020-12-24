@@ -43,4 +43,4 @@ jobs:
           export PATH=~/themis/bin:$PATH
           export THEMIS_VIM=vim
           vim --version
-          themis --reporter spec
+          themis
