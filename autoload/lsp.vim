@@ -492,11 +492,16 @@ function! lsp#default_get_supported_capabilities(server_info) abort
     \           'symbolKind': {
     \              'valueSet': lsp#ui#vim#utils#get_symbol_kinds()
     \           },
-    \           'hierarchicalDocumentSymbolSupport': v:false
+    \           'hierarchicalDocumentSymbolSupport': v:false,
+    \           'labelSupport': v:false
     \       },
     \       'foldingRange': {
     \           'dynamicRegistration': v:false,
-    \           'lineFoldingOnly': v:true
+    \           'lineFoldingOnly': v:true,
+    \           'rangeLimit': 5000,
+    \       },
+    \       'formatting': {
+    \           'dynamicRegistration': v:false,
     \       },
     \       'hover': {
     \           'dynamicRegistration': v:false,
@@ -505,6 +510,9 @@ function! lsp#default_get_supported_capabilities(server_info) abort
     \       'implementation': {
     \           'dynamicRegistration': v:false,
     \           'linkSupport' : v:true
+    \       },
+    \       'rangeFormatting': {
+    \           'dynamicRegistration': v:false,
     \       },
     \       'references': {
     \           'dynamicRegistration': v:false,
