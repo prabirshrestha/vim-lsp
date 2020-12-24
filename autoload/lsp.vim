@@ -452,13 +452,19 @@ function! s:ensure_start(buf, server_name, cb) abort
 endfunction
 
 function! lsp#default_get_supported_capabilities(server_info) abort
+    " Sorted alphabetically
     return {
-    \   'workspace': {
-    \       'applyEdit': v:true,
-    \       'configuration': v:true
-    \   },
     \   'textDocument': {
+    \       'codeAction': {
+    \         'dynamicRegistration': v:false,
+    \         'codeActionLiteralSupport': {
+    \           'codeActionKind': {
+    \             'valueSet': ['', 'quickfix', 'refactor', 'refactor.extract', 'refactor.inline', 'refactor.rewrite', 'source', 'source.organizeImports'],
+    \           }
+    \         }
+    \       },
     \       'completion': {
+    \           'dynamicRegistration': v:false,
     \           'completionItem': {
     \              'documentationFormat': ['plaintext'],
     \              'snippetSupport': v:false,
@@ -470,38 +476,32 @@ function! lsp#default_get_supported_capabilities(server_info) abort
     \              'valueSet': lsp#omni#get_completion_item_kinds()
     \           }
     \       },
-    \       'codeAction': {
-    \         'dynamicRegistration': v:false,
-    \         'codeActionLiteralSupport': {
-    \           'codeActionKind': {
-    \             'valueSet': ['', 'quickfix', 'refactor', 'refactor.extract', 'refactor.inline', 'refactor.rewrite', 'source', 'source.organizeImports'],
-    \           }
-    \         }
-    \       },
     \       'declaration': {
+    \           'dynamicRegistration': v:false,
     \           'linkSupport' : v:true
     \       },
     \       'definition': {
-    \           'linkSupport' : v:true
-    \       },
-    \       'hover': {
-    \           'dynamicRegistration': v:true,
-    \           'contentFormat': ['markdown', 'plaintext'],
-    \       },
-    \       'typeDefinition': {
-    \           'linkSupport' : v:true
-    \       },
-    \       'implementation': {
+    \           'dynamicRegistration': v:false,
     \           'linkSupport' : v:true
     \       },
     \       'documentSymbol': {
+    \           'dynamicRegistration': v:false,
     \           'symbolKind': {
     \              'valueSet': lsp#ui#vim#utils#get_symbol_kinds()
     \           },
     \           'hierarchicalDocumentSymbolSupport': v:false
     \       },
     \       'foldingRange': {
+    \           'dynamicRegistration': v:false,
     \           'lineFoldingOnly': v:true
+    \       },
+    \       'hover': {
+    \           'dynamicRegistration': v:false,
+    \           'contentFormat': ['markdown', 'plaintext'],
+    \       },
+    \       'implementation': {
+    \           'dynamicRegistration': v:false,
+    \           'linkSupport' : v:true
     \       },
     \       'semanticHighlightingCapabilities': {
     \           'semanticHighlighting': lsp#ui#vim#semantic#is_enabled()
@@ -513,7 +513,15 @@ function! lsp#default_get_supported_capabilities(server_info) abort
     \           'willSaveWaitUntil': v:false,
     \       },
     \       'typeHierarchy': v:false,
-    \   }
+    \       'typeDefinition': {
+    \           'dynamicRegistration': v:false,
+    \           'linkSupport' : v:true
+    \       },
+    \   },
+    \   'workspace': {
+    \       'applyEdit': v:true,
+    \       'configuration': v:true
+    \   },
     \ }
 endfunction
 
