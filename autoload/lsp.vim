@@ -502,6 +502,12 @@ function! lsp#default_get_supported_capabilities(server_info) abort
     \       'semanticHighlightingCapabilities': {
     \           'semanticHighlighting': lsp#ui#vim#semantic#is_enabled()
     \       },
+    \       'synchronization': {
+    \           'didSave': v:true,
+    \           'dynamicRegistration': v:false,
+    \           'willSave': v:false,
+    \           'willSaveWaitUntil': v:false,
+    \       },
     \       'typeHierarchy': v:false,
     \   }
     \ }
