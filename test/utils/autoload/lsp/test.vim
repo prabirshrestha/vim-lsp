@@ -49,3 +49,7 @@ function! lsp#test#hasproject(name) abort
         return 0
     endif
 endfunction
+
+function! lsp#test#wait(condition) abort
+    call lsp#utils#_wait(5000, a:condition)
+endfunction
