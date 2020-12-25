@@ -80,6 +80,38 @@ Describe lsp#utils
         End
     End
 
+    Describe lsp#utils#normalize_uri
+        It should return normalized uri (Windows)
+            if !has('win32')
+              Skip This tests is not for UNIX
+            endif
+            let tests = [
+            \  {'path': 'file:///C:\path\to\the\file.txt', 'uri': 'file:///c:\path\to\the\file.txt'},
+            \  {'path': 'file:///c:\path\to\the\file.txt', 'uri': 'file:///c:\path\to\the\file.txt'},
+            \  {'path': 'file:///C%3A\path\to\the\file.txt', 'uri': 'file:///c:\path\to\the\file.txt'},
+            \  {'path': 'file:///c%3a\path\to\the\file.txt', 'uri': 'file:///c:\path\to\the\file.txt'},
+            \  {'path': 'http://foo/bar.txt', 'uri': 'http://foo/bar.txt'},
+            \]
+            for test in tests
+                let uri = lsp#utils#normalize_uri(test.path)
+                Assert Equals(uri, test.uri)
+            endfor
+        End
+
+        It should return normalized uri (UNIX)
+            if has('win32')
+              Skip This tests is not for Windows
+            endif
+            let tests = [
+            \  {'path': 'file:///path/to/the/file.txt', 'uri': 'file:///path/to/the/file.txt'},
+            \]
+            for test in tests
+                let uri = lsp#utils#normalize_uri(test.path)
+                Assert Equals(uri, test.uri)
+            endfor
+        End
+    End
+
     Describe lsp#utils#find_nearest_parent_file_directory
         It should return the root directory if it is found
             let tests = [

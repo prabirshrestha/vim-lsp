@@ -76,6 +76,17 @@ else
     endfunction
 endif
 
+if has('win32') || has('win64')
+    function! lsp#utils#normalize_uri(uri) abort
+        let l:ret = substitute(a:uri, '^file:///[a-zA-Z]\zs%3[aA]', ':', '')
+        return substitute(l:ret, '^file:///\zs\([A-Z]\)', "\\=tolower(submatch(1))", '')
+    endfunction
+else
+    function! lsp#utils#normalize_uri(uri) abort
+        return a:uri
+    endfunction
+endif
+
 function! lsp#utils#get_default_root_uri() abort
     return lsp#utils#path_to_uri(getcwd())
 endfunction
