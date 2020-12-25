@@ -37,7 +37,7 @@ CONTENTS                                                  *vim-lsp-contents*
       g:lsp_highlights_enabled              |g:lsp_highlights_enabled|
       g:lsp_textprop_enabled                |g:lsp_textprop_enabled|
       g:lsp_use_event_queue                 |g:lsp_use_event_queue|
-      g:lsp_document_higlight_enabled       |g:lsp_document_highlight_enabled|
+      g:lsp_document_highlight_enabled      |g:lsp_document_highlight_enabled|
       g:lsp_document_highlight_delay        |g:lsp_document_highlight_delay|
       g:lsp_get_supported_capabilities      |g:lsp_get_supported_capabilities|
       g:lsp_peek_alignment                  |g:lsp_peek_alignment|
