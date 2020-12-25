@@ -6,9 +6,7 @@ function! lsp#ui#vim#diagnostics#handle_text_document_publish_diagnostics(server
         return
     endif
     let l:uri = a:data['response']['params']['uri']
-    if s:is_win
-        let l:uri = substitute(l:uri, '^file:///[a-zA-Z]\zs%3[aA]', ':', '')
-    endif
+    let l:uri = lsp#utils#normalize_uri(l:uri)
     if !has_key(s:diagnostics, l:uri)
         let s:diagnostics[l:uri] = {}
     endif
