@@ -173,6 +173,30 @@ function! lsp#ui#vim#output#adjust_float_placement(bufferlines, maxwidth) abort
     endif
 endfunction
 
+function! lsp#ui#vim#output#popup_scroll(val) abort
+    let l:pos = popup_getpos(s:winid)
+    " only for vim8 popup where focusing is not (yet) possible
+    if !s:use_vim_popup || !s:winid || !l:pos.scrollbar
+        return
+    endif
+
+    let l:new_firstline = l:pos.firstline + a:val
+    let l:new_lastline = l:pos.lastline + a:val
+    let l:bottom_line = str2nr(trim(win_execute(s:winid, "echo line ('$')")))
+
+    if l:new_firstline < 1 " scrolling too far up
+        let l:new_firstline = 1
+    elseif l:new_lastline > l:bottom_line " scrolling too far down
+        let l:new_firstline = l:new_firstline + l:bottom_line - l:new_lastline
+    endif
+
+    call popup_setoptions(s:winid, {
+        \ 'firstline': l:new_firstline,
+        \ 'minwidth': l:pos.core_width,
+        \ 'maxwidth': l:pos.core_width + 1,
+        \ }) " Constrain min and maxwidth so that they don't change when scrolling
+endfunction
+
 function! s:add_float_closing_hooks() abort
     if g:lsp_preview_autoclose
         augroup lsp_float_preview_close
