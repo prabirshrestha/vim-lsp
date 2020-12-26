@@ -114,8 +114,8 @@ command! -range -nargs=? LspDocumentRangeFormatSync call lsp#internal#document_r
 command! LspImplementation call lsp#ui#vim#implementation(0, <q-mods>)
 command! LspPeekImplementation call lsp#ui#vim#implementation(1)
 command! -nargs=0 LspStatus call lsp#print_server_status()
-command! LspNextReference call lsp#internal#highlight_references#jump(+1)
-command! LspPreviousReference call lsp#internal#highlight_references#jump(-1)
+command! LspNextReference call lsp#internal#document_highlight#jump(+1)
+command! LspPreviousReference call lsp#internal#document_highlight#jump(-1)
 command! -nargs=? -complete=customlist,lsp#server_complete LspStopServer call lsp#ui#vim#stop_server(<f-args>)
 command! -nargs=? -complete=customlist,lsp#utils#empty_complete LspSignatureHelp call lsp#ui#vim#signature_help#get_signature_help_under_cursor()
 command! LspDocumentFold call lsp#ui#vim#folding#fold(0)
@@ -158,6 +158,6 @@ xnoremap <plug>(lsp-document-range-format) :<Home>silent <End>call lsp#internal#
 nnoremap <plug>(lsp-implementation) :<c-u>call lsp#ui#vim#implementation(0)<cr>
 nnoremap <plug>(lsp-peek-implementation) :<c-u>call lsp#ui#vim#implementation(1)<cr>
 nnoremap <plug>(lsp-status) :<c-u>echo lsp#get_server_status()<cr>
-nnoremap <plug>(lsp-next-reference) :<c-u>call lsp#internal#highlight_references#jump(+1)<cr>
-nnoremap <plug>(lsp-previous-reference) :<c-u>call lsp#internal#highlight_references#jump(-1)<cr>
+nnoremap <plug>(lsp-next-reference) :<c-u>call lsp#internal#document_highlight#jump(+1)<cr>
+nnoremap <plug>(lsp-previous-reference) :<c-u>call lsp#internal#document_highlight#jump(-1)<cr>
 nnoremap <plug>(lsp-signature-help) :<c-u>call lsp#ui#vim#signature_help#get_signature_help_under_cursor()<cr>
