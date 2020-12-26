@@ -194,7 +194,8 @@ endfunction
 
 " Cyclically move between references by `offset` occurrences.
 function! lsp#internal#document_highlight#jump(offset) abort
-    if s:use_vim_textprops && !exists('b:lsp_reference_positions') || !exists('w:lsp_reference_positions')
+    if s:use_vim_textprops && !exists('b:lsp_reference_positions') ||
+          \ !s:use_vim_textprops && !exists('w:lsp_reference_positions')
         echohl WarningMsg
         echom 'References not available'
         echohl None
