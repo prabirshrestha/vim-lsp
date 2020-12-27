@@ -26,13 +26,23 @@ function! lsp#internal#diagnostics#state#_enable() abort
     let s:enabled = 1
 
     let s:Dispose = lsp#callbag#pipe(
-        \ lsp#stream(),
-        \ lsp#callbag#filter({x->has_key(x, 'server') && has_key(x, 'response')
-        \   && get(x['response'], 'method', '') ==# 'textDocument/publishDiagnostics'}),
-        \ lsp#callbag#subscribe({
-        \   'next':{x->lsp#internal#diagnostics#state#_on_text_document_publish_diagnostics(x['server'], x['response'])}
-        \ }),
+        \ lsp#callbag#merge(
+        \   lsp#callbag#pipe(
+        \       lsp#stream(),
+        \       lsp#callbag#filter({x->has_key(x, 'server') && has_key(x, 'response')
+        \           && get(x['response'], 'method', '') ==# 'textDocument/publishDiagnostics'}),
+        \       lsp#callbag#tap({x->s:on_text_documentation_publish_diagnostics(x['server'], x['response'])}),
+        \   ),
+        \   lsp#callbag#pipe(
+        \       lsp#stream(),
+        \       lsp#callbag#filter({x->has_key(x, 'server') && has_key(x, 'response')
+        \           && get(x['response'], 'method', '') ==# '$/vimlsp/lsp_server_exit' }),
+        \       lsp#callbag#tap({x->s:on_exit(x['response'])}),
+        \   ),
+        \ ),
+        \ lsp#callbag#subscribe(),
         \ )
+
     " TODO: Notify diagnostics update
 endfunction
 
@@ -69,11 +79,22 @@ function! lsp#internal#diagnostics#state#_get_all_diagnostics_grouped_by_uri_and
     return s:diagnostics_state
 endfunction
 
-function! lsp#internal#diagnostics#state#_on_text_document_publish_diagnostics(server, response) abort
+function! s:on_text_documentation_publish_diagnostics(server, response) abort
     if lsp#client#is_error(a:response) | return | endif
     let l:normalized_uri = lsp#utils#normalize_uri(a:response['params']['uri'])
     if !has_key(s:diagnostics_state, l:normalized_uri)
         let s:diagnostics_state[l:normalized_uri] = {}
     endif
     let s:diagnostics_state[l:normalized_uri][a:server] = a:response
+endfunction
+
+function! s:on_exit(response) abort
+    let l:server = a:response['params']['server']
+    echom l:server
+    for [l:key, l:value] in items(s:diagnostics_state)
+        if has_key(l:value, l:server)
+            call remove(l:value, l:server)
+        endif
+    endfor
+    " TODO: Notify diagnostics update
 endfunction
