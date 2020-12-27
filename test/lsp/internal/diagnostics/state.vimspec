@@ -46,5 +46,11 @@ Describe lsp#internal#diagnostics#state
         let l:want = {}
         let l:want[l:uri] = { 'server1': l:server1_response2, 'server2': l:server2_response1 }
         Assert Equals(lsp#internal#diagnostics#state#_get_all_diagnostics_grouped_by_uri_and_server(), l:want)
+
+        call lsp#stream(1, { 'server': '$vimlsp',
+            \ 'response': { 'method': '$/vimlsp/lsp_server_exit', 'params': { 'server': 'server1' } } })
+        let l:want = {}
+        let l:want[l:uri] = { 'server2': l:server2_response1 }
+        Assert Equals(lsp#internal#diagnostics#state#_get_all_diagnostics_grouped_by_uri_and_server(), l:want)
     End
 End
