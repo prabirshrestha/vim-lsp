@@ -67,6 +67,7 @@ function! lsp#enable() abort
     call lsp#internal#document_highlight#_enable()
     call lsp#internal#diagnostics#_enable()
     call lsp#internal#show_message_request#_enable()
+    call lsp#internal#work_done_progress#_enable()
     call s:register_events()
 endfunction
 
@@ -83,6 +84,7 @@ function! lsp#disable() abort
     call lsp#internal#document_highlight#_disable()
     call lsp#internal#diagnostics#_disable()
     call lsp#internal#show_message_request#_disable()
+    call lsp#internal#work_done_progress#_disable()
     call s:unregister_events()
     let s:enabled = 0
 endfunction
@@ -1120,6 +1122,10 @@ endfunction
 " Return first error line or v:null if there are no errors
 function! lsp#get_buffer_first_error_line() abort
     return lsp#ui#vim#diagnostics#get_buffer_first_error_line()
+endfunction
+
+function! lsp#get_progress() abort
+    return lsp#internal#work_done_progress#get_progress()
 endfunction
 
 function! s:merge_dict(dict_old, dict_new) abort
