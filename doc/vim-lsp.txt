@@ -1097,6 +1097,24 @@ au User lsp_setup call lsp#callbag#pipe(
     \ )
 <
 
+Custom vim-lsp notifications streams:
+vimp-lsp events mimic lsp server notifications.
+* `server` is always `$vimlsp`.
+* `response` `method` is always prefixed with ``$/vimlsp/`
+
+
+|$/vimlsp/lsp_server_exit|
+    This is similar to |lsp_server_exit| autocommand.
+
+    Example: >
+	{
+	  "server": "$vimlsp",
+	  "response": {
+	    "method": "$/vimlsp/lsp_server_exit",
+	    "params": { "server": "$vimlsp" }
+	  }
+	}
+<
 lsp#stop_server({name-of-server})                        *lsp#stop_server()*
 
 Used to stop the server.
