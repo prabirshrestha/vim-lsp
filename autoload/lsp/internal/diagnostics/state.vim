@@ -14,7 +14,8 @@
 "   }
 " Note: Do not remove when buffer unloads or doesn't exist since some server
 " may send diagnsotics information regardless of textDocument/didOpen.
-" TODO: remove when server exits.
+" buffer state is removed when server exists.
+" TODO: reset buffer state when server initializes.
 let s:diagnostics_state = {}
 let s:enabled = 0
 
@@ -90,7 +91,6 @@ endfunction
 
 function! s:on_exit(response) abort
     let l:server = a:response['params']['server']
-    echom l:server
     for [l:key, l:value] in items(s:diagnostics_state)
         if has_key(l:value, l:server)
             call remove(l:value, l:server)
