@@ -1,3 +1,5 @@
+" https://microsoft.github.io/language-server-protocol/specifications/specification-current/#diagnostic
+"
 " Refer to https://github.com/microsoft/language-server-protocol/pull/1019 on normalization of urls.
 " {
 "   'normalized_uri': {
