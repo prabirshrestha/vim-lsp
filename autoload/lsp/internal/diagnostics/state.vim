@@ -12,17 +12,18 @@
 "           }
 "       }
 "   }
+" Note: Do not remove when buffer unloads or doesn't exist since some server
+" may send diagnsotics information regardless of textDocument/didOpen.
+" TODO: remove when server exits.
 let s:diagnostics_state = {}
+let s:enabled = 0
 
 function! lsp#internal#diagnostics#state#_enable() abort
     " don't even bother registering if the feature is disabled
     if !g:lsp_diagnostics_enabled | return | endif
 
-    call lsp#internal#diagnostics#state#_disable()
-
-    " TODO:
-    " * remove when buffer unloads
-    " * remove when server exits
+    if s:enabled | return | endif
+    let s:enabled = 1
 
     let s:Dispose = lsp#callbag#pipe(
         \ lsp#stream(),
@@ -32,15 +33,18 @@ function! lsp#internal#diagnostics#state#_enable() abort
         \   'next':{x->lsp#internal#diagnostics#state#_on_text_document_publish_diagnostics(x['server'], x['response'])}
         \ }),
         \ )
+    " TODO: Notify diagnostics update
 endfunction
 
 function! lsp#internal#diagnostics#state#_disable() abort
+    if !s:enabled | return | endif
     if exists('s:Dispose')
         call s:Dispose()
         unlet s:Dispose
-        call lsp#internal#diagnostics#state#_reset()
-        " TODO: Notify diagnostics update
     endif
+    call lsp#internal#diagnostics#state#_reset()
+    " TODO: Notify diagnostics update
+    let s:enabled = 0
 endfunction
 
 function! lsp#internal#diagnostics#state#_reset() abort
@@ -73,4 +77,3 @@ function! lsp#internal#diagnostics#state#_on_text_document_publish_diagnostics(s
     endif
     let s:diagnostics_state[l:normalized_uri][a:server] = a:response
 endfunction
-
