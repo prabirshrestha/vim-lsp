@@ -26,6 +26,8 @@ function! lsp#internal#diagnostics#state#_enable() abort
     if s:enabled | return | endif
     let s:enabled = 1
 
+    call lsp#internal#diagnostics#state#_reset()
+
     let s:Dispose = lsp#callbag#pipe(
         \ lsp#callbag#merge(
         \   lsp#callbag#pipe(
