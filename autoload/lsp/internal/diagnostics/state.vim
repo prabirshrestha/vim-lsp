@@ -46,7 +46,7 @@ function! lsp#internal#diagnostics#state#_enable() abort
         \ lsp#callbag#subscribe(),
         \ )
 
-    " TODO: Notify diagnostics update
+    call s:notify_diagnostics_update()
 endfunction
 
 function! lsp#internal#diagnostics#state#_disable() abort
@@ -56,7 +56,7 @@ function! lsp#internal#diagnostics#state#_disable() abort
         unlet s:Dispose
     endif
     call lsp#internal#diagnostics#state#_reset()
-    " TODO: Notify diagnostics update
+    call s:notify_diagnostics_update()
     let s:enabled = 0
 endfunction
 
@@ -93,10 +93,16 @@ endfunction
 
 function! s:on_exit(response) abort
     let l:server = a:response['params']['server']
+    let l:notify = 0
     for [l:key, l:value] in items(s:diagnostics_state)
         if has_key(l:value, l:server)
+            let l:notify = 1
             call remove(l:value, l:server)
         endif
     endfor
-    " TODO: Notify diagnostics update
+    if l:notify | call s:notify_diagnostics_update() | endif
+endfunction
+
+function! s:notify_diagnostics_update() abort
+    " TODO: Notify diagnostics update when all diagnostics move to relying on state
 endfunction
