@@ -127,5 +127,5 @@ function! lsp#internal#diagnostics#state#_disable_for_buffer(bufnr) abort
 endfunction
 
 function! lsp#internal#diagnostics#state#_is_enabled_for_buffer(bufnr) abort
-    return getbufvar(a:bufnr, 'lsp_diagnostics_enabled', 1)
+    return getbufvar(a:bufnr, 'lsp_diagnostics_enabled', 1) == 1
 endfunction
