@@ -10,5 +10,5 @@ endfunction
 function! lsp#internal#diagnostics#_disable() abort
     call lsp#internal#diagnostics#echo#_disable()
     call lsp#internal#diagnostics#float#_disable()
-    call lsp#internal#diagnsotics#state#disable() " Needs to be the last one to unregister
+    call lsp#internal#diagnostics#state#_disable() " Needs to be the last one to unregister
 endfunction
