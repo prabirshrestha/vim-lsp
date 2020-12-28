@@ -86,7 +86,7 @@ command! LspDefinition call lsp#ui#vim#definition(0, <q-mods>)
 command! LspPeekDefinition call lsp#ui#vim#definition(1)
 command! LspDocumentSymbol call lsp#ui#vim#document_symbol()
 command! -nargs=? LspDocumentDiagnostics call lsp#internal#diagnostics#document_diagnostics_command#do(
-            \ extend({'buffers': '' . bufnr('%')}, lsp#utils#args#_parse(<q-args>, {
+            \ extend({}, lsp#utils#args#_parse(<q-args>, {
             \   'buffers': {'type': type('')},
             \ })))
 command! -nargs=? -complete=customlist,lsp#utils#empty_complete LspHover call lsp#ui#vim#hover#get_hover_under_cursor()
