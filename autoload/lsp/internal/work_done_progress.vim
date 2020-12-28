@@ -7,9 +7,13 @@ let s:lsp_progress = {
       \ 'messages': '',
       \ 'percentage': 100,
       \ }
+let s:enabled = 0
 
 function! lsp#internal#work_done_progress#_enable() abort
     if !g:lsp_work_done_progress_enabled | return | endif
+
+    if s:enabled | return | endif
+    let s:enabled = 1
 
     let s:Dispose = lsp#callbag#pipe(
           \ lsp#stream(),
@@ -36,10 +40,14 @@ function! s:handle_work_done_progress(server, progress) abort
 endfunction
 
 function! lsp#internal#work_done_progress#_disable() abort
+    if !s:enabled | return | endif
+
     if exists('s:Dispose')
         call s:Dispose()
         unlet s:Dispose
     endif
+
+    let s:enabled = 0
 endfunction
 
 function! lsp#internal#work_done_progress#get_progress() abort
