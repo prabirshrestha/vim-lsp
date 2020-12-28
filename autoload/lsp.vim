@@ -1124,8 +1124,10 @@ function! lsp#get_buffer_first_error_line() abort
     return lsp#ui#vim#diagnostics#get_buffer_first_error_line()
 endfunction
 
-" Return dict with window/workDoneProgress
-" { 'server': 'clangd', 'token': 'token', 'title': 'indexing', 'messages': '50/100', 'percentage': 50 }
+" Return UI list with window/workDoneProgress
+" The list is most recently update order.
+" [{ 'server': 'clangd', 'token': 'backgroundIndexProgress', 'title': 'indexing', 'messages': '50/100', 'percentage': 50.0 },
+"  { 'server': 'rust-analyzer', 'token': 'rustAnalyzer/indexing', 'title': 'indexing', 'messages': '9/262 (std)', 'percentage': 3.4 }]
 " 'percentage': 0.0 - 100.0, or -1.0
 " -1.0 indicates that no 'percentage' was received
 function! lsp#get_progress() abort
