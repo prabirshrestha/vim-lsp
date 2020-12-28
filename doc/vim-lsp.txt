@@ -1228,7 +1228,17 @@ Same as |:LspCodeLens| but synchronous.
 
 LspDocumentDiagnostics                             *:LspDocumentDiagnostics*
 
-Gets the current document diagnostics.
+Gets the document diagnostics and opens in |location-list|. By default
+diagnostics are filtered for current buffer.
+
+Arguments:
+
+    --buffers	Defaults to empty string, i.e. shows diagnostics for current
+		buffer. To show diagnotics for all buffer use `--buffers=*`.
+
+    Example: >
+	:LspDocumentDiagnostics
+	:LspDocumentDiagnostics --buffers=*
 
 LspDeclaration                                             *:LspDeclaration*
 
