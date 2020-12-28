@@ -16,14 +16,14 @@ function! lsp#internal#work_done_progress#_enable() abort
           \ lsp#callbag#filter({x->has_key(x, 'response') && has_key(x['response'], 'method')
           \  && x['response']['method'] ==# '$/progress' && has_key(x['response'], 'params')
           \  && has_key(x['response']['params'], 'value') && type(x['response']['params']['value']) == type({})}),
-          \  lsp#callbag#subscribe({'next': function('s:handle_work_done_progress')})
+          \  lsp#callbag#subscribe({'next': {x->s:handle_work_done_progress(x['server'], x['response'])}})
           \ )
 endfunction
 
-function! s:handle_work_done_progress(progress) abort
-    let l:value = a:progress['response']['params']['value']
-    let s:lsp_progress['token'] = a:progress['response']['params']['token']
-    let s:lsp_progress['server'] = a:progress['server']
+function! s:handle_work_done_progress(server, progress) abort
+    let l:value = a:progress['params']['value']
+    let s:lsp_progress['token'] = a:progress['params']['token']
+    let s:lsp_progress['server'] = a:server
     if l:value['kind'] ==# 'end'
         let s:lsp_progress['messages'] = ''
         let s:lsp_progress['percentage'] = 100
