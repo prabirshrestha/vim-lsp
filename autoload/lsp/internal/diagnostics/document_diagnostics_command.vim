@@ -22,9 +22,11 @@ function! lsp#internal#diagnostics#document_diagnostics_command#do(options) abor
 
     let l:result = []
     for [l:uri, l:value] in items(l:filtered_diagnostics)
-        for l:diagnostics in values(l:value)
-            let l:result += lsp#ui#vim#utils#diagnostics_to_loc_list({ 'response': l:diagnostics })
-        endfor
+        if lsp#internal#diagnostics#state#_is_enabled_for_buffer(bufnr(lsp#utils#uri_to_path(l:uri)))
+            for l:diagnostics in values(l:value)
+                let l:result += lsp#ui#vim#utils#diagnostics_to_loc_list({ 'response': l:diagnostics })
+            endfor
+        endif
     endfor
 
     if empty(l:result)
