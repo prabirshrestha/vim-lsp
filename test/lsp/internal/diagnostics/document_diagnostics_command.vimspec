@@ -17,6 +17,7 @@ Describe lsp#internal#diagnostics#document_diagnostics_command
         execute printf('keepalt keepjumps edit %s', lsp#test#projectdir('rust') . '/src/documentdiagnostics.rs')
         let l:uri = lsp#utils#get_buffer_uri()
         let l:uri2 = l:uri . '2'
+        let l:bufnr = bufnr('%')
 
         let l:server1_response1 = {'method': 'textDocument/publishDiagnostics', 'params': {'uri': l:uri, 'diagnostics': [
             \ {'severity': 1, 'message': 'm1', 'range': { 'start': { 'line': 1, 'character': 1, 'end': { 'line': 1, 'character': 1 } } }},
@@ -34,18 +35,19 @@ Describe lsp#internal#diagnostics#document_diagnostics_command
         execute ':LspDocumentDiagnostics'
         let l:result = getloclist(0)
         Assert Equals(l:result, [
-            \ {'lnum': 2, 'bufnr': 3, 'col': 2, 'pattern': '', 'valid': 1, 'vcol': 0, 'nr': 0, 'type': '', 'module': '', 'text': 'Error:m1'},
-            \ {'lnum': 2, 'bufnr': 3, 'col': 3, 'pattern': '', 'valid': 1, 'vcol': 0, 'nr': 0, 'type': '', 'module': '', 'text': 'Error:m2'},
+            \ {'lnum': 2, 'bufnr': l:bufnr, 'col': 2, 'pattern': '', 'valid': 1, 'vcol': 0, 'nr': 0, 'type': '', 'module': '', 'text': 'Error:m1'},
+            \ {'lnum': 2, 'bufnr': l:bufnr, 'col': 3, 'pattern': '', 'valid': 1, 'vcol': 0, 'nr': 0, 'type': '', 'module': '', 'text': 'Error:m2'},
             \ ])
         execute ':lclose'
 
         execute ':LspDocumentDiagnostics --buffers=*'
         let l:result = getloclist(0)
+        " +2 for bufnr because original bufnr + loclist + new unopened file
         Assert Equals(l:result, [
-            \ {'lnum': 2, 'bufnr': 3, 'col': 2, 'pattern': '', 'valid': 1, 'vcol': 0, 'nr': 0, 'type': '', 'module': '', 'text': 'Error:m1'},
-            \ {'lnum': 2, 'bufnr': 3, 'col': 3, 'pattern': '', 'valid': 1, 'vcol': 0, 'nr': 0, 'type': '', 'module': '', 'text': 'Error:m2'},
-            \ {'lnum': 3, 'bufnr': 5, 'col': 2, 'pattern': '', 'valid': 1, 'vcol': 0, 'nr': 0, 'type': '', 'module': '', 'text': 'Error:m3'},
-            \ {'lnum': 4, 'bufnr': 5, 'col': 3, 'pattern': '', 'valid': 1, 'vcol': 0, 'nr': 0, 'type': '', 'module': '', 'text': 'Error:m4'},
+            \ {'lnum': 2, 'bufnr': l:bufnr, 'col': 2, 'pattern': '', 'valid': 1, 'vcol': 0, 'nr': 0, 'type': '', 'module': '', 'text': 'Error:m1'},
+            \ {'lnum': 2, 'bufnr': l:bufnr, 'col': 3, 'pattern': '', 'valid': 1, 'vcol': 0, 'nr': 0, 'type': '', 'module': '', 'text': 'Error:m2'},
+            \ {'lnum': 3, 'bufnr': l:bufnr + 2, 'col': 2, 'pattern': '', 'valid': 1, 'vcol': 0, 'nr': 0, 'type': '', 'module': '', 'text': 'Error:m3'},
+            \ {'lnum': 4, 'bufnr': l:bufnr + 2, 'col': 3, 'pattern': '', 'valid': 1, 'vcol': 0, 'nr': 0, 'type': '', 'module': '', 'text': 'Error:m4'},
             \ ])
         execute ':lclose'
     End
