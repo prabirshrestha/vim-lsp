@@ -85,7 +85,10 @@ command! LspPeekDeclaration call lsp#ui#vim#declaration(1)
 command! LspDefinition call lsp#ui#vim#definition(0, <q-mods>)
 command! LspPeekDefinition call lsp#ui#vim#definition(1)
 command! LspDocumentSymbol call lsp#ui#vim#document_symbol()
-command! LspDocumentDiagnostics call lsp#ui#vim#diagnostics#document_diagnostics()
+command! -nargs=? LspDocumentDiagnostics call lsp#internal#diagnostics#document_diagnostics_command#do(
+            \ extend({}, lsp#utils#args#_parse(<q-args>, {
+            \   'buffers': {'type': type('')},
+            \ })))
 command! -nargs=? -complete=customlist,lsp#utils#empty_complete LspHover call lsp#ui#vim#hover#get_hover_under_cursor()
 command! -nargs=* LspNextError call lsp#ui#vim#diagnostics#next_error(<f-args>)
 command! -nargs=* LspPreviousError call lsp#ui#vim#diagnostics#previous_error(<f-args>)
@@ -129,7 +132,7 @@ nnoremap <plug>(lsp-peek-declaration) :<c-u>call lsp#ui#vim#declaration(1)<cr>
 nnoremap <plug>(lsp-definition) :<c-u>call lsp#ui#vim#definition(0)<cr>
 nnoremap <plug>(lsp-peek-definition) :<c-u>call lsp#ui#vim#definition(1)<cr>
 nnoremap <plug>(lsp-document-symbol) :<c-u>call lsp#ui#vim#document_symbol()<cr>
-nnoremap <plug>(lsp-document-diagnostics) :<c-u>call lsp#ui#vim#diagnostics#document_diagnostics()<cr>
+nnoremap <plug>(lsp-document-diagnostics) :<c-u>call lsp#internal#diagnostics#document_diagnostics_command#do({})<cr>
 nnoremap <plug>(lsp-hover) :<c-u>call lsp#ui#vim#hover#get_hover_under_cursor()<cr>
 nnoremap <plug>(lsp-preview-close) :<c-u>call lsp#ui#vim#output#closepreview()<cr>
 nnoremap <plug>(lsp-preview-focus) :<c-u>call lsp#ui#vim#output#focuspreview()<cr>
