@@ -1,3 +1,5 @@
+" https://microsoft.github.io/language-server-protocol/specifications/specification-current/#progress
+
 let s:lsp_progress = {
       \ 'server': '',
       \ 'token': '',
