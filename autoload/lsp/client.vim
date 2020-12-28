@@ -183,15 +183,21 @@ function! s:on_exit(id, status, event) abort
 endfunction
 
 function! s:lsp_start(opts) abort
-    if !has_key(a:opts, 'cmd')
+    if has_key(a:opts, 'cmd')
+        let l:client_id = lsp#utils#job#start(a:opts.cmd, {
+            \ 'on_stdout': function('s:on_stdout'),
+            \ 'on_stderr': function('s:on_stderr'),
+            \ 'on_exit': function('s:on_exit'),
+            \ })
+    elseif has_key(a:opts, 'tcp')
+        let l:client_id = lsp#utils#job#connect(a:opts.tcp, {
+            \ 'on_stdout': function('s:on_stdout'),
+            \ 'on_stderr': function('s:on_stderr'),
+            \ 'on_exit': function('s:on_exit'),
+            \ })
+    else
         return -1
     endif
-
-    let l:client_id = lsp#utils#job#start(a:opts.cmd, {
-        \ 'on_stdout': function('s:on_stdout'),
-        \ 'on_stderr': function('s:on_stderr'),
-        \ 'on_exit': function('s:on_exit'),
-        \ })
 
     let l:ctx = s:create_context(l:client_id, a:opts)
     let l:ctx['id'] = l:client_id
