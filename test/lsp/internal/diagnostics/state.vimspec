@@ -2,6 +2,8 @@ Describe lsp#internal#diagnostics#state
     Before
         %bwipeout!
         let g:lsp_diagnostics_enabled = 1
+        call lsp#internal#diagnostics#state#_disable()
+        call lsp#internal#diagnostics#state#_enable()
     End
 
     After all
@@ -11,9 +13,6 @@ Describe lsp#internal#diagnostics#state
     End
 
     It should be able to subscribe to textDocument/publishDiagnostics stream and update state correctly
-        call lsp#internal#diagnostics#state#_disable()
-        call lsp#internal#diagnostics#state#_enable()
-
         let l:uri = 'file://some/uri'
 
         let l:server1_response1 = {'method': 'textDocument/publishDiagnostics', 'params': {'uri': l:uri, 'diagnostics': [
@@ -52,5 +51,20 @@ Describe lsp#internal#diagnostics#state
         let l:want = {}
         let l:want[l:uri] = { 'server2': l:server2_response1 }
         Assert Equals(lsp#internal#diagnostics#state#_get_all_diagnostics_grouped_by_uri_and_server(), l:want)
+    End
+
+
+    It should correctly return the state of buffer
+        call lsp#internal#diagnostics#state#_disable()
+        call lsp#internal#diagnostics#state#_enable()
+
+        let l:bufnr = bufnr('%')
+        Assert True(lsp#internal#diagnostics#state#_is_enabled_for_buffer(l:bufnr))
+
+        call lsp#internal#diagnostics#state#_disable_for_buffer(l:bufnr)
+        Assert False(lsp#internal#diagnostics#state#_is_enabled_for_buffer(l:bufnr))
+
+        call lsp#internal#diagnostics#state#_enable_for_buffer(l:bufnr)
+        Assert True(lsp#internal#diagnostics#state#_is_enabled_for_buffer(l:bufnr))
     End
 End
