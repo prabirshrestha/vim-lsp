@@ -16,21 +16,11 @@
 "   }
 " Note: Do not remove when buffer unloads or doesn't exist since some server
 " may send diagnsotics information regardless of textDocument/didOpen.
-" buffer state is removed when server exists.
-" TODO: reset buffer state when server initializes.
+" buffer state is removed when server exits.
+" TODO: reset buffer state when server initializes. ignoring for now for perf.
 let s:diagnostics_state = {}
 
-" Contains dictionary of buffers that have been asked to disable.
-" We always update the s:diagnostics_state regardless of disabled buffer
-" state. Instead all diagnotics UI extensions should check for this state and
-" ignore diagnostics if it is disabled for buffer.
-" { bufnr: 1 }
-" if key exist buffer should be disabled no matter the value.
-" if key doesn't exist buffer is enabled
-let s:diagnostics_disabled_buffers = {}
-
-" internal state for whether it is enabled or not to avoid multiple
-" subscriptions
+" internal state for whether it is enabled or not to avoid multiple subscriptions
 let s:enabled = 0
 
 function! lsp#internal#diagnostics#state#_enable() abort
@@ -123,19 +113,19 @@ function! s:notify_diagnostics_update() abort
 endfunction
 
 function! lsp#internal#diagnostics#state#_enable_for_buffer(bufnr) abort
-    if has_key(s:diagnostics_disabled_buffers, a:bufnr)
-        call remove(s:diagnostics_disabled_buffers, a:bufnr)
+    if getbufvar(a:bufnr, 'lsp_diagnostics_enabled', 1) == 0
+        call setbufvar(a:bufnr, 'lsp_diagnostics_enabled', 1)
         call s:notify_diagnostics_update()
     endif
 endfunction
 
 function! lsp#internal#diagnostics#state#_disable_for_buffer(bufnr) abort
-    if !has_key(s:diagnostics_disabled_buffers, a:bufnr)
-        let s:diagnostics_disabled_buffers[a:bufnr] = 1
+    if getbufvar(a:bufnr, 'lsp_diagnostics_enabled', 1) != 0
+        call setbufvar(a:bufnr, 'lsp_diagnostics_enabled', 0)
         call s:notify_diagnostics_update()
     endif
 endfunction
 
 function! lsp#internal#diagnostics#state#_is_enabled_for_buffer(bufnr) abort
-    return !has_key(s:diagnostics_disabled_buffers, a:bufnr)
+    return getbufvar(a:bufnr, 'lsp_diagnostics_enabled', 1)
 endfunction
