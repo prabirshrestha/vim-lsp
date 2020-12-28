@@ -30,12 +30,12 @@ function! s:handle_work_done_progress(server, progress) abort
     let s:lsp_progress['server'] = a:server
     if l:value['kind'] ==# 'end'
         let s:lsp_progress['messages'] = ''
-        let s:lsp_progress['percentage'] = 100
+        let s:lsp_progress['percentage'] = 100.0
     elseif l:value['kind'] ==# 'begin'
         let s:lsp_progress['title'] = l:value['title']
     elseif l:value['kind'] ==# 'report'
         let s:lsp_progress['messages'] = get(l:value, 'message', '')
-        let s:lsp_progress['percentage'] = get(l:value, 'percentage', '')
+        let s:lsp_progress['percentage'] = get(l:value, 'percentage', -1.0)
     endif
 endfunction
 

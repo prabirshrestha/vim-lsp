@@ -1124,6 +1124,10 @@ function! lsp#get_buffer_first_error_line() abort
     return lsp#ui#vim#diagnostics#get_buffer_first_error_line()
 endfunction
 
+" Return dict with window/workDoneProgress
+" { 'server': 'clangd', 'token': 'token', 'title': 'indexing', 'messages': '50/100', 'percentage': 50 }
+" 'percentage': 0.0 - 100.0, or -1.0
+" -1.0 indicates that no 'percentage' was received
 function! lsp#get_progress() abort
     return lsp#internal#work_done_progress#get_progress()
 endfunction
