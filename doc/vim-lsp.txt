@@ -1098,6 +1098,24 @@ au User lsp_setup call lsp#callbag#pipe(
     \ )
 <
 
+Custom vim-lsp notifications streams:
+vimp-lsp events mimic lsp server notifications.
+* `server` is always `$vimlsp`.
+* `response` `method` is always prefixed with ``$/vimlsp/`
+
+
+|$/vimlsp/lsp_server_exit|
+    This is similar to |lsp_server_exit| autocommand.
+
+    Example: >
+	{
+	  "server": "$vimlsp",
+	  "response": {
+	    "method": "$/vimlsp/lsp_server_exit",
+	    "params": { "server": "$vimlsp" }
+	  }
+	}
+<
 lsp#stop_server({name-of-server})                        *lsp#stop_server()*
 
 Used to stop the server.
@@ -1228,7 +1246,17 @@ Same as |:LspCodeLens| but synchronous.
 
 LspDocumentDiagnostics                             *:LspDocumentDiagnostics*
 
-Gets the current document diagnostics.
+Gets the document diagnostics and opens in |location-list|. By default
+diagnostics are filtered for current buffer.
+
+Arguments:
+
+    --buffers	Defaults to empty string, i.e. shows diagnostics for current
+		buffer. To show diagnotics for all buffer use `--buffers=*`.
+
+    Example: >
+	:LspDocumentDiagnostics
+	:LspDocumentDiagnostics --buffers=*
 
 LspDeclaration                                             *:LspDeclaration*
 

@@ -1,0 +1,70 @@
+Describe lsp#internal#diagnostics#state
+    Before
+        %bwipeout!
+        let g:lsp_diagnostics_enabled = 1
+        call lsp#internal#diagnostics#state#_disable()
+        call lsp#internal#diagnostics#state#_enable()
+    End
+
+    After all
+        %bwipeout!
+        let g:lsp_diagnostics_enabled = 0
+        call lsp#internal#diagnostics#state#_disable()
+    End
+
+    It should be able to subscribe to textDocument/publishDiagnostics stream and update state correctly
+        let l:uri = 'file://some/uri'
+
+        let l:server1_response1 = {'method': 'textDocument/publishDiagnostics', 'params': {'uri': l:uri, 'diagnostics': [
+            \ {'severity': 1, 'message': 'm1', 'range': { 'start': { 'line': 1, 'character': 1, 'end': { 'line': 1, 'character': 1 } } }},
+            \ {'severity': 1, 'message': 'm2', 'range': { 'start': { 'line': 1, 'character': 2, 'end': { 'line': 1, 'character': 3 } } }},
+            \ ]}}
+        let l:server2_response1 = {'method': 'textDocument/publishDiagnostics', 'params': {'uri': l:uri, 'diagnostics': [
+            \ {'severity': 1, 'message': 's2', 'range': { 'start': { 'line': 2, 'character': 3, 'end': { 'line': 4, 'character': 5 } } }},
+            \ ]}}
+        let l:server1_response2 = {'method': 'textDocument/publishDiagnostics', 'params': {'uri': l:uri, 'diagnostics': [
+            \ {'severity': 1, 'message': 'm2', 'range': { 'start': { 'line': 1, 'character': 2, 'end': { 'line': 1, 'character': 3 } } }},
+            \ ]}}
+
+        Assert Equals(lsp#internal#diagnostics#state#_get_all_diagnostics_grouped_by_server_for_uri(l:uri), {})
+
+        call lsp#stream(1, { 'server': 'server1', 'response': l:server1_response1 })
+        Assert Equals(lsp#internal#diagnostics#state#_get_all_diagnostics_grouped_by_server_for_uri(l:uri), { 'server1': l:server1_response1 })
+        let l:want = {}
+        let l:want[l:uri] = { 'server1': l:server1_response1 }
+        Assert Equals(lsp#internal#diagnostics#state#_get_all_diagnostics_grouped_by_uri_and_server(), l:want)
+
+        call lsp#stream(1, { 'server': 'server2', 'response': l:server2_response1 })
+        Assert Equals(lsp#internal#diagnostics#state#_get_all_diagnostics_grouped_by_server_for_uri(l:uri), { 'server1': l:server1_response1, 'server2': l:server2_response1 })
+        let l:want = {}
+        let l:want[l:uri] = { 'server1': l:server1_response1, 'server2': l:server2_response1 }
+        Assert Equals(lsp#internal#diagnostics#state#_get_all_diagnostics_grouped_by_uri_and_server(), l:want)
+
+        call lsp#stream(1, { 'server': 'server1', 'response': l:server1_response2 })
+        Assert Equals(lsp#internal#diagnostics#state#_get_all_diagnostics_grouped_by_server_for_uri(l:uri), { 'server1': l:server1_response2, 'server2': l:server2_response1 })
+        let l:want = {}
+        let l:want[l:uri] = { 'server1': l:server1_response2, 'server2': l:server2_response1 }
+        Assert Equals(lsp#internal#diagnostics#state#_get_all_diagnostics_grouped_by_uri_and_server(), l:want)
+
+        call lsp#stream(1, { 'server': '$vimlsp',
+            \ 'response': { 'method': '$/vimlsp/lsp_server_exit', 'params': { 'server': 'server1' } } })
+        let l:want = {}
+        let l:want[l:uri] = { 'server2': l:server2_response1 }
+        Assert Equals(lsp#internal#diagnostics#state#_get_all_diagnostics_grouped_by_uri_and_server(), l:want)
+    End
+
+
+    It should correctly return the state of buffer
+        call lsp#internal#diagnostics#state#_disable()
+        call lsp#internal#diagnostics#state#_enable()
+
+        let l:bufnr = bufnr('%')
+        Assert True(lsp#internal#diagnostics#state#_is_enabled_for_buffer(l:bufnr))
+
+        call lsp#internal#diagnostics#state#_disable_for_buffer(l:bufnr)
+        Assert False(lsp#internal#diagnostics#state#_is_enabled_for_buffer(l:bufnr))
+
+        call lsp#internal#diagnostics#state#_enable_for_buffer(l:bufnr)
+        Assert True(lsp#internal#diagnostics#state#_is_enabled_for_buffer(l:bufnr))
+    End
+End

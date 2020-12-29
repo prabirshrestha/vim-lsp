@@ -763,6 +763,8 @@ function! s:on_exit(server_name, id, data, event) abort
         if has_key(l:server, 'init_result')
             unlet l:server['init_result']
         endif
+        call lsp#stream(1, { 'server': '$vimlsp',
+            \ 'response': { 'method': '$/vimlsp/lsp_server_exit', 'params': { 'server': a:server_name } } })
         doautocmd <nomodeline> User lsp_server_exit
     endif
 endfunction
