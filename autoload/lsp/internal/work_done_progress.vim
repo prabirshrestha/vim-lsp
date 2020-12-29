@@ -35,7 +35,8 @@ function! s:handle_work_done_progress(server, progress) abort
         let s:progress_ui = filter(s:progress_ui, {_, x->x['token'] !=# l:token})
     elseif l:value['kind'] ==# 'begin'
         let l:new['title'] = l:value['title']
-        let s:progress_ui = filter(s:progress_ui, {_, x->x['token'] !=# l:token})->insert(l:new)
+        call filter(s:progress_ui, {_, x->x['token'] !=# l:token})
+        call insert(s:progress_ui, l:new)
     elseif l:value['kind'] ==# 'report'
         let l:new['messages'] = get(l:value, 'message', '')
         if has_key(l:value, 'percentage')
@@ -46,7 +47,8 @@ function! s:handle_work_done_progress(server, progress) abort
         endif
         let l:idx = match(s:progress_ui, l:token)
         let l:new['title'] = s:progress_ui[l:idx]['title']
-        let s:progress_ui = filter(s:progress_ui, {_, x->x['token'] !=# l:token})->insert(l:new)
+        call filter(s:progress_ui, {_, x->x['token'] !=# l:token})
+        call insert(s:progress_ui, l:new)
     endif
 endfunction
 
