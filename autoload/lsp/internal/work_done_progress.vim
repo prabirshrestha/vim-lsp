@@ -18,10 +18,10 @@ function! lsp#internal#work_done_progress#_enable() abort
           \ )
 endfunction
 
-function! s:handle_work_done_progress(server, progress) abort
-    let l:value = a:progress['params']['value']
+function! s:handle_work_done_progress(server, response) abort
+    let l:value = a:response['params']['value']
     " Add the server name to distinguish the server
-    let l:token = a:server . ':' . a:progress['params']['token']
+    let l:token = a:server . ':' . a:response['params']['token']
     let l:new = {
       \ 'server': a:server,
       \ 'token': l:token,
