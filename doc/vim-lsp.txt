@@ -66,6 +66,7 @@ CONTENTS                                                  *vim-lsp-contents*
                               |lsp#utils#find_nearest_parent_file_directory()|
       lsp#get_buffer_diagnostics_counts() |lsp#get_buffer_diagnostics_counts()|
       lsp#get_buffer_first_error_line()   |lsp#get_buffer_first_error_line()|
+      lsp#get_progress()                  |lsp#get_progress()|
     Commands                              |vim-lsp-commands|
       LspCodeAction                         |:LspCodeAction|
       LspCodeActionSync                     |:LspCodeActionSync|
@@ -1179,6 +1180,23 @@ lsp#get_buffer_first_error_line()        *lsp#get_buffer_first_error_line()*
 Get line number of first error in current buffer.
 
     Returns |Number| or |v:null| if there are no errors.
+
+lsp#get_progress()                       *lsp#get_progress()*
+
+    Return UI |List| of |Dict| with window/workDoneProgress
+    The |List| is most recently update order.
+    The |Dict| has keys as follows.
+    * server
+	Type: |String|
+    * token
+	Type: |String|
+    * title
+	Type: |String|
+    * messages
+	Type: |String|
+    * percentage
+	Type: |Number|
+	0 - 100 or not exist
 
 ==============================================================================
 Commands                                                  *vim-lsp-commands*
