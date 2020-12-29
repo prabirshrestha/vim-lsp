@@ -1126,10 +1126,9 @@ endfunction
 
 " Return UI list with window/workDoneProgress
 " The list is most recently update order.
-" [{ 'server': 'clangd', 'token': 'backgroundIndexProgress', 'title': 'indexing', 'messages': '50/100', 'percentage': 50.0 },
-"  { 'server': 'rust-analyzer', 'token': 'rustAnalyzer/indexing', 'title': 'indexing', 'messages': '9/262 (std)', 'percentage': 3.4 }]
-" 'percentage': 0.0 - 100.0, or -1.0
-" -1.0 indicates that no 'percentage' was received
+" [{ 'server': 'clangd', 'token': 'backgroundIndexProgress', 'title': 'indexing', 'messages': '50/100', 'percentage': 50 },
+"  { 'server': 'rust-analyzer', 'token': 'rustAnalyzer/indexing', 'title': 'indexing', 'messages': '9/262 (std)', 'percentage': 3 }]
+" 'percentage': 0 - 100 or not exist
 function! lsp#get_progress() abort
     return lsp#internal#work_done_progress#get_progress()
 endfunction

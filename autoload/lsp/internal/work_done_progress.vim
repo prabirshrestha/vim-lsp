@@ -27,19 +27,23 @@ function! s:handle_work_done_progress(server, progress) abort
       \ 'token': l:token,
       \ 'title': '',
       \ 'messages': '',
-      \ 'percentage': -1,
       \ }
 
     if l:value['kind'] ==# 'end'
         let l:new['messages'] = ''
-        let l:new['percentage'] = 100.0
+        let l:new['percentage'] = 100
         let s:progress_ui = filter(s:progress_ui, {_, x->x['token'] !=# l:token})
     elseif l:value['kind'] ==# 'begin'
         let l:new['title'] = l:value['title']
         let s:progress_ui = filter(s:progress_ui, {_, x->x['token'] !=# l:token})->insert(l:new)
     elseif l:value['kind'] ==# 'report'
         let l:new['messages'] = get(l:value, 'message', '')
-        let l:new['percentage'] = get(l:value, 'percentage', -1.0)
+        if has_key(l:value, 'percentage')
+            " l:value['percentage'] is uinteger in specification.
+            " But some implementation return float. (e.g. clangd11)
+            " So we round it.
+            let l:new['percentage'] = float2nr(l:value['percentage'] + 0.5)
+        endif
         let l:idx = match(s:progress_ui, l:token)
         let l:new['title'] = s:progress_ui[l:idx]['title']
         let s:progress_ui = filter(s:progress_ui, {_, x->x['token'] !=# l:token})->insert(l:new)
