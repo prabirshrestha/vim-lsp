@@ -18,7 +18,7 @@ jobs:
         include:
           - name: neovim-v04-x64
             os: ubuntu-latest
-            neovim_version: v0.4.3
+            neovim_version: v0.4.4
           - name: neovim-nightly-x64
             os: ubuntu-latest
             neovim_version: nightly
