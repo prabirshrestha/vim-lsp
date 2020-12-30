@@ -1,3 +1,4 @@
+" internal state for whether it is enabled or not to avoid multiple subscriptions
 let s:enabled = 0
 let s:namespace_id = '' " will be set when enabled
 let s:severity_sign_names_mapping = {
@@ -75,6 +76,7 @@ function! lsp#internal#diagnostics#virtual_text#_enable() abort
 endfunction
 
 function! lsp#internal#diagnostics#virtual_text#_disable() abort
+    if !s:enabled | return | endif
     if exists('s:Dispose')
         call s:Dispose()
         unlet s:Dispose
