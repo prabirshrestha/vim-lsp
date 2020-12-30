@@ -188,18 +188,20 @@ You can disable it by adding
 let g:lsp_virtual_text_enabled = 0
 ```
 
-To your configuration.
+to your configuration.
 
 Virtual text will use the same highlight groups as signs feature.
 
 ### Highlight references
 
-Highlight references to the symbol under the cursor. To enable, set in your
-configuration:
+Highlight references to the symbol under the cursor (enabled by default).
+You can disable it by adding
 
 ```viml
-let g:lsp_highlight_references_enabled = 1
+let g:lsp_document_highlight_enabled = 0
 ```
+
+to your configuration.
 
 To change the style of the highlighting, you can set or link the `lspReference`
 highlight group, e.g.:
