@@ -94,6 +94,7 @@ function! s:on_text_documentation_publish_diagnostics(server, response) abort
         let s:diagnostics_state[l:normalized_uri] = {}
     endif
     let s:diagnostics_state[l:normalized_uri][a:server] = a:response
+    call s:notify_diagnostics_update(a:server, l:normalized_uri)
 endfunction
 
 function! s:on_exit(response) abort
@@ -105,11 +106,19 @@ function! s:on_exit(response) abort
             call remove(l:value, l:server)
         endif
     endfor
-    if l:notify | call s:notify_diagnostics_update() | endif
+    if l:notify | call s:notify_diagnostics_update(l:server) | endif
 endfunction
 
-function! s:notify_diagnostics_update() abort
-    " TODO: Notify diagnostics update when all diagnostics move to relying on state
+" call s:notify_diagnostics_update()
+" call s:notify_diagnostics_update('server')
+" call s:notify_diagnostics_update('server', 'uri')
+function! s:notify_diagnostics_update(...) abort
+    let l:data = { 'server': '$vimlsp', 'response': { 'method': '$/vimlsp/lsp_diagnostics_enabled', 'params': {} } }
+    if a:0 > 0 | let l:data['response']['params']['server'] = a:1 | endif
+    if a:0 > 1 | let l:data['response']['params']['uri'] = a:2 | endif
+    call lsp#stream(1, l:data)
+    " TODO: uncomment doautocmd when all diagnostics moves to using callbag
+    " doautocmd <nomodeline> User lsp_diagnostics_updated
 endfunction
 
 function! lsp#internal#diagnostics#state#_enable_for_buffer(bufnr) abort

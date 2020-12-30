@@ -24,7 +24,8 @@ function! lsp#ui#vim#diagnostics#force_refresh(bufnr) abort
     let l:data = lsp#ui#vim#diagnostics#get_document_diagnostics(a:bufnr)
     if !empty(l:data)
         for [l:server_name, l:response] in items(l:data)
-            call lsp#ui#vim#virtual#set(l:server_name, l:response)
+            " TODO: notify diagnostics update
+            " call lsp#ui#vim#virtual#set(l:server_name, l:response)
             call lsp#ui#vim#highlights#set(l:server_name, l:response)
             call lsp#ui#vim#diagnostics#textprop#set(l:server_name, l:response)
             call lsp#ui#vim#signs#set(l:server_name, l:response)
