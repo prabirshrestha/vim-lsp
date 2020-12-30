@@ -77,7 +77,8 @@ function! lsp#internal#diagnostics#state#_get_all_diagnostics_grouped_by_server_
     return get(s:diagnostics_state, lsp#utils#normalize_uri(a:uri), {})
 endfunction
 
-" callers should always treat the return value as immutable
+" callers should always treat the return value as immutable.
+" callers should treat uri as normalized via lsp#utils#normalize_uri
 " @return {
 "   'normalized_uri': {
 "       'servername': response
@@ -119,8 +120,8 @@ endfunction
 " call s:notify_diagnostics_update('server', 'uri')
 function! s:notify_diagnostics_update(...) abort
     let l:data = { 'server': '$vimlsp', 'response': { 'method': '$/vimlsp/lsp_diagnostics_updated', 'params': {} } }
-    if a:0 > 0 | let l:data['response']['params']['server'] = a:1 | endif
-    if a:0 > 1 | let l:data['response']['params']['uri'] = a:2 | endif
+    " if a:0 > 0 | let l:data['response']['params']['server'] = a:1 | endif
+    " if a:0 > 1 | let l:data['response']['params']['uri'] = a:2 | endif
     call lsp#stream(1, l:data)
     " TODO: uncomment doautocmd when all diagnostics moves to using callbag
     " doautocmd <nomodeline> User lsp_diagnostics_updated
