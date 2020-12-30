@@ -159,13 +159,6 @@ let g:lsp_signs_warning = {'text': '‼', 'icon': '/path/to/some/icon'} " icons 
 let g:lsp_signs_hint = {'icon': '/path/to/some/other/icon'} " icons require GUI
 ```
 
-Also three highlight groups for every sign group are defined (for example for LspError these are LspErrorText, LspErrorVirtual, and LspErrorHighlight). By default, LspError text is highlighted using Error group, LspWarning is highlighted as Todo, others use Normal group. Virtual text will by default use the Text highlight group, for example for LspErrorVirtual will default to LspErrorText. Line highlighting is not set by default. If your colorscheme of choice does not provide any of these, it is possible to clear them or link to some other group, like so:
-
-```viml
-highlight link LspErrorText GruvboxRedSign " requires gruvbox
-highlight clear LspWarningLine
-```
-
 #### Highlights
 
 Highlighting diagnostics requires either NeoVim 0.3+ or Vim with patch 8.1.0579.
@@ -178,19 +171,6 @@ let g:lsp_textprop_enabled = 0
 
 Can be customized by setting or linking `LspErrorHighlight`, `LspWarningHighlight`,
 `LspInformationHighlight` and `LspHintHighlight` highlight groups.
-
-#### Virtual text
-
-In NeoVim 0.3 or newer you can use virtual text feature (enabled by default).
-You can disable it by adding
-
-```viml
-let g:lsp_virtual_text_enabled = 0
-```
-
-to your configuration.
-
-Virtual text will use the same highlight groups as signs feature.
 
 ### Highlight references
 

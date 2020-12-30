@@ -43,10 +43,33 @@ endfunction
 "   col
 " ]
 function! lsp#utils#position#lsp_to_vim(expr, position) abort
-    let l:line = a:position['line'] + 1
-    let l:char = a:position['character']
-    let l:col = s:to_col(a:expr, l:line, l:char)
+    let l:line = lsp#utils#position#lsp_line_to_vim(a:expr, a:position)
+    let l:col = lsp#utils#position#lsp_character_to_vim(a:expr, a:position)
     return [l:line, l:col]
+endfunction
+
+" @param expr = see :help bufname()
+" @param position = {
+"   'line': 1,
+"   'character': 1
+" }
+" @returns
+"   line
+function! lsp#utils#position#lsp_line_to_vim(expr, position) abort
+    return a:position['line'] + 1
+endfunction
+
+" @param expr = see :help bufname()
+" @param position = {
+"   'line': 1,
+"   'character': 1
+" }
+" @returns
+"   line
+function! lsp#utils#position#lsp_character_to_vim(expr, position) abort
+    let l:line = a:position['line'] + 1 " optimize function overhead by not calling lsp_line_to_vim
+    let l:char = a:position['character']
+    return s:to_col(a:expr, l:line, l:char)
 endfunction
 
 " @param expr = :help bufname()

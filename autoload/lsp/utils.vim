@@ -1,3 +1,8 @@
+let s:has_virtual_text = exists('*nvim_buf_set_virtual_text') && exists('*nvim_create_namespace')
+function! lsp#utils#_has_virtual_text() abort
+    return s:has_virtual_text
+endfunction
+
 function! lsp#utils#is_file_uri(uri) abort
     return stridx(a:uri, 'file:///') == 0
 endfunction

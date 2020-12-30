@@ -29,11 +29,18 @@ CONTENTS                                                  *vim-lsp-contents*
       g:lsp_diagnostics_echo_delay          |g:lsp_diagnostics_echo_delay|
       g:lsp_diagnostics_float_cursor        |g:lsp_diagnostics_float_cursor|
       g:lsp_diagnostics_float_delay         |g:lsp_diagnostics_float_delay|
+      g:lsp_diagnostics_virtual_text_enabled
+			     |g:lsp_diagnostics_virtual_text_enabled|
+      g:lsp_diagnostics_virtual_text_insert_mode_enabled
+			     |g:lsp_diagnostics_virtual_text_insert_mode_enabled|
+      g:lsp_diagnostics_virtual_text_delay
+			     |g:lsp_diagnostics_virtual_text_delay|
+      g:lsp_diagnostics_virtual_text_prefix
+			     |g:lsp_diagnostics_virtual_text_prefix|
       g:lsp_format_sync_timeout             |g:lsp_format_sync_timeout|
       g:lsp_signs_enabled                   |g:lsp_signs_enabled|
       g:lsp_signs_priority                  |g:lsp_signs_priority|
       g:lsp_signs_priority_map              |g:lsp_signs_priority_map|
-      g:lsp_virtual_text_enabled            |g:lsp_virtual_text_enabled|
       g:lsp_highlights_enabled              |g:lsp_highlights_enabled|
       g:lsp_textprop_enabled                |g:lsp_textprop_enabled|
       g:lsp_use_event_queue                 |g:lsp_use_event_queue|
@@ -528,34 +535,56 @@ g:lsp_signs_priority_map                          *g:lsp_signs_priority_map*
                 \'clangd_LspInformation': 11
                 \}
 
-g:lsp_virtual_text_enabled                      *g:lsp_virtual_text_enabled*
+g:lsp_diagnostics_virtual_text_enabled
+					*g:lsp_diagnostics_virtual_text_enabled*
     Type: |Number|
     Default: `1` for neovim 0.3+
 
     Enables virtual text to be shown next to diagnostic errors. Requires
-    NeoVim with version 0.3 or newer.  Virtual text uses the same highlight
-    groups used for signs (eg LspErrorText), but can be uniquely defined if
-    you want to have different highlight groups for signs and virtual text.
-    To set unique virtual text highlighting, you can set or link
-    `LspErrorVirtual`, `LspWarningVirtual`, `LspInformationVirtual` and
-    `LspHintVirtual` highlight groups.
+    NeoVim with version 0.3 or newer and |g:lsp_diagnostics_enabled| set to `1`.
+    Virtual text uses the same highlight groups used for signs (eg LspErrorText),
+    but can be uniquely defined if you want to have different highlight groups
+    for signs and virtual text. To set unique virtual text highlighting, you
+    can set or link `LspErrorVirtualText`, `LspWarningVirtualText`,
+    `LspInformationVirtualText` and `LspHintVirtualText` highlight groups.
 
     Example: >
-	let g:lsp_virtual_text_enabled = 1
-	let g:lsp_virtual_text_enabled = 0
+	let g:lsp_diagnostics_virtual_text_enabled = 1
+	let g:lsp_diagnostics_virtual_text_enabled = 0
 
+g:lsp_diagnostics_virtual_text_insert_mode_enabled
+			*g:lsp_diagnostics_virtual_text_insert_mode_enabled*
+    Type: |Number|
+    Default: `0`
 
-g:lsp_virtual_text_prefix                        *g:lsp_virtual_text_prefix*
+    Indicates whether to enable diagnostics virtual text when in |insertmode|.
+    Requires |g:lsp_diagnostics_virtual_text_enabled|.
+
+    Example: >
+	let g:lsp_diagnostics_virtual_text_insert_mode_enabled = 1
+	let g:lsp_diagnostics_virtual_text_insert_mode_enabled = 0
+
+g:lsp_diagnostics_virtual_text_delay   *g:lsp_diagnostics_virtual_text_delay*
+    Type: |Number|
+    Default: `500`
+
+    Delay milliseconds to update diagnostics virtual text. Requires
+    |g:lsp_diagnostics_virtual_text_enabled|.
+
+    Example: >
+	let g:lsp_diagnostics_virtual_text_delay = 200
+	let g:lsp_diagnostics_virtual_text_delay = 1000
+
+g:lsp_diagnostics_virtual_text_prefix   *g:lsp_diagnostics_virtual_text_prefix*
     Type: |String|
-    Default: `""` for neovim 0.3+
+    Default: `""`
 
     Adds the prefix to the diagnostics to be shown as virtual text. Requires
-    NeoVim with version 0.3 or newer.
+    |g:lsp_diagnostics_virtual_text_enabled|.
 
     Example: >
-	let g:lsp_virtual_text_prefix = "> "
-	let g:lsp_virtual_text_prefix = " ‣ "
-
+	let g:lsp_diagnostics_virtual_text_prefix = "> "
+	let g:lsp_diagnostics_virtual_text_prefix = " ‣ "
 
 g:lsp_highlights_enabled                         *g:lsp_highlights_enabled*
     Type: |Number|
