@@ -85,7 +85,9 @@ endfunction
 
 function! s:clear_all_virtual_text() abort
     for l:bufnr in nvim_list_bufs()
-        call nvim_buf_clear_namespace(l:bufnr, s:namespace_id, 0, -1)
+        if bufexists(l:bufnr) && bufloaded(l:bufnr)
+            call nvim_buf_clear_namespace(l:bufnr, s:namespace_id, 0, -1)
+        endif
     endfor
 endfunction
 
@@ -110,7 +112,7 @@ function! s:set_virtual_text(params) abort
 
     for l:bufnr in nvim_list_bufs()
         let l:uri = lsp#utils#get_buffer_uri(l:bufnr)
-        if lsp#internal#diagnostics#state#_is_enabled_for_buffer(l:uri)
+        if lsp#internal#diagnostics#state#_is_enabled_for_buffer(l:uri) && bufexists(l:bufnr) && bufloaded(l:bufnr)
             for [l:server, l:diagnostics_response] in items(lsp#internal#diagnostics#state#_get_all_diagnostics_grouped_by_server_for_uri(l:uri))
                 call s:place_virtual_text(l:server, l:diagnostics_response, l:bufnr)
             endfor
