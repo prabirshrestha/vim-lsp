@@ -12,7 +12,6 @@ function! lsp#ui#vim#diagnostics#handle_text_document_publish_diagnostics(server
     endif
     let s:diagnostics[l:uri][a:server_name] = a:data
 
-    call lsp#ui#vim#virtual#set(a:server_name, a:data)
     call lsp#ui#vim#highlights#set(a:server_name, a:data)
     call lsp#ui#vim#diagnostics#textprop#set(a:server_name, a:data)
     call lsp#ui#vim#signs#set(a:server_name, a:data)
@@ -24,8 +23,6 @@ function! lsp#ui#vim#diagnostics#force_refresh(bufnr) abort
     let l:data = lsp#ui#vim#diagnostics#get_document_diagnostics(a:bufnr)
     if !empty(l:data)
         for [l:server_name, l:response] in items(l:data)
-            " TODO: notify diagnostics update
-            " call lsp#ui#vim#virtual#set(l:server_name, l:response)
             call lsp#ui#vim#highlights#set(l:server_name, l:response)
             call lsp#ui#vim#diagnostics#textprop#set(l:server_name, l:response)
             call lsp#ui#vim#signs#set(l:server_name, l:response)
