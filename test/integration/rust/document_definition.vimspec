@@ -21,7 +21,7 @@ Describe integration#rust#document_definition
         call cursor(4, 6) " goto func1() in line 4
 
         let l:curpos = getcurpos()
-        let l:bufnr = bufnr('%')
+        let l:bufnr = bufnr(lsp#utils#get_buffer_path())
         call execute('LspDefinition')
 
         call lsp#test#wait({->l:curpos != getcurpos()}) " verify curpos changed
