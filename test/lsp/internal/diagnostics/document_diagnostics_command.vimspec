@@ -1,3 +1,13 @@
+function! s:sort_item_by_text(lhs, rhs) abort
+  if a:lhs['text'] <# a:rhs['text']
+    return -1
+  endif
+  if a:lhs['text'] ># a:rhs['text']
+    return 1
+  endif
+  return 0
+endfunction
+
 Describe lsp#internal#diagnostics#document_diagnostics_command
     Before
         %bwipeout!
@@ -44,7 +54,7 @@ Describe lsp#internal#diagnostics#document_diagnostics_command
         let l:result = getloclist(0)
 
         " NOTE Older version of Vim does not sort results, and does not include module.
-        call sort(l:result, {a, b -> a['text'] > b['text']})
+        call sort(l:result, function('s:sort_item_by_text'))
         call map(l:result, {_, v -> extend(v, {'module': ''})})
 
         " +2 for bufnr because original bufnr + loclist + new unopened file
