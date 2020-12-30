@@ -109,11 +109,16 @@ function! s:on_exit(response) abort
     if l:notify | call s:notify_diagnostics_update(l:server) | endif
 endfunction
 
+function! lsp#internal#diagnostics#state#_force_notify_buffer(buffer) abort
+    " TODO: optimize buffer only
+    call s:notify_diagnostics_update()
+endfunction
+
 " call s:notify_diagnostics_update()
 " call s:notify_diagnostics_update('server')
 " call s:notify_diagnostics_update('server', 'uri')
 function! s:notify_diagnostics_update(...) abort
-    let l:data = { 'server': '$vimlsp', 'response': { 'method': '$/vimlsp/lsp_diagnostics_enabled', 'params': {} } }
+    let l:data = { 'server': '$vimlsp', 'response': { 'method': '$/vimlsp/lsp_diagnostics_updated', 'params': {} } }
     if a:0 > 0 | let l:data['response']['params']['server'] = a:1 | endif
     if a:0 > 1 | let l:data['response']['params']['uri'] = a:2 | endif
     call lsp#stream(1, l:data)

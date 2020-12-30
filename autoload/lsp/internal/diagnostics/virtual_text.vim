@@ -56,7 +56,7 @@ function! lsp#internal#diagnostics#virtual_text#_enable() abort
         \   lsp#callbag#pipe(
         \       lsp#stream(),
         \       lsp#callbag#filter({x->has_key(x, 'server') && has_key(x, 'response')
-        \       && has_key(x['response'], 'method') && x['response']['method'] ==# '$/vimlsp/lsp_diagnostics_enabled'
+        \       && has_key(x['response'], 'method') && x['response']['method'] ==# '$/vimlsp/lsp_diagnostics_updated'
         \       && !lsp#client#is_error(x['response'])}),
         \       lsp#callbag#map({x->x['response']['params']}),
         \   ),
@@ -98,6 +98,10 @@ function! s:clear_virtual_text(params) abort
     call s:clear_all_virtual_text()
 endfunction
 
+" params => {
+"   server: ''  " optional
+"   uri: ''     " optional
+" }
 function! s:set_virtual_text(params) abort
     " TODO: optimize by looking at params
     if !g:lsp_diagnostics_virtual_text_insert_mode_enabled
