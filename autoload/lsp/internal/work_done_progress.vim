@@ -21,8 +21,7 @@ endfunction
 
 function! s:handle_work_done_progress(server, response) abort
     let l:value = a:response['params']['value']
-    " Add the server name to distinguish the server
-    let l:token = a:server . ':' . a:response['params']['token']
+    let l:token = a:response['params']['token']
     let l:new = {
       \ 'server': a:server,
       \ 'token': l:token,
@@ -33,10 +32,10 @@ function! s:handle_work_done_progress(server, response) abort
     if l:value['kind'] ==# 'end'
         let l:new['messages'] = ''
         let l:new['percentage'] = 100
-        let s:progress_ui = filter(s:progress_ui, {_, x->x['token'] !=# l:token})
+        call filter(s:progress_ui, {_, x->x['token'] !=# l:token || x['server'] !=# a:server})
     elseif l:value['kind'] ==# 'begin'
         let l:new['title'] = l:value['title']
-        call filter(s:progress_ui, {_, x->x['token'] !=# l:token})
+        call filter(s:progress_ui, {_, x->x['token'] !=# l:token || x['server'] !=# a:server})
         call insert(s:progress_ui, l:new)
     elseif l:value['kind'] ==# 'report'
         let l:new['messages'] = get(l:value, 'message', '')
@@ -48,7 +47,7 @@ function! s:handle_work_done_progress(server, response) abort
         endif
         let l:idx = match(s:progress_ui, l:token)
         let l:new['title'] = s:progress_ui[l:idx]['title']
-        call filter(s:progress_ui, {_, x->x['token'] !=# l:token})
+        call filter(s:progress_ui, {_, x->x['token'] !=# l:token || x['server'] !=# a:server})
         call insert(s:progress_ui, l:new)
     endif
     doautocmd <nomodeline> User lsp_progress_updated
