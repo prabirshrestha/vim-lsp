@@ -18,11 +18,11 @@ Describe lsp#internal#work_done_progress
 
         call lsp#stream(1, { 'server': 'server1', 'response': l:server1_response1 })
         Assert Equals(lsp#internal#work_done_progress#get_progress(),
-            \ [{'messages': '', 'token': 'server1:token text', 'title': 'title', 'server': 'server1'}])
+            \ [{'message': '', 'token': 'token text', 'title': 'title', 'server': 'server1'}])
 
         call lsp#stream(1, { 'server': 'server1', 'response': l:server1_response2 })
         Assert Equals(lsp#internal#work_done_progress#get_progress(),
-            \ [{'messages': 'test message', 'token': 'server1:token text', 'percentage': 50, 'title': 'title', 'server': 'server1'}])
+            \ [{'message': 'test message', 'token': 'token text', 'percentage': 50, 'title': 'title', 'server': 'server1'}])
 
         call lsp#stream(1, { 'server': 'server1', 'response': l:server1_response3 })
         Assert Equals(lsp#internal#work_done_progress#get_progress(), [])
@@ -41,31 +41,31 @@ Describe lsp#internal#work_done_progress
 
         call lsp#stream(1, { 'server': 'server1', 'response': l:server1_response1 })
         Assert Equals(lsp#internal#work_done_progress#get_progress(),
-            \ [{'messages': '', 'token': 'server1:token text', 'title': 'title1', 'server': 'server1'}])
+            \ [{'message': '', 'token': 'token text', 'title': 'title1', 'server': 'server1'}])
 
         call lsp#stream(1, { 'server': 'server2', 'response': l:server2_response1 })
         Assert Equals(lsp#internal#work_done_progress#get_progress(),
-            \ [{'messages': '', 'token': 'server2:server2_token', 'title': 'title2', 'server': 'server2'},
-            \  {'messages': '', 'token': 'server1:token text', 'title': 'title1', 'server': 'server1'}])
+            \ [{'message': '', 'token': 'server2_token', 'title': 'title2', 'server': 'server2'},
+            \  {'message': '', 'token': 'token text', 'title': 'title1', 'server': 'server1'}])
 
         call lsp#stream(1, { 'server': 'server2', 'response': l:server2_response2 })
         Assert Equals(lsp#internal#work_done_progress#get_progress(),
-            \ [{'messages': 'msg2', 'token': 'server2:server2_token', 'percentage':0, 'title': 'title2', 'server': 'server2'},
-            \  {'messages': '', 'token': 'server1:token text', 'title': 'title1', 'server': 'server1'}])
+            \ [{'message': 'msg2', 'token': 'server2_token', 'percentage':0, 'title': 'title2', 'server': 'server2'},
+            \  {'message': '', 'token': 'token text', 'title': 'title1', 'server': 'server1'}])
 
         call lsp#stream(1, { 'server': 'server1', 'response': l:server1_response2 })
         Assert Equals(lsp#internal#work_done_progress#get_progress(),
-            \ [{'messages': 'msg1', 'token': 'server1:token text', 'percentage':50, 'title': 'title1', 'server': 'server1'},
-            \  {'messages': 'msg2', 'token': 'server2:server2_token', 'percentage':0, 'title': 'title2', 'server': 'server2'}])
+            \ [{'message': 'msg1', 'token': 'token text', 'percentage':50, 'title': 'title1', 'server': 'server1'},
+            \  {'message': 'msg2', 'token': 'server2_token', 'percentage':0, 'title': 'title2', 'server': 'server2'}])
 
         call lsp#stream(1, { 'server': 'server1', 'response': l:server1_response3 })
         Assert Equals(lsp#internal#work_done_progress#get_progress(),
-            \ [{'messages': 'msg1', 'token': 'server1:token text', 'percentage':90, 'title': 'title1', 'server': 'server1'},
-            \  {'messages': 'msg2', 'token': 'server2:server2_token', 'percentage':0, 'title': 'title2', 'server': 'server2'}])
+            \ [{'message': 'msg1', 'token': 'token text', 'percentage':90, 'title': 'title1', 'server': 'server1'},
+            \  {'message': 'msg2', 'token': 'server2_token', 'percentage':0, 'title': 'title2', 'server': 'server2'}])
 
         call lsp#stream(1, { 'server': 'server1', 'response': l:server1_response4 })
         Assert Equals(lsp#internal#work_done_progress#get_progress(),
-            \ [{'messages': 'msg2', 'token': 'server2:server2_token', 'percentage':0, 'title': 'title2', 'server': 'server2'}])
+            \ [{'message': 'msg2', 'token': 'server2_token', 'percentage':0, 'title': 'title2', 'server': 'server2'}])
 
         call lsp#stream(1, { 'server': 'server2', 'response': l:server2_response3 })
         Assert Equals(lsp#internal#work_done_progress#get_progress(), [])
@@ -80,11 +80,11 @@ Describe lsp#internal#work_done_progress
 
         call lsp#stream(1, { 'server': 'server1', 'response': l:server1_response1 })
         Assert Equals(lsp#internal#work_done_progress#get_progress(),
-            \ [{'messages': '', 'token': 'server1:token text', 'title': 'title', 'server': 'server1'}])
+            \ [{'message': '', 'token': 'token text', 'title': 'title', 'server': 'server1'}])
 
         call lsp#stream(1, { 'server': 'server1', 'response': l:server1_response2 })
         Assert Equals(lsp#internal#work_done_progress#get_progress(),
-            \ [{'messages': '', 'token': 'server1:token text', 'title': 'title', 'server': 'server1'}])
+            \ [{'message': '', 'token': 'token text', 'title': 'title', 'server': 'server1'}])
 
         call lsp#stream(1, { 'server': 'server1', 'response': l:server1_response3 })
         Assert Equals(lsp#internal#work_done_progress#get_progress(), [])
