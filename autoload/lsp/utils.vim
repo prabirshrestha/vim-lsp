@@ -8,6 +8,21 @@ function! lsp#utils#_has_signs() abort
     return s:has_signs
 endfunction
 
+let s:has_nvim_buf_highlight = exists('*nvim_buf_add_highlight')
+function! lsp#utils#_has_nvim_buf_highlight() abort
+    return s:has_nvim_buf_highlight
+endfunction
+
+let s:has_textprops = exists('*prop_add')
+function! lsp#utils#_has_textprops() abort
+    return s:has_textprops
+endfunction
+
+let s:has_higlights = has('nvim') ? lsp#utils#_has_nvim_buf_highlight() : lsp#utils#_has_textprops()
+function! lsp#utils#_has_highlights() abort
+    return s:has_higlights
+endfunction
+
 function! lsp#utils#is_file_uri(uri) abort
     return stridx(a:uri, 'file:///') == 0
 endfunction
