@@ -115,6 +115,7 @@ CONTENTS                                                  *vim-lsp-contents*
       lsp_server_exit                       |lsp_server_exit|
       lsp_buffer_enabled                    |lsp_buffer_enabled|
       lsp_diagnostics_updated               |lsp_diagnostics_updated|
+      lsp_progress_updated                  |lsp_progress_updated|
     Mappings                              |vim-lsp-mappings|
        <plug>(lsp-preview-close)            |<plug>(lsp-preview-close)|
        <plug>(lsp-preview-focus)            |<plug>(lsp-preview-focus)|
@@ -1500,6 +1501,10 @@ processed by vim-lsp.
     autocmd User lsp_diagnostics_updated call DoSomething()
   augroup END
 <
+lsp_progress_updated                                  *lsp_progress_updated*
+
+This autocommand is run after every time after progress updated and
+processed by vim-lsp. Used for statusline plugins.
 
 ==============================================================================
 Mappings                                                  *vim-lsp-mappings*
@@ -1662,7 +1667,7 @@ You can check if semantic highlighting is enabled by running: >
     echo lsp#ui#vim#semantic#is_enabled()
 <
 Before you can use the semantic highlighting feature, you will also need to
-link language server semantic scopes to Vim highlight groups. For example, you
+link language server semantic scopes to Vim highlight groups. For example, yo
 have to specify that function calls need to be highlighted using the
 |Identifier| Vim group.
 

@@ -51,6 +51,7 @@ function! s:handle_work_done_progress(server, response) abort
         call filter(s:progress_ui, {_, x->x['token'] !=# l:token})
         call insert(s:progress_ui, l:new)
     endif
+    doautocmd <nomodeline> User lsp_progress_updated
 endfunction
 
 function! lsp#internal#work_done_progress#_disable() abort
