@@ -13,7 +13,8 @@ function! lsp#utils#_has_nvim_buf_highlight() abort
     return s:has_nvim_buf_highlight
 endfunction
 
-let s:has_textprops = exists('*prop_add')
+" https://github.com/prabirshrestha/vim-lsp/issues/399#issuecomment-500585549
+let s:has_textprops = exists('*prop_add') && has('patch-8.1.1035')
 function! lsp#utils#_has_textprops() abort
     return s:has_textprops
 endfunction

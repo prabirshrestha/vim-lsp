@@ -1,4 +1,4 @@
-let s:use_vim_textprops = has('textprop') && !has('nvim')
+let s:use_vim_textprops = lsp#utils#_has_textprops() && !has('nvim')
 let s:prop_id = 11
 
 function! lsp#internal#document_highlight#_enable() abort
