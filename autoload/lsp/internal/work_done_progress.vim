@@ -8,6 +8,7 @@ function! lsp#internal#work_done_progress#_enable() abort
 
     if s:enabled | return | endif
     let s:enabled = 1
+    let s:progress_ui = []
 
     let s:Dispose = lsp#callbag#pipe(
           \ lsp#stream(),
@@ -61,6 +62,7 @@ function! lsp#internal#work_done_progress#_disable() abort
     endif
 
     let s:enabled = 0
+    let s:progress_ui = []
 endfunction
 
 function! lsp#internal#work_done_progress#get_progress() abort
