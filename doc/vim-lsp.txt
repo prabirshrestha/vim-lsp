@@ -32,7 +32,7 @@ CONTENTS                                                  *vim-lsp-contents*
       g:lsp_diagnostics_signs_enabled       |g:lsp_diagnostics_signs_enabled|
       g:lsp_diagnostics_signs_insert_mode_enabled
 			     |g:lsp_diagnostics_signs_insert_mode_enabled|
-      g:lsp_diagnostics_signs_delay	    |g:lsp_diagnostics_signs_delay|
+      g:lsp_diagnostics_signs_delay         |g:lsp_diagnostics_signs_delay|
       g:lsp_diagnostics_signs_priority      |g:lsp_diagnostics_signs_priority|
       g:lsp_diagnostics_signs_priority_map
 			     |g:lsp_diagnostics_signs_priority_map|
