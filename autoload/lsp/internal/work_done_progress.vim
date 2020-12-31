@@ -26,11 +26,11 @@ function! s:handle_work_done_progress(server, response) abort
       \ 'server': a:server,
       \ 'token': l:token,
       \ 'title': '',
-      \ 'messages': '',
+      \ 'message': '',
       \ }
 
     if l:value['kind'] ==# 'end'
-        let l:new['messages'] = ''
+        let l:new['message'] = ''
         let l:new['percentage'] = 100
         call filter(s:progress_ui, {_, x->x['token'] !=# l:token || x['server'] !=# a:server})
     elseif l:value['kind'] ==# 'begin'
@@ -38,7 +38,7 @@ function! s:handle_work_done_progress(server, response) abort
         call filter(s:progress_ui, {_, x->x['token'] !=# l:token || x['server'] !=# a:server})
         call insert(s:progress_ui, l:new)
     elseif l:value['kind'] ==# 'report'
-        let l:new['messages'] = get(l:value, 'message', '')
+        let l:new['message'] = get(l:value, 'message', '')
         if has_key(l:value, 'percentage')
             " l:value['percentage'] is uinteger in specification.
             " But some implementation return float. (e.g. clangd11)
