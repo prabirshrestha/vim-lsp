@@ -67,8 +67,8 @@ function! lsp#internal#diagnostics#signs#_disable() abort
         call s:Dispose()
         unlet s:Dispose
     endif
-    call s:undefine_signs()
     call s:clear_all_signs()
+    call s:undefine_signs()
     let s:enabled = 0
 endfunction
 
