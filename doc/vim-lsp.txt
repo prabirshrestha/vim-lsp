@@ -77,6 +77,7 @@ CONTENTS                                                  *vim-lsp-contents*
                               |lsp#utils#find_nearest_parent_file_directory()|
       lsp#get_buffer_diagnostics_counts() |lsp#get_buffer_diagnostics_counts()|
       lsp#get_buffer_first_error_line()   |lsp#get_buffer_first_error_line()|
+      lsp#get_progress()                  |lsp#get_progress()|
     Commands                              |vim-lsp-commands|
       LspCodeAction                         |:LspCodeAction|
       LspCodeActionSync                     |:LspCodeActionSync|
@@ -125,6 +126,7 @@ CONTENTS                                                  *vim-lsp-contents*
       lsp_server_exit                       |lsp_server_exit|
       lsp_buffer_enabled                    |lsp_buffer_enabled|
       lsp_diagnostics_updated               |lsp_diagnostics_updated|
+      lsp_progress_updated                  |lsp_progress_updated|
     Mappings                              |vim-lsp-mappings|
        <plug>(lsp-preview-close)            |<plug>(lsp-preview-close)|
        <plug>(lsp-preview-focus)            |<plug>(lsp-preview-focus)|
@@ -1273,6 +1275,23 @@ Get line number of first error in current buffer.
 
     Returns |Number| or |v:null| if there are no errors.
 
+lsp#get_progress()                       *lsp#get_progress()*
+
+    Return UI |List| of |Dict| with window/workDoneProgress
+    The |List| is most recently update order.
+    The |Dict| has keys as follows.
+    * server
+	Type: |String|
+    * token
+	Type: |String|
+    * title
+	Type: |String|
+    * messages
+	Type: |String|
+    * percentage
+	Type: |Number|
+	0 - 100 or not exist
+
 ==============================================================================
 Commands                                                  *vim-lsp-commands*
 
@@ -1557,6 +1576,10 @@ processed by vim-lsp.
     autocmd User lsp_diagnostics_updated call DoSomething()
   augroup END
 <
+lsp_progress_updated                                  *lsp_progress_updated*
+
+This autocommand is run after every time after progress updated and
+processed by vim-lsp. Used for statusline plugins.
 
 ==============================================================================
 Mappings                                                  *vim-lsp-mappings*

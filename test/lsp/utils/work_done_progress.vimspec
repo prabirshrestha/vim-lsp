@@ -1,0 +1,92 @@
+Describe lsp#internal#work_done_progress
+    Before each
+        let g:lsp_work_done_progress_enabled = 1
+        call lsp#internal#work_done_progress#_enable()
+    End
+
+    After each
+        let g:lsp_work_done_progress_enabled = 0
+        call lsp#internal#work_done_progress#_disable()
+    End
+
+    It should be able to subscribe to $progress stream
+        let l:server1_response1 = {'method': '$/progress', 'params':{'token':'token text','value':{'kind':'begin', 'title':'title'}}}
+        let l:server1_response2 = {'method': '$/progress', 'params':{'token':'token text','value':{'percentage':50,'message':'test message','kind':'report'}}}
+        let l:server1_response3 = {'method': '$/progress', 'params':{'token':'token text','value':{'kind':'end'}}}
+
+        Assert Equals(lsp#internal#work_done_progress#get_progress(), [])
+
+        call lsp#stream(1, { 'server': 'server1', 'response': l:server1_response1 })
+        Assert Equals(lsp#internal#work_done_progress#get_progress(),
+            \ [{'message': '', 'token': 'token text', 'title': 'title', 'server': 'server1'}])
+
+        call lsp#stream(1, { 'server': 'server1', 'response': l:server1_response2 })
+        Assert Equals(lsp#internal#work_done_progress#get_progress(),
+            \ [{'message': 'test message', 'token': 'token text', 'percentage': 50, 'title': 'title', 'server': 'server1'}])
+
+        call lsp#stream(1, { 'server': 'server1', 'response': l:server1_response3 })
+        Assert Equals(lsp#internal#work_done_progress#get_progress(), [])
+    End
+
+    It should be able to subscribe to multi $progress stream
+        let l:server1_response1 = {'method': '$/progress', 'params':{'token':'token text','value':{'kind':'begin', 'title':'title1'}}}
+        let l:server1_response2 = {'method': '$/progress', 'params':{'token':'token text','value':{'percentage':50,'message':'msg1','kind':'report'}}}
+        let l:server1_response3 = {'method': '$/progress', 'params':{'token':'token text','value':{'percentage':90,'message':'msg1','kind':'report'}}}
+        let l:server1_response4 = {'method': '$/progress', 'params':{'token':'token text','value':{'kind':'end'}}}
+        let l:server2_response1 = {'method': '$/progress', 'params':{'token':'server2_token','value':{'kind':'begin', 'title':'title2'}}}
+        let l:server2_response2 = {'method': '$/progress', 'params':{'token':'server2_token','value':{'percentage':0,'message':'msg2','kind':'report'}}}
+        let l:server2_response3 = {'method': '$/progress', 'params':{'token':'server2_token','value':{'kind':'end'}}}
+
+        Assert Equals(lsp#internal#work_done_progress#get_progress(), [])
+
+        call lsp#stream(1, { 'server': 'server1', 'response': l:server1_response1 })
+        Assert Equals(lsp#internal#work_done_progress#get_progress(),
+            \ [{'message': '', 'token': 'token text', 'title': 'title1', 'server': 'server1'}])
+
+        call lsp#stream(1, { 'server': 'server2', 'response': l:server2_response1 })
+        Assert Equals(lsp#internal#work_done_progress#get_progress(),
+            \ [{'message': '', 'token': 'server2_token', 'title': 'title2', 'server': 'server2'},
+            \  {'message': '', 'token': 'token text', 'title': 'title1', 'server': 'server1'}])
+
+        call lsp#stream(1, { 'server': 'server2', 'response': l:server2_response2 })
+        Assert Equals(lsp#internal#work_done_progress#get_progress(),
+            \ [{'message': 'msg2', 'token': 'server2_token', 'percentage':0, 'title': 'title2', 'server': 'server2'},
+            \  {'message': '', 'token': 'token text', 'title': 'title1', 'server': 'server1'}])
+
+        call lsp#stream(1, { 'server': 'server1', 'response': l:server1_response2 })
+        Assert Equals(lsp#internal#work_done_progress#get_progress(),
+            \ [{'message': 'msg1', 'token': 'token text', 'percentage':50, 'title': 'title1', 'server': 'server1'},
+            \  {'message': 'msg2', 'token': 'server2_token', 'percentage':0, 'title': 'title2', 'server': 'server2'}])
+
+        call lsp#stream(1, { 'server': 'server1', 'response': l:server1_response3 })
+        Assert Equals(lsp#internal#work_done_progress#get_progress(),
+            \ [{'message': 'msg1', 'token': 'token text', 'percentage':90, 'title': 'title1', 'server': 'server1'},
+            \  {'message': 'msg2', 'token': 'server2_token', 'percentage':0, 'title': 'title2', 'server': 'server2'}])
+
+        call lsp#stream(1, { 'server': 'server1', 'response': l:server1_response4 })
+        Assert Equals(lsp#internal#work_done_progress#get_progress(),
+            \ [{'message': 'msg2', 'token': 'server2_token', 'percentage':0, 'title': 'title2', 'server': 'server2'}])
+
+        call lsp#stream(1, { 'server': 'server2', 'response': l:server2_response3 })
+        Assert Equals(lsp#internal#work_done_progress#get_progress(), [])
+    End
+
+    It should be returned correctly even if percentage and message do not exist.
+        let l:server1_response1 = {'method': '$/progress', 'params':{'token':'token text','value':{'kind':'begin', 'title':'title'}}}
+        let l:server1_response2 = {'method': '$/progress', 'params':{'token':'token text','value':{'kind':'report'}}}
+        let l:server1_response3 = {'method': '$/progress', 'params':{'token':'token text','value':{'kind':'end'}}}
+
+        Assert Equals(lsp#internal#work_done_progress#get_progress(), [])
+
+        call lsp#stream(1, { 'server': 'server1', 'response': l:server1_response1 })
+        Assert Equals(lsp#internal#work_done_progress#get_progress(),
+            \ [{'message': '', 'token': 'token text', 'title': 'title', 'server': 'server1'}])
+
+        call lsp#stream(1, { 'server': 'server1', 'response': l:server1_response2 })
+        Assert Equals(lsp#internal#work_done_progress#get_progress(),
+            \ [{'message': '', 'token': 'token text', 'title': 'title', 'server': 'server1'}])
+
+        call lsp#stream(1, { 'server': 'server1', 'response': l:server1_response3 })
+        Assert Equals(lsp#internal#work_done_progress#get_progress(), [])
+    End
+End

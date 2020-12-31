@@ -31,6 +31,7 @@ augroup _lsp_silent_
     autocmd User lsp_float_closed silent
     autocmd User lsp_buffer_enabled silent
     autocmd User lsp_diagnostics_updated silent
+    autocmd User lsp_progress_updated silent
 augroup END
 
 function! lsp#log_verbose(...) abort
@@ -65,6 +66,7 @@ function! lsp#enable() abort
     call lsp#internal#document_highlight#_enable()
     call lsp#internal#diagnostics#_enable()
     call lsp#internal#show_message_request#_enable()
+    call lsp#internal#work_done_progress#_enable()
     call s:register_events()
 endfunction
 
@@ -79,6 +81,7 @@ function! lsp#disable() abort
     call lsp#internal#document_highlight#_disable()
     call lsp#internal#diagnostics#_disable()
     call lsp#internal#show_message_request#_disable()
+    call lsp#internal#work_done_progress#_disable()
     call s:unregister_events()
     let s:enabled = 0
 endfunction
@@ -1130,6 +1133,15 @@ endfunction
 " Return first error line or v:null if there are no errors
 function! lsp#get_buffer_first_error_line() abort
     return lsp#ui#vim#diagnostics#get_buffer_first_error_line()
+endfunction
+
+" Return UI list with window/workDoneProgress
+" The list is most recently update order.
+" [{ 'server': 'clangd', 'token': 'backgroundIndexProgress', 'title': 'indexing', 'messages': '50/100', 'percentage': 50 },
+"  { 'server': 'rust-analyzer', 'token': 'rustAnalyzer/indexing', 'title': 'indexing', 'messages': '9/262 (std)', 'percentage': 3 }]
+" 'percentage': 0 - 100 or not exist
+function! lsp#get_progress() abort
+    return lsp#internal#work_done_progress#get_progress()
 endfunction
 
 function! s:merge_dict(dict_old, dict_new) abort
