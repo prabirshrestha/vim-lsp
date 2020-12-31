@@ -33,10 +33,10 @@ function! lsp#internal#diagnostics#signs#_enable() abort
     if s:enabled | return | endif
     let s:enabled = 1
 
-    call s:define_sign('LspError', 'E>', g:lsp_signs_error)
-    call s:define_sign('LspWarning', 'W>', g:lsp_signs_warning)
-    call s:define_sign('LspInformation', 'I>', g:lsp_signs_information)
-    call s:define_sign('LspHint', 'H>', g:lsp_signs_hint)
+    call s:define_sign('LspError', 'E>', g:lsp_diagnostics_signs_error)
+    call s:define_sign('LspWarning', 'W>', g:lsp_diagnostics_signs_warning)
+    call s:define_sign('LspInformation', 'I>', g:lsp_diagnostics_signs_information)
+    call s:define_sign('LspHint', 'H>', g:lsp_diagnostics_signs_hint)
 
     let s:Dispose = lsp#callbag#pipe(
         \ lsp#callbag#merge(
@@ -131,12 +131,12 @@ function! s:place_signs(server, diagnostics_response, bufnr) abort
         let l:line = lsp#utils#position#lsp_line_to_vim(a:bufnr, l:item['range']['start'])
         if has_key(l:item, 'severity') && !empty(l:item['severity'])
             let l:sign_name = get(s:severity_sign_names_mapping, l:item['severity'], 'LspError')
-            let l:sign_priority = get(g:lsp_signs_priority_map, l:sign_name, g:lsp_signs_priority)
-            let l:sign_priority = get(g:lsp_signs_priority_map,
-                                      \ a:server . '_' . l:sign_name, l:sign_priority)
+            let l:sign_priority = get(g:lsp_diagnostics_signs_priority_map, l:sign_name, g:lsp_diagnostics_signs_priority)
+            let l:sign_priority = get(g:lsp_diagnostics_signs_priority_map,
+                \ a:server . '_' . l:sign_name, l:sign_priority)
             " pass 0 and let vim generate sign id
             let l:sign_id = sign_place(0, s:sign_group, l:sign_name, a:bufnr,
-                                       \{ 'lnum': l:line, 'priority': l:sign_priority })
+                \{ 'lnum': l:line, 'priority': l:sign_priority })
         endif
     endfor
 endfunction
