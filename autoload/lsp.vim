@@ -55,8 +55,6 @@ function! lsp#enable() abort
     endif
     let s:enabled = 1
     if g:lsp_diagnostics_enabled
-        if g:lsp_signs_enabled | call lsp#ui#vim#signs#enable() | endif
-        if g:lsp_virtual_text_enabled | call lsp#ui#vim#virtual#enable() | endif
         if g:lsp_highlights_enabled | call lsp#ui#vim#highlights#enable() | endif
         if g:lsp_textprop_enabled | call lsp#ui#vim#diagnostics#textprop#enable() | endif
     endif
@@ -74,8 +72,6 @@ function! lsp#disable() abort
     if !s:enabled
         return
     endif
-    call lsp#ui#vim#signs#disable()
-    call lsp#ui#vim#virtual#disable()
     call lsp#ui#vim#highlights#disable()
     call lsp#ui#vim#diagnostics#textprop#disable()
     call lsp#ui#vim#signature_help#_disable()
@@ -239,6 +235,7 @@ function! s:on_text_document_did_open(...) abort
     " This diagnostics was stored `autoload/lsp/ui/vim/diagnostics.vim` but not highlighted.
     " So we should refresh highlights when buffer opened.
     call lsp#ui#vim#diagnostics#force_refresh(l:buf)
+    call lsp#internal#diagnostics#state#_force_notify_buffer(l:buf)
 
     for l:server_name in lsp#get_allowed_servers(l:buf)
         call s:ensure_flush(l:buf, l:server_name, function('s:fire_lsp_buffer_enabled', [l:server_name, l:buf]))

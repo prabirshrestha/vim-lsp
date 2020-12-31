@@ -1,7 +1,13 @@
+" internal state for whether it is enabled or not to avoid multiple subscriptions
+let s:enabled = 0
+
 function! lsp#internal#diagnostics#float#_enable() abort
     " don't even bother registering if the feature is disabled
     if !lsp#ui#vim#output#float_supported() | return | endif
     if !g:lsp_diagnostics_float_cursor | return | endif 
+
+    if s:enabled | return | endif
+    let s:enabled = 1
 
     let s:Dispose = lsp#callbag#pipe(
         \ lsp#callbag#fromEvent('CursorMoved'),
@@ -17,10 +23,12 @@ function! lsp#internal#diagnostics#float#_enable() abort
 endfunction
 
 function! lsp#internal#diagnostics#float#_disable() abort
+    if !s:enabled | return | endif
     if exists('s:Dispose')
         call s:Dispose()
         unlet s:Dispose
     endif
+    let s:enabled = 0
 endfunction
 
 function! s:show_float(diagnostic) abort

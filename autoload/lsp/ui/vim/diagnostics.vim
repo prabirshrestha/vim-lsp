@@ -12,10 +12,8 @@ function! lsp#ui#vim#diagnostics#handle_text_document_publish_diagnostics(server
     endif
     let s:diagnostics[l:uri][a:server_name] = a:data
 
-    call lsp#ui#vim#virtual#set(a:server_name, a:data)
     call lsp#ui#vim#highlights#set(a:server_name, a:data)
     call lsp#ui#vim#diagnostics#textprop#set(a:server_name, a:data)
-    call lsp#ui#vim#signs#set(a:server_name, a:data)
 
     doautocmd <nomodeline> User lsp_diagnostics_updated
 endfunction
@@ -24,47 +22,14 @@ function! lsp#ui#vim#diagnostics#force_refresh(bufnr) abort
     let l:data = lsp#ui#vim#diagnostics#get_document_diagnostics(a:bufnr)
     if !empty(l:data)
         for [l:server_name, l:response] in items(l:data)
-            call lsp#ui#vim#virtual#set(l:server_name, l:response)
             call lsp#ui#vim#highlights#set(l:server_name, l:response)
             call lsp#ui#vim#diagnostics#textprop#set(l:server_name, l:response)
-            call lsp#ui#vim#signs#set(l:server_name, l:response)
         endfor
     endif
 endfunction
 
 function! lsp#ui#vim#diagnostics#get_document_diagnostics(bufnr) abort
     return get(s:diagnostics, lsp#utils#get_buffer_uri(a:bufnr), {})
-endfunction
-
-function! lsp#ui#vim#diagnostics#document_diagnostics() abort
-    if !g:lsp_diagnostics_enabled
-        call lsp#utils#error('Diagnostics manually disabled -- g:lsp_diagnostics_enabled = 0')
-        return
-    endif
-
-    let l:uri = lsp#utils#get_buffer_uri()
-
-    let [l:has_diagnostics, l:diagnostics] = s:get_diagnostics(l:uri)
-    if !l:has_diagnostics
-        call lsp#utils#error('No diagnostics results')
-        return
-    endif
-
-    let l:result = []
-    for l:data in values(l:diagnostics)
-        let l:result += lsp#ui#vim#utils#diagnostics_to_loc_list(l:data)
-    endfor
-
-    call setloclist(0, l:result)
-
-    " autocmd FileType qf setlocal wrap
-
-    if empty(l:result)
-        call lsp#utils#error('No diagnostics results found')
-    else
-        echo 'Retrieved diagnostics results'
-        botright lopen
-    endif
 endfunction
 
 " Returns a diagnostic object, or empty dictionary if no diagnostics are available.

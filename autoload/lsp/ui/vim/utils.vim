@@ -131,7 +131,6 @@ function! lsp#ui#vim#utils#diagnostics_to_loc_list(result) abort
         endfor
     endif
 
-
     return l:list
 endfunction
 

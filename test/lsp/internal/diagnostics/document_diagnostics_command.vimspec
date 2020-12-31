@@ -1,0 +1,74 @@
+function! s:sort_item_by_text(lhs, rhs) abort
+  if a:lhs['text'] <# a:rhs['text']
+    return -1
+  endif
+  if a:lhs['text'] ># a:rhs['text']
+    return 1
+  endif
+  return 0
+endfunction
+
+Describe lsp#internal#diagnostics#document_diagnostics_command
+    Before
+        %bwipeout!
+        let g:lsp_diagnostics_enabled = 1
+        call lsp#internal#diagnostics#state#_disable()
+        call lsp#internal#diagnostics#state#_enable()
+    End
+
+    After all
+        %bwipeout!
+        let g:lsp_diagnostics_enabled = 0
+        call lsp#internal#diagnostics#state#_disable()
+    End
+
+    It should be able to show document diagnostics for a buffer
+        normal! m'
+        execute printf('keepalt keepjumps edit %s', lsp#test#projectdir('rust') . '/src/documentdiagnostics.rs')
+        let l:uri = lsp#utils#get_buffer_uri()
+        let l:uri2 = l:uri . '2'
+        let l:bufnr = bufnr('%')
+
+        let l:server1_response1 = {'method': 'textDocument/publishDiagnostics', 'params': {'uri': l:uri, 'diagnostics': [
+            \ {'severity': 1, 'message': 'm1', 'range': { 'start': { 'line': 1, 'character': 1, 'end': { 'line': 1, 'character': 1 } } }},
+            \ {'severity': 1, 'message': 'm2', 'range': { 'start': { 'line': 1, 'character': 2, 'end': { 'line': 1, 'character': 3 } } }},
+            \ ]}}
+
+        let l:server1_response2 = {'method': 'textDocument/publishDiagnostics', 'params': {'uri': l:uri2, 'diagnostics': [
+            \ {'severity': 1, 'message': 'm3', 'range': { 'start': { 'line': 2, 'character': 1, 'end': { 'line': 1, 'character': 1 } } }},
+            \ {'severity': 1, 'message': 'm4', 'range': { 'start': { 'line': 3, 'character': 2, 'end': { 'line': 1, 'character': 3 } } }},
+            \ ]}}
+
+        call lsp#stream(1, { 'server': 'server1', 'response': l:server1_response1 })
+        call lsp#stream(1, { 'server': 'server1', 'response': l:server1_response2 })
+
+        execute ':LspDocumentDiagnostics'
+        let l:result = getloclist(0)
+
+        " NOTE Older version of Vim does not sort results, and does not include module.
+        call sort(l:result, function('s:sort_item_by_text'))
+        call map(l:result, {_, v -> extend(v, {'module': ''})})
+
+        Assert Equals(l:result, [
+            \ {'lnum': 2, 'bufnr': l:bufnr, 'col': 2, 'pattern': '', 'valid': 1, 'vcol': 0, 'nr': 0, 'type': '', 'module': '', 'text': 'Error:m1'},
+            \ {'lnum': 2, 'bufnr': l:bufnr, 'col': 3, 'pattern': '', 'valid': 1, 'vcol': 0, 'nr': 0, 'type': '', 'module': '', 'text': 'Error:m2'},
+            \ ])
+        execute ':lclose'
+
+        execute ':LspDocumentDiagnostics --buffers=*'
+        let l:result = getloclist(0)
+
+        " NOTE Older version of Vim does not sort results, and does not include module.
+        call sort(l:result, function('s:sort_item_by_text'))
+        call map(l:result, {_, v -> extend(v, {'module': ''})})
+
+        " +2 for bufnr because original bufnr + loclist + new unopened file
+        Assert Equals(l:result, [
+            \ {'lnum': 2, 'bufnr': l:bufnr, 'col': 2, 'pattern': '', 'valid': 1, 'vcol': 0, 'nr': 0, 'type': '', 'module': '', 'text': 'Error:m1'},
+            \ {'lnum': 2, 'bufnr': l:bufnr, 'col': 3, 'pattern': '', 'valid': 1, 'vcol': 0, 'nr': 0, 'type': '', 'module': '', 'text': 'Error:m2'},
+            \ {'lnum': 3, 'bufnr': l:bufnr + 2, 'col': 2, 'pattern': '', 'valid': 1, 'vcol': 0, 'nr': 0, 'type': '', 'module': '', 'text': 'Error:m3'},
+            \ {'lnum': 4, 'bufnr': l:bufnr + 2, 'col': 3, 'pattern': '', 'valid': 1, 'vcol': 0, 'nr': 0, 'type': '', 'module': '', 'text': 'Error:m4'},
+            \ ])
+        execute ':lclose'
+    End
+End
