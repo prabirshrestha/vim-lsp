@@ -12,7 +12,6 @@ CONTENTS                                                  *vim-lsp-contents*
       vim-lsp-settings                      |vim-lsp-settings_plugin|
       Wiki                                  |vim-lsp-configure-wiki|
     Options                               |vim-lsp-options|
-      g:lsp_diagnostics_enabled             |g:lsp_diagnostics_enabled|
       g:lsp_auto_enable                     |g:lsp_auto_enable|
       g:lsp_preview_keep_focus              |g:lsp_preview_keep_focus|
       g:lsp_preview_float                   |g:lsp_preview_float|
@@ -25,10 +24,18 @@ CONTENTS                                                  *vim-lsp-contents*
       g:lsp_documentation_float_docked      |g:lsp_documentation_float_docked|
       g:lsp_documentation_float_docked_maxheight
                               |g:lsp_documentation_float_docked_maxheight|
+      g:lsp_diagnostics_enabled             |g:lsp_diagnostics_enabled|
       g:lsp_diagnostics_echo_cursor         |g:lsp_diagnostics_echo_cursor|
       g:lsp_diagnostics_echo_delay          |g:lsp_diagnostics_echo_delay|
       g:lsp_diagnostics_float_cursor        |g:lsp_diagnostics_float_cursor|
       g:lsp_diagnostics_float_delay         |g:lsp_diagnostics_float_delay|
+      g:lsp_diagnostics_signs_enabled       |g:lsp_diagnostics_signs_enabled|
+      g:lsp_diagnostics_signs_insert_mode_enabled
+			     |g:lsp_diagnostics_signs_insert_mode_enabled|
+      g:lsp_diagnostics_signs_delay         |g:lsp_diagnostics_signs_delay|
+      g:lsp_diagnostics_signs_priority      |g:lsp_diagnostics_signs_priority|
+      g:lsp_diagnostics_signs_priority_map
+			     |g:lsp_diagnostics_signs_priority_map|
       g:lsp_diagnostics_virtual_text_enabled
 			     |g:lsp_diagnostics_virtual_text_enabled|
       g:lsp_diagnostics_virtual_text_insert_mode_enabled
@@ -38,9 +45,6 @@ CONTENTS                                                  *vim-lsp-contents*
       g:lsp_diagnostics_virtual_text_prefix
 			     |g:lsp_diagnostics_virtual_text_prefix|
       g:lsp_format_sync_timeout             |g:lsp_format_sync_timeout|
-      g:lsp_signs_enabled                   |g:lsp_signs_enabled|
-      g:lsp_signs_priority                  |g:lsp_signs_priority|
-      g:lsp_signs_priority_map              |g:lsp_signs_priority_map|
       g:lsp_highlights_enabled              |g:lsp_highlights_enabled|
       g:lsp_textprop_enabled                |g:lsp_textprop_enabled|
       g:lsp_use_event_queue                 |g:lsp_use_event_queue|
@@ -242,18 +246,6 @@ to https://github.com/prabirshrestha/vim-lsp/wiki/Servers
 ==============================================================================
 Options                                                   *vim-lsp-options*
 
-g:lsp_diagnostics_enabled                       *g:lsp_diagnostics_enabled*
-    Type: |Number|
-    Default: `1`
-
-    Enable support for document diagnostics like warnings and error messages.
-    enabling vim-lsp during startup. Refer to |g:lsp_signs_enabled| to enable
-    signs column.
-
-    Example: >
-	let g:lsp_diagnostics_enabled = 1
-	let g:lsp_diagnostics_enabled = 0
-
 g:lsp_auto_enable                                       *g:lsp_auto_enable*
     Type: |Number|
     Default: `1`
@@ -427,7 +419,8 @@ g:lsp_documentation_float_docked               *g:lsp_documentation_float_docked
 	let g:lsp_documentation_float_docked = 1
 	let g:lsp_documentation_float_docked = 0
 
-g:lsp_documentation_float_docked_maxheight     *g:lsp_documentation_float_docked_maxheight*
+g:lsp_documentation_float_docked_maxheight
+				    *g:lsp_documentation_float_docked_maxheight*
     Type: |Number|
     Default: `&previewheight`
 
@@ -437,6 +430,19 @@ g:lsp_documentation_float_docked_maxheight     *g:lsp_documentation_float_docked
 	let g:lsp_documentation_float_docked_maxheight = 1
 	let g:lsp_documentation_float_docked_maxheight = 0
 
+g:lsp_diagnostics_enabled                           *g:lsp_diagnostics_enabled*
+    Type: |Number|
+    Default: `1`
+
+    Enable support for document diagnostics like warnings and error messages.
+    enabling vim-lsp during startup.
+    Refer to |g:lsp_diagnostics_signs_enabled| to enable signs column.
+    Refer to |g:lsp_diagnostics_virtual_text_enabled| to enable virtual text.
+
+    Example: >
+	let g:lsp_diagnostics_enabled = 1
+	let g:lsp_diagnostics_enabled = 0
+<
 g:lsp_diagnostics_echo_cursor                *g:lsp_diagnostics_echo_cursor*
     Type: |Number|
     Default: `0`
@@ -497,38 +503,79 @@ g:lsp_format_sync_timeout                           *g:lsp_format_sync_timeout*
 	let g:lsp_format_sync_timeout = -1
 	let g:lsp_format_sync_timeout = 1000
 
-g:lsp_signs_enabled                                   *g:lsp_signs_enabled*
+g:lsp_diagnostics_signs_enabled
+					      *g:lsp_diagnostics_signs_enabled*
     Type: |Number|
     Default: `1` for vim/neovim with patch 8.1.0772
 
-    Enables signs for diagnostics. Requires patch 8.1.0772 and
-    |g:lsp_diagnostics_enabled| set to 1.
+    Enables signs for diagnostics. Requires NeoVim with |sign_define| or Vim
+    with |sign_define| and patch 8.1.0772 or newer and
+    |g:lsp_diagnostics_enabled| set to `1`.
 
     Example: >
-	let g:lsp_signs_enabled = 1
-	let g:lsp_signs_enabled = 0
+	let g:lsp_diagnostics_signs_enabled = 1
+	let g:lsp_diagnostics_signs_enabled = 0
+<
+    Four groups of signs are defined and used:
+    `LspError`, `LspWarning`, `LspInformation`, `LspHint`.
 
-g:lsp_signs_priority                                  *g:lsp_signs_priority*
+    It is possible to set custom text or icon that will be used for each sign
+    (note that icons are only available in GUI). To do this, set some of the
+    following globals:
+    `g:lsp_diagnostics_signs_error`, `g:lsp_diagnostics_signs_warning`,
+    `g:lsp_diagnostics_signs_information`, `g:lsp_diagnostics_signs_hint`.
+    They should be set to a dict, that contains either text that will be used
+    as sign in terminal, or icon that will be used for GUI, or both.
+
+    Example: >
+	let g:lsp_diagnostics_signs_error = {'text': '✗'}
+	let g:lsp_diagnostics_signs_warning = {'text': '‼', 'icon': '/path/to/some/icon'} " icons require GUI
+	let g:lsp_diagnostics_signs_hint = {'icon': '/path/to/some/other/icon'} " icons require GUI
+
+g:lsp_diagnostics_signs_insert_mode_enabled
+			          *g:lsp_diagnostics_signs_insert_mode_enabled*
     Type: |Number|
-    Default: `10` for vim/neovim with patch 8.1.0772
+    Default: `1`
+
+    Indicates whether to enable diagnostics signs column when in |insertmode|.
+    Requires |g:lsp_diagnostics_signs_enabled|.
+
+    Example: >
+	let g:lsp_diagnostics_signs_insert_mode_enabled = 1
+	let g:lsp_diagnostics_signs_insert_mode_enabled = 0
+
+g:lsp_diagnostics_signs_delay			*g:lsp_diagnostics_signs_delay*
+    Type: |Number|
+    Default: `500`
+
+    Delay milliseconds to update diagnostics signs column. Requires
+    |g:lsp_diagnostics_signs_enabled|.
+
+    Example: >
+	let g:lsp_diagnostics_signs_delay = 200
+	let g:lsp_diagnostics_signs_delay = 1000
+
+g:lsp_diagnostics_signs_priority             *g:lsp_diagnostics_signs_priority*
+    Type: |Number|
+    Default: `10`
 
     Configures the |sign-priority| for placed signs. Signs placed by other
-    plugins have a priority of 10 by default. Requires |g:lsp_signs_enabled|
-    set to 1.
+    plugins have a priority of 10 by default. Requires
+    |g:lsp_diagnostics_signs_enabled| set to 1.
 
     Example: >
-	let g:lsp_signs_priority = 11
-	let g:lsp_signs_priority = 9
+	let g:lsp_diagnostics_signs_priority = 11
+	let g:lsp_diagnostics_signs_priority = 9
 
-g:lsp_signs_priority_map                          *g:lsp_signs_priority_map*
+g:lsp_diagnostics_signs_priority_map	 *g:lsp_diagnostics_signs_priority_map*
     Type: |Dict|
-    Default: `{}` for vim/neovim with patch 8.1.0772
+    Default: `{}`
 
-    Overrides |g:lsp_signs_priority| per severity level or per server name
-    and severity level. Requires |g:lsp_signs_enabled| set to 1.
+    Overrides |g:lsp_diagnostics_signs_priority| per severity level or per server
+    name and severity level. Requires |g:lsp_diagnostics_signs_enabled| set to 1.
 
     Example: >
-        let g:lsp_signs_priority_map = {
+        let g:lsp_diagnostics_signs_priority_map = {
                 \'LspError': 11,
                 \'LspWarning': 7,
                 \'clangd_LspWarning': 11,

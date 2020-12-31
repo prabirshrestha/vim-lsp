@@ -3,6 +3,11 @@ function! lsp#utils#_has_virtual_text() abort
     return s:has_virtual_text
 endfunction
 
+let s:has_signs = exists('*sign_define') && (has('nvim') || has('patch-8.1.0772'))
+function! lsp#utils#_has_signs() abort
+    return s:has_signs
+endfunction
+
 function! lsp#utils#is_file_uri(uri) abort
     return stridx(a:uri, 'file:///') == 0
 endfunction

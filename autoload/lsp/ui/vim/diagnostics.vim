@@ -14,7 +14,6 @@ function! lsp#ui#vim#diagnostics#handle_text_document_publish_diagnostics(server
 
     call lsp#ui#vim#highlights#set(a:server_name, a:data)
     call lsp#ui#vim#diagnostics#textprop#set(a:server_name, a:data)
-    call lsp#ui#vim#signs#set(a:server_name, a:data)
 
     doautocmd <nomodeline> User lsp_diagnostics_updated
 endfunction
@@ -25,7 +24,6 @@ function! lsp#ui#vim#diagnostics#force_refresh(bufnr) abort
         for [l:server_name, l:response] in items(l:data)
             call lsp#ui#vim#highlights#set(l:server_name, l:response)
             call lsp#ui#vim#diagnostics#textprop#set(l:server_name, l:response)
-            call lsp#ui#vim#signs#set(l:server_name, l:response)
         endfor
     endif
 endfunction
