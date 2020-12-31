@@ -34,6 +34,8 @@ let g:lsp_diagnostics_virtual_text_insert_mode_enabled = get(g:, 'lsp_diagnostic
 let g:lsp_diagnostics_virtual_text_delay = get(g:, 'lsp_diagnostics_virtual_text_delay', 500)
 let g:lsp_diagnostics_virtual_text_prefix = get(g:, 'lsp_diagnostics_virtual_text_prefix', '')
 let g:lsp_diagnostics_signs_enabled = get(g:, 'lsp_diagnostics_signs_enabled', lsp#utils#_has_signs())
+let g:lsp_diagnostics_signs_insert_mode_enabled = get(g:, 'lsp_diagnostics_signs_insert_mode_enabled', lsp#utils#_has_signs())
+let g:lsp_diagnostics_signs_delay = get(g:, 'lsp_diagnostics_signs_delay', 500)
 
 let g:lsp_next_sign_id = get(g:, 'lsp_next_sign_id', 6999)
 let g:lsp_preview_keep_focus = get(g:, 'lsp_preview_keep_focus', 1)

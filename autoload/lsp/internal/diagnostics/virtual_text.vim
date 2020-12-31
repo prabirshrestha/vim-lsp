@@ -113,8 +113,8 @@ function! s:set_virtual_text(params) abort
     endif
 
     for l:bufnr in nvim_list_bufs()
-        let l:uri = lsp#utils#get_buffer_uri(l:bufnr)
-        if lsp#internal#diagnostics#state#_is_enabled_for_buffer(l:uri) && bufexists(l:bufnr) && bufloaded(l:bufnr)
+        if lsp#internal#diagnostics#state#_is_enabled_for_buffer(l:bufnr) && bufexists(l:bufnr) && bufloaded(l:bufnr)
+            let l:uri = lsp#utils#get_buffer_uri(l:bufnr)
             for [l:server, l:diagnostics_response] in items(lsp#internal#diagnostics#state#_get_all_diagnostics_grouped_by_server_for_uri(l:uri))
                 call s:place_virtual_text(l:server, l:diagnostics_response, l:bufnr)
             endfor
@@ -124,6 +124,7 @@ endfunction
 
 function! s:place_virtual_text(server, diagnostics_response, bufnr) abort
     for l:item in a:diagnostics_response['params']['diagnostics']
+        " need to do -1 for virtual text
         let l:line = lsp#utils#position#lsp_line_to_vim(a:bufnr, l:item['range']['start']) - 1
         let l:name = get(s:severity_sign_names_mapping, get(l:item, 'severity', 3), 'LspError')
         let l:hl_name = l:name . 'VirtualText'
