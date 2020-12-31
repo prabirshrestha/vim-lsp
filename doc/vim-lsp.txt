@@ -1667,7 +1667,7 @@ You can check if semantic highlighting is enabled by running: >
     echo lsp#ui#vim#semantic#is_enabled()
 <
 Before you can use the semantic highlighting feature, you will also need to
-link language server semantic scopes to Vim highlight groups. For example, yo
+link language server semantic scopes to Vim highlight groups. For example, you
 have to specify that function calls need to be highlighted using the
 |Identifier| Vim group.
 
