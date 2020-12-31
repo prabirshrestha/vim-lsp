@@ -221,8 +221,8 @@ on pyls (https://github.com/palantir/python-language-server)
 <
 TCP SERVERS						*vim-lsp-tcp*
 You can use tcp to connect to LSP servers that don't support stdio. Set host
-and port to tcp. The Godot game engine uses 6008 as its LSP
-port and godot ftplugins define gdscript or gdscript3 filetype: >
+and port to tcp. The Godot game engine uses 6008 as its LSP port and godot
+ftplugins define gdscript or gdscript3 filetype: >
 
 	au User lsp_setup 
 	    \ call lsp#register_server({
