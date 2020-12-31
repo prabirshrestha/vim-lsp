@@ -412,29 +412,40 @@ function! s:ensure_start(buf, server_name, cb) abort
         return
     endif
 
-    let l:cmd_type = type(l:server_info['cmd'])
-    if l:cmd_type == v:t_list
-        let l:cmd = l:server_info['cmd']
-    else
-        let l:cmd = l:server_info['cmd'](l:server_info)
+    if has_key(l:server_info, 'tcp')
+        let l:tcp = l:server_info['tcp'](l:server_info)
+        let l:lsp_id = lsp#client#start({
+            \ 'tcp': l:tcp,
+            \ 'on_stderr': function('s:on_stderr', [a:server_name]),
+            \ 'on_exit': function('s:on_exit', [a:server_name]),
+            \ 'on_notification': function('s:on_notification', [a:server_name]),
+            \ 'on_request': function('s:on_request', [a:server_name]),
+            \ })
+    elseif has_key(l:server_info, 'cmd')
+        let l:cmd_type = type(l:server_info['cmd'])
+        if l:cmd_type == v:t_list
+            let l:cmd = l:server_info['cmd']
+        else
+            let l:cmd = l:server_info['cmd'](l:server_info)
+        endif
+
+        if empty(l:cmd)
+            let l:msg = s:new_rpc_error('ignore server start since cmd is empty', { 'server_name': a:server_name })
+            call lsp#log(l:msg)
+            call a:cb(l:msg)
+            return
+        endif
+
+        call lsp#log('Starting server', a:server_name, l:cmd)
+
+        let l:lsp_id = lsp#client#start({
+            \ 'cmd': l:cmd,
+            \ 'on_stderr': function('s:on_stderr', [a:server_name]),
+            \ 'on_exit': function('s:on_exit', [a:server_name]),
+            \ 'on_notification': function('s:on_notification', [a:server_name]),
+            \ 'on_request': function('s:on_request', [a:server_name]),
+            \ })
     endif
-
-    if empty(l:cmd)
-        let l:msg = s:new_rpc_error('ignore server start since cmd is empty', { 'server_name': a:server_name })
-        call lsp#log(l:msg)
-        call a:cb(l:msg)
-        return
-    endif
-
-    call lsp#log('Starting server', a:server_name, l:cmd)
-
-    let l:lsp_id = lsp#client#start({
-        \ 'cmd': l:cmd,
-        \ 'on_stderr': function('s:on_stderr', [a:server_name]),
-        \ 'on_exit': function('s:on_exit', [a:server_name]),
-        \ 'on_notification': function('s:on_notification', [a:server_name]),
-        \ 'on_request': function('s:on_request', [a:server_name]),
-        \ })
 
     if l:lsp_id > 0
         let l:server['lsp_id'] = l:lsp_id
