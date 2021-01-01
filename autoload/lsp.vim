@@ -789,7 +789,7 @@ function! s:on_notification(server_name, id, data, event) abort
     if has_key(a:data, 'request')
         let l:stream_data['request'] = a:data['request']
     endif
-    call s:Stream(1, l:stream_data) " notify stream before callbacks
+    call lsp#stream(1, l:stream_data) " notify stream before callbacks
 
     if lsp#client#is_server_instantiated_notification(a:data)
         if has_key(l:response, 'method')
@@ -816,7 +816,7 @@ function! s:on_request(server_name, id, request) abort
     call lsp#log_verbose('<---', 's:on_request', a:id, a:request)
 
     let l:stream_data = { 'server': a:server_name, 'request': a:request }
-    call s:Stream(1, l:stream_data) " notify stream before callbacks
+    call lsp#stream(1, l:stream_data) " notify stream before callbacks
 
     if a:request['method'] ==# 'workspace/applyEdit'
         call lsp#utils#workspace_edit#apply_workspace_edit(a:request['params']['edit'])
@@ -985,7 +985,7 @@ endfunction
 " call lsp#stream(1, { 'command': 'DocumentFormat' })
 function! lsp#stream(...) abort
     if a:0 == 0
-        return s:Stream
+        return lsp#callbag#share(s:Stream)
     else
         call s:Stream(a:1, a:2)
     endif
@@ -1171,7 +1171,7 @@ endfunction
 
 function! lsp#_new_command() abort
     let s:last_command_id += 1
-    call s:Stream(1, { 'command': 1 })
+    call lsp#stream(1, { 'command': 1 })
     return s:last_command_id
 endfunction
 
