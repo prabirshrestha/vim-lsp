@@ -91,7 +91,7 @@ function! s:clear_all_highlights() abort
             else
                 for l:severity in keys(s:severity_sign_names_mapping)
                     try
-                        call prop_remove({
+                        silent! call prop_remove({
                             \ 'type': s:get_prop_type_name(l:severity),
                             \ 'bufnr': l:bufnr,
                             \ 'all': v:true })
@@ -161,7 +161,7 @@ function! s:place_highlights(server, diagnostics_response, bufnr) abort
             endfor
         else
             try
-                call prop_add(l:start_line, l:start_col, {
+                silent! call prop_add(l:start_line, l:start_col, {
                     \ 'end_lnum': l:end_line,
                     \ 'end_col': l:end_col,
                     \ 'bufnr': a:bufnr,
