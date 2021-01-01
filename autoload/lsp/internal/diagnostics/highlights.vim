@@ -128,6 +128,7 @@ function! s:set_highlights(params) abort
 endfunction
 
 function! s:place_highlights(server, diagnostics_response, bufnr) abort
+    " TODO: make diagnostics highlights same across vim and neovim
     for l:item in a:diagnostics_response['params']['diagnostics']
         let [l:start_line, l:start_col] = lsp#utils#position#lsp_to_vim(a:bufnr, l:item['range']['start'])
         let [l:end_line, l:end_col] = lsp#utils#position#lsp_to_vim(a:bufnr, l:item['range']['end'])
