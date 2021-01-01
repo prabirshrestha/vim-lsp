@@ -210,10 +210,6 @@ function! s:get_diagnostics(uri) abort
     return [0, {}]
 endfunction
 
-function! lsp#ui#vim#diagnostics#get_all() abort
-    return s:get_all_buffer_diagnostics()
-endfunction
-
 " Get diagnostics for the current buffer URI from all servers
 function! s:get_all_buffer_diagnostics(...) abort
     let l:target_server_name = get(a:000, 0, '')
