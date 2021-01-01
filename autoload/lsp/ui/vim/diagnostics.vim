@@ -15,16 +15,6 @@ function! lsp#ui#vim#diagnostics#handle_text_document_publish_diagnostics(server
     doautocmd <nomodeline> User lsp_diagnostics_updated
 endfunction
 
-function! lsp#ui#vim#diagnostics#force_refresh(bufnr) abort
-    let l:data = lsp#ui#vim#diagnostics#get_document_diagnostics(a:bufnr)
-    if !empty(l:data)
-        for [l:server_name, l:response] in items(l:data)
-            " call lsp#ui#vim#highlights#set(l:server_name, l:response)
-            " call lsp#ui#vim#diagnostics#textprop#set(l:server_name, l:response)
-        endfor
-    endif
-endfunction
-
 function! lsp#ui#vim#diagnostics#get_document_diagnostics(bufnr) abort
     return get(s:diagnostics, lsp#utils#get_buffer_uri(a:bufnr), {})
 endfunction

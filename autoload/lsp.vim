@@ -231,7 +231,6 @@ function! s:on_text_document_did_open(...) abort
     " Some language server notify diagnostics to the buffer that has not been loaded yet.
     " This diagnostics was stored `autoload/lsp/ui/vim/diagnostics.vim` but not highlighted.
     " So we should refresh highlights when buffer opened.
-    call lsp#ui#vim#diagnostics#force_refresh(l:buf)
     call lsp#internal#diagnostics#state#_force_notify_buffer(l:buf)
 
     for l:server_name in lsp#get_allowed_servers(l:buf)
