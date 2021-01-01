@@ -89,7 +89,6 @@ function! lsp#internal#diagnostics#state#_get_all_diagnostics_grouped_by_uri_and
 endfunction
 
 function! s:on_text_documentation_publish_diagnostics(server, response) abort
-    echom json_encode(['new', a:response])
     if lsp#client#is_error(a:response) | return | endif
     let l:normalized_uri = lsp#utils#normalize_uri(a:response['params']['uri'])
     if !has_key(s:diagnostics_state, l:normalized_uri)
