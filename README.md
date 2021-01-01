@@ -144,19 +144,6 @@ preferred to turn them off and use other plugins instead (like
 let g:lsp_diagnostics_enabled = 0         " disable diagnostics support
 ```
 
-#### Highlights
-
-Highlighting diagnostics requires either NeoVim 0.3+ or Vim with patch 8.1.0579.
-They are enabled by default when supported, but can be turned off respectively by
-
-```viml
-let g:lsp_highlights_enabled = 0
-let g:lsp_textprop_enabled = 0
-```
-
-Can be customized by setting or linking `LspErrorHighlight`, `LspWarningHighlight`,
-`LspInformationHighlight` and `LspHintHighlight` highlight groups.
-
 ### Highlight references
 
 Highlight references to the symbol under the cursor (enabled by default).

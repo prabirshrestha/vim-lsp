@@ -29,6 +29,12 @@ CONTENTS                                                  *vim-lsp-contents*
       g:lsp_diagnostics_echo_delay          |g:lsp_diagnostics_echo_delay|
       g:lsp_diagnostics_float_cursor        |g:lsp_diagnostics_float_cursor|
       g:lsp_diagnostics_float_delay         |g:lsp_diagnostics_float_delay|
+      g:lsp_diagnostics_highlights_enabled
+			     |g:lsp_diagnostics_highlights_enabled|
+      g:lsp_diagnostics_highlights_insert_mode_enabled
+			     |g:lsp_diagnostics_highlights_insert_mode_enabled|
+      g:lsp_diagnostics_highlights_delay
+			     |g:lsp_diagnostics_highlights_delay|
       g:lsp_diagnostics_signs_enabled       |g:lsp_diagnostics_signs_enabled|
       g:lsp_diagnostics_signs_insert_mode_enabled
 			     |g:lsp_diagnostics_signs_insert_mode_enabled|
@@ -45,8 +51,6 @@ CONTENTS                                                  *vim-lsp-contents*
       g:lsp_diagnostics_virtual_text_prefix
 			     |g:lsp_diagnostics_virtual_text_prefix|
       g:lsp_format_sync_timeout             |g:lsp_format_sync_timeout|
-      g:lsp_highlights_enabled              |g:lsp_highlights_enabled|
-      g:lsp_textprop_enabled                |g:lsp_textprop_enabled|
       g:lsp_use_event_queue                 |g:lsp_use_event_queue|
       g:lsp_document_highlight_enabled      |g:lsp_document_highlight_enabled|
       g:lsp_document_highlight_delay        |g:lsp_document_highlight_delay|
@@ -504,6 +508,47 @@ g:lsp_format_sync_timeout                           *g:lsp_format_sync_timeout*
 	let g:lsp_format_sync_timeout = -1
 	let g:lsp_format_sync_timeout = 1000
 
+g:lsp_diagnostics_highlights_enabled    *g:lsp_diagnostics_highlights_enabled*
+    Type: |Number|
+    Default: `1` for neovim 0.3+ and vim with patch-8.1.1035
+
+    Enables highlighting of diagnostics. Requires NeoVim with version 0.3 or
+    Vim 8.1.1035 or newer.
+
+    Example: >
+	let g:lsp_diagnostics_highlights_enabled = 1
+	let g:lsp_diagnostics_highlights_enabled = 0
+<
+    To change the style of the highlighting, you can set or link
+    `LspErrorHighlight`, `LspWarningHighlight`, `LspInformationHighlight` and
+    `LspHintHighlight` highlight groups.
+
+    Example: >
+	highlight link LspErrorHighlight Error
+
+g:lsp_diagnostics_highlights_insert_mode_enabled
+			          *g:lsp_diagnostics_highlights_insert_mode_enabled*
+    Type: |Number|
+    Default: `1`
+
+    Indicates whether to enable diagnostics highlighting when in |insertmode|.
+    Requires |g:lsp_diagnostics_highlights_enabled|.
+
+    Example: >
+	let g:lsp_diagnostics_highlights_insert_mode_enabled = 1
+	let g:lsp_diagnostics_highlights_insert_mode_enabled = 0
+
+g:lsp_diagnostics_highlights_delay			*g:lsp_diagnostics_highlights_delay*
+    Type: |Number|
+    Default: `500`
+
+    Delay milliseconds to update diagnostics highlights. Requires
+    |g:lsp_diagnostics_highlights_enabled|.
+
+    Example: >
+	let g:lsp_diagnostics_highlights_delay = 200
+	let g:lsp_diagnostics_highlights_delay = 1000
+
 g:lsp_diagnostics_signs_enabled
 					      *g:lsp_diagnostics_signs_enabled*
     Type: |Number|
@@ -634,46 +679,6 @@ g:lsp_diagnostics_virtual_text_prefix   *g:lsp_diagnostics_virtual_text_prefix*
 	let g:lsp_diagnostics_virtual_text_prefix = "> "
 	let g:lsp_diagnostics_virtual_text_prefix = " ‣ "
 
-g:lsp_highlights_enabled                         *g:lsp_highlights_enabled*
-    Type: |Number|
-    Default: `1` for neovim 0.3+
-
-    Enables highlighting of diagnostics. Requires NeoVim with version 0.3 or
-    newer.
-
-    Example: >
-	let g:lsp_highlights_enabled = 1
-	let g:lsp_highlights_enabled = 0
-<
-
-    To change the style of the highlighting, you can set or link
-    `LspErrorHighlight`, `LspWarningHighlight`, `LspInformationHighlight` and
-    `LspHintHighlight` highlight groups.
-
-    Example: >
-	highlight link LspErrorHighlight Error
-
-
-g:lsp_textprop_enabled                             *g:lsp_textprop_enabled*
-    Type: |Number|
-    Default: `1` for vim with +textprop
-
-    Enables highlighting of diagnostics. Requires vim with +textprop
-    (patch 8.1.0579).
-
-    Example: >
-	let g:lsp_textprop_enabled = 1
-	let g:lsp_textprop_enabled = 0
-<
-
-    To change the style of the highlighting, you can set or link
-    `LspErrorHighlight`, `LspWarningHighlight`, `LspInformationHighlight` and
-    `LspHintHighlight` highlight groups.
-
-    Example: >
-	highlight LspErrorHighlight term=underline cterm=underline gui=underline
-
-
 g:lsp_use_event_queue                               *g:lsp_use_event_queue*
     Type: |Number|
     Default: `1` for neovim or vim with patch-8.1.0889
@@ -687,9 +692,10 @@ g:lsp_use_event_queue                               *g:lsp_use_event_queue*
 
 g:lsp_document_highlight_enabled      *g:lsp_document_highlight_enabled*
     Type: |Number|
-    Default: `1`
+    Default: `1` for neovim or vim with patch-8.1.1035
 
-    Enable highlighting of the references to the symbol under the cursor.
+    Enables highlighting of the references to the symbol under the cursor.
+    Requires NeoVim with version 0.3 or Vim 8.1.1035 or newer.
 
     Example: >
     let g:lsp_document_highlight_enabled = 1

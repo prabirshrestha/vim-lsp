@@ -3,7 +3,7 @@
 " }
 function! lsp#internal#diagnostics#document_diagnostics_command#do(options) abort
     if !g:lsp_diagnostics_enabled
-        call lsp#utils#error(':LspDocumentDiagnostics', 'g:lsp_diagnostics_enabled must be enabled')
+        call lsp#utils#error(':LspDocumentDiagnostics g:lsp_diagnostics_enabled must be enabled')
         return
     endif
 
