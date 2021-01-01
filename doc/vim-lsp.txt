@@ -51,7 +51,6 @@ CONTENTS                                                  *vim-lsp-contents*
       g:lsp_diagnostics_virtual_text_prefix
 			     |g:lsp_diagnostics_virtual_text_prefix|
       g:lsp_format_sync_timeout             |g:lsp_format_sync_timeout|
-      g:lsp_textprop_enabled                |g:lsp_textprop_enabled|
       g:lsp_use_event_queue                 |g:lsp_use_event_queue|
       g:lsp_document_highlight_enabled      |g:lsp_document_highlight_enabled|
       g:lsp_document_highlight_delay        |g:lsp_document_highlight_delay|
@@ -679,26 +678,6 @@ g:lsp_diagnostics_virtual_text_prefix   *g:lsp_diagnostics_virtual_text_prefix*
     Example: >
 	let g:lsp_diagnostics_virtual_text_prefix = "> "
 	let g:lsp_diagnostics_virtual_text_prefix = " ‣ "
-
-g:lsp_textprop_enabled                             *g:lsp_textprop_enabled*
-    Type: |Number|
-    Default: `1` for vim with +textprop
-
-    Enables highlighting of diagnostics. Requires vim with +textprop
-    (patch 8.1.0579).
-
-    Example: >
-	let g:lsp_textprop_enabled = 1
-	let g:lsp_textprop_enabled = 0
-<
-
-    To change the style of the highlighting, you can set or link
-    `LspErrorHighlight`, `LspWarningHighlight`, `LspInformationHighlight` and
-    `LspHintHighlight` highlight groups.
-
-    Example: >
-	highlight LspErrorHighlight term=underline cterm=underline gui=underline
-
 
 g:lsp_use_event_queue                               *g:lsp_use_event_queue*
     Type: |Number|

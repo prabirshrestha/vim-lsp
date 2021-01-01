@@ -1,4 +1,4 @@
-let s:use_vim_textprops = has('textprop') && !has('nvim')
+let s:use_vim_textprops = lsp#utils#_has_textprops() && !has('nvim')
 let s:use_nvim_highlight = exists('*nvim_buf_add_highlight') && has('nvim')
 let s:textprop_cache = 'vim-lsp-semantic-cache'
 
