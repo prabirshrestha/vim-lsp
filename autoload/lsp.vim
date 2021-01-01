@@ -55,9 +55,6 @@ function! lsp#enable() abort
         let s:already_setup = 1
     endif
     let s:enabled = 1
-    if g:lsp_diagnostics_enabled
-        if g:lsp_textprop_enabled | call lsp#ui#vim#diagnostics#textprop#enable() | endif
-    endif
     if g:lsp_signature_help_enabled
         call lsp#ui#vim#signature_help#setup()
     endif
@@ -73,7 +70,6 @@ function! lsp#disable() abort
     if !s:enabled
         return
     endif
-    call lsp#ui#vim#diagnostics#textprop#disable()
     call lsp#ui#vim#signature_help#_disable()
     call lsp#ui#vim#completion#_disable()
     call lsp#internal#document_highlight#_disable()

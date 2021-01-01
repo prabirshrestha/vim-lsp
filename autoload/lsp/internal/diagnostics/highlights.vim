@@ -37,7 +37,12 @@ function! lsp#internal#diagnostics#highlights#_enable() abort
         if has('nvim')
             let s:namespace_id = nvim_create_namespace('vim_lsp_diagnostics_highlights')
         else
-            " TODO
+            let s:namespace_id = 'vim_lsp_diagnostics_highlights'
+            for l:severity in keys(s:severity_sign_names_mapping)
+                let l:hl_group = s:severity_sign_names_mapping[l:severity] . 'Highlight'
+                call prop_type_add(s:get_prop_type_name(l:severity),
+                    \ {'highlight': l:hl_group, 'combine': v:true })
+            endfor
         endif
     endif
 
@@ -74,13 +79,22 @@ function! lsp#internal#diagnostics#highlights#_disable() abort
     let s:enabled = 0
 endfunction
 
+function! s:get_prop_type_name(severity) abort
+    return s:namespace_id . '_' . get(s:severity_sign_names_mapping, a:severity, 'LspError')
+endfunction
+
 function! s:clear_all_highlights() abort
     for l:bufnr in range(1, bufnr('$'))
         if bufexists(l:bufnr) && bufloaded(l:bufnr)
             if has('nvim')
                 call nvim_buf_clear_namespace(l:bufnr, s:namespace_id, 0, -1)
             else
-                " TODO
+                for l:severity in keys(s:severity_sign_names_mapping)
+                    call prop_remove({
+                        \ 'type': s:get_prop_type_name(l:severity),
+                        \ 'bufnr': l:bufnr,
+                        \ 'all': v:true })
+                endfor
             endif
         endif
     endfor
@@ -111,7 +125,8 @@ function! s:place_highlights(server, diagnostics_response, bufnr) abort
     for l:item in a:diagnostics_response['params']['diagnostics']
         let [l:start_line, l:start_col] = lsp#utils#position#lsp_to_vim(a:bufnr, l:item['range']['start'])
         let [l:end_line, l:end_col] = lsp#utils#position#lsp_to_vim(a:bufnr, l:item['range']['end'])
-        let l:hl_group = get(s:severity_sign_names_mapping, get(l:item, 'severity', 3), 'LspError') . 'Highlight'
+        let l:severity = get(l:item, 'severity', 3)
+        let l:hl_group = get(s:severity_sign_names_mapping, l:severity, 'LspError') . 'Highlight'
         if has('nvim')
             for l:line in range(l:start_line, l:end_line)
                 if l:line == l:start_line
@@ -141,7 +156,12 @@ function! s:place_highlights(server, diagnostics_response, bufnr) abort
                    \ l:line - 1, l:highlight_start_col - 1, l:highlight_end_col == -1 ? -1 : l:highlight_end_col)
             endfor
         else
-            " TODO: vim
+            call prop_add(l:start_line, l:start_col, {
+                \ 'end_lnum': l:end_line,
+                \ 'end_col': l:end_col + 1,
+                \ 'bufnr': a:bufnr,
+                \ 'type': s:get_prop_type_name(l:severity),
+                \ })
         endif
     endfor
 endfunction
