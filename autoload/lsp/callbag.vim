@@ -1,4 +1,4 @@
-" https://github.com/prabirshrestha/callbag.vim#9108df10d721c04a8908a391dde14aeabacc422d
+" https://github.com/prabirshrestha/callbag.vim#09ff9228257f5e8c68910fd9721c95f9d4fb6763
 "    :CallbagEmbed path=autoload/lsp/callbag.vim namespace=lsp#callbag
 
 let s:undefined_token = '__callbag_undefined__'
@@ -1315,21 +1315,20 @@ endfunction
 
 function! s:shareTalkbackCallback(data, sink, t, d) abort
     if a:t == 2
-        let l:i = -1
-        let l:found = 0
-        for l:S in a:data['sinks']
-            let l:i += 1
-            if l:S == a:sink
+        let l:i = 0
+        while l:i < len(a:data['sinks'])
+            if a:data['sinks'][l:i] == a:sink
                 let l:found = 1
                 break
             endif
-        endfor
+            let l:i += 1
+        endwhile
 
         if l:found
             call remove(a:data['sinks'], l:i)
         endif
 
-        if !empty(a:data['sinks'])
+        if empty(a:data['sinks'])
             call a:data['sourceTalkback'](2, lsp#callbag#undefined())
         endif
     else
