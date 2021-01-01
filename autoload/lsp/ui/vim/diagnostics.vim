@@ -5,6 +5,7 @@ function! lsp#ui#vim#diagnostics#handle_text_document_publish_diagnostics(server
     if lsp#client#is_error(a:data['response'])
         return
     endif
+    echom json_encode(['old', a:data['response']])
     let l:uri = a:data['response']['params']['uri']
     let l:uri = lsp#utils#normalize_uri(l:uri)
     if !has_key(s:diagnostics, l:uri)
@@ -218,6 +219,10 @@ function! s:get_diagnostics(uri) abort
         endif
     endif
     return [0, {}]
+endfunction
+
+function! lsp#ui#vim#diagnostics#get_all() abort
+    return s:get_all_buffer_diagnostics()
 endfunction
 
 " Get diagnostics for the current buffer URI from all servers

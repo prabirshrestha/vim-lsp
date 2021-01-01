@@ -50,6 +50,7 @@ function! lsp#internal#document_formatting#format(options) abort
                 \ )),
                 \ lsp#callbag#toList(),
                 \ ).wait({ 'sleep': get(a:options, 'sleep', 1), 'timeout': get(a:options, 'timeout', g:lsp_format_sync_timeout) })
+            echom json_encode(['xformat', l:x])
             call s:format_next(l:x[0])
             call s:format_complete()
         catch

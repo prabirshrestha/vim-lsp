@@ -787,6 +787,10 @@ function! s:on_notification(server_name, id, data, event) abort
 
     if lsp#client#is_server_instantiated_notification(a:data)
         if has_key(l:response, 'method')
+            if a:data['response']['method'] ==# 'textDocument/publishDiagnostics'
+                echom json_encode(['old', a:data['response']])
+                call lsp#log('pubdiag', a:data['response'])
+            endif
             if g:lsp_diagnostics_enabled && l:lsp_diagnostics_config_enabled && l:response['method'] ==# 'textDocument/publishDiagnostics'
                 call lsp#ui#vim#diagnostics#handle_text_document_publish_diagnostics(a:server_name, a:data)
             elseif l:response['method'] ==# 'textDocument/semanticHighlighting'
@@ -981,6 +985,7 @@ function! lsp#stream(...) abort
     if a:0 == 0
         return lsp#callbag#share(s:Stream)
     else
+        call lsp#log('streamv', a:1, a:2)
         call s:Stream(a:1, a:2)
     endif
 endfunction
