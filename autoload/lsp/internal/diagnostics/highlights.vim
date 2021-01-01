@@ -90,10 +90,16 @@ function! s:clear_all_highlights() abort
                 call nvim_buf_clear_namespace(l:bufnr, s:namespace_id, 0, -1)
             else
                 for l:severity in keys(s:severity_sign_names_mapping)
-                    call prop_remove({
-                        \ 'type': s:get_prop_type_name(l:severity),
-                        \ 'bufnr': l:bufnr,
-                        \ 'all': v:true })
+                    try
+                        " TODO: need to check for valid range before calling prop_add
+                        " See https://github.com/prabirshrestha/vim-lsp/pull/721
+                        silent! call prop_remove({
+                            \ 'type': s:get_prop_type_name(l:severity),
+                            \ 'bufnr': l:bufnr,
+                            \ 'all': v:true })
+                    catch
+                        call lsp#log('diagnostics', 'clear_all_highlights', 'prop_remove', v:exception, v:throwpoint)
+                    endtry
                 endfor
             endif
         endif
