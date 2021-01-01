@@ -692,9 +692,10 @@ g:lsp_use_event_queue                               *g:lsp_use_event_queue*
 
 g:lsp_document_highlight_enabled      *g:lsp_document_highlight_enabled*
     Type: |Number|
-    Default: `1`
+    Default: `1` for neovim or vim with patch-8.1.1035
 
-    Enable highlighting of the references to the symbol under the cursor.
+    Enables highlighting of the references to the symbol under the cursor.
+    Requires NeoVim with version 0.3 or Vim 8.1.1035 or newer.
 
     Example: >
     let g:lsp_document_highlight_enabled = 1
