@@ -9,14 +9,14 @@ function! lsp#internal#diagnostics#echo#_enable() abort
     let s:enabled = 1
 
     let s:Dispose = lsp#callbag#pipe(
-        \ lsp#callbag#fromEvent('CursorMoved'),
+        \ lsp#callbag#fromEvent(['CursorMoved']),
         \ lsp#callbag#filter({_->g:lsp_diagnostics_echo_cursor}),
         \ lsp#callbag#debounceTime(g:lsp_diagnostics_echo_delay),
         \ lsp#callbag#map({_->{'bufnr': bufnr('%'), 'curpos': getcurpos()[0:2], 'changedtick': b:changedtick }}),
         \ lsp#callbag#distinctUntilChanged({a,b -> a['bufnr'] == b['bufnr'] && a['curpos'] == b['curpos'] && a['changedtick'] == b['changedtick']}),
         \ lsp#callbag#filter({_->mode() is# 'n'}),
         \ lsp#callbag#filter({_->getbufvar(bufnr('%'), '&buftype') !=# 'terminal' }),
-        \ lsp#callbag#map({_->lsp#ui#vim#diagnostics#get_diagnostics_under_cursor()}),
+        \ lsp#callbag#map({_->lsp#internal#diagnostics#under_cursor#get_diagnostic()}),
         \ lsp#callbag#subscribe({x->s:echo(x)}),
         \ )
 endfunction

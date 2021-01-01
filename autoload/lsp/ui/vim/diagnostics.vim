@@ -19,39 +19,6 @@ function! lsp#ui#vim#diagnostics#get_document_diagnostics(bufnr) abort
     return get(s:diagnostics, lsp#utils#get_buffer_uri(a:bufnr), {})
 endfunction
 
-" Returns a diagnostic object, or empty dictionary if no diagnostics are available.
-"
-" Note: Consider renaming this method (s/diagnostics/diagnostic) to make
-" it clear that it returns just one diagnostic, not a list.
-function! lsp#ui#vim#diagnostics#get_diagnostics_under_cursor(...) abort
-    let l:target_server_name = get(a:000, 0, '')
-
-    let l:diagnostics = s:get_all_buffer_diagnostics(l:target_server_name)
-    if !len(l:diagnostics)
-        return
-    endif
-
-    let l:line = line('.')
-    let l:col = col('.')
-
-    let l:closest_diagnostic = {}
-    let l:closest_distance = -1
-
-    for l:diagnostic in l:diagnostics
-        let [l:start_line, l:start_col] = lsp#utils#position#lsp_to_vim('%', l:diagnostic['range']['start'])
-
-        if l:line == l:start_line
-            let l:distance = abs(l:start_col - l:col)
-            if l:closest_distance < 0 || l:distance < l:closest_distance
-                let l:closest_diagnostic = l:diagnostic
-                let l:closest_distance = l:distance
-            endif
-        endif
-    endfor
-
-    return l:closest_diagnostic
-endfunction
-
 function! s:severity_of(diagnostic) abort
     return get(a:diagnostic, 'severity', 1)
 endfunction
