@@ -1125,7 +1125,7 @@ endfunction
 
 " Return first error line or v:null if there are no errors
 function! lsp#get_buffer_first_error_line() abort
-    return lsp#ui#vim#diagnostics#get_buffer_first_error_line()
+    return lsp#internal#diagnostics#first_line#get_first_error_line({'bufnr': bufnr('%')})
 endfunction
 
 " Return UI list with window/workDoneProgress
