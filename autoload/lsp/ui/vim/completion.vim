@@ -131,6 +131,7 @@ function! s:on_complete_done_after() abort
       endif
     else
       call lsp#utils#text_edit#apply_text_edits('%', [{ 'range': l:range, 'newText': l:text }])
+      call cursor(lsp#utils#position#lsp_to_vim('%', l:range.end))
     endif
   endif
 
