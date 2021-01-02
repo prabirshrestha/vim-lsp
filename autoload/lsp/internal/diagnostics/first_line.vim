@@ -3,7 +3,7 @@
 " options = {
 "   'bufnr': '',        " optional
 " }
-function! lsp#internal#diagnostics#first_line#get_diagnostic(options) abort
+function! lsp#internal#diagnostics#first_line#get_first_error_line(options) abort
     let l:bufnr = get(a:options, 'bufnr', bufnr('%'))
 
     if !lsp#internal#diagnostics#state#_is_enabled_for_buffer(l:bufnr)
