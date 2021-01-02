@@ -130,8 +130,7 @@ function! s:notify_diagnostics_update(...) abort
     " if a:0 > 0 | let l:data['response']['params']['server'] = a:1 | endif
     " if a:0 > 1 | let l:data['response']['params']['uri'] = a:2 | endif
     call lsp#stream(1, l:data)
-    " TODO: uncomment doautocmd when all diagnostics moves to using callbag
-    " doautocmd <nomodeline> User lsp_diagnostics_updated
+    doautocmd <nomodeline> User lsp_diagnostics_updated
 endfunction
 
 function! lsp#internal#diagnostics#state#_enable_for_buffer(bufnr) abort
