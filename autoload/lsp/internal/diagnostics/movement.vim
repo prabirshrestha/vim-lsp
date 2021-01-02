@@ -1,39 +1,22 @@
-let s:is_win = has('win32') || has('win64')
-let s:diagnostics = {} " { uri: { 'server_name': response } }
-
-function! lsp#ui#vim#diagnostics#handle_text_document_publish_diagnostics(server_name, data) abort
-    if lsp#client#is_error(a:data['response'])
-        return
-    endif
-    let l:uri = a:data['response']['params']['uri']
-    let l:uri = lsp#utils#normalize_uri(l:uri)
-    if !has_key(s:diagnostics, l:uri)
-        let s:diagnostics[l:uri] = {}
-    endif
-    let s:diagnostics[l:uri][a:server_name] = a:data
-
-    doautocmd <nomodeline> User lsp_diagnostics_updated
-endfunction
-
 function! s:severity_of(diagnostic) abort
     return get(a:diagnostic, 'severity', 1)
 endfunction
 
-function! lsp#ui#vim#diagnostics#next_error(...) abort
+function! lsp#internal#diagnostics#movement#_next_error(...) abort
     let l:diagnostics = filter(s:get_all_buffer_diagnostics(),
         \ {_, diagnostic -> s:severity_of(diagnostic) ==# 1 })
     let l:options = lsp#utils#parse_command_options(a:000)
     call s:next_diagnostic(l:diagnostics, l:options)
 endfunction
 
-function! lsp#ui#vim#diagnostics#next_warning(...) abort
+function! lsp#internal#diagnostics#movement#_next_warning(...) abort
     let l:diagnostics = filter(s:get_all_buffer_diagnostics(),
         \ {_, diagnostic -> s:severity_of(diagnostic) ==# 2 })
     let l:options = lsp#utils#parse_command_options(a:000)
     call s:next_diagnostic(l:diagnostics, l:options)
 endfunction
 
-function! lsp#ui#vim#diagnostics#next_diagnostic(...) abort
+function! lsp#internal#diagnostics#movement#_next_diagnostics(...) abort
     let l:options = lsp#utils#parse_command_options(a:000)
     call s:next_diagnostic(s:get_all_buffer_diagnostics(), l:options)
 endfunction
@@ -87,21 +70,21 @@ function! s:next_diagnostic(diagnostics, options) abort
     call winrestview(l:view)
 endfunction
 
-function! lsp#ui#vim#diagnostics#previous_error(...) abort
+function! lsp#internal#diagnostics#movement#_previous_error(...) abort
     let l:diagnostics = filter(s:get_all_buffer_diagnostics(),
         \ {_, diagnostic -> s:severity_of(diagnostic) ==# 1 })
     let l:options = lsp#utils#parse_command_options(a:000)
     call s:previous_diagnostic(l:diagnostics, l:options)
 endfunction
 
-function! lsp#ui#vim#diagnostics#previous_warning(...) abort
+function! lsp#internal#diagnostics#movement#_previous_warning(...) abort
     let l:options = lsp#utils#parse_command_options(a:000)
     let l:diagnostics = filter(s:get_all_buffer_diagnostics(),
         \ {_, diagnostic -> s:severity_of(diagnostic) ==# 2 })
     call s:previous_diagnostic(l:diagnostics, l:options)
 endfunction
 
-function! lsp#ui#vim#diagnostics#previous_diagnostic(...) abort
+function! lsp#internal#diagnostics#movement#_previous_diagnostics(...) abort
     let l:options = lsp#utils#parse_command_options(a:000)
     call s:previous_diagnostic(s:get_all_buffer_diagnostics(), l:options)
 endfunction
@@ -175,23 +158,30 @@ endfunction
 
 " Get diagnostics for the current buffer URI from all servers
 function! s:get_all_buffer_diagnostics(...) abort
-    let l:target_server_name = get(a:000, 0, '')
+    let l:server = get(a:000, 0, '')
 
-    let l:uri = lsp#utils#get_buffer_uri()
+    let l:bufnr = bufnr('%')
+    let l:uri = lsp#utils#get_buffer_uri(l:bufnr)
 
-    let [l:has_diagnostics, l:diagnostics] = s:get_diagnostics(l:uri)
-    if !l:has_diagnostics
+    if !lsp#internal#diagnostics#state#_is_enabled_for_buffer(l:bufnr)
         return []
     endif
 
-    let l:all_diagnostics = []
-    for [l:server_name, l:data] in items(l:diagnostics)
-        if empty(l:target_server_name) || l:server_name ==# l:target_server_name
-            call extend(l:all_diagnostics, l:data['response']['params']['diagnostics'])
+    let l:diagnostics_by_server = lsp#internal#diagnostics#state#_get_all_diagnostics_grouped_by_server_for_uri(l:uri)
+    if empty(l:server)
+        let l:diagnostics = []
+        for l:item in values(l:diagnostics_by_server)
+            let l:diagnostics += l:item['params']['diagnostics']
+        endfor
+    else
+        if has_key(l:diagnostics_by_server, l:server)
+            let l:diagnostics = l:diagnostics_by_server[l:server]['params']['diagnostics']
+        else
+            let l:diagnostics = []
         endif
-    endfor
+    endif
 
-    return l:all_diagnostics
+    return l:diagnostics
 endfunction
 
 function! s:compare_diagnostics(d1, d2) abort
