@@ -229,7 +229,7 @@ function! s:on_text_document_did_open(...) abort
     call lsp#log('s:on_text_document_did_open()', l:buf, &filetype, getcwd(), lsp#utils#get_buffer_uri(l:buf))
 
     " Some language server notify diagnostics to the buffer that has not been loaded yet.
-    " This diagnostics was stored `autoload/lsp/ui/vim/diagnostics.vim` but not highlighted.
+    " This diagnostics was stored `autoload/lsp/internal/diagnostics/state.vim` but not highlighted.
     " So we should refresh highlights when buffer opened.
     call lsp#internal#diagnostics#state#_force_notify_buffer(l:buf)
 
@@ -776,7 +776,6 @@ function! s:on_notification(server_name, id, data, event) abort
     let l:response = a:data['response']
     let l:server = s:servers[a:server_name]
     let l:server_info = l:server['server_info']
-    let l:lsp_diagnostics_config_enabled = get(get(l:server_info, 'config', {}), 'diagnostics', v:true)
 
     let l:stream_data = { 'server': a:server_name, 'response': l:response }
     if has_key(a:data, 'request')
@@ -786,11 +785,10 @@ function! s:on_notification(server_name, id, data, event) abort
 
     if lsp#client#is_server_instantiated_notification(a:data)
         if has_key(l:response, 'method')
-            if g:lsp_diagnostics_enabled && l:lsp_diagnostics_config_enabled && l:response['method'] ==# 'textDocument/publishDiagnostics'
-                call lsp#ui#vim#diagnostics#handle_text_document_publish_diagnostics(a:server_name, a:data)
-            elseif l:response['method'] ==# 'textDocument/semanticHighlighting'
+            if l:response['method'] ==# 'textDocument/semanticHighlighting'
                 call lsp#ui#vim#semantic#handle_semantic(a:server_name, a:data)
             endif
+            " NOTE: this is legacy code, use stream instead of handling notifications here
         endif
     else
         let l:request = a:data['request']

@@ -96,12 +96,12 @@ command! -nargs=? LspDocumentDiagnostics call lsp#internal#diagnostics#document_
             \   'buffers': {'type': type('')},
             \ })))
 command! -nargs=? -complete=customlist,lsp#utils#empty_complete LspHover call lsp#ui#vim#hover#get_hover_under_cursor()
-command! -nargs=* LspNextError call lsp#ui#vim#diagnostics#next_error(<f-args>)
-command! -nargs=* LspPreviousError call lsp#ui#vim#diagnostics#previous_error(<f-args>)
-command! -nargs=* LspNextWarning call lsp#ui#vim#diagnostics#next_warning(<f-args>)
-command! -nargs=* LspPreviousWarning call lsp#ui#vim#diagnostics#previous_warning(<f-args>)
-command! -nargs=* LspNextDiagnostic call lsp#ui#vim#diagnostics#next_diagnostic(<f-args>)
-command! -nargs=* LspPreviousDiagnostic call lsp#ui#vim#diagnostics#previous_diagnostic(<f-args>)
+command! -nargs=* LspNextError call lsp#internal#diagnostics#movement#_next_error(<f-args>)
+command! -nargs=* LspPreviousError call lsp#internal#diagnostics#movement#_previous_error(<f-args>)
+command! -nargs=* LspNextWarning call lsp#internal#diagnostics#movement#_next_warning(<f-args>)
+command! -nargs=* LspPreviousWarning call lsp#internal#diagnostics#movement#_previous_warning(<f-args>)
+command! -nargs=* LspNextDiagnostic call lsp#internal#diagnostics#movement#_next_diagnostics(<f-args>)
+command! -nargs=* LspPreviousDiagnostic call lsp#internal#diagnostics#movement#_previous_diagnostics(<f-args>)
 command! LspReferences call lsp#ui#vim#references()
 command! LspRename call lsp#ui#vim#rename()
 command! LspTypeDefinition call lsp#ui#vim#type_definition(0, <q-mods>)
@@ -142,18 +142,18 @@ nnoremap <plug>(lsp-document-diagnostics) :<c-u>call lsp#internal#diagnostics#do
 nnoremap <plug>(lsp-hover) :<c-u>call lsp#ui#vim#hover#get_hover_under_cursor()<cr>
 nnoremap <plug>(lsp-preview-close) :<c-u>call lsp#ui#vim#output#closepreview()<cr>
 nnoremap <plug>(lsp-preview-focus) :<c-u>call lsp#ui#vim#output#focuspreview()<cr>
-nnoremap <plug>(lsp-next-error) :<c-u>call lsp#ui#vim#diagnostics#next_error()<cr>
-nnoremap <plug>(lsp-next-error-nowrap) :<c-u>call lsp#ui#vim#diagnostics#next_error("--nowrap")<cr>
-nnoremap <plug>(lsp-previous-error) :<c-u>call lsp#ui#vim#diagnostics#previous_error()<cr>
-nnoremap <plug>(lsp-previous-error-nowrap) :<c-u>call lsp#ui#vim#diagnostics#previous_error("--nowrap")<cr>
-nnoremap <plug>(lsp-next-warning) :<c-u>call lsp#ui#vim#diagnostics#next_warning()<cr>
-nnoremap <plug>(lsp-next-warning-nowrap) :<c-u>call lsp#ui#vim#diagnostics#next_warning("--nowrap")<cr>
-nnoremap <plug>(lsp-previous-warning) :<c-u>call lsp#ui#vim#diagnostics#previous_warning()<cr>
-nnoremap <plug>(lsp-previous-warning-nowrap) :<c-u>call lsp#ui#vim#diagnostics#previous_warning("--nowrap")<cr>
-nnoremap <plug>(lsp-next-diagnostic) :<c-u>call lsp#ui#vim#diagnostics#next_diagnostic()<cr>
-nnoremap <plug>(lsp-next-diagnostic-nowrap) :<c-u>call lsp#ui#vim#diagnostics#next_diagnostic("--nowrap")<cr>
-nnoremap <plug>(lsp-previous-diagnostic) :<c-u>call lsp#ui#vim#diagnostics#previous_diagnostic()<cr>
-nnoremap <plug>(lsp-previous-diagnostic-nowrap) :<c-u>call lsp#ui#vim#diagnostics#previous_diagnostic("--nowrap")<cr>
+nnoremap <plug>(lsp-next-error) :<c-u>call lsp#internal#diagnostics#movement#_next_error()<cr>
+nnoremap <plug>(lsp-next-error-nowrap) :<c-u>call lsp#internal#diagnostics#movement#_next_error("--nowrap")<cr>
+nnoremap <plug>(lsp-previous-error) :<c-u>call lsp#internal#diagnostics#movement#_previous_error()<cr>
+nnoremap <plug>(lsp-previous-error-nowrap) :<c-u>call lsp#internal#diagnostics#movement#_previous_error("--nowrap")<cr>
+nnoremap <plug>(lsp-next-warning) :<c-u>call lsp#internal#diagnostics#movement#_next_warning()<cr>
+nnoremap <plug>(lsp-next-warning-nowrap) :<c-u>call lsp#internal#diagnostics#movement#_next_warning("--nowrap")<cr>
+nnoremap <plug>(lsp-previous-warning) :<c-u>call lsp#internal#diagnostics#movement#_previous_warning()<cr>
+nnoremap <plug>(lsp-previous-warning-nowrap) :<c-u>call lsp#internal#diagnostics#movement#_previous_warning("--nowrap")<cr>
+nnoremap <plug>(lsp-next-diagnostic) :<c-u>call lsp#internal#diagnostics#movement#_next_diagnostics()<cr>
+nnoremap <plug>(lsp-next-diagnostic-nowrap) :<c-u>call lsp#internal#diagnostics#movement#_next_diagnostics("--nowrap")<cr>
+nnoremap <plug>(lsp-previous-diagnostic) :<c-u>call lsp#internal#diagnostics#movement#_previous_diagnostics()<cr>
+nnoremap <plug>(lsp-previous-diagnostic-nowrap) :<c-u>call lsp#internal#diagnostics#movement#_previous_diagnostics("--nowrap")<cr>
 nnoremap <plug>(lsp-references) :<c-u>call lsp#ui#vim#references()<cr>
 nnoremap <plug>(lsp-rename) :<c-u>call lsp#ui#vim#rename()<cr>
 nnoremap <plug>(lsp-type-definition) :<c-u>call lsp#ui#vim#type_definition(0)<cr>
