@@ -23,6 +23,13 @@ let s:diagnostics_state = {}
 " internal state for whether it is enabled or not to avoid multiple subscriptions
 let s:enabled = 0
 
+let s:diagnostic_kinds = {
+    \ 1: 'error',
+    \ 2: 'warning',
+    \ 3: 'information',
+    \ 4: 'hint',
+    \ }
+
 function! lsp#internal#diagnostics#state#_enable() abort
     " don't even bother registering if the feature is disabled
     if !g:lsp_diagnostics_enabled | return | endif
@@ -143,4 +150,25 @@ endfunction
 
 function! lsp#internal#diagnostics#state#_is_enabled_for_buffer(bufnr) abort
     return getbufvar(a:bufnr, 'lsp_diagnostics_enabled', 1) == 1
+endfunction
+
+" Return dict with diagnostic counts for the specified buffer
+" { 'error': 1, 'warning': 0, 'information': 0, 'hint': 0 }
+function! lsp#internal#diagnostics#state#_get_diagnostics_count_for_buffer(bufnr) abort
+    let l:counts = {
+        \ 'error': 0,
+        \ 'warning': 0,
+        \ 'information': 0,
+        \ 'hint': 0,
+        \ }
+    if lsp#internal#diagnostics#state#_is_enabled_for_buffer(a:bufnr)
+        let l:uri = lsp#utils#get_buffer_uri(a:bufnr)
+        for [l:_, l:response] in items(lsp#internal#diagnostics#state#_get_all_diagnostics_grouped_by_server_for_uri(l:uri))
+            for l:diagnostic in l:response['params']['diagnostics']
+                let l:key = get(s:diagnostic_kinds, get(l:diagnostic, 'severity', 1) , 'error')
+                let l:counts[l:key] += 1
+            endfor
+        endfor
+    end
+    return l:counts
 endfunction
