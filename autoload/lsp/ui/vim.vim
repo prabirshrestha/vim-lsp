@@ -1,5 +1,5 @@
 function! s:not_supported(what) abort
-    return lsp#utils#error(a:what.' not supported for '.&filetype)
+    return lsp#utils#error(printf("%s not supported for filetype '%s'", a:what, &filetype))
 endfunction
 
 function! lsp#ui#vim#implementation(in_preview, ...) abort
