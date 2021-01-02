@@ -1120,7 +1120,7 @@ endfunction
 " Return dict with diagnostic counts for current buffer
 " { 'error': 1, 'warning': 0, 'information': 0, 'hint': 0 }
 function! lsp#get_buffer_diagnostics_counts() abort
-    return lsp#ui#vim#diagnostics#get_buffer_diagnostics_counts()
+    return lsp#internal#diagnostics#state#_get_diagnostics_count_for_buffer(bufnr('%'))
 endfunction
 
 " Return first error line or v:null if there are no errors

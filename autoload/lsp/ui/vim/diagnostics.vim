@@ -15,10 +15,6 @@ function! lsp#ui#vim#diagnostics#handle_text_document_publish_diagnostics(server
     doautocmd <nomodeline> User lsp_diagnostics_updated
 endfunction
 
-function! lsp#ui#vim#diagnostics#get_document_diagnostics(bufnr) abort
-    return get(s:diagnostics, lsp#utils#get_buffer_uri(a:bufnr), {})
-endfunction
-
 function! s:severity_of(diagnostic) abort
     return get(a:diagnostic, 'severity', 1)
 endfunction
@@ -211,31 +207,6 @@ function! s:compare_diagnostics(d1, d2) abort
     else
         return l:line1 > l:line2 ? 1 : -1
     endif
-endfunction
-
-let s:diagnostic_kinds = {
-    \ 1: 'error',
-    \ 2: 'warning',
-    \ 3: 'information',
-    \ 4: 'hint',
-    \ }
-
-function! lsp#ui#vim#diagnostics#get_buffer_diagnostics_counts() abort
-    let l:counts = {
-        \ 'error': 0,
-        \ 'warning': 0,
-        \ 'information': 0,
-        \ 'hint': 0,
-        \ }
-    let l:uri = lsp#utils#get_buffer_uri()
-    let [l:has_diagnostics, l:diagnostics] = s:get_diagnostics(l:uri)
-    for [l:server_name, l:data] in items(l:diagnostics)
-        for l:diag in l:data['response']['params']['diagnostics']
-            let l:key = get(s:diagnostic_kinds, s:severity_of(l:diag), 'error')
-            let l:counts[l:key] += 1
-        endfor
-    endfor
-    return l:counts
 endfunction
 
 function! lsp#ui#vim#diagnostics#get_buffer_first_error_line() abort
