@@ -79,6 +79,8 @@ CONTENTS                                                  *vim-lsp-contents*
       lsp#stop_server                       |lsp#stop_server()|
       lsp#utils#find_nearest_parent_file_directory()
                               |lsp#utils#find_nearest_parent_file_directory()|
+      lsp#enable_diagnostics_for_buffer() |lsp#enable_diagnostics_for_buffer()|
+      lsp#disable_diagnostics_for_buffer()|lsp#disable_diagnostics_for_buffer()|
       lsp#get_buffer_diagnostics_counts() |lsp#get_buffer_diagnostics_counts()|
       lsp#get_buffer_first_error_line()   |lsp#get_buffer_first_error_line()|
       lsp#get_progress()                  |lsp#get_progress()|
@@ -1267,6 +1269,34 @@ This method is mainly used to generate 'root_uri' when registering server.
 	  be regarded as a directory name, otherwise as a file name.
 	* If there is not directory with the specific files or diretories
 	  found, the method will return an empty string.
+
+lsp#enable_diagnostics_for_buffer()          *lsp#enable_diagnotics_for_buffer()*
+
+Re-enable diagnsostics for the specified buffer. By default diagnostics are
+enabled for all buffers.
+
+    Example: >
+	:call lsp#enable_diagnostics_for_buffer()
+	:call lsp#enable_diagnostics_for_buffer(bufnr('%'))
+
+lsp#disable_diagnostics_for_buffer()       *lsp#disable_diagnostics_for_buffer()*
+
+Diable diagnostics for the specified buffer. By default diagnostics are
+enabled for all buffers.
+
+    Example: >
+	:call lsp#enable_diagnostics_for_buffer()
+	:call lsp#enable_diagnostics_for_buffer(bufnr('%'))
+
+Diagnostics can be disabled for buffer to temporarily avoid conflicts with
+other plugins.
+
+    Example: >
+	augroup LspEasyMotion
+	    autocmd!
+	    autocmd User EasyMotionPromptBegin call lsp#disable_diagnostics_for_buffer()<CR>
+	    autocmd User EasyMotionPromptEnd call lsp#enable_diagnostics_for_buffer()<CR>
+	augroup END
 
 lsp#get_buffer_diagnostics_counts()    *lsp#get_buffer_diagnostics_counts()*
 
