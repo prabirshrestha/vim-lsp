@@ -1115,6 +1115,16 @@ function! s:send_didchange_queue(...) abort
     let s:didchange_queue = []
 endfunction
 
+function! lsp#enable_diagnostics_for_buffer(...) abort
+    let l:bufnr = a:0 > 0 ? a:1 : bufnr('%')
+    call lsp#internal#diagnostics#state#_enable_for_buffer(l:bufnr)
+endfunction
+
+function! lsp#disable_diagnostics_for_buffer(...) abort
+    let l:bufnr = a:0 > 0 ? a:1 : bufnr('%')
+    call lsp#internal#diagnostics#state#_disable_for_buffer(l:bufnr)
+endfunction
+
 " Return dict with diagnostic counts for current buffer
 " { 'error': 1, 'warning': 0, 'information': 0, 'hint': 0 }
 function! lsp#get_buffer_diagnostics_counts() abort
