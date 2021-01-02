@@ -3,7 +3,7 @@
 " options = {
 "   'server': '',        " optional
 " }
-function! lsp#internal#diagnostics#under_cursor#get_diagnostic() abort
+function! lsp#internal#diagnostics#under_cursor#get_diagnostic(...) abort
     let l:options = get(a:000, 0, {})
     let l:server = get(l:options, 'server', '')
     let l:bufnr = bufnr('%')
