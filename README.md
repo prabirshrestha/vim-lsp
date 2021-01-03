@@ -178,4 +178,4 @@ let g:asyncomplete_log_file = expand('~/asyncomplete.log')
 
 [vim-themis](https://github.com/thinca/vim-themis) is used for testing. To run
 integration tests [rust-analyzer](https://github.com/rust-analyzer/rust-analyzer) 
-exectuable must be in path.
+executable must be in path.

@@ -283,7 +283,7 @@ g:lsp_preview_keep_focus                         *g:lsp_preview_keep_focus*
     * |preview-window| can be also automatically closed after completion with
     the following auto command: >
 	autocmd! CompleteDone * if pumvisible() == 0 | pclose | endif
-<    * |preview-window| can be supressed with: >
+<    * |preview-window| can be suppressed with: >
 	set completeopt-=preview
 <
 g:lsp_preview_float                         *g:lsp_preview_float*
@@ -887,7 +887,7 @@ Disables vim-lsp plugin.
 lsp#register_server({server-info})                  *lsp#register_server()*
 
 Used to register the language server with vim-lsp. This method takes
-one parameter which is a vim |dict| and is refered to as |vim-lsp-server_info|
+one parameter which is a vim |dict| and is referred to as |vim-lsp-server_info|
 
     Example: >
 	if (executable('pyls'))
@@ -958,7 +958,7 @@ The vim |dict| containing information about the server.
     It is recommended to use &shell with &shellcmdflag when running script
     files that can be executed specially on windows where *.bat and *.cmd
     files cannot be started without running the shell first. This is common
-    for exectuables installed by npm for nodejs.
+    for executable installed by npm for nodejs.
 
     Example: >
 	'cmd': {server_info->
@@ -1039,7 +1039,7 @@ The vim |dict| containing information about the server.
 	    Type: |Boolean|
 	    Default: |g:lsp_hover_conceal|
 
-	    This takes precendence over the value of |g:lsp_hover_conceal|, to
+	    This takes precedence over the value of |g:lsp_hover_conceal|, to
 	    allow overriding this setting per server.
 
 	    Example: >
@@ -1223,7 +1223,7 @@ Get the status of a server.
 
 lsp#utils#position#lsp_to_vim({expr}, {position})  *lsp#utils#position#lsp_to_vim()*
 
-Convert LSP's positon to vim's pos ([lnum, col]).
+Convert LSP's position to vim's pos ([lnum, col]).
 
 {expr} is same of bufname argument.
 {position} is LSP's position params.
@@ -1334,7 +1334,7 @@ diagnostics are filtered for current buffer.
 Arguments:
 
     --buffers	Defaults to empty string, i.e. shows diagnostics for current
-		buffer. To show diagnotics for all buffer use `--buffers=*`.
+		buffer. To show diagnostic for all buffers use `--buffers=*`.
 
     Example: >
 	:LspDocumentDiagnostics
@@ -1565,7 +1565,7 @@ This autocommand is run after the server is exited.
 lsp_buffer_enabled                                      *lsp_buffer_enabled*
 
 This autocommand is run after vim-lsp is enabled for the buffer. This event is
-triggered imediately when the buffer is currently active. If the buffer is not
+triggered immediately when the buffer is currently active. If the buffer is not
 current active, the event will be triggered when the buffer will be active.
 
 lsp_diagnostics_updated                            *lsp_diagnostics_updated*
