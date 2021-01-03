@@ -1,4 +1,4 @@
-" https://github.com/prabirshrestha/callbag.vim#09ff9228257f5e8c68910fd9721c95f9d4fb6763
+" https://github.com/prabirshrestha/callbag.vim#110c554484bd21520c5f75983f9a3ccd72330018
 "    :CallbagEmbed path=autoload/lsp/callbag.vim namespace=lsp#callbag
 
 let s:undefined_token = '__callbag_undefined__'
@@ -1206,6 +1206,15 @@ function! s:flattenInnerSourceCallback(data, t, d) abort
             call a:data['outerTalkback'](1, lsp#callbag#undefined())
         endif
     endif
+endfunction
+" }}}
+
+" flatMap() {{{
+function! lsp#callbag#flatMap(F) abort
+    return lsp#callbag#operate(
+        \ lsp#callbag#map(a:F),
+        \ lsp#callbag#flatten(),
+        \ )
 endfunction
 " }}}
 
