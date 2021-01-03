@@ -5,31 +5,59 @@
 "   sync: v:true | v:false = Specify enable synchronous request.
 " }
 "
+
+function! s:echo(...) abort
+    echom json_encode(a:000)
+endfunction
+
+function! s:flatMap(func) abort
+    return lsp#callbag#operate(
+        \ lsp#callbag#map(a:func),
+        \ lsp#callbag#flatten(),
+        \ )
+endfunction
+
 function! lsp#ui#vim#code_lens#do(option) abort
     let l:sync = get(a:option, 'sync', v:false)
 
-    let l:server_names = filter(lsp#get_allowed_servers(), 'lsp#capabilities#has_code_lens_provider(v:val)')
-    if len(l:server_names) == 0
+    let l:servers = filter(lsp#get_allowed_servers(), 'lsp#capabilities#has_code_lens_provider(v:val)')
+    if len(l:servers) == 0
         return lsp#utils#error('Code lens not supported for ' . &filetype)
     endif
 
-    let l:ctx = {
-    \ 'count': len(l:server_names),
-    \ 'results': [],
-    \}
-    let l:bufnr = bufnr('%')
-    let l:command_id = lsp#_new_command()
-    for l:server_name in l:server_names
-        call lsp#send_request(l:server_name, {
-                    \ 'method': 'textDocument/codeLens',
-                    \ 'params': {
-                    \   'textDocument': lsp#get_text_document_identifier(),
-                    \ },
-                    \ 'sync': l:sync,
-                    \ 'on_notification': function('s:handle_code_lens', [l:ctx, l:server_name, l:command_id, l:sync, l:bufnr]),
-                    \ })
-    endfor
-    echo 'Retrieving code lenses ...'
+    " TODO: cancel if there is a new command
+    call lsp#callbag#pipe(
+        \ lsp#callbag#fromList(l:servers),
+        \ callbag#flatMap({server->
+        \   lsp#request(server, {
+        \       'method': 'textDocument/codeLens',
+        \       'params': {
+        \           'textDocument': lsp#get_text_document_identifier(),
+        \       },
+        \   })
+        \ }),
+        \ lsp#callbag#tap({x->s:echo(x)}),
+        \ lsp#callbag#subscribe(),
+        \ )
+
+
+    " let l:ctx = {
+    " \ 'count': len(l:server_names),
+    " \ 'results': [],
+    " \}
+    " let l:bufnr = bufnr('%')
+    " let l:command_id = lsp#_new_command()
+    " for l:server_name in l:server_names
+    "     call lsp#send_request(l:server_name, {
+    "         \ 'method': 'textDocument/codeLens',
+    "         \ 'params': {
+    "         \   'textDocument': lsp#get_text_document_identifier(),
+    "         \ },
+    "         \ 'sync': l:sync,
+    "         \ 'on_notification': function('s:handle_code_lens', [l:ctx, l:server_name, l:command_id, l:sync, l:bufnr]),
+    "         \ })
+    " endfor
+    " echo 'Retrieving code lenses ...'
 endfunction
 
 function! s:handle_code_lens(ctx, server_name, command_id, sync, bufnr, data) abort
@@ -77,16 +105,18 @@ function! s:handle_code_lens(ctx, server_name, command_id, sync, bufnr, data) ab
     endif
     call lsp#log('s:handle_code_lens', l:total_code_lenses)
 
-    " Prompt to choose code lenses.
-    let l:index = inputlist(map(copy(l:total_code_lenses), { i, lens ->
-                \   printf('%s - [%s] %s', i + 1, lens['server_name'], lens['code_lens']['command']['title'])
-                \ }))
+    echom json_encode(l:total_code_lenses)
 
-    " Execute code lens.
-    if 0 < l:index && l:index <= len(l:total_code_lenses)
-        let l:selected = l:total_code_lenses[l:index - 1]
-        call s:handle_one_code_lens(l:selected['server_name'], a:sync, a:bufnr, l:selected['code_lens'])
-    endif
+    " " Prompt to choose code lenses.
+    " let l:index = inputlist(map(copy(l:total_code_lenses), { i, lens ->
+    "             \   printf('%s - [%s] %s', i + 1, lens['server_name'], lens['code_lens']['command']['title'])
+    "             \ }))
+
+    " " Execute code lens.
+    " if 0 < l:index && l:index <= len(l:total_code_lenses)
+    "     let l:selected = l:total_code_lenses[l:index - 1]
+    "     call s:handle_one_code_lens(l:selected['server_name'], a:sync, a:bufnr, l:selected['code_lens'])
+    " endif
 endfunction
 
 function! s:handle_one_code_lens(server_name, sync, bufnr, code_lens) abort
