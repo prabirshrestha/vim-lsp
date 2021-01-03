@@ -70,6 +70,7 @@ CONTENTS                                                  *vim-lsp-contents*
       g:lsp_tagfunc_source_methods          |g:lsp_tagfunc_source_methods|
       g:lsp_show_message_request_enabled    |g:lsp_show_message_request_enabled|
       g:lsp_work_done_progress_enabled      |g:lsp_work_done_progress_enabled|
+      g:lsp_float_normal_highlight          |g:lsp_float_normal_highlight|
     Functions                             |vim-lsp-functions|
       lsp#enable                            |lsp#enable()|
       lsp#disable                           |lsp#disable()|
@@ -867,6 +868,17 @@ g:lsp_work_done_progress_enabled         *g:lsp_work_done_progress_enabled*
     Determines whether or not to ask the server to send `$/progress`
     notifications. This can be intercepted by listening to |lsp#stream()|.
     Set to `1` to enable.
+
+g:lsp_float_normal_highlight                 *g:lsp_float_normal_highlight*
+    Type: |String|
+    Default: `"Pmenu"`
+
+    Determines |hl-Normal| highlight group for highlighting a normal text in
+    floating windows on Neovim. This variable is effective only on Neovim.
+    By default, |hl-Pmenu| is used. Set the highlight group name as string.
+
+    Example: >
+	let g:lsp_float_normal_highlight = 'NormalFloat'
 
 ==============================================================================
 FUNCTIONS                                               *vim-lsp-functions*

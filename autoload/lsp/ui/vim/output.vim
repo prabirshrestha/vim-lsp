@@ -116,7 +116,8 @@ function! lsp#ui#vim#output#floatingpreview(data) abort
         let l:opts = s:get_float_positioning(l:height, l:width)
 
         let s:winid = nvim_open_win(l:buf, v:false, l:opts)
-        call nvim_win_set_option(s:winid, 'winhl', 'Normal:Pmenu,NormalNC:Pmenu')
+        let l:winhl = 'Normal:'.g:lsp_float_normal_highlight.',NormalNC:'.g:lsp_float_normal_highlight
+        call nvim_win_set_option(s:winid, 'winhl', l:winhl)
         call nvim_win_set_option(s:winid, 'foldenable', v:false)
         call nvim_win_set_option(s:winid, 'wrap', v:true)
         call nvim_win_set_option(s:winid, 'statusline', '')
