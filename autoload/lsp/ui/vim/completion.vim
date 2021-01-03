@@ -138,10 +138,10 @@ function! s:on_complete_done_after() abort
       " The VSCode always apply completion word as snippet.
       " It means we should place cursor to end of new inserted text as snippet does.
       let l:lines = lsp#utils#_split_by_eol(l:text)
-      let l:end = l:range.end
-      let l:end.line += len(l:lines) - 1
-      let l:end.character = strchars(l:text[-1]) + (len(l:lines) > 1 ? 0 : l:end.character)
-      call cursor(lsp#utils#position#lsp_to_vim('%', l:end))
+      let l:start = l:range.start
+      let l:start.line += len(l:lines) - 1
+      let l:start.character += strchars(l:lines[-1])
+      call cursor(lsp#utils#position#lsp_to_vim('%', l:start))
     endif
   endif
 
