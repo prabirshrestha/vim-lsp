@@ -72,7 +72,9 @@ function! s:chooseCodeLens(items, bufnr) abort
         return lsp#callbag#throwError('No codelens found')
     endif
     let l:index = inputlist(map(copy(a:items), {i, value ->
-        \   printf('%s - [%s] %s', i + 1, value['server'], value['codelens']['command']['title'])
+        \   printf("%s - [%s] %s\t| L%s:%s", i + 1, value['server'], value['codelens']['command']['title'],
+        \   lsp#utils#position#lsp_line_to_vim(a:bufnr, value['codelens']['range']['start']),
+        \   getbufline(a:bufnr, lsp#utils#position#lsp_line_to_vim(a:bufnr, value['codelens']['range']['start']))[0][:50])
         \ }))
     if l:index > 0 && l:index <= len(a:items)
         let l:selected = a:items[l:index - 1]
