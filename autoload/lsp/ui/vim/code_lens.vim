@@ -1,6 +1,5 @@
-" vint: -ProhibitUnusedVariable
+" https://microsoft.github.io/language-server-protocol/specification#textDocument_codeLens
 
-"
 " @param option = {
 " }
 "
@@ -23,7 +22,7 @@ function! lsp#ui#vim#code_lens#do(option) abort
         \       lsp#request(server, {
         \           'method': 'textDocument/codeLens',
         \           'params': {
-        \               'textDocument': lsp#get_text_document_identifier(),
+        \               'textDocument': lsp#get_text_document_identifier(l:bufnr),
         \           },
         \       }),
         \       lsp#callbag#map({x->x['response']['result']}),
