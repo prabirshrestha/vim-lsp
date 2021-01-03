@@ -1,6 +1,5 @@
-" vint: -ProhibitUnusedVariable
+" https://microsoft.github.io/language-server-protocol/specification#textDocument_codeLens
 
-"
 " @param option = {
 " }
 "
@@ -23,34 +22,36 @@ function! lsp#ui#vim#code_lens#do(option) abort
         \       lsp#request(server, {
         \           'method': 'textDocument/codeLens',
         \           'params': {
-        \               'textDocument': lsp#get_text_document_identifier(),
+        \               'textDocument': lsp#get_text_document_identifier(l:bufnr),
         \           },
         \       }),
-        \       lsp#callbag#flatMap({x->s:resolve_if_required(server, x['response'])}),
-        \       lsp#callbag#map({x->{ 'server': server, 'codelens': x }}),
+        \       lsp#callbag#map({x->x['response']['result']}),
+        \       lsp#callbag#filter({codelenses->!empty(codelenses)}),
+        \       lsp#callbag#flatMap({codelenses->
+        \           lsp#callbag#pipe(
+        \               lsp#callbag#fromList(codelenses),
+        \               lsp#callbag#flatMap({codelens->
+        \                   has_key(codelens, 'command') ? lsp#callbag#of(codelens) : s:resolve_codelens(server, codelens)}),
+        \           )
+        \       }),
+        \       lsp#callbag#map({codelens->{ 'server': server, 'codelens': codelens }}),
         \   )
         \ }),
         \ lsp#callbag#reduce({acc,curr->add(acc, curr)}, []),
-        \ lsp#callbag#tap({x->s:chooseCodeLens(x, l:bufnr)}),
+        \ lsp#callbag#flatMap({x->s:chooseCodeLens(x, l:bufnr)}),
+        \ lsp#callbag#tap({x-> lsp#ui#vim#execute_command#_execute({
+        \   'server_name': x['server'],
+        \   'command_name': get(x['codelens']['command'], 'command', ''),
+        \   'command_args': get(x['codelens']['command'], 'arguments', v:null),
+        \   'bufnr': l:bufnr,
+        \ })}),
         \ lsp#callbag#takeUntil(lsp#callbag#pipe(
         \   lsp#stream(),
         \   lsp#callbag#filter({x->has_key(x, 'command')}),
         \ )),
         \ lsp#callbag#subscribe({
-        \   'error': {e->s:error(x)},
+        \   'error': {e->lsp#utils#error('Error running codelens ' . json_encode(e))},
         \ }),
-        \ )
-endfunction
-
-function! s:resolve_if_required(server, response) abort
-    let l:codelens = a:response['result']
-    if empty(l:codelens)
-        return lsp#callbag#empty()
-    endif
-
-    return lsp#callbag#pipe(
-        \ lsp#callbag#fromList(l:codelens),
-        \ lsp#callbag#flatMap({codelens-> has_key(codelens, 'command') ? lsp#callbag#of(codelens) : s:resolve_codelens(a:server, codelens) }),
         \ )
 endfunction
 
@@ -68,28 +69,15 @@ endfunction
 function! s:chooseCodeLens(items, bufnr) abort
     redraw | echo 'Select codelens:'
     if empty(a:items)
-        call lsp#utils#error('No codelens found')
-        return
+        return lsp#callbag#throwError('No codelens found')
     endif
     let l:index = inputlist(map(copy(a:items), {i, value ->
         \   printf('%s - [%s] %s', i + 1, value['server'], value['codelens']['command']['title'])
         \ }))
     if l:index > 0 && l:index <= len(a:items)
         let l:selected = a:items[l:index - 1]
-        call s:handle_code_lens_command(l:selected['server'], l:selected['codelens'], a:bufnr)
+        return lsp#callbag#of(l:selected)
+    else
+        return lsp#callbag#empty()
     endif
-endfunction
-
-function! s:error(e) abort
-    call lsp#utils#error('Echo occured during CodeLens' . a:e)
-endfunction
-
-function! s:handle_code_lens_command(server, codelens, bufnr) abort
-    call lsp#ui#vim#execute_command#_execute({
-        \   'server_name': a:server,
-        \   'command_name': get(a:codelens['command'], 'command', ''),
-        \   'command_args': get(a:codelens['command'], 'arguments', v:null),
-        \   'sync': 0,
-        \   'bufnr': a:bufnr,
-        \ })
 endfunction
