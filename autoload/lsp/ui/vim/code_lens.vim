@@ -8,8 +8,6 @@
 function! lsp#ui#vim#code_lens#do(option) abort
     let l:sync = get(a:option, 'sync', v:false)
 
-    let s:items = []
-
     let l:servers = filter(lsp#get_allowed_servers(), 'lsp#capabilities#has_code_lens_provider(v:val)')
     if len(l:servers) == 0
         return lsp#utils#error('Code lens not supported for ' . &filetype)
@@ -33,13 +31,13 @@ function! lsp#ui#vim#code_lens#do(option) abort
         \       lsp#callbag#map({x->{ 'server': server, 'codelens': x }}),
         \   )
         \ }),
+        \ lsp#callbag#reduce({acc,curr->add(acc, curr)}, []),
+        \ lsp#callbag#tap({x->s:chooseCodeLens(x, l:bufnr)}),
         \ lsp#callbag#takeUntil(lsp#callbag#pipe(
         \   lsp#stream(),
         \   lsp#callbag#filter({x->has_key(x, 'command')}),
         \ )),
         \ lsp#callbag#subscribe({
-        \   'next':{x->add(s:items, x)},
-        \   'complete': {->s:chooseCodeLens(s:items, l:bufnr)},
         \   'error': {e->s:error(x)},
         \ }),
         \ )
