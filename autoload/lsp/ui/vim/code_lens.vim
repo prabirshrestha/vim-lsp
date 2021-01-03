@@ -2,7 +2,6 @@
 
 "
 " @param option = {
-"   sync: v:true | v:false = Specify enable synchronous request.
 " }
 "
 function! lsp#ui#vim#code_lens#do(option) abort
