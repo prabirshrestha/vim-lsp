@@ -15,9 +15,10 @@ function! lsp#ui#vim#code_lens#do(option) abort
         return lsp#utils#error('Code lens not supported for ' . &filetype)
     endif
 
+    redraw | echo 'Retrieving codelens ...'
+
     let l:bufnr = bufnr('%')
 
-    " TODO: cancel if there is a new command with takeUntil
     call lsp#callbag#pipe(
         \ lsp#callbag#fromList(l:servers),
         \ lsp#callbag#flatMap({server->
@@ -32,6 +33,10 @@ function! lsp#ui#vim#code_lens#do(option) abort
         \       lsp#callbag#map({x->{ 'server': server, 'codelens': x }}),
         \   )
         \ }),
+        \ lsp#callbag#takeUntil(lsp#callbag#pipe(
+        \   lsp#stream(),
+        \   lsp#callbag#filter({x->has_key(x, 'command')}),
+        \ )),
         \ lsp#callbag#subscribe({
         \   'next':{x->add(s:items, x)},
         \   'complete': {->s:chooseCodeLens(s:items, l:bufnr)},
@@ -64,6 +69,7 @@ function! s:resolve_codelens(server, codelens) abort
 endfunction
 
 function! s:chooseCodeLens(items, bufnr) abort
+    redraw | echo 'Select codelens:'
     if empty(a:items)
         call lsp#utils#error('No codelens found')
         return
