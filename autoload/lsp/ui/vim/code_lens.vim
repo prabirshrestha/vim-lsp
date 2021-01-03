@@ -10,13 +10,6 @@ function! s:echo(...) abort
     echom json_encode(a:000)
 endfunction
 
-function! s:flatMap(func) abort
-    return lsp#callbag#operate(
-        \ lsp#callbag#map(a:func),
-        \ lsp#callbag#flatten(),
-        \ )
-endfunction
-
 function! lsp#ui#vim#code_lens#do(option) abort
     let l:sync = get(a:option, 'sync', v:false)
 
@@ -28,18 +21,20 @@ function! lsp#ui#vim#code_lens#do(option) abort
     " TODO: cancel if there is a new command
     call lsp#callbag#pipe(
         \ lsp#callbag#fromList(l:servers),
-        \ callbag#flatMap({server->
-        \   lsp#request(server, {
-        \       'method': 'textDocument/codeLens',
-        \       'params': {
-        \           'textDocument': lsp#get_text_document_identifier(),
-        \       },
-        \   })
+        \ lsp#callbag#flatMap({server->
+        \   lsp#callbag#pipe(
+        \       lsp#request(server, {
+        \           'method': 'textDocument/codeLens',
+        \           'params': {
+        \               'textDocument': lsp#get_text_document_identifier(),
+        \           },
+        \       }),
+        \       lsp#callbag#flatMap({x->s:resolve_if_required(server, x['response'])}),
+        \   )
         \ }),
         \ lsp#callbag#tap({x->s:echo(x)}),
         \ lsp#callbag#subscribe(),
         \ )
-
 
     " let l:ctx = {
     " \ 'count': len(l:server_names),
@@ -58,6 +53,18 @@ function! lsp#ui#vim#code_lens#do(option) abort
     "         \ })
     " endfor
     " echo 'Retrieving code lenses ...'
+endfunction
+
+function! s:resolve_if_required(server, response) abort
+    let l:codelens = a:response['result']
+    if empty(l:codelens)
+        return lsp#callbag#empty()
+    endif
+
+    return lsp#callbag#pipe(
+        \ lsp#callbag#fromList(l:codelens),
+        \ )
+    " return lsp#callbag#of({ 'server': a:server, 'response': a:response })
 endfunction
 
 function! s:handle_code_lens(ctx, server_name, command_id, sync, bufnr, data) abort
