@@ -41,7 +41,7 @@ function! s:show_documentation(event) abort
         let g:lsp_documentation_float_docked = get(g:, 'lsp_documentation_float_docked', 0)
 
         if g:lsp_documentation_float_docked
-            let g:lsp_documentation_float_docked_maxheight = get(g:, ':lsp_documentation_float_docked_maxheight', &previewheight)
+            let g:lsp_documentation_float_docked_maxheight = get(g:, 'lsp_documentation_float_docked_maxheight', &previewheight)
             let l:dock_downwards = max([screenrow(), l:curpos]) < (&lines / 2)
             let l:height = min([len(l:data), g:lsp_documentation_float_docked_maxheight])
             let l:width = &columns
