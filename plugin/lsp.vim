@@ -167,3 +167,6 @@ nnoremap <plug>(lsp-status) :<c-u>echo lsp#get_server_status()<cr>
 nnoremap <plug>(lsp-next-reference) :<c-u>call lsp#internal#document_highlight#jump(+1)<cr>
 nnoremap <plug>(lsp-previous-reference) :<c-u>call lsp#internal#document_highlight#jump(-1)<cr>
 nnoremap <plug>(lsp-signature-help) :<c-u>call lsp#ui#vim#signature_help#get_signature_help_under_cursor()<cr>
+nnoremap <expr> <plug>(lsp-linked-editing-range-prepare) lsp#internal#linked_editing_range#prepare()
+xnoremap <expr> <plug>(lsp-linked-editing-range-prepare) lsp#internal#linked_editing_range#prepare()
+

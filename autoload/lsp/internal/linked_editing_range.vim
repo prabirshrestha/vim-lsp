@@ -12,14 +12,14 @@ function! lsp#internal#linked_editing_range#_enable() abort
     if !s:TextEdit.is_text_mark_preserved()
         return
     endif
-
     if !g:lsp_linked_editing_range_enabled | return | endif
+
     let s:Dispose = lsp#callbag#merge(
     \     lsp#callbag#pipe(
     \         lsp#callbag#fromEvent(['InsertEnter']),
-    \         lsp#callbag#flatMap({ -> s:request(v:false) }),
+    \         lsp#callbag#flatMap({ -> s:request_sync() }),
     \         lsp#callbag#subscribe({
-    \           'next': { x -> s:prepare(x) }
+    \           'next': { x -> call('s:prepare', x) }
     \         })
     \     ),
     \     lsp#callbag#pipe(
@@ -42,43 +42,52 @@ function! lsp#internal#linked_editing_range#_disable() abort
     endif
 endfunction
 
-function! s:request(sync) abort
+function! lsp#internal#linked_editing_range#prepare() abort
+    if !s:TextEdit.is_text_mark_preserved()
+        return ''
+    endif
+    if !g:lsp_linked_editing_range_enabled
+        return ''
+    endif
+
+    call lsp#callbag#pipe(
+    \     s:request_sync(),
+    \     lsp#callbag#subscribe({
+    \         'next': { x -> call('s:prepare', x) },
+    \         'error': { -> {} },
+    \     })
+    \ )
+    return ''
+endfunction
+
+function! s:request_sync() abort
     let l:server = lsp#get_allowed_servers(&filetype)
     let l:server = filter(l:server, 'lsp#capabilities#has_linked_editing_range_provider(v:val)')
     let l:server = get(l:server, 0, v:null)
     if empty(l:server)
-        return lsp#callbag#empty()
+        return lsp#callbag#of([v:null])
     endif
 
-    let l:X = lsp#callbag#pipe(
-    \     lsp#request(l:server, {
-    \         'method': 'textDocument/linkedEditingRange',
-    \         'params': {
-    \             'textDocument': lsp#get_text_document_identifier(),
-    \             'position': lsp#get_position(),
-    \         }
-    \     }),
+    return lsp#callbag#of(
+    \     lsp#callbag#pipe(
+    \         lsp#request(l:server, {
+    \             'method': 'textDocument/linkedEditingRange',
+    \             'params': {
+    \                 'textDocument': lsp#get_text_document_identifier(),
+    \                 'position': lsp#get_position(),
+    \             }
+    \         }),
+    \         lsp#callbag#toList()
+    \     ).wait({ 'sleep': 1, 'timeout': 200 })
     \ )
-    if a:sync
-      return lsp#callbag#of(
-      \     get(
-      \         lsp#callbag#pipe(
-      \             l:X,
-      \             lsp#callbag#toList()
-      \         ).wait({ 'sleep': 1, 'timeout': 200 }),
-      \        0,
-      \        v:null
-      \     )
-      \ )
-    endif
-    return l:X
 endfunction
 
 function! s:prepare(x) abort
-    if empty(get(a:x['response']['result'], 'ranges', {}))
-      return
+    if empty(a:x) || empty(get(a:x, 'response')) || empty(get(a:x['response'], 'result')) || empty(get(a:x['response']['result'], 'ranges'))
+        return
     endif
 
+    call s:clear()
     call s:TextMark.set(bufnr('%'), s:TEXT_MARK_NAMESPACE, map(a:x['response']['result']['ranges'], { _, range -> {
     \     'range': range,
     \     'highlight': 'Underlined',
@@ -100,7 +109,7 @@ function! s:sync() abort
     if s:state['changedtick'] == b:changedtick
         return
     endif
-    if s:state['changenr'] >  changenr()
+    if s:state['changenr'] > changenr()
         return
     endif
 
