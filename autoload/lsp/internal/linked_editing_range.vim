@@ -16,6 +16,7 @@ function! lsp#internal#linked_editing_range#_enable() abort
     let s:Dispose = lsp#callbag#merge(
     \     lsp#callbag#pipe(
     \         lsp#callbag#fromEvent(['InsertEnter']),
+    \         lsp#callbag#filter({ -> g:lsp_linked_editing_range_enabled }),
     \         lsp#callbag#flatMap({ -> s:request_sync() }),
     \         lsp#callbag#subscribe({
     \           'next': { x -> call('s:prepare', x) }
@@ -23,10 +24,12 @@ function! lsp#internal#linked_editing_range#_enable() abort
     \     ),
     \     lsp#callbag#pipe(
     \         lsp#callbag#fromEvent(['InsertLeave']),
+    \         lsp#callbag#filter({ -> g:lsp_linked_editing_range_enabled }),
     \         lsp#callbag#subscribe({ -> s:clear() })
     \     ),
     \     lsp#callbag#pipe(
     \         lsp#callbag#fromEvent(['TextChanged', 'TextChangedI', 'TextChangedP']),
+    \         lsp#callbag#filter({ -> g:lsp_linked_editing_range_enabled }),
     \         lsp#callbag#delay(0),
     \         lsp#callbag#subscribe({ -> s:sync() })
     \     ),
