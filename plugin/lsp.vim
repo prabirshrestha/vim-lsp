@@ -80,12 +80,7 @@ command! -range -nargs=* -complete=customlist,lsp#ui#vim#code_action#complete Ls
       \   'selection': <range> != 0,
       \   'query': '<args>'
       \ })
-command! LspCodeLens call lsp#ui#vim#code_lens#do({
-      \   'sync': v:false,
-      \ })
-command! LspCodeLensSync call lsp#ui#vim#code_lens#do({
-      \   'sync': v:true,
-      \ })
+command! LspCodeLens call lsp#ui#vim#code_lens#do({})
 command! LspDeclaration call lsp#ui#vim#declaration(0, <q-mods>)
 command! LspPeekDeclaration call lsp#ui#vim#declaration(1)
 command! LspDefinition call lsp#ui#vim#definition(0, <q-mods>)

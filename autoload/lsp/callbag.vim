@@ -1,4 +1,4 @@
-" https://github.com/prabirshrestha/callbag.vim#c721874292709dcf9024496e85f06236f56f66bf
+" https://github.com/prabirshrestha/callbag.vim#62a31fd03dfceb0e94a19295a1f6d3d0f2a954ed
 "    :CallbagEmbed path=autoload/lsp/callbag.vim namespace=lsp#callbag
 
 let s:undefined_token = '__callbag_undefined__'
@@ -1240,6 +1240,36 @@ function! s:scanSourceCallback(data, t, d) abort
     if a:t == 1
         let a:data['acc'] = a:data['reducer'](a:data['acc'], a:d)
         call a:data['sink'](1, a:data['acc'])
+    else
+        call a:data['sink'](a:t, a:d)
+    endif
+endfunction
+" }}}
+
+" reduce() {{{
+function! lsp#callbag#reduce(reducer, seed) abort
+    let l:data = { 'reducer': a:reducer, 'seed': a:seed }
+    return function('s:reduceSource', [l:data])
+endfunction
+
+function! s:reduceSource(data, source) abort
+    let a:data['source'] = a:source
+    return function('s:reduceFactory', [a:data])
+endfunction
+
+function! s:reduceFactory(data, start, sink) abort
+    if a:start != 0 | return | endif
+    let a:data['sink'] = a:sink
+    let a:data['acc'] = a:data['seed']
+    call a:data['source'](0, function('s:reduceSourceCallback', [a:data]))
+endfunction
+
+function! s:reduceSourceCallback(data, t, d) abort
+    if a:t == 1
+        let a:data['acc'] = a:data['reducer'](a:data['acc'], a:d)
+    elseif a:t == 2 && lsp#callbag#isUndefined(a:d)
+        call a:data['sink'](1, a:data['acc'])
+        call a:data['sink'](2, lsp#callbag#undefined())
     else
         call a:data['sink'](a:t, a:d)
     endif

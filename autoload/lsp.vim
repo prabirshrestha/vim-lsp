@@ -467,6 +467,9 @@ function! lsp#default_get_supported_capabilities(server_info) abort
     \           }
     \         }
     \       },
+    \       'codeLens': {
+    \           'dynamicRegistration': v:false,
+    \       },
     \       'completion': {
     \           'dynamicRegistration': v:false,
     \           'completionItem': {
