@@ -57,5 +57,95 @@ Describe lsp#utils#range
 
   End
 
+  Describe lsp#utils#range#_contains
+
+    It should return the range contains specified position
+      " not contains.
+      Assert Equals(lsp#utils#range#_contains({
+      \   'start': {
+      \     'line': 1,
+      \     'character': 1,
+      \   },
+      \   'end': {
+      \     'line': 1,
+      \     'character': 4,
+      \   },
+      \ }, {
+      \   'line': 1,
+      \   'character': 0,
+      \ }), v:false)
+      Assert Equals(lsp#utils#range#_contains({
+      \   'start': {
+      \     'line': 1,
+      \     'character': 1,
+      \   },
+      \   'end': {
+      \     'line': 1,
+      \     'character': 4,
+      \   },
+      \ }, {
+      \   'line': 1,
+      \   'character': 5,
+      \ }), v:false)
+
+      " contains.
+      Assert Equals(lsp#utils#range#_contains({
+      \   'start': {
+      \     'line': 1,
+      \     'character': 1,
+      \   },
+      \   'end': {
+      \     'line': 1,
+      \     'character': 4,
+      \   },
+      \ }, {
+      \   'line': 1,
+      \   'character': 1,
+      \ }), v:true)
+      Assert Equals(lsp#utils#range#_contains({
+      \   'start': {
+      \     'line': 1,
+      \     'character': 1,
+      \   },
+      \   'end': {
+      \     'line': 1,
+      \     'character': 4,
+      \   },
+      \ }, {
+      \   'line': 1,
+      \   'character': 4,
+      \ }), v:true)
+    End
+
+  End
+
+  Describe lsp#utils#range#_get_text
+
+    It should return range of text
+      call setline(1, ['あいうえお', 'かきくけこ', 'さしすせそ'])
+      Assert Equals(lsp#utils#range#_get_text('%', {
+      \   'start': {
+      \     'line': 1,
+      \     'character': 1,
+      \   },
+      \   'end': {
+      \     'line': 1,
+      \     'character': 4,
+      \   },
+      \ }), 'きくけ')
+      Assert Equals(lsp#utils#range#_get_text('%', {
+      \   'start': {
+      \     'line': 0,
+      \     'character': 4,
+      \   },
+      \   'end': {
+      \     'line': 2,
+      \     'character': 1,
+      \   },
+      \ }), "お\nかきくけこ\nさ")
+    End
+
+  End
+
 End
 

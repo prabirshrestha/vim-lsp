@@ -61,6 +61,7 @@ function! lsp#enable() abort
     call lsp#ui#vim#completion#_setup()
     call lsp#internal#document_highlight#_enable()
     call lsp#internal#diagnostics#_enable()
+    call lsp#internal#linked_editing_range#_enable()
     call lsp#internal#show_message_request#_enable()
     call lsp#internal#work_done_progress#_enable()
     call s:register_events()
@@ -517,6 +518,9 @@ function! lsp#default_get_supported_capabilities(server_info) abort
     \       'implementation': {
     \           'dynamicRegistration': v:false,
     \           'linkSupport' : v:true
+    \       },
+    \       'linkedEditingRange': {
+    \           'dynamicRegistration': v:false,
     \       },
     \       'rangeFormatting': {
     \           'dynamicRegistration': v:false,

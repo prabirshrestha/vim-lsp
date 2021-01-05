@@ -53,6 +53,10 @@ function! lsp#capabilities#has_implementation_provider(server_name) abort
     return s:has_provider(a:server_name, 'implementationProvider')
 endfunction
 
+function! lsp#capabilities#has_linked_editing_range_provider(server_name) abort
+    return s:has_provider(a:server_name, 'linkedEditingRangeProvider')
+endfunction
+
 function! lsp#capabilities#has_code_action_provider(server_name) abort
     let l:capabilities = lsp#get_server_capabilities(a:server_name)
     if !empty(l:capabilities) && has_key(l:capabilities, 'codeActionProvider')

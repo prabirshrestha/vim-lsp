@@ -29,6 +29,38 @@ function! lsp#utils#range#_get_current_line_range() abort
   return l:range
 endfunction
 
+" Returns the range contains specified position or not.
+function! lsp#utils#range#_contains(range, position) abort
+    if !(
+    \   a:range['start']['line'] <= a:position['line'] && (
+    \     a:range['start']['line'] == a:position['line'] &&
+    \     a:range['start']['character'] <= a:position['character']
+    \   )
+    \ )
+        return v:false
+    endif
+    if !(
+    \   a:range['end']['line'] >= a:position['line'] && (
+    \     a:range['end']['line'] == a:position['line'] &&
+    \     a:range['end']['character'] >= a:position['character']
+    \   )
+    \ )
+        return v:false
+    endif
+    return v:true
+endfunction
+
+" Return the range of text for the specified expr.
+function! lsp#utils#range#_get_text(expr, range) abort
+  let l:lines = []
+  for l:line in range(a:range['start']['line'], a:range['end']['line'])
+    let l:lines += getbufline(a:expr, l:line + 1)
+  endfor
+  let l:lines[-1] = strcharpart(l:lines[-1], 0, a:range['end']['character'])
+  let l:lines[0] = strcharpart(l:lines[0], a:range['start']['character'], strchars(l:lines[0]))
+  return join(l:lines, "\n")
+endfunction
+
 " Convert a LSP range to one or more vim match positions.
 " If the range spans over multiple lines, break it down to multiple
 " positions, one for each line.
