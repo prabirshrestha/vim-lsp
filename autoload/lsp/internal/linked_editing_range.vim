@@ -9,10 +9,9 @@ let s:state['changenr'] = -1
 let s:state['changedtick'] = -1
 
 function! lsp#internal#linked_editing_range#_enable() abort
-    if !s:TextEdit.is_text_mark_preserved()
+    if !s:enabled()
         return
     endif
-    if !g:lsp_linked_editing_range_enabled | return | endif
 
     let s:Dispose = lsp#callbag#merge(
     \     lsp#callbag#pipe(
@@ -43,10 +42,7 @@ function! lsp#internal#linked_editing_range#_disable() abort
 endfunction
 
 function! lsp#internal#linked_editing_range#prepare() abort
-    if !s:TextEdit.is_text_mark_preserved()
-        return ''
-    endif
-    if !g:lsp_linked_editing_range_enabled
+    if !s:enabled()
         return ''
     endif
 
@@ -58,6 +54,10 @@ function! lsp#internal#linked_editing_range#prepare() abort
     \     })
     \ )
     return ''
+endfunction
+
+function! s:enabled(...) abort
+    return g:lsp_linked_editing_range_enabled && s:TextEdit.is_text_mark_preserved() && s:TextMark.is_available()
 endfunction
 
 function! s:request_sync() abort
@@ -142,4 +142,3 @@ function! s:sync() abort
     let s:state['changenr'] = changenr()
     let s:state['changedtick'] = b:changedtick
 endfunction
-

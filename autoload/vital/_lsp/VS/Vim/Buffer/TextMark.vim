@@ -4,7 +4,7 @@
 function! s:_SID() abort
   return matchstr(expand('<sfile>'), '<SNR>\zs\d\+\ze__SID$')
 endfunction
-execute join(['function! vital#_lsp#VS#Vim#Buffer#TextMark#import() abort', printf("return map({'_vital_depends': '', 'clear': '', 'set': '', 'get': '', '_vital_loaded': ''}, \"vital#_lsp#function('<SNR>%s_' . v:key)\")", s:_SID()), 'endfunction'], "\n")
+execute join(['function! vital#_lsp#VS#Vim#Buffer#TextMark#import() abort', printf("return map({'_vital_depends': '', 'clear': '', 'set': '', 'is_available': '', 'get': '', '_vital_loaded': ''}, \"vital#_lsp#function('<SNR>%s_' . v:key)\")", s:_SID()), 'endfunction'], "\n")
 delfunction s:_SID
 " ___vital___
 "
@@ -23,6 +23,17 @@ endfunction
 
 let s:nvim_namespace = {}
 let s:vim_prop_types = {}
+
+"
+" is_available
+"
+function! s:is_available() abort
+  if has('nvim')
+    return exists('*nvim_buf_set_text')
+  else
+    return exists('*prop_type_add') && exists('*prop_add')
+  endif
+endfunction
 
 "
 " @param {number} bufnr
