@@ -1,4 +1,4 @@
-" https://github.com/prabirshrestha/quickpick.vim#30c74fe10098ad9e81ee438406b3e1ba6508187a
+" https://github.com/prabirshrestha/quickpick.vim#dc78c77d6d2b431d03237367555ca880ed35b8c0
 "    :QuickpickEmbed path=autoload/lsp/internal/ui/quickpick.vim namespace=lsp#internal#ui#quickpick prefix=lsp-quickpick
 
 let s:has_timer = exists('*timer_start') && exists('*timer_stop')
@@ -101,7 +101,7 @@ function! lsp#internal#ui#quickpick#open(opt) abort
   endif
 
   call cursor(line('$'), 0)
-  startinsert!
+  call feedkeys('i', 'n')
 
   augroup lsp#internal#ui#quickpick
     autocmd!
