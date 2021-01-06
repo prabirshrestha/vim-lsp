@@ -134,6 +134,12 @@ function! s:sync() abort
 
     " apply new text for related marks.
     let l:new_text = lsp#utils#range#_get_text(l:bufnr, l:current_mark['range'])
+    if l:new_text !~# '^\k*$'
+        call s:clear()
+        call feedkeys("\<C-G>u", 'n')
+        return
+    endif
+
     call lsp#utils#text_edit#apply_text_edits(l:bufnr, map(l:related_marks, { _, mark -> {
     \     'range': mark['range'],
     \     'newText': l:new_text
