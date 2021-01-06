@@ -687,8 +687,6 @@ g:lsp_linked_editing_enabled                  *g:lsp_linked_editing_enabled*
 
     Enable textDocument/linkedEditingRange feature.
 
-    NOTE: This only works on the environment has `nvim_buf_set_text` for now.
-
     Example: >
 	let g:lsp_linked_editing_enabled = 1
 	let g:lsp_linked_editing_enabled = 0

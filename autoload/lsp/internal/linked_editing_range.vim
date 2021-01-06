@@ -30,7 +30,6 @@ function! lsp#internal#linked_editing_range#_enable() abort
     \     lsp#callbag#pipe(
     \         lsp#callbag#fromEvent(['TextChanged', 'TextChangedI', 'TextChangedP']),
     \         lsp#callbag#filter({ -> g:lsp_linked_editing_range_enabled }),
-    \         lsp#callbag#delay(0),
     \         lsp#callbag#subscribe({ -> s:sync() })
     \     ),
     \ )
@@ -60,7 +59,7 @@ function! lsp#internal#linked_editing_range#prepare() abort
 endfunction
 
 function! s:enabled(...) abort
-    return g:lsp_linked_editing_range_enabled && s:TextEdit.is_text_mark_preserved() && s:TextMark.is_available()
+    return g:lsp_linked_editing_range_enabled && s:TextMark.is_available()
 endfunction
 
 function! s:request_sync() abort
