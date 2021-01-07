@@ -4,23 +4,9 @@
 function! s:_SID() abort
   return matchstr(expand('<sfile>'), '<SNR>\zs\d\+\ze__SID$')
 endfunction
-execute join(['function! vital#_lsp#VS#Vim#Buffer#TextMark#import() abort', printf("return map({'_vital_depends': '', 'clear': '', 'set': '', 'is_available': '', 'get': '', '_vital_loaded': ''}, \"vital#_lsp#function('<SNR>%s_' . v:key)\")", s:_SID()), 'endfunction'], "\n")
+execute join(['function! vital#_lsp#VS#Vim#Buffer#TextMark#import() abort', printf("return map({'clear': '', 'set': '', 'is_available': '', 'get': ''}, \"vital#_lsp#function('<SNR>%s_' . v:key)\")", s:_SID()), 'endfunction'], "\n")
 delfunction s:_SID
 " ___vital___
-"
-" _vital_loaded
-"
-function! s:_vital_loaded(V) abort
-  let s:Position = a:V.import('VS.LSP.Position')
-endfunction
-
-"
-" _vital_depends
-"
-function! s:_vital_depends() abort
-  return ['VS.LSP.Position']
-endfunction
-
 let s:nvim_namespace = {}
 let s:vim_prop_types = {}
 
@@ -73,11 +59,9 @@ if has('nvim')
       let s:nvim_namespace[a:id] = nvim_create_namespace(a:id)
     endif
     for l:mark in a:marks
-      let l:start = s:Position.lsp_to_vim(a:bufnr, l:mark.range.start)
-      let l:end = s:Position.lsp_to_vim(a:bufnr, l:mark.range.end)
       let l:opts = {
-      \   'end_line': l:end[0] - 1,
-      \   'end_col': l:end[1] - 1,
+      \   'end_line': l:mark.end_pos[0] - 1,
+      \   'end_col': l:mark.end_pos[1] - 1,
       \ }
       if has_key(l:mark, 'highlight')
         let l:opts.hl_group = l:mark.highlight
@@ -85,8 +69,8 @@ if has('nvim')
       call nvim_buf_set_extmark(
       \   bufnr(a:bufnr),
       \   s:nvim_namespace[a:id],
-      \   l:start[0] - 1,
-      \   l:start[1] - 1,
+      \   l:mark.start_pos[0] - 1,
+      \   l:mark.start_pos[1] - 1,
       \   l:opts
       \ )
     endfor
@@ -99,13 +83,11 @@ else
         let s:vim_prop_types[l:type] = s:_create_prop_type_dict(l:mark)
         call prop_type_add(l:type, s:vim_prop_types[l:type])
       endif
-      let l:start = s:Position.lsp_to_vim(a:bufnr, l:mark.range.start)
-      let l:end = s:Position.lsp_to_vim(a:bufnr, l:mark.range.end)
-      call prop_add(l:start[0], l:start[1], {
+      call prop_add(l:mark.start_pos[0], l:mark.start_pos[1], {
       \   'id': a:id,
       \   'bufnr': a:bufnr,
-      \   'end_lnum': l:end[0],
-      \   'end_col': l:end[1],
+      \   'end_lnum': l:mark.end_pos[0],
+      \   'end_col': l:mark.end_pos[1],
       \   'type': l:type,
       \ })
     endfor
@@ -133,18 +115,19 @@ if has('nvim')
     let l:marks = []
     for l:extmark in nvim_buf_get_extmarks(bufnr(a:bufnr), s:nvim_namespace[a:id], 0, -1, { 'details': v:true })
       let l:mark = {}
-      let l:mark.range = {}
-      let l:mark.range.start = s:Position.vim_to_lsp(a:bufnr, [l:extmark[1] + 1, l:extmark[2] + 1])
-      let l:mark.range.end = s:Position.vim_to_lsp(a:bufnr, [l:extmark[3].end_row + 1, l:extmark[3].end_col + 1])
+      let l:mark.start_pos = [l:extmark[1] + 1, l:extmark[2] + 1]
+      let l:mark.end_pos = [l:extmark[3].end_row + 1, l:extmark[3].end_col + 1]
       if has_key(l:extmark[3], 'hl_group')
         let l:mark.highlight = l:extmark[3].hl_group
       endif
 
-      if l:mark.range.start.line > l:mark.range.end.line || (
-      \   l:mark.range.start.line == l:mark.range.end.line &&
-      \   l:mark.range.start.character > l:mark.range.end.character
+      if l:mark.start_pos[0] > l:mark.end_pos[0] || (
+      \   l:mark.start_pos[0] == l:mark.end_pos[0] &&
+      \   l:mark.start_pos[1] > l:mark.end_pos[1]
       \ )
-        let l:mark.range = { 'start': l:mark.range.end, 'end': l:mark.range.start }
+        let l:start_pos = l:mark.start_pos
+        let l:mark.start_pos = l:mark.end_pos
+        let l:mark.end_pos = l:start_pos
       endif
 
       call add(l:marks, l:mark)
@@ -168,18 +151,16 @@ else
         continue
       endif
 
-      let l:start = s:Position.vim_to_lsp(a:bufnr, [l:prop.lnum, l:prop.col])
+      let l:start_pos = [l:prop.lnum, l:prop.col]
       let l:end_byte = line2byte(l:prop.lnum) + l:prop.col + l:prop.length - 1
       let l:end_lnum = byte2line(l:end_byte)
       let l:end_col = (l:end_byte - line2byte(l:end_lnum)) + 1
-      let l:end = s:Position.vim_to_lsp(a:bufnr, [l:end_lnum, l:end_col])
+      let l:end_pos = [l:end_lnum, l:end_col]
 
       if has_key(s:vim_prop_types, l:prop.type)
         let l:_prop = {
-        \   'range': {
-        \     'start': l:start,
-        \     'end': l:end,
-        \   }
+        \   'start_pos': l:start_pos,
+        \   'end_pos': l:end_pos,
         \ }
         if has_key(s:vim_prop_types[l:prop.type], 'highlight')
           let l:_prop.highlight = s:vim_prop_types[l:prop.type].highlight

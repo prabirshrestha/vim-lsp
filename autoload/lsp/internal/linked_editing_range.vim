@@ -91,7 +91,8 @@ function! s:prepare(x) abort
 
     call s:clear()
     call s:TextMark.set(bufnr('%'), s:TEXT_MARK_NAMESPACE, map(a:x['response']['result']['ranges'], { _, range -> {
-    \     'range': range,
+    \     'start_pos': lsp#utils#position#lsp_to_vim('%', range['start']),
+    \     'end_pos': lsp#utils#position#lsp_to_vim('%', range['end']),
     \     'highlight': 'Underlined',
     \ } }))
     let s:state['bufnr'] = bufnr('%')
@@ -116,11 +117,17 @@ function! s:sync() abort
     endif
 
     " get current mark and related marks.
-    let l:position = lsp#utils#position#vim_to_lsp('%', getpos('.')[1 : 2])
+    let l:pos = getpos('.')[1 : 2]
     let l:current_mark = v:null
     let l:related_marks = []
     for l:mark in s:TextMark.get(l:bufnr, s:TEXT_MARK_NAMESPACE)
-        if lsp#utils#range#_contains(l:mark['range'], l:position)
+        let l:start_pos = l:mark['start_pos']
+        let l:end_pos = l:mark['end_pos']
+
+        let l:contains = v:true
+        let l:contains = l:contains && (l:start_pos[0] < l:pos[0] || l:start_pos[0] == l:pos[0] && l:start_pos[1] <= l:pos[1])
+        let l:contains = l:contains && (l:end_pos[0] > l:pos[0] || l:end_pos[0] == l:pos[0] && l:end_pos[1] >= l:pos[1])
+        if l:contains
             let l:current_mark = l:mark
         else
             let l:related_marks += [l:mark]
@@ -133,7 +140,10 @@ function! s:sync() abort
     endif
 
     " apply new text for related marks.
-    let l:new_text = lsp#utils#range#_get_text(l:bufnr, l:current_mark['range'])
+    let l:new_text = lsp#utils#range#_get_text(l:bufnr, {
+    \     'start': lsp#utils#position#vim_to_lsp('%', l:current_mark['start_pos']),
+    \     'end': lsp#utils#position#vim_to_lsp('%', l:current_mark['end_pos']),
+    \ })
     if l:new_text !~# '^\k*$'
         call s:clear()
         call feedkeys("\<C-G>u", 'n')
@@ -141,7 +151,10 @@ function! s:sync() abort
     endif
 
     call lsp#utils#text_edit#apply_text_edits(l:bufnr, map(l:related_marks, { _, mark -> {
-    \     'range': mark['range'],
+    \     'range': {
+    \         'start': lsp#utils#position#vim_to_lsp('%', mark['start_pos']),
+    \         'end': lsp#utils#position#vim_to_lsp('%', mark['end_pos']),
+    \     },
     \     'newText': l:new_text
     \ } }))
 

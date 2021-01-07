@@ -50,6 +50,10 @@ function! s:_get_buffer_line(expr, lnum) abort
   if bufloaded(bufnr(a:expr))
     return get(getbufline(a:expr, a:lnum), 0, v:null)
   elseif filereadable(a:expr)
+    if exists('*bufload')
+      call bufload(bufnr(a:expr, v:true))
+      return get(getbufline(a:expr, a:lnum), 0, v:null)
+    endif
     return get(readfile(a:expr, '', a:lnum), 0, v:null)
   endif
   return v:null

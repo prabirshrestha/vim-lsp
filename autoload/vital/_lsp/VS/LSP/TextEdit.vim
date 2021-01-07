@@ -31,14 +31,10 @@ function! s:apply(path, text_edits) abort
   let l:current_position = s:Position.cursor()
 
   let l:target_bufnr = s:_switch(a:path)
-  try
-    let l:fix_cursor = s:_substitute(l:target_bufnr, a:text_edits, l:current_position)
-  catch /.*/
-    echomsg string({ 'exception': v:exception, 'throwpoint': v:throwpoint })
-  endtry
+  call s:_substitute(l:target_bufnr, a:text_edits, l:current_position)
   let l:current_bufnr = s:_switch(l:current_bufname)
 
-  if get(l:, 'fix_cursor', v:false) && l:current_bufnr == l:target_bufnr
+  if l:current_bufnr == l:target_bufnr
     call cursor(s:Position.lsp_to_vim('%', l:current_position))
   endif
 endfunction
@@ -47,34 +43,32 @@ endfunction
 " _substitute
 "
 function! s:_substitute(bufnr, text_edits, current_position) abort
-  let l:fix_cursor = v:false
-
   try
     " Save state.
     let l:Restore = s:Option.define({
     \   'foldenable': '0',
     \ })
     let l:view = winsaveview()
-    let l:regx = getreg('x')
 
     " Apply substitute.
     let [l:fixeol, l:text_edits] = s:_normalize(a:bufnr, a:text_edits)
     for l:text_edit in l:text_edits
       let l:start = s:Position.lsp_to_vim(a:bufnr, l:text_edit.range.start)
       let l:end = s:Position.lsp_to_vim(a:bufnr, l:text_edit.range.end)
-      call setreg('x', s:Text.normalize_eol(l:text_edit.newText), 'c')
-      execute printf('noautocmd keepjumps %ssubstitute/\%%%sl\%%%sc\zs\_.\{-}\ze\%%%sl\%%%sc/\=getreg("x")/',
+      let l:text = s:Text.normalize_eol(l:text_edit.newText)
+      execute printf('noautocmd keeppatterns keepjumps silent %ssubstitute/\%%%sl\%%%sc\zs\_.\{-}\ze\%%%sl\%%%sc/\=l:text/%se',
       \   l:start[0],
       \   l:start[0],
       \   l:start[1],
       \   l:end[0],
-      \   l:end[1]
+      \   l:end[1],
+      \   &gdefault ? 'g' : ''
       \ )
-      let l:fix_cursor = s:_fix_cursor(a:current_position, l:text_edit, getreg('x', 1, v:true)) || l:fix_cursor
+      call s:_fix_cursor_position(a:current_position, l:text_edit, s:Text.split_by_eol(l:text))
     endfor
 
     " Remove last empty line if fixeol enabled.
-    if l:fixeol && getline('$') == ''
+    if l:fixeol && getline('$') ==# ''
       $delete _
     endif
   catch /.*/
@@ -83,31 +77,25 @@ function! s:_substitute(bufnr, text_edits, current_position) abort
     " Restore state.
     call l:Restore()
     call winrestview(l:view)
-    call setreg('x', l:regx)
   endtry
-
-  return l:fix_cursor
 endfunction
 
 "
-" _fix_cursor
+" _fix_cursor_position
 "
-function! s:_fix_cursor(position, text_edit, lines) abort
+function! s:_fix_cursor_position(position, text_edit, lines) abort
   let l:lines_len = len(a:lines)
   let l:range_len = (a:text_edit.range.end.line - a:text_edit.range.start.line) + 1
 
   if a:text_edit.range.end.line < a:position.line
     let a:position.line += l:lines_len - l:range_len
-    return v:true
   elseif a:text_edit.range.end.line == a:position.line && a:text_edit.range.end.character <= a:position.character
     let a:position.line += l:lines_len - l:range_len
     let a:position.character = strchars(a:lines[-1]) + (a:position.character - a:text_edit.range.end.character)
     if l:lines_len == 1
       let a:position.character += a:text_edit.range.start.character
     endif
-    return v:true
   endif
-  return v:false
 endfunction
 
 "
