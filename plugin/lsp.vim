@@ -129,6 +129,7 @@ command! -nargs=? -complete=customlist,lsp#utils#empty_complete LspSignatureHelp
 command! LspDocumentFold call lsp#ui#vim#folding#fold(0)
 command! LspDocumentFoldSync call lsp#ui#vim#folding#fold(1)
 command! -nargs=? LspSemanticScopes call lsp#ui#vim#semantic#display_scope_tree(<args>)
+command! -nargs=1 LspPopupScroll call lsp#ui#vim#output#popup_scroll(<args>)
 
 nnoremap <plug>(lsp-code-action) :<c-u>call lsp#ui#vim#code_action()<cr>
 nnoremap <plug>(lsp-code-lens) :<c-u>call lsp#ui#vim#code_lens()<cr>

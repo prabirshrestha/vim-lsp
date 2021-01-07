@@ -1554,6 +1554,16 @@ LspStopServer                                                *:LspStopServer*
 
 Stop all active servers.
 
+LspPopupScroll {num}                                        *:LspPopupScroll* 
+
+Scroll a Vim 8 popup window by {num} lines (positive to
+scroll down, negative to scroll up). For example, to remap
+<C-j> and <C-k> to scroll down and up in a popup window: >
+
+        nnoremap <buffer><silent><C-j> :LspPopupScroll(1)<CR>
+        nnoremap <buffer><silent><C-k> :LspPopupScroll(-1)<CR>
+
+
 ==============================================================================
 Autocommands                                          *vim-lsp-autocommands*
 
