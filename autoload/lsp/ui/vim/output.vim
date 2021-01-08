@@ -176,11 +176,12 @@ endfunction
 
 function! lsp#ui#vim#output#popup_scroll(val) abort
     " Scroll a popup window by a:val lines downwards (or upwards if a:val is
-    " negative. Example usage:
-    " nnoremap <buffer><silent><expr><C-j>
-    "             \ pumvisible() ? LspPopupScroll(1) : "\<C-j>"
-    " nnoremap <buffer><silent><expr><C-k>
-    "             \ pumvisible() ? LspPopupScroll(-1) : "\<C-k>"
+    " negative. The command :LspPopupScroll(val) calls this function. For
+    " example, 
+    "     lsp#ui#vim#output#popup_scroll(1)
+    " and
+    "     lsp#ui#vim#output#popup_scroll(-1)
+    " scroll the popup window one line down and one line up respectively.
 
     " Return early if there is no popup, or if the popup is already focused
     if !s:winid || win_getid() ==# s:winid
