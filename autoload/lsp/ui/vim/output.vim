@@ -173,28 +173,66 @@ function! lsp#ui#vim#output#adjust_float_placement(bufferlines, maxwidth) abort
     endif
 endfunction
 
+
 function! lsp#ui#vim#output#popup_scroll(val) abort
-    let l:pos = popup_getpos(s:winid)
-    " only for vim8 popup where focusing is not (yet) possible
-    if !s:use_vim_popup || !s:winid || !l:pos.scrollbar
+    " Scroll a popup window by a:val lines downwards (or upwards if a:val is
+    " negative. Example usage:
+    " nnoremap <buffer><silent><expr><C-j>
+    "             \ pumvisible() ? LspPopupScroll(1) : "\<C-j>"
+    " nnoremap <buffer><silent><expr><C-k>
+    "             \ pumvisible() ? LspPopupScroll(-1) : "\<C-k>"
+
+    " Return early if there is no popup, or if the popup is already focused
+    if !s:winid || win_getid() ==# s:winid
         return
     endif
 
-    let l:new_firstline = l:pos.firstline + a:val
-    let l:new_lastline = l:pos.lastline + a:val
-    let l:bottom_line = str2nr(trim(win_execute(s:winid, "echo line ('$')")))
+    if s:use_vim_popup
+        " Vim 8 popup window
+        let l:pos = popup_getpos(s:winid)
+        if !l:pos.scrollbar | return | endif
 
-    if l:new_firstline < 1 " scrolling too far up
-        let l:new_firstline = 1
-    elseif l:new_lastline > l:bottom_line " scrolling too far down
-        let l:new_firstline = l:new_firstline + l:bottom_line - l:new_lastline
+        let l:new_firstline = l:pos.firstline + a:val
+        let l:new_lastline = l:pos.lastline + a:val
+        let l:bottom_line = str2nr(trim(win_execute(s:winid, "echo line ('$')")))
+
+        if l:new_firstline < 1 " scrolling too far up
+            let l:new_firstline = 1
+        elseif l:new_lastline > l:bottom_line " scrolling too far down
+            let l:new_firstline = l:new_firstline + l:bottom_line - l:new_lastline
+        endif
+
+        call popup_setoptions(s:winid, {
+            \ 'firstline': l:new_firstline,
+            \ 'minwidth': l:pos.core_width,
+            \ 'maxwidth': l:pos.core_width + 1,
+            \ }) " Constrain min and maxwidth so that they don't change when scrolling
+
+    elseif s:use_nvim_float
+        " Nvim doesn't (yet) have the win_execute() function (cf.
+        " neovim/neovim#13664) or a way to directly move the lines like above,
+        " so the easiest option seems to be to temporarily give focus to the
+        " float window.
+        let l:old_winid = win_getid()
+        let l:value = a:val
+        let l:winheight = nvim_win_get_height(s:winid)
+        call win_gotoid(s:winid)
+        if l:value > 0  " extra check to make sure we don't move too far down
+            while l:value > 0 && line('w0') + l:winheight - 1 <= line('$')
+                execute "normal! \<C-e>"
+                let l:value -= 1
+            endwhile
+        elseif l:value < 0 " <C-y> can't move too far up, so no need for other checks
+            while l:value < 0
+                execute "normal! \<C-y>"
+                let l:value += 1
+            endwhile
+        endif
+        " need noautocmd here in order to prevent the popup window from being
+        " closed when losing focus if g:lsp_preview_autoclose is set to 1.
+        noautocmd call win_gotoid(l:old_winid)
     endif
 
-    call popup_setoptions(s:winid, {
-        \ 'firstline': l:new_firstline,
-        \ 'minwidth': l:pos.core_width,
-        \ 'maxwidth': l:pos.core_width + 1,
-        \ }) " Constrain min and maxwidth so that they don't change when scrolling
 endfunction
 
 function! s:add_float_closing_hooks() abort
