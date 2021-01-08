@@ -71,15 +71,58 @@ function! s:chooseCodeLens(items, bufnr) abort
     if empty(a:items)
         return lsp#callbag#throwError('No codelens found')
     endif
-    let l:index = inputlist(map(copy(a:items), {i, value ->
-        \   printf("%s - [%s] %s\t| L%s:%s", i + 1, value['server'], value['codelens']['command']['title'],
-        \   lsp#utils#position#lsp_line_to_vim(a:bufnr, value['codelens']['range']['start']),
-        \   getbufline(a:bufnr, lsp#utils#position#lsp_line_to_vim(a:bufnr, value['codelens']['range']['start']))[0][:50])
-        \ }))
-    if l:index > 0 && l:index <= len(a:items)
-        let l:selected = a:items[l:index - 1]
-        return lsp#callbag#of(l:selected)
+    if g:lsp_experimental_quickpick_ui
+        return lsp#callbag#create(function('s:quickpick_open', [a:items, a:bufnr]))
     else
+        let l:index = inputlist(map(copy(a:items), {i, value ->
+            \   printf("%s - [%s] %s\t| L%s:%s", i + 1, value['server'], value['codelens']['command']['title'],
+            \   lsp#utils#position#lsp_line_to_vim(a:bufnr, value['codelens']['range']['start']),
+            \   getbufline(a:bufnr, lsp#utils#position#lsp_line_to_vim(a:bufnr, value['codelens']['range']['start']))[0][:50])
+            \ }))
+        if l:index > 0 && l:index <= len(a:items)
+            let l:selected = a:items[l:index - 1]
+            return lsp#callbag#of(l:selected)
+        else
+            return lsp#callbag#empty()
+        endif
+    endif
+endfunction
+
+function! s:quickpick_open(items, bufnr, next, error, complete) abort
+    if empty(a:items)
         return lsp#callbag#empty()
     endif
+
+    let l:items = []
+    for l:item in a:items
+        let l:title = printf("[%s] %s\t| L%s:%s",
+            \ l:item['server'],
+            \ l:item['codelens']['command']['title'],
+            \ lsp#utils#position#lsp_line_to_vim(a:bufnr, l:item['codelens']['range']['start']),
+            \ getbufline(a:bufnr, lsp#utils#position#lsp_line_to_vim(a:bufnr, l:item['codelens']['range']['start']))[0])
+        call add(l:items, { 'title': l:title, 'item': l:item })
+    endfor
+
+    call lsp#internal#ui#quickpick#open({
+        \ 'items': l:items,
+        \ 'key': 'title',
+        \ 'on_accept': function('s:quickpick_accept', [a:next, a:error, a:complete]),
+        \ 'on_cancel': function('s:quickpick_cancel', [a:next, a:error, a:complete]),
+        \ })
+
+    return function('s:quickpick_dispose')
+endfunction
+
+function! s:quickpick_dispose() abort
+    call lsp#internal#ui#quickpick#close()
+endfunction
+
+function! s:quickpick_accept(next, error, complete, data, ...) abort
+    call lsp#internal#ui#quickpick#close()
+    call a:next(a:data['items'][0]['item'])
+    call a:complete()
+endfunction
+
+function! s:quickpick_cancel(next, error, complete, ...) abort
+    call a:complete()
 endfunction

@@ -63,6 +63,8 @@ let g:lsp_work_done_progress_enabled = get(g:, 'lsp_work_done_progress_enabled',
 
 let g:lsp_get_supported_capabilities = get(g:, 'lsp_get_supported_capabilities', [function('lsp#default_get_supported_capabilities')])
 
+let g:lsp_experimental_quickpick_ui = get(g:, 'lsp_experimental_quickpick_ui', 0)
+
 if g:lsp_auto_enable
     augroup lsp_auto_enable
         autocmd!
