@@ -108,6 +108,7 @@ function! s:show_documentation(event) abort
         let l:width = (l:width < 1 ? 1 : l:width)
 
         let s:last_popup_id = nvim_open_win(l:buffer, v:false, {'relative': 'editor', 'anchor': l:anchor, 'row': l:row, 'col': l:col, 'height': l:height, 'width': l:width, 'style': 'minimal'})
+        call nvim_win_set_option(s:last_popup_id, 'wrap', v:true)
         return
     endif
 
