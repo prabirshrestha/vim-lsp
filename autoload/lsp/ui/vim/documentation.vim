@@ -108,6 +108,7 @@ function! s:show_documentation(event) abort
         let l:width = (l:width < 1 ? 1 : l:width)
 
         let s:last_popup_id = nvim_open_win(l:buffer, v:false, {'relative': 'editor', 'anchor': l:anchor, 'row': l:row, 'col': l:col, 'height': l:height, 'width': l:width, 'style': 'minimal'})
+        doautocmd <nomodeline> User lsp_float_opened
         return
     endif
 
@@ -126,6 +127,7 @@ function! s:show_documentation(event) abort
         let l:col = a:event['col'] - 1
     endif
     let s:last_popup_id = popup_create('(no documentation available)', {'line': l:line, 'col': l:col, 'pos': l:right ? 'topleft' : 'topright', 'padding': [0, 1, 0, 1], 'border': [1, 1, 1, 1]})
+    doautocmd <nomodeline> User lsp_float_opened
     call setbufvar(winbufnr(s:last_popup_id), 'lsp_syntax_highlights', l:syntax_lines)
     call setbufvar(winbufnr(s:last_popup_id), 'lsp_do_conceal', 1)
     call lsp#ui#vim#output#setcontent(s:last_popup_id, l:lines, l:ft)
@@ -142,6 +144,7 @@ function! s:close_popup() abort
         if s:use_nvim_float && nvim_win_is_valid(s:last_popup_id) | call nvim_win_close(s:last_popup_id, 1) | endif
 
         let s:last_popup_id = -1
+        doautocmd <nomodeline> User lsp_float_closed
     endif
 endfunction
 
