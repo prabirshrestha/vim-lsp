@@ -88,6 +88,7 @@ command! LspPeekDeclaration call lsp#ui#vim#declaration(1)
 command! LspDefinition call lsp#ui#vim#definition(0, <q-mods>)
 command! LspPeekDefinition call lsp#ui#vim#definition(1)
 command! LspDocumentSymbol call lsp#ui#vim#document_symbol()
+command! LspDocumentSymbolSearch call lsp#internal#document_symbol#search#do({})
 command! -nargs=? LspDocumentDiagnostics call lsp#internal#diagnostics#document_diagnostics_command#do(
             \ extend({}, lsp#utils#args#_parse(<q-args>, {
             \   'buffers': {'type': type('')},
