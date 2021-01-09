@@ -1,4 +1,4 @@
-" https://github.com/prabirshrestha/quickpick.vim#dc78c77d6d2b431d03237367555ca880ed35b8c0
+" https://github.com/prabirshrestha/quickpick.vim#601f826b829dcac19a613f6724e6fb9f110d7c07
 "    :QuickpickEmbed path=autoload/lsp/internal/ui/quickpick.vim namespace=lsp#internal#ui#quickpick prefix=lsp-quickpick
 
 let s:has_timer = exists('*timer_start') && exists('*timer_stop')
@@ -157,10 +157,7 @@ function! lsp#internal#ui#quickpick#close() abort
     autocmd!
   augroup END
 
-  mapclear <buffer>
   exe 'silent! bunload! ' . s:state['promptbufnr']
-
-  mapclear <buffer>
   exe 'silent! bunload! ' . s:state['resultsbufnr']
 
   let s:inputecharpre = 0
