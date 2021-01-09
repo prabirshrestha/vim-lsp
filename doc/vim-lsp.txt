@@ -98,6 +98,7 @@ CONTENTS                                                  *vim-lsp-contents*
       LspDocumentRangeFormat                |:LspDocumentRangeFormat|
       LspDocumentRangeFormatSync            |:LspDocumentRangeFormatSync|
       LspDocumentSymbol                     |:LspDocumentSymbol|
+      LspDocumentSymbolSearch               |:LspDocumentSymbolSearch|
       LspHover                              |:LspHover|
       LspNextDiagnostic                     |:LspNextDiagnostic|
       LspNextError                          |:LspNextError|
@@ -1417,6 +1418,10 @@ Note that this may slow down vim.
 LspDocumentSymbol                                       *:LspDocumentSymbol*
 
 Gets the symbols for the current document.
+
+LspDocumentSymbolSearch                             *:LspDocumentSymbolSearch*
+
+Search the symbols for the current document and navigate.
 
 LspHover                                                         *:LspHover*
 
