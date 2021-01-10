@@ -1,4 +1,4 @@
-" https://microsoft.github.io/language-server-protocol/specification#textDocument_documentSymbol
+" https://microsoft.github.io/language-server-protocol/specification#workspace_symbol
 " options - {
 "   bufnr: bufnr('%')       " optional
 "   server - 'server_name'  " optional
