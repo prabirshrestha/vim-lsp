@@ -108,6 +108,7 @@ CONTENTS                                                  *vim-lsp-contents*
       LspPeekDefinition                     |:LspPeekDefinition|
       LspPeekImplementation                 |:LspPeekImplementation|
       LspPeekTypeDefinition                 |:LspPeekTypeDefinition|
+      LspPopupScroll                        |:LspPopupScroll|
       LspPreviousDiagnostic                 |:LspPreviousDiagnostic|
       LspPreviousError                      |:LspPreviousError|
       LspPreviousReference                  |:LspPreviousReference|
@@ -1561,9 +1562,9 @@ down, negative to scroll up). For example, to remap <C-j>
 and <C-k> to scroll a popup window down and up respectively: >
 
     nnoremap <buffer><silent><expr><C-j>
-                \ pumvisible() ? LspPopupScroll(1) : "\<C-j>"
+	\ lsp#ui#vim#output#getpreviewwinid() ? ":LspPopupScroll 1<CR>" : "\<C-j>"
     nnoremap <buffer><silent><expr><C-k>
-                \ pumvisible() ? LspPopupScroll(-1) : "\<C-k>"
+	\ lsp#ui#vim#output#getpreviewwinid() ? ":LspPopupScroll -1<CR>" : "\<C-k>"
 
 
 ==============================================================================
