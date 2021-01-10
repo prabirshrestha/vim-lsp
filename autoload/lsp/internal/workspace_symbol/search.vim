@@ -32,7 +32,7 @@ function! lsp#internal#workspace_symbol#search#do(options) abort
         \ 'on_close': function('s:on_close'),
         \ })
 
-    call lsp#callbag#pipe(
+    let s:Dispose = lsp#callbag#pipe(
         \ l:TextChangeSubject,
         \ lsp#callbag#debounceTime(250),
         \ lsp#callbag#distinctUntilChanged(),
