@@ -1,4 +1,4 @@
-" https://github.com/prabirshrestha/quickpick.vim#601f826b829dcac19a613f6724e6fb9f110d7c07
+" https://github.com/prabirshrestha/quickpick.vim#3c3d5850867a7308391a1143575f62677dc2ce3f
 "    :QuickpickEmbed path=autoload/lsp/internal/ui/quickpick.vim namespace=lsp#internal#ui#quickpick prefix=lsp-quickpick
 
 let s:has_timer = exists('*timer_start') && exists('*timer_stop')
@@ -211,7 +211,9 @@ function! s:update_items() abort
     else
       if empty(s:state['key']) " item is string
         if s:has_matchfuzzypos
-          let [l:fitems, l:highlights] = matchfuzzypos(s:state['items'], s:state['input'])
+          let l:matchfuzzyresult = matchfuzzypos(s:state['items'], s:state['input'])
+          let l:fitems = l:matchfuzzyresult[0]
+          let l:highlights = l:matchfuzzyresult[1]
           let s:state['fitems'] = l:fitems
           let s:state['highlights'] = l:highlights
         elseif s:has_matchfuzzy
@@ -223,7 +225,9 @@ function! s:update_items() abort
         if s:has_matchfuzzypos
           " vim requires matchfuzzypos to have highlights.
           " matchfuzzy only patch doesn't support dict search
-          let [l:fitems, l:highlights] = matchfuzzypos(s:state['items'], s:state['input'], { 'key': s:state['key'] })
+          let l:matchfuzzyresult = matchfuzzypos(s:state['items'], s:state['input'], { 'key': s:state['key'] })
+          let l:fitems = l:matchfuzzyresult[0]
+          let l:highlights = l:matchfuzzyresult[1]
           let s:state['fitems'] = l:fitems
           let s:state['highlights'] = l:highlights
         else
