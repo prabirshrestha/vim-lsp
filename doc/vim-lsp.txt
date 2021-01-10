@@ -119,6 +119,7 @@ CONTENTS                                                  *vim-lsp-contents*
       LspTypeDefinition                     |:LspTypeDefinition|
       LspTypeHierarchy                      |:LspTypeHierarchy|
       LspWorkspaceSymbol                    |:LspWorkspaceSymbol|
+      LspWorkspaceSymbolSearch              |:LspWorkspaceSymbolSearch|
       LspStatus                             |:LspStatus|
       LspStopServer                         |:LspStopServer|
     Autocommands                          |vim-lsp-autocommands|
@@ -1537,7 +1538,11 @@ Also see |:LspPeekTypeDefinition|.
 
 LspWorkspaceSymbol                                     *:LspWorkspaceSymbol*
 
-Search and show workspace symbols.
+Search and show workspace symbols in quickfix.
+
+LspWorkspaceSymbolSearch                            *:LspWorkspaceSymbolSearch*
+
+Search the workspace symbols for all servers and navigate using quickpick.
 
 LspStatus                                                       *:LspStatus*
 
@@ -1633,6 +1638,7 @@ Available plug mappings are following:
   nnoremap <plug>(lsp-definition)
   nnoremap <plug>(lsp-peek-definition)
   nnoremap <plug>(lsp-document-symbol)
+  nnoremap <plug>(lsp-document-symbol-search)
   nnoremap <plug>(lsp-document-diagnostics)
   nnoremap <plug>(lsp-hover)
   nnoremap <plug>(lsp-next-diagnostic)
@@ -1654,6 +1660,7 @@ Available plug mappings are following:
   nnoremap <plug>(lsp-references)
   nnoremap <plug>(lsp-rename)
   nnoremap <plug>(lsp-workspace-symbol)
+  nnoremap <plug>(lsp-workspace-symbol-search)
   nnoremap <plug>(lsp-document-format)
   vnoremap <plug>(lsp-document-format)
   nnoremap <plug>(lsp-document-range-format)
