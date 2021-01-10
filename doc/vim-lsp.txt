@@ -1539,10 +1539,12 @@ Also see |:LspPeekTypeDefinition|.
 LspWorkspaceSymbol                                     *:LspWorkspaceSymbol*
 
 Search and show workspace symbols in quickfix.
+Servers may choose to return empty results if the search query is empty.
 
 LspWorkspaceSymbolSearch                            *:LspWorkspaceSymbolSearch*
 
 Search the workspace symbols for all servers and navigate using quickpick.
+Servers may choose to return empty results if the search query is empty.
 
 LspStatus                                                       *:LspStatus*
 
