@@ -1,3 +1,8 @@
+let s:has_lua = has('nvim-0.4.0') || (has('lua') && has('patch-8.2.0775'))
+function! lsp#utils#has_lua() abort
+    return s:has_lua
+endfunction
+
 let s:has_virtual_text = exists('*nvim_buf_set_virtual_text') && exists('*nvim_create_namespace')
 function! lsp#utils#_has_virtual_text() abort
     return s:has_virtual_text
