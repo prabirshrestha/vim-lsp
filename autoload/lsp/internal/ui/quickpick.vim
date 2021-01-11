@@ -1,4 +1,4 @@
-" https://github.com/prabirshrestha/quickpick.vim#3c3d5850867a7308391a1143575f62677dc2ce3f
+" https://github.com/prabirshrestha/quickpick.vim#37e29b28f65d3ae344ec8eaf7ce2d5f87e2f4b90
 "    :QuickpickEmbed path=autoload/lsp/internal/ui/quickpick.vim namespace=lsp#internal#ui#quickpick prefix=lsp-quickpick
 
 let s:has_timer = exists('*timer_start') && exists('*timer_stop')
@@ -252,7 +252,10 @@ function! s:update_items() abort
     let l:i = 0
     for l:line in s:state['highlights']
       for l:pos in l:line
-        call prop_add(l:i + 1, l:pos + 1, { 'length': 1, 'type': 'highlight', 'bufnr': s:state['resultsbufnr'] })
+        let l:cs = split(getbufline(s:state['resultsbufnr'], l:i + 1)[0], '\zs')
+        let l:mpos = strlen(join(l:cs[: l:pos - 1], ''))
+        let l:len =  strlen(l:cs[l:pos])
+        call prop_add(l:i + 1, l:mpos + 1, { 'length': l:len, 'type': 'highlight', 'bufnr': s:state['resultsbufnr'] })
       endfor
       let l:i += 1
     endfor
