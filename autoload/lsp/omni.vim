@@ -341,6 +341,8 @@ endfunction
 " }
 function! lsp#omni#get_vim_completion_items(options) abort
     let l:server = a:options['server']
+    let l:server_name = l:server['name']
+    let l:kind_text_mappings = s:get_kind_text_mappings(l:server)
     let l:complete_position = a:options['position']
 
     let l:result = a:options['response']['result']
@@ -356,9 +358,6 @@ function! lsp#omni#get_vim_completion_items(options) abort
     endif
 
     let l:vim_complete_items = []
-    let l:server_name = l:server['name']
-    let l:kind_text_mappings = s:get_kind_text_mappings(l:server)
-
     for l:completion_item in l:items
         let l:label = lsp#utils#_trim(l:completion_item.label)
         let l:insert_text = lsp#utils#_trim(get(l:completion_item, 'insertText', l:label))
@@ -367,16 +366,17 @@ function! lsp#omni#get_vim_completion_items(options) abort
             let l:word = l:label
             let l:abbr = l:label
 
-            let l:expandable = 0
-            if has_key(l:completion_item, 'textEdit') && has_key(l:completion_item.textEdit, 'newText')
-                let l:expandable = l:word !=# l:completion_item.textEdit.newText
-            elseif has_key(l:completion_item, 'insertText')
-                let l:expandable = l:word !=# l:completion_item.insertText
-            endif
+            " always set to 1 for perf for now
+            let l:expandable = 1
+            " if has_key(l:completion_item, 'textEdit') && has_key(l:completion_item.textEdit, 'newText')
+            "     let l:expandable = l:word !=# l:completion_item.textEdit.newText
+            " elseif has_key(l:completion_item, 'insertText')
+            "     let l:expandable = l:word !=# l:completion_item.insertText
+            " endif
 
-            if l:expandable
+            " if l:expandable
                 let l:abbr = l:abbr . '~'
-            endif
+            " endif
         else
             let l:word = l:insert_text
             let l:abbr = l:label
@@ -387,6 +387,7 @@ function! lsp#omni#get_vim_completion_items(options) abort
             \ 'abbr': l:abbr,
             \ 'dup': 1,
             \ 'icase': 1,
+            \ 'kind': get(l:kind_text_mappings, get(l:completion_item, 'kind', '') , '')
             \ }
 
         if s:is_user_data_support
@@ -459,5 +460,4 @@ endfunction
 function! s:create_user_data_key(base) abort
     return '{"vim-lsp/key":"' . a:base . '"}'
 endfunction
-
 " }}}
