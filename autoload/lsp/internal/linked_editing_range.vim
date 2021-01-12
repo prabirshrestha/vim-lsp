@@ -58,7 +58,7 @@ function! lsp#internal#linked_editing_range#prepare() abort
 endfunction
 
 function! s:enabled(...) abort
-    return g:lsp_linked_editing_range_enabled && s:TextMark.is_available()
+    return exists('##TextChangedP') && g:lsp_linked_editing_range_enabled && s:TextMark.is_available()
 endfunction
 
 function! s:request_sync() abort
