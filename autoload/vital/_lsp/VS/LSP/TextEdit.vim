@@ -13,6 +13,7 @@ delfunction s:_SID
 function! s:_vital_loaded(V) abort
   let s:Text = a:V.import('VS.LSP.Text')
   let s:Position = a:V.import('VS.LSP.Position')
+  let s:Buffer = a:V.import('VS.Vim.Buffer')
   let s:Option = a:V.import('VS.Vim.Option')
 endfunction
 
@@ -20,7 +21,7 @@ endfunction
 " _vital_depends
 "
 function! s:_vital_depends() abort
-  return ['VS.LSP.Text', 'VS.LSP.Position', 'VS.Vim.Option']
+  return ['VS.LSP.Text', 'VS.LSP.Position', 'VS.Vim.Buffer', 'VS.Vim.Option']
 endfunction
 
 "
@@ -56,7 +57,7 @@ function! s:_substitute(bufnr, text_edits, current_position) abort
       let l:start = s:Position.lsp_to_vim(a:bufnr, l:text_edit.range.start)
       let l:end = s:Position.lsp_to_vim(a:bufnr, l:text_edit.range.end)
       let l:text = s:Text.normalize_eol(l:text_edit.newText)
-      execute printf('noautocmd keeppatterns keepjumps silent %ssubstitute/\%%%sl\%%%sc\zs\_.\{-}\ze\%%%sl\%%%sc/\=l:text/%se',
+      execute printf('noautocmd keeppatterns keepjumps silent %ssubstitute/\%%%sl\%%%sc\_.\{-}\%%%sl\%%%sc/\=l:text/%se',
       \   l:start[0],
       \   l:start[0],
       \   l:start[1],
@@ -69,7 +70,7 @@ function! s:_substitute(bufnr, text_edits, current_position) abort
 
     " Remove last empty line if fixeol enabled.
     if l:fixeol && getline('$') ==# ''
-      $delete _
+      noautocmd keeppatterns keepjumps silent $delete _
     endif
   catch /.*/
     echomsg string({ 'exception': v:exception, 'throwpoint': v:throwpoint })
@@ -105,8 +106,7 @@ function! s:_normalize(bufnr, text_edits) abort
   let l:text_edits = type(a:text_edits) == type([]) ? a:text_edits : [a:text_edits]
   let l:text_edits = s:_range(l:text_edits)
   let l:text_edits = sort(l:text_edits, function('s:_compare'))
-  let l:text_edits = s:_check(l:text_edits)
-  let l:text_edits =  reverse(l:text_edits)
+  let l:text_edits = reverse(l:text_edits)
   return s:_fix_text_edits(a:bufnr, l:text_edits)
 endfunction
 
@@ -131,25 +131,6 @@ function! s:_range(text_edits) abort
 endfunction
 
 "
-" _check
-"
-function! s:_check(text_edits) abort
-  if len(a:text_edits) > 1
-    let l:range = a:text_edits[0].range
-    for l:text_edit in a:text_edits[1 : -1]
-      if l:range.end.line > l:text_edit.range.start.line || (
-      \   l:range.end.line == l:text_edit.range.start.line &&
-      \   l:range.end.character > l:text_edit.range.start.character
-      \ )
-        echomsg 'VS.LSP.TextEdit: range overlapped.'
-      endif
-      let l:range = l:text_edit.range
-    endfor
-  endif
-  return a:text_edits
-endfunction
-
-"
 " _compare
 "
 function! s:_compare(text_edit1, text_edit2) abort
@@ -164,21 +145,20 @@ endfunction
 " _fix_text_edits
 "
 function! s:_fix_text_edits(bufnr, text_edits) abort
-  let l:buf = getbufline(a:bufnr, '^', '$')
-  let l:max = len(l:buf)
+  let l:max = s:Buffer.get_line_count(a:bufnr)
 
   let l:fixeol = v:false
   let l:text_edits = []
   for l:text_edit in a:text_edits
     if l:max <= l:text_edit.range.start.line
       let l:text_edit.range.start.line = l:max - 1
-      let l:text_edit.range.start.character = strchars(get(l:buf, -1, 0))
+      let l:text_edit.range.start.character = strchars(get(getbufline(a:bufnr, '$'), 0, ''))
       let l:text_edit.newText = "\n" . l:text_edit.newText
       let l:fixeol = &fixendofline && !&binary
     endif
     if l:max <= l:text_edit.range.end.line
       let l:text_edit.range.end.line = l:max - 1
-      let l:text_edit.range.end.character = strchars(get(l:buf, -1, 0))
+      let l:text_edit.range.end.character = strchars(get(getbufline(a:bufnr, '$'), 0, ''))
       let l:fixeol = &fixendofline && !&binary
     endif
     call add(l:text_edits, l:text_edit)
@@ -191,8 +171,12 @@ endfunction
 " _switch
 "
 function! s:_switch(path) abort
-  if bufnr(a:path) >= 0
-    execute printf('noautocmd keepalt keepjumps %sbuffer!', bufnr(a:path))
+  let l:curr = bufnr('%')
+  let l:next = bufnr(a:path)
+  if l:next >= 0
+    if l:curr != l:next
+      execute printf('noautocmd keepalt keepjumps %sbuffer!', bufnr(a:path))
+    endif
   else
     execute printf('noautocmd keepalt keepjumps edit! %s', fnameescape(a:path))
   endif

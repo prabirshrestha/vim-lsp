@@ -17,9 +17,9 @@ function! lsp#internal#linked_editing_range#_enable() abort
     \     lsp#callbag#pipe(
     \         lsp#callbag#fromEvent(['InsertEnter']),
     \         lsp#callbag#filter({ -> g:lsp_linked_editing_range_enabled }),
-    \         lsp#callbag#flatMap({ -> s:request_sync() }),
+    \         lsp#callbag#switchMap({ -> lsp#callbag#of(s:request_sync()) }),
     \         lsp#callbag#subscribe({
-    \           'next': { x -> call('s:prepare', x) }
+    \           'next': { x -> s:prepare(x) }
     \         })
     \     ),
     \     lsp#callbag#pipe(
@@ -30,6 +30,11 @@ function! lsp#internal#linked_editing_range#_enable() abort
     \     lsp#callbag#pipe(
     \         lsp#callbag#fromEvent(['TextChanged', 'TextChangedI', 'TextChangedP']),
     \         lsp#callbag#filter({ -> g:lsp_linked_editing_range_enabled }),
+    \         lsp#callbag#filter({ ->
+    \           s:state.bufnr == bufnr('%') &&
+    \           s:state.changedtick != b:changedtick &&
+    \           s:state.changenr <= changenr()
+    \         }),
     \         lsp#callbag#subscribe({ -> s:sync() })
     \     ),
     \ )
@@ -48,13 +53,7 @@ function! lsp#internal#linked_editing_range#prepare() abort
         return ''
     endif
 
-    call lsp#callbag#pipe(
-    \     s:request_sync(),
-    \     lsp#callbag#subscribe({
-    \         'next': { x -> call('s:prepare', x) },
-    \         'error': { -> {} },
-    \     })
-    \ )
+    call s:prepare(s:request_sync())
     return ''
 endfunction
 
@@ -67,37 +66,47 @@ function! s:request_sync() abort
     let l:server = filter(l:server, 'lsp#capabilities#has_linked_editing_range_provider(v:val)')
     let l:server = get(l:server, 0, v:null)
     if empty(l:server)
-        return lsp#callbag#of([v:null])
+        return v:null
     endif
 
-    return lsp#callbag#of(
-    \     lsp#callbag#pipe(
-    \         lsp#request(l:server, {
-    \             'method': 'textDocument/linkedEditingRange',
-    \             'params': {
-    \                 'textDocument': lsp#get_text_document_identifier(),
-    \                 'position': lsp#get_position(),
-    \             }
-    \         }),
-    \         lsp#callbag#toList()
-    \     ).wait({ 'sleep': 1, 'timeout': 200 })
-    \ )
+    return lsp#callbag#pipe(
+    \     lsp#request(l:server, {
+    \         'method': 'textDocument/linkedEditingRange',
+    \         'params': {
+    \             'textDocument': lsp#get_text_document_identifier(),
+    \             'position': lsp#get_position(),
+    \         }
+    \     }),
+    \     lsp#callbag#toList(),
+    \ ).wait({ 'wait': 1, 'timeout': 200 })[0]
 endfunction
 
 function! s:prepare(x) abort
     if empty(a:x) || empty(get(a:x, 'response')) || empty(get(a:x['response'], 'result')) || empty(get(a:x['response']['result'], 'ranges'))
         return
     endif
+    let l:ranges = a:x['response']['result']['ranges']
 
-    call s:clear()
-    call s:TextMark.set(bufnr('%'), s:TEXT_MARK_NAMESPACE, map(a:x['response']['result']['ranges'], { _, range -> {
-    \     'start_pos': lsp#utils#position#lsp_to_vim('%', range['start']),
-    \     'end_pos': lsp#utils#position#lsp_to_vim('%', range['end']),
-    \     'highlight': 'Underlined',
-    \ } }))
-    let s:state['bufnr'] = bufnr('%')
+    let l:bufnr = bufnr('%')
+    let s:state['bufnr'] = l:bufnr
     let s:state['changenr'] = changenr()
     let s:state['changedtick'] = b:changedtick
+
+    call s:clear()
+    call s:TextMark.set(l:bufnr, s:TEXT_MARK_NAMESPACE, map(copy(l:ranges), { _, range -> {
+    \     'start_pos': lsp#utils#position#lsp_to_vim(l:bufnr, range['start']),
+    \     'end_pos': lsp#utils#position#lsp_to_vim(l:bufnr, range['end']),
+    \     'highlight': 'Underlined',
+    \ } }))
+
+    " TODO: Force enable extmark's gravity option.
+    if has('nvim')
+        let l:new_text = lsp#utils#range#_get_text(l:bufnr, l:ranges[0])
+        call s:TextEdit.apply(l:bufnr, map(copy(l:ranges), { _, range -> {
+        \   'range': range,
+        \   'newText': l:new_text,
+        \ } }))
+    endif
 endfunction
 
 function! s:clear() abort
@@ -105,18 +114,8 @@ function! s:clear() abort
 endfunction
 
 function! s:sync() abort
-    let l:bufnr = bufnr('%')
-    if s:state['bufnr'] != l:bufnr
-        return
-    endif
-    if s:state['changedtick'] == b:changedtick
-        return
-    endif
-    if s:state['changenr'] > changenr()
-        return
-    endif
-
     " get current mark and related marks.
+    let l:bufnr = bufnr('%')
     let l:pos = getpos('.')[1 : 2]
     let l:current_mark = v:null
     let l:related_marks = []
@@ -139,7 +138,7 @@ function! s:sync() abort
         return
     endif
 
-    " apply new text for related marks.
+    " if new_text does not match to keyword pattern, we stop syncing and break undopoint.
     let l:new_text = lsp#utils#range#_get_text(l:bufnr, {
     \     'start': lsp#utils#position#vim_to_lsp('%', l:current_mark['start_pos']),
     \     'end': lsp#utils#position#vim_to_lsp('%', l:current_mark['end_pos']),
@@ -150,6 +149,7 @@ function! s:sync() abort
         return
     endif
 
+    " apply new text for related marks.
     call lsp#utils#text_edit#apply_text_edits(l:bufnr, map(l:related_marks, { _, mark -> {
     \     'range': {
     \         'start': lsp#utils#position#vim_to_lsp('%', mark['start_pos']),

@@ -687,6 +687,8 @@ g:lsp_linked_editing_enabled                  *g:lsp_linked_editing_enabled*
 
     Enable textDocument/linkedEditingRange feature.
 
+    NOTE: If you using `vim-matchup`, recommend to set `g:matchup_matchparen_deferred = 1`
+
     Example: >
 	let g:lsp_linked_editing_enabled = 1
 	let g:lsp_linked_editing_enabled = 0
