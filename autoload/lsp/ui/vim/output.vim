@@ -284,8 +284,8 @@ function! lsp#ui#vim#output#get_size_info(winid) abort
     " Get size information while still having the buffer active
     let l:buffer = winbufnr(a:winid)
     let l:maxwidth = max(map(getbufline(l:buffer, 1, '$'), 'strdisplaywidth(v:val)'))
+    let l:bufferlines = 0
     if g:lsp_preview_max_width > 0
-      let l:bufferlines = 0
       let l:maxwidth = min([g:lsp_preview_max_width, l:maxwidth])
 
       " Determine, for each line, how many "virtual" lines it spans, and add
