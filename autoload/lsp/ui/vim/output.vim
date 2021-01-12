@@ -303,7 +303,6 @@ function! lsp#ui#vim#output#get_size_info(winid) abort
     endif
 
     return [l:bufferlines, l:maxwidth]
-  return [l:bufferlines, l:maxwidth]
 endfunction
 
 function! lsp#ui#vim#output#float_supported() abort
