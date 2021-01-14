@@ -85,6 +85,8 @@ CONTENTS                                                  *vim-lsp-contents*
       lsp#get_buffer_first_error_line()   |lsp#get_buffer_first_error_line()|
       lsp#get_progress()                  |lsp#get_progress()|
     Commands                              |vim-lsp-commands|
+      LspCallHierarchyIncoming              |:LspCallHierarchyIncoming|
+      LspCallHierarchyOutgoing              |:LspCallHierarchyOutgoing|
       LspCodeAction                         |:LspCodeAction|
       LspCodeActionSync                     |:LspCodeActionSync|
       LspCodeLens                           |:LspCodeLens|
@@ -1332,6 +1334,14 @@ lsp#get_progress()                       *lsp#get_progress()*
 ==============================================================================
 Commands                                                  *vim-lsp-commands*
 
+LspCallHierarchyIncoming                         *:LspCallHierarchyIncoming*
+
+Find incoming call hierarchy for the symbol under cursor.
+
+LspCallHierarchyOutgoing                         *:LspCallHierarchyOutgoing*
+
+Find outgoing call hierarchy for the symbol under cursor.
+
 LspCodeAction [{CodeActionKind}]                            *:LspCodeAction*
 
 Gets a list of possible commands that can be applied to a file so it can be
@@ -1633,6 +1643,8 @@ To map keys to the feature of vim-lsp, use <plug> mappings:
 <
 Available plug mappings are following:
 
+  nnoremap <plug>(lsp-call-hierarchy-incoming)
+  nnoremap <plug>(lsp-call-hierarchy-outgoing)
   nnoremap <plug>(lsp-code-action)
   nnoremap <plug>(lsp-code-lens)
   nnoremap <plug>(lsp-declaration)
