@@ -12,7 +12,6 @@ CONTENTS                                                  *vim-lsp-contents*
       vim-lsp-settings                      |vim-lsp-settings_plugin|
       Wiki                                  |vim-lsp-configure-wiki|
     Options                               |vim-lsp-options|
-      g:lsp_diagnostics_enabled             |g:lsp_diagnostics_enabled|
       g:lsp_auto_enable                     |g:lsp_auto_enable|
       g:lsp_preview_keep_focus              |g:lsp_preview_keep_focus|
       g:lsp_preview_float                   |g:lsp_preview_float|
@@ -25,19 +24,36 @@ CONTENTS                                                  *vim-lsp-contents*
       g:lsp_documentation_float_docked      |g:lsp_documentation_float_docked|
       g:lsp_documentation_float_docked_maxheight
                               |g:lsp_documentation_float_docked_maxheight|
+      g:lsp_diagnostics_enabled             |g:lsp_diagnostics_enabled|
       g:lsp_diagnostics_echo_cursor         |g:lsp_diagnostics_echo_cursor|
       g:lsp_diagnostics_echo_delay          |g:lsp_diagnostics_echo_delay|
       g:lsp_diagnostics_float_cursor        |g:lsp_diagnostics_float_cursor|
       g:lsp_diagnostics_float_delay         |g:lsp_diagnostics_float_delay|
-      g:lsp_signs_enabled                   |g:lsp_signs_enabled|
-      g:lsp_signs_priority                  |g:lsp_signs_priority|
-      g:lsp_signs_priority_map              |g:lsp_signs_priority_map|
-      g:lsp_virtual_text_enabled            |g:lsp_virtual_text_enabled|
-      g:lsp_highlights_enabled              |g:lsp_highlights_enabled|
-      g:lsp_textprop_enabled                |g:lsp_textprop_enabled|
+      g:lsp_diagnostics_highlights_enabled
+			     |g:lsp_diagnostics_highlights_enabled|
+      g:lsp_diagnostics_highlights_insert_mode_enabled
+			     |g:lsp_diagnostics_highlights_insert_mode_enabled|
+      g:lsp_diagnostics_highlights_delay
+			     |g:lsp_diagnostics_highlights_delay|
+      g:lsp_diagnostics_signs_enabled       |g:lsp_diagnostics_signs_enabled|
+      g:lsp_diagnostics_signs_insert_mode_enabled
+			     |g:lsp_diagnostics_signs_insert_mode_enabled|
+      g:lsp_diagnostics_signs_delay         |g:lsp_diagnostics_signs_delay|
+      g:lsp_diagnostics_signs_priority      |g:lsp_diagnostics_signs_priority|
+      g:lsp_diagnostics_signs_priority_map
+			     |g:lsp_diagnostics_signs_priority_map|
+      g:lsp_diagnostics_virtual_text_enabled
+			     |g:lsp_diagnostics_virtual_text_enabled|
+      g:lsp_diagnostics_virtual_text_insert_mode_enabled
+			     |g:lsp_diagnostics_virtual_text_insert_mode_enabled|
+      g:lsp_diagnostics_virtual_text_delay
+			     |g:lsp_diagnostics_virtual_text_delay|
+      g:lsp_diagnostics_virtual_text_prefix
+			     |g:lsp_diagnostics_virtual_text_prefix|
+      g:lsp_format_sync_timeout             |g:lsp_format_sync_timeout|
       g:lsp_use_event_queue                 |g:lsp_use_event_queue|
-      g:lsp_highlight_references_enabled    |g:lsp_highlight_references_enabled|
-      g:lsp_highlight_references_delay      |g:lsp_highlight_references_delay|
+      g:lsp_document_highlight_enabled      |g:lsp_document_highlight_enabled|
+      g:lsp_document_highlight_delay        |g:lsp_document_highlight_delay|
       g:lsp_get_supported_capabilities      |g:lsp_get_supported_capabilities|
       g:lsp_peek_alignment                  |g:lsp_peek_alignment|
       g:lsp_preview_max_width               |g:lsp_preview_max_width|
@@ -53,6 +69,7 @@ CONTENTS                                                  *vim-lsp-contents*
       g:lsp_completion_resolve_timeout      |g:lsp_completion_resolve_timeout|
       g:lsp_tagfunc_source_methods          |g:lsp_tagfunc_source_methods|
       g:lsp_show_message_request_enabled    |g:lsp_show_message_request_enabled|
+      g:lsp_work_done_progress_enabled      |g:lsp_work_done_progress_enabled|
     Functions                             |vim-lsp-functions|
       lsp#enable                            |lsp#enable()|
       lsp#disable                           |lsp#disable()|
@@ -62,13 +79,15 @@ CONTENTS                                                  *vim-lsp-contents*
       lsp#stop_server                       |lsp#stop_server()|
       lsp#utils#find_nearest_parent_file_directory()
                               |lsp#utils#find_nearest_parent_file_directory()|
+      lsp#enable_diagnostics_for_buffer() |lsp#enable_diagnostics_for_buffer()|
+      lsp#disable_diagnostics_for_buffer()|lsp#disable_diagnostics_for_buffer()|
       lsp#get_buffer_diagnostics_counts() |lsp#get_buffer_diagnostics_counts()|
       lsp#get_buffer_first_error_line()   |lsp#get_buffer_first_error_line()|
+      lsp#get_progress()                  |lsp#get_progress()|
     Commands                              |vim-lsp-commands|
       LspCodeAction                         |:LspCodeAction|
       LspCodeActionSync                     |:LspCodeActionSync|
       LspCodeLens                           |:LspCodeLens|
-      LspCodeLensSync                       |:LspCodeLensSync|
       LspDocumentDiagnostics                |:LspDocumentDiagnostics|
       LspDeclaration                        |:LspDeclaration|
       LspDefinition                         |:LspDefinition|
@@ -77,7 +96,9 @@ CONTENTS                                                  *vim-lsp-contents*
       LspDocumentFormat                     |:LspDocumentFormat|
       LspDocumentFormatSync                 |:LspDocumentFormatSync|
       LspDocumentRangeFormat                |:LspDocumentRangeFormat|
+      LspDocumentRangeFormatSync            |:LspDocumentRangeFormatSync|
       LspDocumentSymbol                     |:LspDocumentSymbol|
+      LspDocumentSymbolSearch               |:LspDocumentSymbolSearch|
       LspHover                              |:LspHover|
       LspNextDiagnostic                     |:LspNextDiagnostic|
       LspNextError                          |:LspNextError|
@@ -98,6 +119,7 @@ CONTENTS                                                  *vim-lsp-contents*
       LspTypeDefinition                     |:LspTypeDefinition|
       LspTypeHierarchy                      |:LspTypeHierarchy|
       LspWorkspaceSymbol                    |:LspWorkspaceSymbol|
+      LspWorkspaceSymbolSearch              |:LspWorkspaceSymbolSearch|
       LspStatus                             |:LspStatus|
       LspStopServer                         |:LspStopServer|
     Autocommands                          |vim-lsp-autocommands|
@@ -111,6 +133,7 @@ CONTENTS                                                  *vim-lsp-contents*
       lsp_server_exit                       |lsp_server_exit|
       lsp_buffer_enabled                    |lsp_buffer_enabled|
       lsp_diagnostics_updated               |lsp_diagnostics_updated|
+      lsp_progress_updated                  |lsp_progress_updated|
     Mappings                              |vim-lsp-mappings|
        <plug>(lsp-preview-close)            |<plug>(lsp-preview-close)|
        <plug>(lsp-preview-focus)            |<plug>(lsp-preview-focus)|
@@ -161,6 +184,8 @@ http://downloads.sourceforge.net/luabinaries/lua-5.3.2_Win64_dllw4_lib.zip
 
 Set |g:lsp_semantic_enabled| to 0.
 
+Set |g:lsp_format_sync_timeout| to a reasonable value such as `1000`.
+
 ==============================================================================
 LANGUAGE SERVERS                                 *vim-lsp-language-servers*
 
@@ -204,15 +229,14 @@ on pyls (https://github.com/palantir/python-language-server)
        augroup END
 <
 TCP SERVERS						*vim-lsp-tcp*
-You can use netcat to connect to LSP servers that don't support stdio, but do
-support TCP. Set your cmd to use your netcat executable (`nc` on unix-likes),
-localhost, and your server's port. The Godot game engine uses 6008 as its LSP
-port and godot ftplugins define gdscript or gdscript3 filetype: >
+You can use tcp to connect to LSP servers that don't support stdio. Set host
+and port to tcp. The Godot game engine uses 6008 as its LSP port and godot
+ftplugins define gdscript or gdscript3 filetype: >
 
 	au User lsp_setup 
 	    \ call lsp#register_server({
 	    \     'name': 'godot',
-	    \     'cmd': ["nc", "localhost", "6008"],
+	    \     'tcp': "localhost:6008",
 	    \     'allowlist': ['gdscript3', 'gdscript']
 	    \ })
 >
@@ -229,18 +253,6 @@ to https://github.com/prabirshrestha/vim-lsp/wiki/Servers
 
 ==============================================================================
 Options                                                   *vim-lsp-options*
-
-g:lsp_diagnostics_enabled                       *g:lsp_diagnostics_enabled*
-    Type: |Number|
-    Default: `1`
-
-    Enable support for document diagnostics like warnings and error messages.
-    enabling vim-lsp during startup. Refer to |g:lsp_signs_enabled| to enable
-    signs column.
-
-    Example: >
-	let g:lsp_diagnostics_enabled = 1
-	let g:lsp_diagnostics_enabled = 0
 
 g:lsp_auto_enable                                       *g:lsp_auto_enable*
     Type: |Number|
@@ -274,7 +286,7 @@ g:lsp_preview_keep_focus                         *g:lsp_preview_keep_focus*
     * |preview-window| can be also automatically closed after completion with
     the following auto command: >
 	autocmd! CompleteDone * if pumvisible() == 0 | pclose | endif
-<    * |preview-window| can be supressed with: >
+<    * |preview-window| can be suppressed with: >
 	set completeopt-=preview
 <
 g:lsp_preview_float                         *g:lsp_preview_float*
@@ -415,7 +427,8 @@ g:lsp_documentation_float_docked               *g:lsp_documentation_float_docked
 	let g:lsp_documentation_float_docked = 1
 	let g:lsp_documentation_float_docked = 0
 
-g:lsp_documentation_float_docked_maxheight     *g:lsp_documentation_float_docked_maxheight*
+g:lsp_documentation_float_docked_maxheight
+				    *g:lsp_documentation_float_docked_maxheight*
     Type: |Number|
     Default: `&previewheight`
 
@@ -425,6 +438,19 @@ g:lsp_documentation_float_docked_maxheight     *g:lsp_documentation_float_docked
 	let g:lsp_documentation_float_docked_maxheight = 1
 	let g:lsp_documentation_float_docked_maxheight = 0
 
+g:lsp_diagnostics_enabled                           *g:lsp_diagnostics_enabled*
+    Type: |Number|
+    Default: `1`
+
+    Enable support for document diagnostics like warnings and error messages.
+    enabling vim-lsp during startup.
+    Refer to |g:lsp_diagnostics_signs_enabled| to enable signs column.
+    Refer to |g:lsp_diagnostics_virtual_text_enabled| to enable virtual text.
+
+    Example: >
+	let g:lsp_diagnostics_enabled = 1
+	let g:lsp_diagnostics_enabled = 0
+<
 g:lsp_diagnostics_echo_cursor                *g:lsp_diagnostics_echo_cursor*
     Type: |Number|
     Default: `0`
@@ -471,85 +497,31 @@ g:lsp_diagnostics_float_delay                *g:lsp_diagnostics_float_delay*
 	let g:lsp_diagnostics_float_delay = 200
 	let g:lsp_diagnostics_float_delay = 1000
 
-g:lsp_signs_enabled                                   *g:lsp_signs_enabled*
+g:lsp_format_sync_timeout                           *g:lsp_format_sync_timeout*
     Type: |Number|
-    Default: `1` for vim/neovim with patch 8.1.0772
+    Default: `-1`
 
-    Enables signs for diagnostics. Requires patch 8.1.0772 and
-    |g:lsp_diagnostics_enabled| set to 1.
+    Timeout milliseconds to abort `:LspDocumentFormatSync` or
+    `:LspDocumentRangeFormatSync`. Set to `-1` to disable timeout. Using
+    `BufWritePre` to execute sync commands may cause vim to hang when using
+    some language servers as starting the language server may be slow. Set the
+    timeout value to cancel sync format.
 
     Example: >
-	let g:lsp_signs_enabled = 1
-	let g:lsp_signs_enabled = 0
+	let g:lsp_format_sync_timeout = -1
+	let g:lsp_format_sync_timeout = 1000
 
-g:lsp_signs_priority                                  *g:lsp_signs_priority*
+g:lsp_diagnostics_highlights_enabled    *g:lsp_diagnostics_highlights_enabled*
     Type: |Number|
-    Default: `10` for vim/neovim with patch 8.1.0772
-
-    Configures the |sign-priority| for placed signs. Signs placed by other
-    plugins have a priority of 10 by default. Requires |g:lsp_signs_enabled|
-    set to 1.
-
-    Example: >
-	let g:lsp_signs_priority = 11
-	let g:lsp_signs_priority = 9
-
-g:lsp_signs_priority_map                          *g:lsp_signs_priority_map*
-    Type: |Dict|
-    Default: `{}` for vim/neovim with patch 8.1.0772
-
-    Overrides |g:lsp_signs_priority| per severity level or per server name
-    and severity level. Requires |g:lsp_signs_enabled| set to 1.
-
-    Example: >
-        let g:lsp_signs_priority_map = {
-                \'LspError': 11,
-                \'LspWarning': 7,
-                \'clangd_LspWarning': 11,
-                \'clangd_LspInformation': 11
-                \}
-
-g:lsp_virtual_text_enabled                      *g:lsp_virtual_text_enabled*
-    Type: |Number|
-    Default: `1` for neovim 0.3+
-
-    Enables virtual text to be shown next to diagnostic errors. Requires
-    NeoVim with version 0.3 or newer.  Virtual text uses the same highlight
-    groups used for signs (eg LspErrorText), but can be uniquely defined if
-    you want to have different highlight groups for signs and virtual text.
-    To set unique virtual text highlighting, you can set or link
-    `LspErrorVirtual`, `LspWarningVirtual`, `LspInformationVirtual` and
-    `LspHintVirtual` highlight groups.
-
-    Example: >
-	let g:lsp_virtual_text_enabled = 1
-	let g:lsp_virtual_text_enabled = 0
-
-
-g:lsp_virtual_text_prefix                        *g:lsp_virtual_text_prefix*
-    Type: |String|
-    Default: `""` for neovim 0.3+
-
-    Adds the prefix to the diagnostics to be shown as virtual text. Requires
-    NeoVim with version 0.3 or newer.
-
-    Example: >
-	let g:lsp_virtual_text_prefix = "> "
-	let g:lsp_virtual_text_prefix = " ‣ "
-
-
-g:lsp_highlights_enabled                         *g:lsp_highlights_enabled*
-    Type: |Number|
-    Default: `1` for neovim 0.3+
+    Default: `1` for neovim 0.3+ and vim with patch-8.1.1035
 
     Enables highlighting of diagnostics. Requires NeoVim with version 0.3 or
-    newer.
+    Vim 8.1.1035 or newer.
 
     Example: >
-	let g:lsp_highlights_enabled = 1
-	let g:lsp_highlights_enabled = 0
+	let g:lsp_diagnostics_highlights_enabled = 1
+	let g:lsp_diagnostics_highlights_enabled = 0
 <
-
     To change the style of the highlighting, you can set or link
     `LspErrorHighlight`, `LspWarningHighlight`, `LspInformationHighlight` and
     `LspHintHighlight` highlight groups.
@@ -557,26 +529,158 @@ g:lsp_highlights_enabled                         *g:lsp_highlights_enabled*
     Example: >
 	highlight link LspErrorHighlight Error
 
-
-g:lsp_textprop_enabled                             *g:lsp_textprop_enabled*
+g:lsp_diagnostics_highlights_insert_mode_enabled
+			          *g:lsp_diagnostics_highlights_insert_mode_enabled*
     Type: |Number|
-    Default: `1` for vim with +textprop
+    Default: `1`
 
-    Enables highlighting of diagnostics. Requires vim with +textprop
-    (patch 8.1.0579).
+    Indicates whether to enable diagnostics highlighting when in |insertmode|.
+    Requires |g:lsp_diagnostics_highlights_enabled|.
 
     Example: >
-	let g:lsp_textprop_enabled = 1
-	let g:lsp_textprop_enabled = 0
+	let g:lsp_diagnostics_highlights_insert_mode_enabled = 1
+	let g:lsp_diagnostics_highlights_insert_mode_enabled = 0
+
+g:lsp_diagnostics_highlights_delay			*g:lsp_diagnostics_highlights_delay*
+    Type: |Number|
+    Default: `500`
+
+    Delay milliseconds to update diagnostics highlights. Requires
+    |g:lsp_diagnostics_highlights_enabled|.
+
+    Example: >
+	let g:lsp_diagnostics_highlights_delay = 200
+	let g:lsp_diagnostics_highlights_delay = 1000
+
+g:lsp_diagnostics_signs_enabled
+					      *g:lsp_diagnostics_signs_enabled*
+    Type: |Number|
+    Default: `1` for vim/neovim with patch 8.1.0772
+
+    Enables signs for diagnostics. Requires NeoVim with |sign_define| or Vim
+    with |sign_define| and patch 8.1.0772 or newer and
+    |g:lsp_diagnostics_enabled| set to `1`.
+
+    Example: >
+	let g:lsp_diagnostics_signs_enabled = 1
+	let g:lsp_diagnostics_signs_enabled = 0
 <
+    Four groups of signs are defined and used:
+    `LspError`, `LspWarning`, `LspInformation`, `LspHint`.
 
-    To change the style of the highlighting, you can set or link
-    `LspErrorHighlight`, `LspWarningHighlight`, `LspInformationHighlight` and
-    `LspHintHighlight` highlight groups.
+    It is possible to set custom text or icon that will be used for each sign
+    (note that icons are only available in GUI). To do this, set some of the
+    following globals:
+    `g:lsp_diagnostics_signs_error`, `g:lsp_diagnostics_signs_warning`,
+    `g:lsp_diagnostics_signs_information`, `g:lsp_diagnostics_signs_hint`.
+    They should be set to a dict, that contains either text that will be used
+    as sign in terminal, or icon that will be used for GUI, or both.
 
     Example: >
-	highlight LspErrorHighlight term=underline cterm=underline gui=underline
+	let g:lsp_diagnostics_signs_error = {'text': '✗'}
+	let g:lsp_diagnostics_signs_warning = {'text': '‼', 'icon': '/path/to/some/icon'} " icons require GUI
+	let g:lsp_diagnostics_signs_hint = {'icon': '/path/to/some/other/icon'} " icons require GUI
 
+g:lsp_diagnostics_signs_insert_mode_enabled
+			          *g:lsp_diagnostics_signs_insert_mode_enabled*
+    Type: |Number|
+    Default: `1`
+
+    Indicates whether to enable diagnostics signs column when in |insertmode|.
+    Requires |g:lsp_diagnostics_signs_enabled|.
+
+    Example: >
+	let g:lsp_diagnostics_signs_insert_mode_enabled = 1
+	let g:lsp_diagnostics_signs_insert_mode_enabled = 0
+
+g:lsp_diagnostics_signs_delay			*g:lsp_diagnostics_signs_delay*
+    Type: |Number|
+    Default: `500`
+
+    Delay milliseconds to update diagnostics signs column. Requires
+    |g:lsp_diagnostics_signs_enabled|.
+
+    Example: >
+	let g:lsp_diagnostics_signs_delay = 200
+	let g:lsp_diagnostics_signs_delay = 1000
+
+g:lsp_diagnostics_signs_priority             *g:lsp_diagnostics_signs_priority*
+    Type: |Number|
+    Default: `10`
+
+    Configures the |sign-priority| for placed signs. Signs placed by other
+    plugins have a priority of 10 by default. Requires
+    |g:lsp_diagnostics_signs_enabled| set to 1.
+
+    Example: >
+	let g:lsp_diagnostics_signs_priority = 11
+	let g:lsp_diagnostics_signs_priority = 9
+
+g:lsp_diagnostics_signs_priority_map	 *g:lsp_diagnostics_signs_priority_map*
+    Type: |Dict|
+    Default: `{}`
+
+    Overrides |g:lsp_diagnostics_signs_priority| per severity level or per server
+    name and severity level. Requires |g:lsp_diagnostics_signs_enabled| set to 1.
+
+    Example: >
+        let g:lsp_diagnostics_signs_priority_map = {
+                \'LspError': 11,
+                \'LspWarning': 7,
+                \'clangd_LspWarning': 11,
+                \'clangd_LspInformation': 11
+                \}
+
+g:lsp_diagnostics_virtual_text_enabled
+					*g:lsp_diagnostics_virtual_text_enabled*
+    Type: |Number|
+    Default: `1` for neovim 0.3+
+
+    Enables virtual text to be shown next to diagnostic errors. Requires
+    NeoVim with version 0.3 or newer and |g:lsp_diagnostics_enabled| set to `1`.
+    Virtual text uses the same highlight groups used for signs (eg LspErrorText),
+    but can be uniquely defined if you want to have different highlight groups
+    for signs and virtual text. To set unique virtual text highlighting, you
+    can set or link `LspErrorVirtualText`, `LspWarningVirtualText`,
+    `LspInformationVirtualText` and `LspHintVirtualText` highlight groups.
+
+    Example: >
+	let g:lsp_diagnostics_virtual_text_enabled = 1
+	let g:lsp_diagnostics_virtual_text_enabled = 0
+
+g:lsp_diagnostics_virtual_text_insert_mode_enabled
+			*g:lsp_diagnostics_virtual_text_insert_mode_enabled*
+    Type: |Number|
+    Default: `0`
+
+    Indicates whether to enable diagnostics virtual text when in |insertmode|.
+    Requires |g:lsp_diagnostics_virtual_text_enabled|.
+
+    Example: >
+	let g:lsp_diagnostics_virtual_text_insert_mode_enabled = 1
+	let g:lsp_diagnostics_virtual_text_insert_mode_enabled = 0
+
+g:lsp_diagnostics_virtual_text_delay   *g:lsp_diagnostics_virtual_text_delay*
+    Type: |Number|
+    Default: `500`
+
+    Delay milliseconds to update diagnostics virtual text. Requires
+    |g:lsp_diagnostics_virtual_text_enabled|.
+
+    Example: >
+	let g:lsp_diagnostics_virtual_text_delay = 200
+	let g:lsp_diagnostics_virtual_text_delay = 1000
+
+g:lsp_diagnostics_virtual_text_prefix   *g:lsp_diagnostics_virtual_text_prefix*
+    Type: |String|
+    Default: `""`
+
+    Adds the prefix to the diagnostics to be shown as virtual text. Requires
+    |g:lsp_diagnostics_virtual_text_enabled|.
+
+    Example: >
+	let g:lsp_diagnostics_virtual_text_prefix = "> "
+	let g:lsp_diagnostics_virtual_text_prefix = " ‣ "
 
 g:lsp_use_event_queue                               *g:lsp_use_event_queue*
     Type: |Number|
@@ -589,15 +693,16 @@ g:lsp_use_event_queue                               *g:lsp_use_event_queue*
 	let g:lsp_use_event_queue = 1
 	let g:lsp_use_event_queue = 0
 
-g:lsp_highlight_references_enabled      *g:lsp_highlight_references_enabled*
+g:lsp_document_highlight_enabled      *g:lsp_document_highlight_enabled*
     Type: |Number|
-    Default: `1`
+    Default: `1` for neovim or vim with patch-8.1.1035
 
-    Enable highlighting of the references to the symbol under the cursor.
+    Enables highlighting of the references to the symbol under the cursor.
+    Requires NeoVim with version 0.3 or Vim 8.1.1035 or newer.
 
     Example: >
-    let g:lsp_highlight_references_enabled = 1
-    let g:lsp_highlight_references_enabled = 0
+    let g:lsp_document_highlight_enabled = 1
+    let g:lsp_document_highlight_enabled = 0
 <
 
     To change the style of the highlighting, you can set or link the
@@ -606,16 +711,16 @@ g:lsp_highlight_references_enabled      *g:lsp_highlight_references_enabled*
     Example: >
     highlight lspReference ctermfg=red guifg=red ctermbg=green guibg=green
 
-g:lsp_highlight_references_delay            *g:lsp_highlight_references_delay*
+g:lsp_document_highlight_delay            *g:lsp_document_highlight_delay*
     Type: |Number|
     Default: `350`
 
     Delay milliseconds to highlight references. Requires
-    |g:lsp_highlight_references_enabled| set to 1.
+    |g:lsp_document_highlight_enabled| set to 1.
 
     Example: >
-	let g:lsp_highlight_references_delay = 200
-	let g:lsp_highlight_references_delay = 1000
+	let g:lsp_document_highlight_delay = 200
+	let g:lsp_document_highlight_delay = 1000
 
 g:lsp_get_supported_capabilities         *g:lsp_get_supported_capabilities*
     Type: |List|
@@ -757,6 +862,14 @@ g:lsp_show_message_request_enabled         *g:lsp_show_message_request_enabled*
     Determines whether or not `window/showMessageRequest` should show message to
     the user or if it should be ignored. Set to `1` to enable.
 
+g:lsp_work_done_progress_enabled         *g:lsp_work_done_progress_enabled*
+    Type: |Number|
+    Default: `0`
+
+    Determines whether or not to ask the server to send `$/progress`
+    notifications. This can be intercepted by listening to |lsp#stream()|.
+    Set to `1` to enable.
+
 ==============================================================================
 FUNCTIONS                                               *vim-lsp-functions*
 
@@ -777,7 +890,7 @@ Disables vim-lsp plugin.
 lsp#register_server({server-info})                  *lsp#register_server()*
 
 Used to register the language server with vim-lsp. This method takes
-one parameter which is a vim |dict| and is refered to as |vim-lsp-server_info|
+one parameter which is a vim |dict| and is referred to as |vim-lsp-server_info|
 
     Example: >
 	if (executable('pyls'))
@@ -848,7 +961,7 @@ The vim |dict| containing information about the server.
     It is recommended to use &shell with &shellcmdflag when running script
     files that can be executed specially on windows where *.bat and *.cmd
     files cannot be started without running the shell first. This is common
-    for exectuables installed by npm for nodejs.
+    for executable installed by npm for nodejs.
 
     Example: >
 	'cmd': {server_info->
@@ -929,7 +1042,7 @@ The vim |dict| containing information about the server.
 	    Type: |Boolean|
 	    Default: |g:lsp_hover_conceal|
 
-	    This takes precendence over the value of |g:lsp_hover_conceal|, to
+	    This takes precedence over the value of |g:lsp_hover_conceal|, to
 	    allow overriding this setting per server.
 
 	    Example: >
@@ -1070,6 +1183,24 @@ au User lsp_setup call lsp#callbag#pipe(
     \ )
 <
 
+Custom vim-lsp notifications streams:
+vimp-lsp events mimic lsp server notifications.
+* `server` is always `$vimlsp`.
+* `response` `method` is always prefixed with ``$/vimlsp/`
+
+
+|$/vimlsp/lsp_server_exit|
+    This is similar to |lsp_server_exit| autocommand.
+
+    Example: >
+	{
+	  "server": "$vimlsp",
+	  "response": {
+	    "method": "$/vimlsp/lsp_server_exit",
+	    "params": { "server": "$vimlsp" }
+	  }
+	}
+<
 lsp#stop_server({name-of-server})                        *lsp#stop_server()*
 
 Used to stop the server.
@@ -1095,7 +1226,7 @@ Get the status of a server.
 
 lsp#utils#position#lsp_to_vim({expr}, {position})  *lsp#utils#position#lsp_to_vim()*
 
-Convert LSP's positon to vim's pos ([lnum, col]).
+Convert LSP's position to vim's pos ([lnum, col]).
 
 {expr} is same of bufname argument.
 {position} is LSP's position params.
@@ -1140,6 +1271,34 @@ This method is mainly used to generate 'root_uri' when registering server.
 	* If there is not directory with the specific files or diretories
 	  found, the method will return an empty string.
 
+lsp#enable_diagnostics_for_buffer()          *lsp#enable_diagnotics_for_buffer()*
+
+Re-enable diagnsostics for the specified buffer. By default diagnostics are
+enabled for all buffers.
+
+    Example: >
+	:call lsp#enable_diagnostics_for_buffer()
+	:call lsp#enable_diagnostics_for_buffer(bufnr('%'))
+
+lsp#disable_diagnostics_for_buffer()       *lsp#disable_diagnostics_for_buffer()*
+
+Diable diagnostics for the specified buffer. By default diagnostics are
+enabled for all buffers.
+
+    Example: >
+	:call lsp#enable_diagnostics_for_buffer()
+	:call lsp#enable_diagnostics_for_buffer(bufnr('%'))
+
+Diagnostics can be disabled for buffer to temporarily avoid conflicts with
+other plugins.
+
+    Example: >
+	augroup LspEasyMotion
+	    autocmd!
+	    autocmd User EasyMotionPromptBegin call lsp#disable_diagnostics_for_buffer()<CR>
+	    autocmd User EasyMotionPromptEnd call lsp#enable_diagnostics_for_buffer()<CR>
+	augroup END
+
 lsp#get_buffer_diagnostics_counts()    *lsp#get_buffer_diagnostics_counts()*
 
 Get dict with diagnostic counts for current buffer. Useful e.g. for display
@@ -1152,6 +1311,23 @@ lsp#get_buffer_first_error_line()        *lsp#get_buffer_first_error_line()*
 Get line number of first error in current buffer.
 
     Returns |Number| or |v:null| if there are no errors.
+
+lsp#get_progress()                       *lsp#get_progress()*
+
+    Return UI |List| of |Dict| with window/workDoneProgress
+    The |List| is most recently update order.
+    The |Dict| has keys as follows.
+    * server
+	Type: |String|
+    * token
+	Type: |String|
+    * title
+	Type: |String|
+    * messages
+	Type: |String|
+    * percentage
+	Type: |Number|
+	0 - 100 or not exist
 
 ==============================================================================
 Commands                                                  *vim-lsp-commands*
@@ -1177,13 +1353,19 @@ LspCodeLens                                                   *:LspCodeLens*
 
 Gets a list of possible commands that can be executed on the current document.
 
-LspCodeLensSync                                           *:LspCodeLensSync*
-
-Same as |:LspCodeLens| but synchronous.
-
 LspDocumentDiagnostics                             *:LspDocumentDiagnostics*
 
-Gets the current document diagnostics.
+Gets the document diagnostics and opens in |location-list|. By default
+diagnostics are filtered for current buffer.
+
+Arguments:
+
+    --buffers	Defaults to empty string, i.e. shows diagnostics for current
+		buffer. To show diagnostic for all buffers use `--buffers=*`.
+
+    Example: >
+	:LspDocumentDiagnostics
+	:LspDocumentDiagnostics --buffers=*
 
 LspDeclaration                                             *:LspDeclaration*
 
@@ -1215,7 +1397,8 @@ Format the entire document.
 LspDocumentFormatSync                               *:LspDocumentFormatSync*
 
 Same as |:LspDocumentFormat| but synchronous. Useful when running |:autocmd|
-commands such as formatting before save.
+commands such as formatting before save. Set |g:lsp_format_sync_timeout| to
+configure timeouts.
 
     Example: >
         autocmd BufWritePre <buffer> LspDocumentFormatSync
@@ -1226,9 +1409,20 @@ LspDocumentRangeFormat                             *:LspDocumentRangeFormat*
 
 Format the current document selection.
 
+LspDocumentRangeFormatSync                     *:LspDocumentRangeFormatSync*
+
+Same as |:LspDocumentRangeFormat| but synchronous. Useful when running running
+:autocmd commands. Set |g:lsp_format_sync_timeout| to configure timeouts.
+
+Note that this may slow down vim.
+
 LspDocumentSymbol                                       *:LspDocumentSymbol*
 
 Gets the symbols for the current document.
+
+LspDocumentSymbolSearch                             *:LspDocumentSymbolSearch*
+
+Search the symbols for the current document and navigate.
 
 LspHover                                                         *:LspHover*
 
@@ -1344,7 +1538,13 @@ Also see |:LspPeekTypeDefinition|.
 
 LspWorkspaceSymbol                                     *:LspWorkspaceSymbol*
 
-Search and show workspace symbols.
+Search and show workspace symbols in quickfix.
+Servers may choose to return empty results if the search query is empty.
+
+LspWorkspaceSymbolSearch                            *:LspWorkspaceSymbolSearch*
+
+Search the workspace symbols for all servers and navigate using quickpick.
+Servers may choose to return empty results if the search query is empty.
 
 LspStatus                                                       *:LspStatus*
 
@@ -1402,7 +1602,7 @@ This autocommand is run after the server is exited.
 lsp_buffer_enabled                                      *lsp_buffer_enabled*
 
 This autocommand is run after vim-lsp is enabled for the buffer. This event is
-triggered imediately when the buffer is currently active. If the buffer is not
+triggered immediately when the buffer is currently active. If the buffer is not
 current active, the event will be triggered when the buffer will be active.
 
 lsp_diagnostics_updated                            *lsp_diagnostics_updated*
@@ -1419,6 +1619,10 @@ processed by vim-lsp.
     autocmd User lsp_diagnostics_updated call DoSomething()
   augroup END
 <
+lsp_progress_updated                                  *lsp_progress_updated*
+
+This autocommand is run after every time after progress updated and
+processed by vim-lsp. Used for statusline plugins.
 
 ==============================================================================
 Mappings                                                  *vim-lsp-mappings*
@@ -1436,6 +1640,7 @@ Available plug mappings are following:
   nnoremap <plug>(lsp-definition)
   nnoremap <plug>(lsp-peek-definition)
   nnoremap <plug>(lsp-document-symbol)
+  nnoremap <plug>(lsp-document-symbol-search)
   nnoremap <plug>(lsp-document-diagnostics)
   nnoremap <plug>(lsp-hover)
   nnoremap <plug>(lsp-next-diagnostic)
@@ -1457,6 +1662,7 @@ Available plug mappings are following:
   nnoremap <plug>(lsp-references)
   nnoremap <plug>(lsp-rename)
   nnoremap <plug>(lsp-workspace-symbol)
+  nnoremap <plug>(lsp-workspace-symbol-search)
   nnoremap <plug>(lsp-document-format)
   vnoremap <plug>(lsp-document-format)
   nnoremap <plug>(lsp-document-range-format)

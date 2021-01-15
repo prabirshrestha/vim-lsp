@@ -153,10 +153,8 @@ function! lsp#ui#vim#output#setcontent(winid, lines, ft) abort
         " vim popup
         call setbufline(winbufnr(a:winid), 1, a:lines)
         call setbufvar(winbufnr(a:winid), '&filetype', a:ft . '.lsp-hover')
-
-    else
+    elseif s:use_nvim_float
         " nvim floating or preview
-
         call nvim_buf_set_lines(winbufnr(a:winid), 0, -1, v:false, a:lines)
         call nvim_buf_set_option(winbufnr(a:winid), 'readonly', v:true)
         call nvim_buf_set_option(winbufnr(a:winid), 'modifiable', v:false)
@@ -286,8 +284,8 @@ function! lsp#ui#vim#output#get_size_info(winid) abort
     " Get size information while still having the buffer active
     let l:buffer = winbufnr(a:winid)
     let l:maxwidth = max(map(getbufline(l:buffer, 1, '$'), 'strdisplaywidth(v:val)'))
+    let l:bufferlines = 0
     if g:lsp_preview_max_width > 0
-      let l:bufferlines = 0
       let l:maxwidth = min([g:lsp_preview_max_width, l:maxwidth])
 
       " Determine, for each line, how many "virtual" lines it spans, and add
@@ -305,7 +303,6 @@ function! lsp#ui#vim#output#get_size_info(winid) abort
     endif
 
     return [l:bufferlines, l:maxwidth]
-  return [l:bufferlines, l:maxwidth]
 endfunction
 
 function! lsp#ui#vim#output#float_supported() abort

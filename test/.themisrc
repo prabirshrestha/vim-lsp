@@ -1,3 +1,10 @@
 set encoding=utf-8
 call themis#option('recursive', 1)
+call themis#option('reporter', 'spec')
 call themis#helper('command').with(themis#helper('assert'))
+
+set runtimepath+=./test/utils
+
+" let g:lsp_log_verbose = 1
+" let g:lsp_log_file = expand("~/.config/nvim/data/lsp.log")
+autocmd BufNewFile,BufRead *.rs setfiletype rust

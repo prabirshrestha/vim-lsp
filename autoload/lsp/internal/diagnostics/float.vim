@@ -1,7 +1,13 @@
+" internal state for whether it is enabled or not to avoid multiple subscriptions
+let s:enabled = 0
+
 function! lsp#internal#diagnostics#float#_enable() abort
     " don't even bother registering if the feature is disabled
     if !lsp#ui#vim#output#float_supported() | return | endif
     if !g:lsp_diagnostics_float_cursor | return | endif 
+
+    if s:enabled | return | endif
+    let s:enabled = 1
 
     let s:Dispose = lsp#callbag#pipe(
         \ lsp#callbag#fromEvent('CursorMoved'),
@@ -11,16 +17,18 @@ function! lsp#internal#diagnostics#float#_enable() abort
         \ lsp#callbag#distinctUntilChanged({a,b -> a['bufnr'] == b['bufnr'] && a['curpos'] == b['curpos'] && a['changedtick'] == b['changedtick']}),
         \ lsp#callbag#filter({_->mode() is# 'n'}),
         \ lsp#callbag#filter({_->getbufvar(bufnr('%'), '&buftype') !=# 'terminal' }),
-        \ lsp#callbag#map({_->lsp#ui#vim#diagnostics#get_diagnostics_under_cursor()}),
+        \ lsp#callbag#map({_->lsp#internal#diagnostics#under_cursor#get_diagnostic()}),
         \ lsp#callbag#subscribe({x->s:show_float(x)}),
         \ )
 endfunction
 
 function! lsp#internal#diagnostics#float#_disable() abort
+    if !s:enabled | return | endif
     if exists('s:Dispose')
         call s:Dispose()
         unlet s:Dispose
     endif
+    let s:enabled = 0
 endfunction
 
 function! s:show_float(diagnostic) abort

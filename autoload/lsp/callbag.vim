@@ -1,4 +1,4 @@
-" https://github.com/prabirshrestha/callbag.vim#9108df10d721c04a8908a391dde14aeabacc422d
+" https://github.com/prabirshrestha/callbag.vim#62a31fd03dfceb0e94a19295a1f6d3d0f2a954ed
 "    :CallbagEmbed path=autoload/lsp/callbag.vim namespace=lsp#callbag
 
 let s:undefined_token = '__callbag_undefined__'
@@ -1209,6 +1209,15 @@ function! s:flattenInnerSourceCallback(data, t, d) abort
 endfunction
 " }}}
 
+" flatMap() {{{
+function! lsp#callbag#flatMap(F) abort
+    return lsp#callbag#operate(
+        \ lsp#callbag#map(a:F),
+        \ lsp#callbag#flatten(),
+        \ )
+endfunction
+" }}}
+
 " scan() {{{
 function! lsp#callbag#scan(reducer, seed) abort
     let l:data = { 'reducer': a:reducer, 'seed': a:seed }
@@ -1231,6 +1240,36 @@ function! s:scanSourceCallback(data, t, d) abort
     if a:t == 1
         let a:data['acc'] = a:data['reducer'](a:data['acc'], a:d)
         call a:data['sink'](1, a:data['acc'])
+    else
+        call a:data['sink'](a:t, a:d)
+    endif
+endfunction
+" }}}
+
+" reduce() {{{
+function! lsp#callbag#reduce(reducer, seed) abort
+    let l:data = { 'reducer': a:reducer, 'seed': a:seed }
+    return function('s:reduceSource', [l:data])
+endfunction
+
+function! s:reduceSource(data, source) abort
+    let a:data['source'] = a:source
+    return function('s:reduceFactory', [a:data])
+endfunction
+
+function! s:reduceFactory(data, start, sink) abort
+    if a:start != 0 | return | endif
+    let a:data['sink'] = a:sink
+    let a:data['acc'] = a:data['seed']
+    call a:data['source'](0, function('s:reduceSourceCallback', [a:data]))
+endfunction
+
+function! s:reduceSourceCallback(data, t, d) abort
+    if a:t == 1
+        let a:data['acc'] = a:data['reducer'](a:data['acc'], a:d)
+    elseif a:t == 2 && lsp#callbag#isUndefined(a:d)
+        call a:data['sink'](1, a:data['acc'])
+        call a:data['sink'](2, lsp#callbag#undefined())
     else
         call a:data['sink'](a:t, a:d)
     endif
@@ -1315,21 +1354,20 @@ endfunction
 
 function! s:shareTalkbackCallback(data, sink, t, d) abort
     if a:t == 2
-        let l:i = -1
-        let l:found = 0
-        for l:S in a:data['sinks']
-            let l:i += 1
-            if l:S == a:sink
+        let l:i = 0
+        while l:i < len(a:data['sinks'])
+            if a:data['sinks'][l:i] == a:sink
                 let l:found = 1
                 break
             endif
-        endfor
+            let l:i += 1
+        endwhile
 
         if l:found
             call remove(a:data['sinks'], l:i)
         endif
 
-        if !empty(a:data['sinks'])
+        if empty(a:data['sinks'])
             call a:data['sourceTalkback'](2, lsp#callbag#undefined())
         endif
     else

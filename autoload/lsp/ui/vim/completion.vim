@@ -122,7 +122,9 @@ function! s:on_complete_done_after() abort
     \     'character': l:position['character'] + l:overflow_after,
     \   }
     \ }
+
     if get(l:completion_item, 'insertTextFormat', 1) == 2
+      " insert Snippet.
       call lsp#utils#text_edit#apply_text_edits('%', [{ 'range': l:range, 'newText': '' }])
       if exists('g:lsp_snippet_expand') && len(g:lsp_snippet_expand) > 0
         call g:lsp_snippet_expand[0]({ 'snippet': l:text })
@@ -130,7 +132,16 @@ function! s:on_complete_done_after() abort
         call s:simple_expand_text(l:text)
       endif
     else
+      " apply TextEdit.
       call lsp#utils#text_edit#apply_text_edits('%', [{ 'range': l:range, 'newText': l:text }])
+
+      " The VSCode always apply completion word as snippet.
+      " It means we should place cursor to end of new inserted text as snippet does.
+      let l:lines = lsp#utils#_split_by_eol(l:text)
+      let l:start = l:range.start
+      let l:start.line += len(l:lines) - 1
+      let l:start.character += strchars(l:lines[-1])
+      call cursor(lsp#utils#position#lsp_to_vim('%', l:start))
     endif
   endif
 

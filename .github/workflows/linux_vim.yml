@@ -33,14 +33,22 @@ jobs:
           mkdir -p ~/vim/bin
           curl -L https://github.com/vim/vim-appimage/releases/download/v${{matrix.vim_version}}/GVim-v${{matrix.vim_version}}.glibc${{matrix.glibc_version}}-x86_64.AppImage -o ~/vim/bin/vim
           chmod u+x ~/vim/bin/vim
+      - name: Download language servers
+        shell: bash
+        run: |
+          mkdir -p ~/langservers
+          curl -L https://github.com/rust-analyzer/rust-analyzer/releases/download/2020-12-21/rust-analyzer-linux -o ~/langservers/rust-analyzer
+          chmod u+x ~/langservers/rust-analyzer
+          ~/langservers/rust-analyzer --version
       - name: Download test runner
         shell: bash
-        run: git clone --depth 1 --branch v1.5.4 --single-branch https://github.com/thinca/vim-themis ~/themis
+        run: git clone --depth 1 --branch v1.5.5 --single-branch https://github.com/thinca/vim-themis ~/themis
       - name: Run tests
         shell: bash
         run: |
           export PATH=~/vim/bin:$PATH
+          export PATH=~/langservers:$PATH
           export PATH=~/themis/bin:$PATH
           export THEMIS_VIM=vim
           vim --version
-          themis --reporter spec
+          themis

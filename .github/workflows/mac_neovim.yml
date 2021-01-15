@@ -18,7 +18,7 @@ jobs:
         include:
           - name: neovim-v04-x64
             os: macos-latest
-            neovim_version: v0.4.3
+            neovim_version: v0.4.4
           - name: neovim-nightly-x64
             os: macos-latest
             neovim_version: nightly
@@ -33,12 +33,20 @@ jobs:
         run: tar xzf ~/nvim.tar.gz -C ~/
       - name: Download test runner
         shell: bash
-        run: git clone --depth 1 --branch v1.5.4 --single-branch https://github.com/thinca/vim-themis ~/themis
+        run: git clone --depth 1 --branch v1.5.5 --single-branch https://github.com/thinca/vim-themis ~/themis
+      - name: Download language servers
+        shell: bash
+        run: |
+          mkdir -p ~/langservers
+          curl -L https://github.com/rust-analyzer/rust-analyzer/releases/download/2020-12-21/rust-analyzer-mac -o ~/langservers/rust-analyzer
+          chmod u+x ~/langservers/rust-analyzer
+          ~/langservers/rust-analyzer --version
       - name: Run tests
         shell: bash
         run: |
           export PATH=~/nvim-osx64/bin:$PATH
+          export PATH=~/langservers:$PATH
           export PATH=~/themis/bin:$PATH
           export THEMIS_VIM=nvim
           nvim --version
-          themis --reporter spec
+          themis

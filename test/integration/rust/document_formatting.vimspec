@@ -1,0 +1,36 @@
+Describe integration#rust#document_formatting
+    Before
+        %bwipeout!
+        if lsp#test#hasproject('rust')
+            call lsp#test#openproject('rust', {})
+        endif
+    End
+
+    After all
+        %bwipeout!
+        call lsp#test#closeproject('rust')
+    End
+
+    It should correctly format document when using LspDocumentFormatSync
+        if !lsp#test#hasproject('rust')
+            Skip rust project not supported
+        endif
+
+        setl shiftwidth=4
+
+        normal! m'
+        execute printf('keepalt keepjumps edit %s', lsp#test#projectdir('rust') . '/src/documentformat.rs')
+        let l:original = getline(1, "$")
+
+        call execute('LspDocumentFormatSync')
+
+        let got = getline(1, "$")
+        let want = [
+            \ 'fn format() {',
+            \ '    unimplemented!();',
+            \ '}'
+            \ ]
+        Assert Equals(got, want)
+    End
+
+End

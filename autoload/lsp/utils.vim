@@ -1,3 +1,29 @@
+let s:has_virtual_text = exists('*nvim_buf_set_virtual_text') && exists('*nvim_create_namespace')
+function! lsp#utils#_has_virtual_text() abort
+    return s:has_virtual_text
+endfunction
+
+let s:has_signs = exists('*sign_define') && (has('nvim') || has('patch-8.1.0772'))
+function! lsp#utils#_has_signs() abort
+    return s:has_signs
+endfunction
+
+let s:has_nvim_buf_highlight = exists('*nvim_buf_add_highlight')
+function! lsp#utils#_has_nvim_buf_highlight() abort
+    return s:has_nvim_buf_highlight
+endfunction
+
+" https://github.com/prabirshrestha/vim-lsp/issues/399#issuecomment-500585549
+let s:has_textprops = exists('*prop_add') && has('patch-8.1.1035')
+function! lsp#utils#_has_textprops() abort
+    return s:has_textprops
+endfunction
+
+let s:has_higlights = has('nvim') ? lsp#utils#_has_nvim_buf_highlight() : lsp#utils#_has_textprops()
+function! lsp#utils#_has_highlights() abort
+    return s:has_higlights
+endfunction
+
 function! lsp#utils#is_file_uri(uri) abort
     return stridx(a:uri, 'file:///') == 0
 endfunction
@@ -73,6 +99,19 @@ if has('win32') || has('win64')
 else
     function! lsp#utils#uri_to_path(uri) abort
         return s:decode_uri(a:uri[len('file://'):])
+    endfunction
+endif
+
+if has('win32') || has('win64')
+    function! lsp#utils#normalize_uri(uri) abort
+        " Refer to https://github.com/microsoft/language-server-protocol/pull/1019 on normalization of urls.
+        " TODO: after the discussion is settled, modify this function.
+        let l:ret = substitute(a:uri, '^file:///[a-zA-Z]\zs%3[aA]', ':', '')
+        return substitute(l:ret, '^file:///\zs\([A-Z]\)', "\\=tolower(submatch(1))", '')
+    endfunction
+else
+    function! lsp#utils#normalize_uri(uri) abort
+        return a:uri
     endfunction
 endif
 

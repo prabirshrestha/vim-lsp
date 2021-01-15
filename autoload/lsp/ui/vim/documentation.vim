@@ -31,25 +31,35 @@ function! s:show_documentation(event) abort
 
 
    " Neovim
-   if s:use_nvim_float
+    if s:use_nvim_float
         let l:event = a:event
         let l:event.row = float2nr(l:event.row)
         let l:event.col = float2nr(l:event.col)
 
         let l:buffer = nvim_create_buf(v:false, v:true)
-        let l:curpos = win_screenpos(nvim_get_current_win())[0] + winline() - 1
+        let l:curpos = screenrow()
         let g:lsp_documentation_float_docked = get(g:, 'lsp_documentation_float_docked', 0)
 
+        call setbufvar(l:buffer, 'lsp_syntax_highlights', l:syntax_lines)
+        call setbufvar(l:buffer, 'lsp_do_conceal', 1)
+        call nvim_buf_set_lines(l:buffer, 0, -1, v:false, l:lines)
+        call nvim_buf_set_option(l:buffer, 'readonly', v:true)
+        call nvim_buf_set_option(l:buffer, 'modifiable', v:false)
+        call nvim_buf_set_option(l:buffer, 'filetype', l:ft.'.lsp-hover')
+
+
         if g:lsp_documentation_float_docked
-            let g:lsp_documentation_float_docked_maxheight = get(g:, ':lsp_documentation_float_docked_maxheight', &previewheight)
-            let l:dock_downwards = max([screenrow(), l:curpos]) < (&lines / 2)
+            let g:lsp_documentation_float_docked_maxheight = get(g:, 'lsp_documentation_float_docked_maxheight', &previewheight)
+            let l:dock_downwards = (l:curpos + l:event.height) < (&lines / 2)
             let l:height = min([len(l:data), g:lsp_documentation_float_docked_maxheight])
             let l:width = &columns
             let l:col = 0
             if l:dock_downwards
                 let l:anchor = 'SW'
                 let l:row = &lines - &cmdheight - 1
-                let l:height = min([l:height, &lines - &cmdheight - l:event.row - l:event.height])
+                let l:height = min([l:height, &lines - &cmdheight - l:event.row - l:event.height - 1]) - 1
+                " Extra -1 of height to distinguish between completion popup
+                " and documentation popup
             else " dock upwards
                 let l:anchor = 'NW'
                 let l:row = 0
@@ -57,6 +67,9 @@ function! s:show_documentation(event) abort
             endif
 
         else " not docked
+            let l:bufferlines = nvim_buf_line_count(l:buffer)
+            let l:maxwidth = max(map(getbufline(l:buffer, 1, '$'), 'strdisplaywidth(v:val)'))
+
             let l:row = l:event['row']
             let l:height = max([&lines - &cmdheight - l:row, &previewheight])
 
@@ -72,10 +85,21 @@ function! s:show_documentation(event) abort
                 let l:width = l:left_area
                 let l:col = l:event.col - 1     " 1 due to padding of completion popup
             endif
+            if l:width < 0.75 * l:maxwidth
+                let l:col = &columns
+                let l:width = l:maxwidth
+                let l:above = l:event.row > &lines - &cmdheight - l:event.row - l:event.height
+                if l:above
+                    let l:anchor = 'SE'
+                    let l:row = l:event.row
+                    let l:height = l:row
+                else
+                    let l:anchor = 'NE'
+                    let l:row = l:event.row + l:event.height
+                    let l:height = &lines - &cmdheight - l:row
+                endif
+            endif
         endif
-
-        call setbufvar(l:buffer, 'lsp_syntax_highlights', l:syntax_lines)
-        call setbufvar(l:buffer, 'lsp_do_conceal', 1)
 
         " add padding on both sides of lines containing text
         for l:index in range(len(l:lines))
@@ -84,17 +108,7 @@ function! s:show_documentation(event) abort
             endif
         endfor
 
-        call nvim_buf_set_lines(l:buffer, 0, -1, v:false, l:lines)
-        call nvim_buf_set_option(l:buffer, 'readonly', v:true)
-        call nvim_buf_set_option(l:buffer, 'modifiable', v:false)
-        call nvim_buf_set_option(l:buffer, 'filetype', l:ft.'.lsp-hover')
-
         if !g:lsp_documentation_float_docked
-            let l:bufferlines = nvim_buf_line_count(l:buffer)
-            let l:maxwidth = max(map(getbufline(l:buffer, 1, '$'), 'strdisplaywidth(v:val)'))
-            if g:lsp_preview_max_width > 0
-                let l:maxwidth = min([g:lsp_preview_max_width, l:maxwidth])
-            endif
             let l:width = min([float2nr(l:width), l:maxwidth])
             let l:height = min([float2nr(l:height), l:bufferlines])
         endif
@@ -102,12 +116,17 @@ function! s:show_documentation(event) abort
             let l:maxheight = g:lsp_preview_max_height
             let l:height = min([l:height, l:maxheight])
         endif
+        if g:lsp_preview_max_width > 0
+            let l:maxwidth = min([g:lsp_preview_max_width, l:width])
+        endif
 
         " Height and width must be atleast 1, otherwise error
         let l:height = (l:height < 1 ? 1 : l:height)
         let l:width = (l:width < 1 ? 1 : l:width)
 
         let s:last_popup_id = nvim_open_win(l:buffer, v:false, {'relative': 'editor', 'anchor': l:anchor, 'row': l:row, 'col': l:col, 'height': l:height, 'width': l:width, 'style': 'minimal'})
+        call nvim_win_set_option(s:last_popup_id, 'wrap', v:true)
+        doautocmd <nomodeline> User lsp_float_opened
         return
     endif
 
@@ -126,6 +145,7 @@ function! s:show_documentation(event) abort
         let l:col = a:event['col'] - 1
     endif
     let s:last_popup_id = popup_create('(no documentation available)', {'line': l:line, 'col': l:col, 'pos': l:right ? 'topleft' : 'topright', 'padding': [0, 1, 0, 1], 'border': [1, 1, 1, 1]})
+    doautocmd <nomodeline> User lsp_float_opened
     call setbufvar(winbufnr(s:last_popup_id), 'lsp_syntax_highlights', l:syntax_lines)
     call setbufvar(winbufnr(s:last_popup_id), 'lsp_do_conceal', 1)
     call lsp#ui#vim#output#setcontent(s:last_popup_id, l:lines, l:ft)
@@ -142,6 +162,7 @@ function! s:close_popup() abort
         if s:use_nvim_float && nvim_win_is_valid(s:last_popup_id) | call nvim_win_close(s:last_popup_id, 1) | endif
 
         let s:last_popup_id = -1
+        doautocmd <nomodeline> User lsp_float_closed
     endif
 endfunction
 

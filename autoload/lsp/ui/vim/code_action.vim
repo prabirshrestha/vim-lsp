@@ -39,7 +39,7 @@ function! lsp#ui#vim#code_action#do(option) abort
     let l:bufnr = bufnr('%')
     let l:command_id = lsp#_new_command()
     for l:server_name in l:server_names
-        let l:diagnostic = lsp#ui#vim#diagnostics#get_diagnostics_under_cursor(l:server_name)
+        let l:diagnostic = lsp#internal#diagnostics#under_cursor#get_diagnostic({'server': l:server_name})
         call lsp#send_request(l:server_name, {
                     \ 'method': 'textDocument/codeAction',
                     \ 'params': {

@@ -18,7 +18,7 @@ jobs:
         include:
           - name: neovim-v04-x64
             os: windows-latest
-            neovim_version: v0.4.3
+            neovim_version: v0.4.4
             neovim_arch: win64
           - name: neovim-nightly-x64
             os: windows-latest
@@ -35,7 +35,7 @@ jobs:
         run: Expand-Archive -Path neovim.zip -DestinationPath $env:USERPROFILE
       - name: Download test runner
         shell: PowerShell
-        run: git clone --depth 1 --branch v1.5.4 --single-branch https://github.com/thinca/vim-themis $env:USERPROFILE\themis
+        run: git clone --depth 1 --branch v1.5.5 --single-branch https://github.com/thinca/vim-themis $env:USERPROFILE\themis
       - name: Run tests
         shell: cmd
         run: |
@@ -43,4 +43,4 @@ jobs:
           SET PATH=%USERPROFILE%\themis\bin;%PATH%;
           SET THEMIS_VIM=nvim
           nvim --version
-          themis --reporter spec
+          themis

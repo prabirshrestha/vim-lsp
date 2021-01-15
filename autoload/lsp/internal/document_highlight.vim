@@ -1,9 +1,9 @@
-let s:use_vim_textprops = has('textprop') && !has('nvim')
+let s:use_vim_textprops = lsp#utils#_has_textprops() && !has('nvim')
 let s:prop_id = 11
 
-function! lsp#internal#highlight_references#_enable() abort
+function! lsp#internal#document_highlight#_enable() abort
     " don't event bother registering if the feature is disabled
-    if !g:lsp_highlight_references_enabled | return | endif
+    if !g:lsp_document_highlight_enabled | return | endif
 
     " Highlight group for references
     if !hlexists('lspReference')
@@ -24,8 +24,8 @@ function! lsp#internal#highlight_references#_enable() abort
         \       lsp#callbag#tap({_ -> s:clear_highlights() }),
         \   )
         \ ),
-        \ lsp#callbag#filter({_ -> g:lsp_highlight_references_enabled }),
-        \ lsp#callbag#debounceTime(g:lsp_highlight_references_delay),
+        \ lsp#callbag#filter({_ -> g:lsp_document_highlight_enabled }),
+        \ lsp#callbag#debounceTime(g:lsp_document_highlight_delay),
         \ lsp#callbag#map({_->{'bufnr': bufnr('%'), 'curpos': getcurpos()[0:2], 'changedtick': b:changedtick }}),
         \ lsp#callbag#distinctUntilChanged({a,b -> a['bufnr'] == b['bufnr'] && a['curpos'] == b['curpos'] && a['changedtick'] == b['changedtick']}),
         \ lsp#callbag#filter({_->mode() is# 'n' && getbufvar(bufnr('%'), '&buftype') !=# 'terminal' }),
@@ -45,7 +45,7 @@ function! lsp#internal#highlight_references#_enable() abort
         \)
 endfunction
 
-function! lsp#internal#highlight_references#_disable() abort
+function! lsp#internal#document_highlight#_disable() abort
     if exists('s:Dispose')
         call s:Dispose()
         unlet s:Dispose
@@ -108,12 +108,18 @@ function! s:set_highlights(data) abort
     call s:init_reference_highlight(l:bufnr)
     if s:use_vim_textprops
         for l:position in l:position_list
-            call prop_add(l:position[0], l:position[1],
-            \   {'id': s:prop_id,
-            \    'bufnr': l:bufnr,
-            \    'length': l:position[2],
-            \    'type': 'vim-lsp-reference-highlight'})
-            call add(b:lsp_reference_matches, l:position[0])
+            try
+                " TODO: need to check for valid range before calling prop_add
+                " See https://github.com/prabirshrestha/vim-lsp/pull/721
+                silent! call prop_add(l:position[0], l:position[1], {
+                    \ 'id': s:prop_id,
+                    \ 'bufnr': l:bufnr,
+                    \ 'length': l:position[2],
+                    \ 'type': 'vim-lsp-reference-highlight'})
+                call add(b:lsp_reference_matches, l:position[0])
+            catch
+                call lsp#log('document_highlight', 'set_highlights', v:exception, v:throwpoint)
+            endtry
         endfor
     else
         for l:position in l:position_list
@@ -193,8 +199,9 @@ function! s:init_reference_highlight(buf) abort
 endfunction
 
 " Cyclically move between references by `offset` occurrences.
-function! lsp#internal#highlight_references#jump(offset) abort
-    if s:use_vim_textprops && !exists('b:lsp_reference_positions') || !exists('w:lsp_reference_positions')
+function! lsp#internal#document_highlight#jump(offset) abort
+    if s:use_vim_textprops && !exists('b:lsp_reference_positions') ||
+          \ !s:use_vim_textprops && !exists('w:lsp_reference_positions')
         echohl WarningMsg
         echom 'References not available'
         echohl None
