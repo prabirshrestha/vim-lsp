@@ -171,6 +171,8 @@ function! lsp#register_server(server_info) abort
         \ 'server_info': a:server_info,
         \ 'lsp_id': 0,
         \ 'buffers': {},
+        \ 'watchers': [],
+        \ 'unregister_capability_callbacks': {},
         \ }
     call lsp#log('lsp#register_server', 'server registered', l:server_name)
     doautocmd <nomodeline> User lsp_register_server
@@ -263,6 +265,7 @@ function! s:on_text_document_did_save() abort
             call s:ensure_flush(l:buf, l:server_name, {result->s:call_did_save(l:buf, l:server_name, result, function('s:Noop'))})
         endif
     endfor
+    call s:notify_did_change(l:buf)
 endfunction
 
 function! s:on_text_document_did_change() abort
@@ -308,6 +311,27 @@ function! s:call_did_save(buf, server_name, result, cb) abort
     let l:msg = s:new_rpc_success('textDocument/didSave sent', { 'server_name': a:server_name, 'path': l:path })
     call lsp#log(l:msg)
     call a:cb(l:msg)
+endfunction
+
+function! s:notify_did_change(buf) abort
+    let l:path = lsp#utils#get_buffer_uri(a:buf)
+    for l:server_name in keys(s:servers)
+        for l:watcher in s:servers[l:server_name]['watchers']
+            let l:kind = get(l:watcher, 'kind', 7)
+            " Only notify watchers that requested Change events.
+            if and(l:kind, 2)
+                if l:path =~ glob2regpat(l:watcher['globPattern'])
+                    call lsp#log_verbose('Notifying '.l:server_name.' server of change to '.l:path)
+                    call s:send_notification(l:server_name, {
+                          \ 'method': 'workspace/didChangeWatchedFiles',
+                          \ 'params': {
+                          \     'changes': [{'uri': l:path, 'type': 2}],
+                          \ }})
+                    break
+                endif
+            endif
+        endfor
+    endfor
 endfunction
 
 function! s:on_text_document_did_close() abort
@@ -455,7 +479,8 @@ function! lsp#default_get_supported_capabilities(server_info) abort
     return {
     \   'workspace': {
     \       'applyEdit': v:true,
-    \       'configuration': v:true
+    \       'configuration': v:true,
+    \       'didChangeWatchedFiles': {'dynamicRegistration': v:true},
     \   },
     \   'textDocument': {
     \       'completion': {
@@ -772,6 +797,18 @@ function! s:on_request(server_name, id, request) abort
     elseif a:request['method'] ==# 'workspace/configuration'
         let l:response_items = map(a:request['params']['items'], { key, val -> lsp#utils#workspace_config#get_value(a:server_name, val) })
         call s:send_response(a:server_name, { 'id': a:request['id'], 'result': l:response_items })
+    elseif a:request['method'] ==# 'client/registerCapability'
+        for l:registration in a:request['params']['registrations']
+            call s:handle_register_capability(a:server_name, l:registration)
+        endfor
+    elseif a:request['method'] ==# 'client/unregisterCapability'
+        for l:unregistration in a:request['params']['unregisterations']
+            let l:id = a:request['params']['id']
+            let l:unregister_callbacks = s:servers[a:server_name]['unregister_capability_callbacks']
+            if has_key(l:unregister_callbacks, l:id)
+                call l:unregister_callbacks[l:id]()
+            endif
+        endfor
     else
         " TODO: for now comment this out until we figure out a better solution.
         " We need to comment this out so that others outside of vim-lsp can
@@ -779,6 +816,20 @@ function! s:on_request(server_name, id, request) abort
         " " Error returned according to json-rpc specification.
         " call s:send_response(a:server_name, { 'id': a:request['id'], 'error': { 'code': -32601, 'message': 'Method not found' } })
     endif
+endfunction
+
+function! s:handle_register_capability(server_name, registration) abort
+    let l:id = a:registration['id']
+    let l:method = a:registration['method']
+    call lsp#log_verbose('Registering client capability: '.l:method)
+    if l:method ==# 'workspace/didChangeWatchedFiles'
+        let s:servers[a:server_name]['watchers'] = a:registration['registerOptions']['watchers']
+        let s:servers[a:server_name]['unregister_capability_callbacks'][l:id] = function('s:clear_watchers', [a:server_name])
+    endif
+endfunction
+
+function! s:clear_watchers(server_name) abort
+    let s:servers[a:server_name]['watchers'] = []
 endfunction
 
 function! s:handle_initialize(server_name, data) abort
