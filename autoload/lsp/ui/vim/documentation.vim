@@ -18,28 +18,17 @@ endfunction
 function! s:show_documentation(event) abort
     call s:close_popup()
 
-    let l:managed_data = lsp#omni#get_managed_user_data_from_completed_item(a:event['completed_item'])
-    if empty(l:managed_data)
+    if !has_key(a:event['completed_item'], 'info') || empty(a:event['completed_item']['info'])
         return
     endif
 
-    let l:completion_item = l:managed_data['completion_item']
-    if !has_key(l:completion_item, 'documentation')
-        return
-    endif
-
-    if type(l:completion_item['documentation']) == type('')
-        let l:documentation = l:completion_item['documentation']
-    elseif type(l:completion_item['documentation']) == type({}) && has_key(l:completion_item['documentation'], 'value')
-        " field is MarkupContent (hopefully plaintext)
-        let l:documentation = substitute(l:completion_item['documentation']['value'], '\r', '', 'g')
-    endif
 
     " TODO: Support markdown
-    let l:data = split(l:documentation, '\n')
+    let l:data = split(a:event['completed_item']['info'], '\n')
     let l:lines = []
     let l:syntax_lines = []
     let l:ft = lsp#ui#vim#output#append(l:data, l:lines, l:syntax_lines)
+
 
    " Neovim
     if s:use_nvim_float

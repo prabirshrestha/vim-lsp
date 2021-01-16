@@ -25,10 +25,12 @@ Describe lsp#omni
             \ 'items': [{
             \   'word': 'my-label',
             \   'abbr': 'my-label',
+            \   'info': 'my documentation.',
             \   'icase': 1,
             \   'dup': 1,
             \   'empty': 1,
             \   'kind': 'function',
+            \   'menu': 'my-detail',
             \   'user_data': '{"vim-lsp/key":"0"}',
             \ }],
             \ 'incomplete': 0,
@@ -65,11 +67,13 @@ Describe lsp#omni
             let want = {
             \ 'items': [{
             \  'word': 'my-label',
-            \  'abbr': 'my-label',
+            \  'abbr': 'my-label~',
+            \  'info': 'my documentation.',
             \  'icase': 1,
             \  'dup': 1,
             \  'empty': 1,
             \  'kind': 'function',
+            \  'menu': 'my-detail',
             \  'user_data': '{"vim-lsp/key":"0"}',
             \  }],
             \  'incomplete': 0,
@@ -82,6 +86,38 @@ Describe lsp#omni
                         \   'completion_item': item,
                         \   'complete_position': { 'line': 1, 'character': 1 }
                         \ })
+        End
+
+        It should return item with newlines in 'menu' replaced
+            let item = {
+            \ 'label': 'my-label',
+            \ 'documentation': 'my documentation.',
+            \ 'detail': "my-detail\nmore-detail",
+            \ 'kind': '3'
+            \}
+
+            let options = {
+            \ 'server': { 'name': 'dummy-server' },
+            \ 'position': lsp#get_position(),
+            \ 'response': { 'result': [item] },
+            \}
+
+            let want = {
+            \ 'items': [{
+            \  'word': 'my-label',
+            \  'abbr': 'my-label',
+            \  'info': 'my documentation.',
+            \  'icase': 1,
+            \  'dup': 1,
+            \  'empty': 1,
+            \  'kind': 'function',
+            \  'menu': 'my-detail more-detail',
+            \  'user_data': '{"vim-lsp/key":"0"}',
+            \  }],
+            \  'incomplete': 0,
+            \}
+
+            Assert Equals(lsp#omni#get_vim_completion_items(options), want)
         End
 
         It should not raise errors
@@ -100,10 +136,12 @@ Describe lsp#omni
             \ 'items': [{
             \  'word': 'my-label',
             \  'abbr': 'my-label',
+            \  'info': '',
             \  'icase': 1,
             \  'dup': 1,
             \  'empty': 1,
             \  'kind': '',
+            \  'menu': '',
             \  'user_data': '{"vim-lsp/key":"0"}',
             \  }],
             \  'incomplete': 0,
@@ -128,10 +166,12 @@ Describe lsp#omni
             \ 'items': [{
             \  'word': 'my-label',
             \  'abbr': 'my-label',
+            \  'info': '',
             \  'icase': 1,
             \  'dup': 1,
             \  'empty': 1,
             \  'kind': '',
+            \  'menu': '',
             \  'user_data': '{"vim-lsp/key":"1"}',
             \  }],
             \  'incomplete': 0,
