@@ -294,8 +294,6 @@ function! s:get_vim_completion_item(item, options) abort
     let l:completion = {
                 \ 'word': l:word,
                 \ 'abbr': l:abbr . (l:expandable ? '~' : ''),
-                \ 'menu': '',
-                \ 'info': '',
                 \ 'icase': 1,
                 \ 'dup': 1,
                 \ 'empty': 1,
@@ -359,36 +357,26 @@ function! lsp#omni#get_vim_completion_items(options) abort
 
     let l:vim_complete_items = []
     for l:completion_item in l:items
-        let l:label = lsp#utils#_trim(l:completion_item.label)
-        let l:insert_text = lsp#utils#_trim(get(l:completion_item, 'insertText', l:label))
-
-        if get(l:completion_item, 'insertTextFormat', 1) == 2
-            let l:word = l:label
-            let l:abbr = l:label
-
-            " always set to 1 for perf for now
-            let l:expandable = 1
-            " if has_key(l:completion_item, 'textEdit') && has_key(l:completion_item.textEdit, 'newText')
-            "     let l:expandable = l:word !=# l:completion_item.textEdit.newText
-            " elseif has_key(l:completion_item, 'insertText')
-            "     let l:expandable = l:word !=# l:completion_item.insertText
-            " endif
-
-            " if l:expandable
-                let l:abbr = l:abbr . '~'
-            " endif
+        let l:expandable = get(l:completion_item, 'insertTextFormat', 1) == 2
+        let l:vim_complete_item = {
+            \ 'kind': get(l:kind_text_mappings, get(l:completion_item, 'kind', '') , ''),
+            \ 'dup': 1,
+            \ 'empty': 1,
+            \ 'icase': 1,
+            \ }
+        if has_key(l:completion_item, 'textEdit') && type(l:completion_item['textEdit']) == type(s:t_dict) && has_key(l:completion_item['textEdit'], 'nextText')
+            let l:vim_complete_item['word'] = l:completion_item['textEdit']['nextText']
+        elseif has_key(l:completion_item, 'insertText') && !empty(l:completion_item['insertText'])
+            let l:vim_complete_item['word'] = l:completion_item['insertText']
         else
-            let l:word = l:insert_text
-            let l:abbr = l:label
+            let l:vim_complete_item['word'] = l:completion_item['label']
         endif
 
-        let l:vim_complete_item = {
-            \ 'word': l:word,
-            \ 'abbr': l:abbr,
-            \ 'dup': 1,
-            \ 'icase': 1,
-            \ 'kind': get(l:kind_text_mappings, get(l:completion_item, 'kind', '') , '')
-            \ }
+        if l:expandable
+            let l:vim_complete_item['abbr'] = l:completion_item['label'] . '~'
+        else
+            let l:vim_complete_item['abbr'] = l:completion_item['label']
+        endif
 
         if s:is_user_data_support
             let l:vim_complete_item['user_data'] = s:create_user_data(l:completion_item, l:server_name, l:complete_position)
