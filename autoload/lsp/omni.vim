@@ -299,6 +299,7 @@ function! lsp#omni#get_vim_completion_items(options) abort
         endif
 
         if l:expandable
+            let l:vim_complete_item['word'] = lsp#utils#make_valid_word(substitute(l:vim_complete_item['word'], '\$[0-9]\+\|\${\%(\\.\|[^}]\)\+}', '', 'g'))
             let l:vim_complete_item['abbr'] = l:completion_item['label'] . '~'
         else
             let l:vim_complete_item['abbr'] = l:completion_item['label']
