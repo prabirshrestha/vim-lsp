@@ -390,7 +390,7 @@ function! s:handle_prepare_call_hierarchy(ctx, server, type, data) abort
     endif
 
     for l:item in a:data['response']['result']
-        call timer_start(1, {x->s:call_hierarchy(a:ctx, a:server, l:item)})
+        call s:call_hierarchy(a:ctx, a:server, l:item)
     endfor
 endfunction
 
