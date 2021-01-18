@@ -71,21 +71,7 @@ function! s:chooseCodeLens(items, bufnr) abort
     if empty(a:items)
         return lsp#callbag#throwError('No codelens found')
     endif
-    if g:lsp_experimental_quickpick_ui
-        return lsp#callbag#create(function('s:quickpick_open', [a:items, a:bufnr]))
-    else
-        let l:index = inputlist(map(copy(a:items), {i, value ->
-            \   printf("%s - [%s] %s\t| L%s:%s", i + 1, value['server'], value['codelens']['command']['title'],
-            \   lsp#utils#position#lsp_line_to_vim(a:bufnr, value['codelens']['range']['start']),
-            \   getbufline(a:bufnr, lsp#utils#position#lsp_line_to_vim(a:bufnr, value['codelens']['range']['start']))[0][:50])
-            \ }))
-        if l:index > 0 && l:index <= len(a:items)
-            let l:selected = a:items[l:index - 1]
-            return lsp#callbag#of(l:selected)
-        else
-            return lsp#callbag#empty()
-        endif
-    endif
+    return lsp#callbag#create(function('s:quickpick_open', [a:items, a:bufnr]))
 endfunction
 
 function! s:quickpick_open(items, bufnr, next, error, complete) abort
