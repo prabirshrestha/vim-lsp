@@ -87,9 +87,8 @@ function! s:show_floating_window(event, managed_user_data) abort
     " TODO: reuse floating window/buffer??
     let s:floating_win = s:FloatingWindow.new()
     let l:bufnr = s:Buffer.create()
+    call setbufline(l:bufnr, 1, l:lines)
     call s:floating_win.set_bufnr(l:bufnr)
-    call setbufline(s:floating_win.get_bufnr(), 1, l:lines)
-    call setbufline(s:floating_win.get_bufnr(), 1, l:lines)
 
     call s:floating_win.open({
         \ 'row': 1,
