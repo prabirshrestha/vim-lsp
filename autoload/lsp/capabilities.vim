@@ -89,6 +89,10 @@ function! lsp#capabilities#has_folding_range_provider(server_name) abort
     return s:has_provider(a:server_name, 'foldingRangeProvider')
 endfunction
 
+function! lsp#capabilities#has_call_hierarchy_provider(server_name) abort
+    return s:has_provider(a:server_name, 'callHierarchyProvider')
+endfunction
+
 function! lsp#capabilities#has_semantic_highlight(server_name) abort
     let l:capabilities = lsp#get_server_capabilities(a:server_name)
 
