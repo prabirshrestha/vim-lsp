@@ -178,6 +178,7 @@ function! s:close_popup() abort
 endfunction
 
 function! lsp#ui#vim#documentation#setup() abort
+    return
     augroup lsp_documentation_popup
         autocmd!
         if exists('##CompleteChanged')

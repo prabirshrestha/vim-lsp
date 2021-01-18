@@ -63,6 +63,7 @@ function! lsp#enable() abort
     call lsp#internal#diagnostics#_enable()
     call lsp#internal#show_message_request#_enable()
     call lsp#internal#work_done_progress#_enable()
+    call lsp#internal#completion#documentation#_enable()
     call s:register_events()
 endfunction
 
@@ -76,6 +77,7 @@ function! lsp#disable() abort
     call lsp#internal#diagnostics#_disable()
     call lsp#internal#show_message_request#_disable()
     call lsp#internal#work_done_progress#_disable()
+    call lsp#internal#completion#documentation#_disable()
     call s:unregister_events()
     let s:enabled = 0
 endfunction

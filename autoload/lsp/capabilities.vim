@@ -187,3 +187,6 @@ function! lsp#capabilities#get_code_action_kinds(server_name) abort
     return []
 endfunction
 
+function! lsp#capabilities#has_completion_resolve_provider(server_name) abort
+    return s:has_provider(a:server_name, 'completionProvider', 'resolveProvider')
+endfunction
