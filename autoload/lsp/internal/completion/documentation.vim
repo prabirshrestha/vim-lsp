@@ -19,13 +19,12 @@ function! lsp#internal#completion#documentation#_enable() abort
         \   lsp#callbag#pipe(
         \       lsp#callbag#fromEvent('CompleteChanged'),
         \       lsp#callbag#filter({_->g:lsp_documentation_float}),
-        \       lsp#callbag#map({_->lsp#omni#get_managed_user_data_from_completed_item(v:event['completed_item'])}),
-        \       lsp#callbag#filter({x->!empty(x)}),
+        \       lsp#callbag#map({->copy(v:event)}),
         \       lsp#callbag#debounceTime(g:lsp_documentation_debounce),
-        \       lsp#callbag#switchMap({user_data->
+        \       lsp#callbag#switchMap({event->
         \           lsp#callbag#pipe(
-        \               s:resolve_completion(user_data),
-        \               lsp#callbag#tap({user_data->s:show_floating_window(user_data)}),
+        \               s:resolve_completion(event),
+        \               lsp#callbag#tap({managed_user_data->s:show_floating_window(event, managed_user_data)}),
         \               lsp#callbag#takeUntil(lsp#callbag#fromEvent('CompleteDone'))
         \           )
         \       })
@@ -39,21 +38,24 @@ function! lsp#internal#completion#documentation#_enable() abort
         \ )
 endfunction
 
-let s:i = 0
-function! s:resolve_completion(user_data) abort
-    let l:completion_item = a:user_data['completion_item']
+function! s:resolve_completion(event) abort
+    let l:managed_user_data = lsp#omni#get_managed_user_data_from_completed_item(a:event['completed_item'])
+    if empty(l:managed_user_data) | return lsp#callbag#empty() | endif
+
+    let l:completion_item = l:managed_user_data['completion_item']
+
     if has_key(l:completion_item, 'documentation')
-        return lsp#callbag#of(a:user_data)
-    elseif lsp#capabilities#has_completion_resolve_provider(a:user_data['server_name'])
+        return lsp#callbag#of(l:managed_user_data)
+    elseif lsp#capabilities#has_completion_resolve_provider(l:managed_user_data['server_name'])
         return lsp#callbag#pipe(
-            \ lsp#request(a:user_data['server_name'], {
+            \ lsp#request(l:managed_user_data['server_name'], {
             \   'method': 'completionItem/resolve',
             \   'params': l:completion_item,
             \ }),
             \ lsp#callbag#map({x->{
-            \   'server_name': a:user_data['server_name'],
+            \   'server_name': l:managed_user_data['server_name'],
             \   'completion_item': x['response']['result'],
-            \   'complete_position': a:user_data['complete_position'],
+            \   'complete_position': l:managed_user_data['complete_position'],
             \ }})
             \ )
     else
@@ -61,8 +63,8 @@ function! s:resolve_completion(user_data) abort
     endif
 endfunction
 
-function! s:show_floating_window(user_data) abort
-    let l:completion_item = a:user_data['completion_item']
+function! s:show_floating_window(event, managed_user_data) abort
+    let l:completion_item = a:managed_user_data['completion_item']
     let l:documentation = get(l:completion_item, 'documentation', '')
     if type(l:documentation) == type({}) && has_key(l:documentation, 'value')
         let l:documentation = l:documentation['value']
@@ -78,10 +80,15 @@ function! s:show_floating_window(user_data) abort
     " TODO: support markdown
     let l:lines = lsp#utils#_split_by_eol(l:documentation)
 
+    let l:row = float2nr(a:event['row'])
+    let l:col = float2nr(a:event['col'])
+    let l:curpos = screenrow()
+
     " TODO: reuse floating window/buffer??
     let s:floating_win = s:FloatingWindow.new()
     let l:bufnr = s:Buffer.create()
     call s:floating_win.set_bufnr(l:bufnr)
+    call setbufline(s:floating_win.get_bufnr(), 1, l:lines)
     call setbufline(s:floating_win.get_bufnr(), 1, l:lines)
 
     call s:floating_win.open({
