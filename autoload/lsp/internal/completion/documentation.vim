@@ -63,7 +63,6 @@ endfunction
 
 function! s:show_floating_window(user_data) abort
     let l:completion_item = a:user_data['completion_item']
-    echom json_encode(l:completion_item)
     let l:documentation = get(l:completion_item, 'documentation', '')
     if type(l:documentation) == type({}) && has_key(l:documentation, 'value')
         let l:documentation = l:documentation['value']
@@ -72,19 +71,19 @@ function! s:show_floating_window(user_data) abort
         return
     endif
 
-    echom json_encode(l:documentation)
     if exists('s:floating_win')
         call s:floating_win.close()
     endif
 
     " TODO: support markdown
-    let l:documentation = substitute(l:documentation, "\r", "", "g")
-    let l:lines = split(l:documentation, "\n")
+    let l:lines = lsp#utils#_split_by_eol(l:documentation)
 
     " TODO: reuse floating window/buffer??
     let s:floating_win = s:FloatingWindow.new()
-    call s:floating_win.set_bufnr(s:Buffer.create())
+    let l:bufnr = s:Buffer.create()
+    call s:floating_win.set_bufnr(l:bufnr)
     call setbufline(s:floating_win.get_bufnr(), 1, l:lines)
+
     call s:floating_win.open({
         \ 'row': 1,
         \ 'col': 1,
