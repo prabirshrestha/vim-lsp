@@ -11,6 +11,9 @@ function! lsp#internal#completion#documentation#_enable() abort
     if !s:FloatingWindow.is_available() | return | endif
     if !exists('##CompleteChanged') | return | endif
 
+    if s:enabled | return | endif
+    let s:enabled = 1
+
     let s:Dispose = lsp#callbag#pipe(
         \ lsp#callbag#merge(
         \   lsp#callbag#pipe(
@@ -34,10 +37,6 @@ function! lsp#internal#completion#documentation#_enable() abort
         \ ),
         \ lsp#callbag#subscribe(),
         \ )
-
-
-    if s:enabled | return | endif
-    let s:enabled = 1
 endfunction
 
 let s:i = 0
@@ -78,9 +77,11 @@ function! s:show_floating_window(user_data) abort
         call s:floating_win.close()
     endif
 
+    " TODO: support markdown
     let l:documentation = substitute(l:documentation, "\r", "", "g")
     let l:lines = split(l:documentation, "\n")
 
+    " TODO: reuse floating window/buffer??
     let s:floating_win = s:FloatingWindow.new()
     call s:floating_win.set_bufnr(s:Buffer.create())
     call setbufline(s:floating_win.get_bufnr(), 1, l:lines)
