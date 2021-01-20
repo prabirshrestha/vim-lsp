@@ -4,7 +4,7 @@
 function! s:_SID() abort
   return matchstr(expand('<sfile>'), '<SNR>\zs\d\+\ze__SID$')
 endfunction
-execute join(['function! vital#_lsp#VS#Vim#Window#import() abort', printf("return map({'info': '', 'do': '', 'find': '', 'scroll': '', 'screenpos': ''}, \"vital#_lsp#function('<SNR>%s_' . v:key)\")", s:_SID()), 'endfunction'], "\n")
+execute join(['function! vital#_lsp#VS#Vim#Window#import() abort', printf("return map({'info': '', 'do': '', 'is_floating': '', 'find': '', 'scroll': '', 'screenpos': ''}, \"vital#_lsp#function('<SNR>%s_' . v:key)\")", s:_SID()), 'endfunction'], "\n")
 delfunction s:_SID
 " ___vital___
 let s:Do = { -> {} }
@@ -43,8 +43,8 @@ endfunction
 " info
 "
 if has('nvim')
-  function! s:info(win) abort
-    let l:info = getwininfo(a:win)[0]
+  function! s:info(winid) abort
+    let l:info = getwininfo(a:winid)[0]
     return {
     \   'width': l:info.width,
     \   'height': l:info.height,
@@ -52,9 +52,9 @@ if has('nvim')
     \ }
   endfunction
 else
-  function! s:info(win) abort
-    if index(s:_get_visible_popup_winids(), a:win) >= 0
-      let l:info = popup_getpos(a:win)
+  function! s:info(winid) abort
+    if s:is_floating(a:winid)
+      let l:info = popup_getpos(a:winid)
       return {
       \   'width': l:info.width,
       \   'height': l:info.height,
@@ -69,7 +69,7 @@ else
       let self.info.height = winheight(0)
       let self.info.topline = line('w0')
     endfunction
-    call s:do(a:win, { -> l:ctx.callback() })
+    call s:do(a:winid, { -> l:ctx.callback() })
     return l:ctx.info
   endfunction
 endif
@@ -83,6 +83,20 @@ function! s:find(callback) abort
   let l:winids += s:_get_visible_popup_winids()
   return filter(l:winids, 'a:callback(v:val)')
 endfunction
+
+"
+" is_floating
+"
+if has('nvim')
+  function! s:is_floating(winid) abort
+    let l:config = nvim_win_get_config(a:winid)
+    return empty(l:config) || !empty(get(l:config, 'relative', ''))
+  endfunction
+else
+  function! s:is_floating(winid) abort
+    return winheight(a:winid) != -1 && win_id2win(a:winid) == 0
+  endfunction
+endif
 
 "
 " scroll
@@ -99,7 +113,7 @@ function! s:scroll(winid, topline) abort
       return
     endif
 
-    if index(s:_get_visible_popup_winids(), a:winid) >= 0
+    if !has('nvim') && s:is_floating(a:winid)
       call popup_setoptions(a:winid, {
       \   'firstline': l:topline,
       \ })
@@ -118,13 +132,17 @@ endfunction
 " @param {[number, number]} pos - position on the current buffer.
 "
 function! s:screenpos(pos) abort
-  let l:ui_x = wincol() - col('.')
+  let l:y = a:pos[0]
+  let l:x = a:pos[1] + get(a:pos, 2, 0)
+
   let l:view = winsaveview()
   let l:scroll_x = l:view.leftcol
-  let l:scroll_y = l:view.topline - 1
+  let l:scroll_y = l:view.topline
+
   let l:winpos = win_screenpos(win_getid())
-  let l:origin1 = [l:winpos[0] + (a:pos[0] - l:scroll_y) - 1, l:winpos[1] + (a:pos[1] + a:pos[2] + l:ui_x - l:scroll_x) - 1]
-  return [l:origin1[0] - 1, l:origin1[1] - 1]
+  let l:y = l:winpos[0] + l:y - l:scroll_y
+  let l:x = l:winpos[1] + l:x - l:scroll_x
+  return [l:y, l:x + (wincol() - virtcol('.')) - 1]
 endfunction
 
 "

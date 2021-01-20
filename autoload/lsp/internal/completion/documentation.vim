@@ -1,7 +1,10 @@
 " https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_completion
 let s:enabled = 0
 
+let s:Markdown = vital#lsp#import('VS.Vim.Syntax.Markdown')
+let s:MarkupContent = vital#lsp#import('VS.LSP.MarkupContent')
 let s:FloatingWindow = vital#lsp#import('VS.Vim.Window.FloatingWindow')
+let s:Window = vital#lsp#import('VS.Vim.Window')
 let s:Buffer = vital#lsp#import('VS.Vim.Buffer')
 
 function! lsp#internal#completion#documentation#_enable() abort
@@ -31,7 +34,7 @@ function! lsp#internal#completion#documentation#_enable() abort
         \   ),
         \   lsp#callbag#pipe(
         \       lsp#callbag#fromEvent('CompleteDone'),
-        \       lsp#callbag#tap({_->s:close_floating_window()}),
+        \       lsp#callbag#tap({_->s:close_floating_window(v:false)}),
         \   )
         \ ),
         \ lsp#callbag#subscribe(),
@@ -65,43 +68,113 @@ endfunction
 
 function! s:show_floating_window(event, managed_user_data) abort
     let l:completion_item = a:managed_user_data['completion_item']
-    let l:documentation = get(l:completion_item, 'documentation', '')
-    if type(l:documentation) == type({}) && has_key(l:documentation, 'value')
-        let l:documentation = l:documentation['value']
-    endif
-    if empty(l:documentation)
+
+    " Ignore if documentation does not exists.
+    if !has_key(l:completion_item, 'documentation')
+        call s:close_floating_window(v:true)
         return
     endif
 
-    if exists('s:floating_win')
-        call s:floating_win.close()
+    " Ignore normalized documentation is empty.
+    let l:documentation = s:MarkupContent.normalize(l:completion_item['documentation'])
+    if empty(l:documentation)
+        call s:close_floating_window(v:true)
+        return
     endif
 
-    " TODO: support markdown
-    let l:lines = lsp#utils#_split_by_eol(l:documentation)
+    " Add detail field if provided.
+    if type(get(l:completion_item, 'detail', v:null)) == type('')
+        if !empty(l:completion_item.detail)
+            let l:detail = s:MarkupContent.normalize({
+            \   'language': &filetype,
+            \   'value': l:completion_item['detail'],
+            \ })
+            let l:documentation = l:detail . "\n\n" . l:documentation
+        endif
+    endif
 
-    let l:row = float2nr(a:event['row'])
-    let l:col = float2nr(a:event['col'])
-    let l:curpos = screenrow()
+    let l:doc_win = s:get_doc_win()
+    if empty(l:doc_win)
+        call s:close_floating_window(v:true)
+        return
+    endif
 
-    " TODO: reuse floating window/buffer??
-    let s:floating_win = s:FloatingWindow.new()
-    let l:bufnr = s:Buffer.create()
-    call setbufline(l:bufnr, 1, l:lines)
-    call s:floating_win.set_bufnr(l:bufnr)
+    " Update contents.
+    call deletebufline(l:doc_win.get_bufnr(), '^', '$')
+    call setbufline(l:doc_win.get_bufnr(), 1, lsp#utils#_split_by_eol(l:documentation))
 
-    call s:floating_win.open({
-        \ 'row': 1,
-        \ 'col': 1,
-        \ 'width': 10,
-        \ 'height': 10,
+    " Calculate layout.
+    let l:size = l:doc_win.get_size({
+    \   'maxwidth': float2nr(&columns * 0.4),
+    \   'maxheight': float2nr(&lines * 0.4),
+    \ })
+    let l:pos = s:compute_position(a:event, l:size)
+    if empty(l:pos)
+        call s:close_floating_window(v:true)
+        return
+    endif
+
+    if mode()[0] ==# 'i'
+        call l:doc_win.open({
+        \   'row': l:pos[0] + 1,
+        \   'col': l:pos[1] + 1,
+        \   'width': l:size.width,
+        \   'height': l:size.height,
         \ })
+    endif
+    call s:Window.do(l:doc_win.get_winid(), { -> s:Markdown.apply() })
 endfunction
 
-function! s:close_floating_window() abort
-    if exists('s:floating_win')
-        call s:floating_win.close()
+function! s:close_floating_window(force) abort
+    " Ignore `CompleteDone` if it occurred by `complete()` function because the popup menu will re-appear immediately.
+    let l:ctx = {}
+    function! l:ctx.callback(force) abort
+        let l:doc_win = s:get_doc_win()
+        if empty(l:doc_win)
+            return
+        endif
+
+        if !pumvisible() || mode()[0] !=# 'i' || a:force
+            call l:doc_win.close()
+        endif
+    endfunction
+    call timer_start(1, { -> l:ctx.callback(a:force) })
+endfunction
+
+function! s:compute_position(event, size) abort
+    let l:col_if_right = a:event.col + a:event.width + 1 + (a:event.scrollbar ? 1 : 0)
+    let l:col_if_left = a:event.col - a:size.width - 2
+
+    if a:size.width >= (&columns - l:col_if_right)
+        let l:col = l:col_if_left
+    else
+        let l:col = l:col_if_right
     endif
+
+    if l:col <= 0
+        return []
+    endif
+    if &columns <= l:col + a:size.width
+        return []
+    endif
+
+    return [a:event.row, l:col]
+endfunction
+
+function! s:get_doc_win() abort
+    if exists('s:doc_win')
+        return s:doc_win
+    endif
+    if !s:FloatingWindow.is_available()
+        return v:null
+    endif
+
+    let s:doc_win = s:FloatingWindow.new()
+    call s:doc_win.set_bufnr(s:Buffer.create())
+    call s:doc_win.set_var('&wrap', 1)
+    call s:doc_win.set_var('&conceallevel', 2)
+    call s:doc_win.set_var('&scrolloff', 0)
+    return s:doc_win
 endfunction
 
 function! lsp#internal#completion#documentation#_disable() abort

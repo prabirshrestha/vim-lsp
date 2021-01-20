@@ -49,11 +49,23 @@ endfunction
 "
 if exists('*bufload')
   function! s:load(bufnr_or_path) abort
-    call bufload(bufnr(a:bufnr_or_path, v:true))
+    let l:bufnr = bufnr(a:bufnr_or_path, v:true)
+    silent call bufload(l:bufnr)
+    return l:bufnr
   endfunction
 else
   function! s:load(bufnr_or_path) abort
-    call s:do(bufnr(a:bufnr_or_path, v:true), { -> {} })
+    let l:curr_bufnr = bufnr('%')
+
+    try
+      let l:bufnr = bufnr(a:bufnr_or_path, v:true)
+      execute printf('keepalt keepjumps silent %sbuffer', l:bufnr)
+    catch /.*/
+      echomsg string({ 'exception': v:exception, 'throwpoint': v:throwpoint })
+    finally
+      execute printf('noautocmd keepalt keepjumps silent %sbuffer', l:curr_bufnr)
+    endtry
+    return l:bufnr
   endfunction
 endif
 
@@ -68,12 +80,12 @@ function! s:do(bufnr, func) abort
   endif
 
   try
-    execute printf('noautocmd keepalt keepjumps %sbuffer', a:bufnr)
+    execute printf('noautocmd keepalt keepjumps silent %sbuffer', a:bufnr)
     call a:func()
   catch /.*/
     echomsg string({ 'exception': v:exception, 'throwpoint': v:throwpoint })
   finally
-    execute printf('noautocmd keepalt keepjumps %sbuffer', l:curr_bufnr)
+    execute printf('noautocmd keepalt keepjumps silent %sbuffer', l:curr_bufnr)
   endtry
 endfunction
 
