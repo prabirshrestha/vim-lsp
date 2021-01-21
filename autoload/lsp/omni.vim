@@ -346,6 +346,9 @@ function! lsp#omni#get_managed_user_data_from_completed_item(completed_item) abo
     endif
 
     let l:user_data_string = get(a:completed_item, 'user_data', '')
+    if type(l:user_data_string) != type('')
+        return {}
+    endif
 
     " Check managed user_data.
     if has_key(s:managed_user_data_map, l:user_data_string)
