@@ -162,7 +162,10 @@ function! s:get_doc_win() abort
         return s:doc_win
     endif
 
-    let s:doc_win = s:FloatingWindow.new()
+    let s:doc_win = s:FloatingWindow.new({
+    \   'on_opened': { -> execute('doautocmd <nomodeline> User lsp_float_opened') },
+    \   'on_closed': { -> execute('doautocmd <nomodeline> User lsp_float_closed') }
+    \ })
     call s:doc_win.set_var('&wrap', 1)
     call s:doc_win.set_var('&conceallevel', 2)
     call s:doc_win.set_bufnr(s:Buffer.create())
