@@ -9,7 +9,7 @@ let s:Buffer = vital#lsp#import('VS.Vim.Buffer')
 
 function! lsp#internal#completion#documentation#_enable() abort
     " don't even bother registering if the feature is disabled
-    if !g:lsp_documentation_float | return | endif
+    if !g:lsp_completion_documentation_enabled | return | endif
 
     if !s:FloatingWindow.is_available() | return | endif
     if !exists('##CompleteChanged') | return | endif
@@ -21,9 +21,9 @@ function! lsp#internal#completion#documentation#_enable() abort
         \ lsp#callbag#merge(
         \   lsp#callbag#pipe(
         \       lsp#callbag#fromEvent('CompleteChanged'),
-        \       lsp#callbag#filter({_->g:lsp_documentation_float}),
+        \       lsp#callbag#filter({_->g:lsp_completion_documentation_enabled}),
         \       lsp#callbag#map({->copy(v:event)}),
-        \       lsp#callbag#debounceTime(g:lsp_documentation_debounce),
+        \       lsp#callbag#debounceTime(g:lsp_completion_documentation_delay),
         \       lsp#callbag#switchMap({event->
         \           lsp#callbag#pipe(
         \               s:resolve_completion(event),
