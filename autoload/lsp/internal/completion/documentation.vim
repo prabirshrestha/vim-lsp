@@ -182,8 +182,3 @@ function! lsp#internal#completion#documentation#_disable() abort
         unlet s:Dispose
     endif
 endfunction
-
-function! s:log(x) abort
-    echom json_encode(a:x)
-endfunction
-
