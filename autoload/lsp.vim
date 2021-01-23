@@ -63,6 +63,7 @@ function! lsp#enable() abort
     call lsp#internal#diagnostics#_enable()
     call lsp#internal#show_message_request#_enable()
     call lsp#internal#work_done_progress#_enable()
+    call lsp#internal#completion#documentation#_enable()
     call s:register_events()
 endfunction
 
@@ -76,6 +77,7 @@ function! lsp#disable() abort
     call lsp#internal#diagnostics#_disable()
     call lsp#internal#show_message_request#_disable()
     call lsp#internal#work_done_progress#_disable()
+    call lsp#internal#completion#documentation#_disable()
     call s:unregister_events()
     let s:enabled = 0
 endfunction
@@ -473,7 +475,7 @@ function! lsp#default_get_supported_capabilities(server_info) abort
     \       'completion': {
     \           'dynamicRegistration': v:false,
     \           'completionItem': {
-    \              'documentationFormat': ['plaintext'],
+    \              'documentationFormat': ['markdown', 'plaintext'],
     \              'snippetSupport': v:false,
     \              'resolveSupport': {
     \                  'properties': ['additionalTextEdits']
@@ -856,8 +858,6 @@ function! s:handle_initialize(server_name, data) abort
     for l:Init_callback in l:init_callbacks
         call l:Init_callback(a:data)
     endfor
-
-    call lsp#ui#vim#documentation#setup()
 
     doautocmd <nomodeline> User lsp_server_init
 endfunction

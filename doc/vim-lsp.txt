@@ -19,11 +19,10 @@ CONTENTS                                                  *vim-lsp-contents*
       g:lsp_preview_doubletap               |g:lsp_preview_doubletap|
       g:lsp_insert_text_enabled             |g:lsp_insert_text_enabled|
       g:lsp_text_edit_enabled               |g:lsp_text_edit_enabled|
-      g:lsp_documentation_debounce          |g:lsp_documentation_debounce|
-      g:lsp_documentation_float             |g:lsp_documentation_float|
-      g:lsp_documentation_float_docked      |g:lsp_documentation_float_docked|
-      g:lsp_documentation_float_docked_maxheight
-                              |g:lsp_documentation_float_docked_maxheight|
+      g:lsp_completion_documentation_enabled
+					|g:lsp_completion_documentation_enabled|
+      g:lsp_completion_documentation_delay
+					|g:lsp_completion_documentation_delay|
       g:lsp_diagnostics_enabled             |g:lsp_diagnostics_enabled|
       g:lsp_diagnostics_echo_cursor         |g:lsp_diagnostics_echo_cursor|
       g:lsp_diagnostics_echo_delay          |g:lsp_diagnostics_echo_delay|
@@ -398,7 +397,17 @@ g:lsp_text_edit_enabled                           *g:lsp_text_edit_enabled*
 	let g:lsp_text_edit_enabled = 1
 	let g:lsp_text_edit_enabled = 0
 
-g:lsp_documentation_debounce                      *g:lsp_documentation_debounce*
+g:lsp_completion_documentation_enabled   *g:lsp_completion_documentation_enabled*
+    Type: |Number|
+    Default: `1`
+
+    Enables floating window documentation for complete items.
+
+    Example: >
+	let g:lsp_completion_documentation_enabled = 1
+	let g:lsp_completion_documentation_enabled = 0
+
+g:lsp_completion_documentation_delay       *g:lsp_completion_documentation_delay*
     Type: |Number|
     Default: `80`
 
@@ -406,39 +415,8 @@ g:lsp_documentation_debounce                      *g:lsp_documentation_debounce*
     help with performance. Set this to `0` to disable debouncing.
 
     Example: >
-	let g:lsp_documentation_debounce = 120
-	let g:lsp_documentation_debounce = 0
-
-g:lsp_documentation_float                      *g:lsp_documentation_float*
-    Type: |Number|
-    Default: `1`
-
-    Enables floating window documentation for complete items.
-
-    Example: >
-	let g:lsp_documentation_float = 1
-	let g:lsp_documentation_float = 0
-
-g:lsp_documentation_float_docked               *g:lsp_documentation_float_docked*
-    Type: |Number|
-    Default: `0`
-
-    Dock the floating documentation window for complete items if enabled.
-
-    Example: >
-	let g:lsp_documentation_float_docked = 1
-	let g:lsp_documentation_float_docked = 0
-
-g:lsp_documentation_float_docked_maxheight
-				    *g:lsp_documentation_float_docked_maxheight*
-    Type: |Number|
-    Default: `&previewheight`
-
-    The maximum height of the docked documentation window if enabled.
-
-    Example: >
-	let g:lsp_documentation_float_docked_maxheight = 1
-	let g:lsp_documentation_float_docked_maxheight = 0
+	let g:lsp_completion_documentation_delay = 120
+	let g:lsp_completion_documentation_delay = 0
 
 g:lsp_diagnostics_enabled                           *g:lsp_diagnostics_enabled*
     Type: |Number|
