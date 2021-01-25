@@ -1676,6 +1676,10 @@ Closes an opened preview window
 Transfers focus to an opened preview window or back to the previous window if
 focus is already on the preview window.
 
+<plug>(lsp-floatwin-scroll-up)              *<plug>(lsp-floatwin-scroll-up)*
+<plug>(lsp-floatwin-scroll-down)          *<plug>(lsp-floatwin-scroll-down)*
+
+Scroll all displayed floating windows.
 
 ==============================================================================
 Autocomplete                                          *vim-lsp-autocomplete*

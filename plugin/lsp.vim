@@ -10,6 +10,7 @@ let g:lsp_log_file = get(g:, 'lsp_log_file', '')
 let g:lsp_log_verbose = get(g:, 'lsp_log_verbose', 1)
 let g:lsp_debug_servers = get(g:, 'lsp_debug_servers', [])
 let g:lsp_format_sync_timeout = get(g:, 'lsp_format_sync_timeout', -1)
+let g:lsp_floatwin_scroll_delta = get(g:, 'lsp_floatwin_scroll_delta', 4)
 
 let g:lsp_completion_documentation_enabled = get(g:, 'lsp_completion_documentation_enabled', 1)
 let g:lsp_completion_documentation_delay = get(g:, 'lsp_completion_documention_delay', 80)
@@ -172,3 +173,11 @@ nnoremap <plug>(lsp-status) :<c-u>echo lsp#get_server_status()<cr>
 nnoremap <plug>(lsp-next-reference) :<c-u>call lsp#internal#document_highlight#jump(+1)<cr>
 nnoremap <plug>(lsp-previous-reference) :<c-u>call lsp#internal#document_highlight#jump(-1)<cr>
 nnoremap <plug>(lsp-signature-help) :<c-u>call lsp#ui#vim#signature_help#get_signature_help_under_cursor()<cr>
+
+nnoremap <expr> <plug>(lsp-floatwin-scroll-up) lsp#internal#ui#floatwin#scroll(-g:lsp_floatwin_scroll_delta)
+nnoremap <expr> <plug>(lsp-floatwin-scroll-down) lsp#internal#ui#floatwin#scroll(g:lsp_floatwin_scroll_delta)
+inoremap <expr> <plug>(lsp-floatwin-scroll-up) lsp#internal#ui#floatwin#scroll(-g:lsp_floatwin_scroll_delta)
+inoremap <expr> <plug>(lsp-floatwin-scroll-down) lsp#internal#ui#floatwin#scroll(g:lsp_floatwin_scroll_delta)
+xnoremap <expr> <plug>(lsp-floatwin-scroll-up) lsp#internal#ui#floatwin#scroll(-g:lsp_floatwin_scroll_delta)
+xnoremap <expr> <plug>(lsp-floatwin-scroll-down) lsp#internal#ui#floatwin#scroll(g:lsp_floatwin_scroll_delta)
+
