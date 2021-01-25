@@ -105,22 +105,17 @@ function! s:show_floating_window(event, managed_user_data) abort
     call setbufline(l:doc_win.get_bufnr(), 1, lsp#utils#_split_by_eol(join(l:contents, "\n\n")))
 
     " Calculate layout.
-    let l:size = l:doc_win.get_size({
-    \     'maxwidth': float2nr(&columns * 0.4),
-    \     'maxheight': float2nr(&lines * 0.4),
-    \ })
-    let l:pos = s:compute_position(a:event, l:size)
-    if empty(l:pos)
-        call s:close_floating_window(v:true)
-        return
+    let l:layout = s:get_layout(a:event)
+    if empty(l:layout)
+        return s:close_floating_window(v:true)
     endif
 
     " Show popupmenu and apply markdown syntax.
     call l:doc_win.open({
-    \     'row': l:pos[0] + 1,
-    \     'col': l:pos[1] + 1,
-    \     'width': l:size.width,
-    \     'height': l:size.height,
+    \     'row': l:layout.row,
+    \     'col': l:layout.col,
+    \     'width': l:layout.width,
+    \     'height': l:layout.height,
     \     'topline': 1,
     \ })
     call s:Window.do(l:doc_win.get_winid(), { -> s:Markdown.apply() })
@@ -137,24 +132,33 @@ function! s:close_floating_window(force) abort
     call timer_start(1, { -> l:ctx.callback(a:force) })
 endfunction
 
-function! s:compute_position(event, size) abort
-    let l:col_if_right = a:event.col + a:event.width + 1 + (a:event.scrollbar ? 1 : 0)
-    let l:col_if_left = a:event.col - a:size.width - 2
+function! s:get_layout(event) abort
+    let l:size = s:get_doc_win().get_size({
+    \   'maxwidth': float2nr(&columns * 0.4),
+    \   'maxheight': float2nr(&lines - a:event.row - 1),
+    \ })
 
-    if a:size.width >= (&columns - l:col_if_right)
+    let l:col_if_right = a:event.col + a:event.width + 1 + (a:event.scrollbar ? 1 : 0)
+    let l:col_if_left = a:event.col - l:size.width - 2
+
+    if l:size.width >= (&columns - l:col_if_right)
         let l:col = l:col_if_left
     else
         let l:col = l:col_if_right
     endif
 
+    " Has no enough space for left/right both.
     if l:col <= 0
-        return []
+        return {}
     endif
-    if &columns <= l:col + a:size.width
-        return []
+    if &columns <= l:col + l:size.width
+        return {}
     endif
 
-    return [a:event.row, l:col]
+    return extend(l:size, {
+    \   'row': float2nr(a:event.row + 1),
+    \   'col': float2nr(l:col + 1),
+    \ })
 endfunction
 
 function! s:get_doc_win() abort
