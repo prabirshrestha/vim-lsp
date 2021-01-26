@@ -126,6 +126,7 @@ function! s:on_complete_done_after() abort
     if get(l:completion_item, 'insertTextFormat', 1) == 2
       " insert Snippet.
       call lsp#utils#text_edit#apply_text_edits('%', [{ 'range': l:range, 'newText': '' }])
+      call cursor(lsp#utils#position#lsp_to_vim('%', l:range['start']))
       if exists('g:lsp_snippet_expand') && len(g:lsp_snippet_expand) > 0
         call g:lsp_snippet_expand[0]({ 'snippet': l:text })
       else
