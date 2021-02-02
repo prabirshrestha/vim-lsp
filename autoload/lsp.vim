@@ -1025,7 +1025,7 @@ endfunction
 function! s:request_on_notification(ctx, id, data, event) abort
     if a:ctx['cancelled'] | return | endif " caller already unsubscribed so don't bother notifying
     let a:ctx['done'] = 1
-    call a:ctx['next'](a:data)
+    call a:ctx['next'](extend({ 'server_name': a:ctx['server_name'] }, a:data))
     call a:ctx['complete']()
 endfunction
 
