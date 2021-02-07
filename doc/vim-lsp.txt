@@ -1309,6 +1309,10 @@ lsp#get_progress()                       *lsp#get_progress()*
 	Type: |Number|
 	0 - 100 or not exist
 
+lsp#scroll(count)                                             *lsp#scroll()*
+
+    Scroll current displayed floating/popup window with specified count.
+
 ==============================================================================
 Commands                                                  *vim-lsp-commands*
 
