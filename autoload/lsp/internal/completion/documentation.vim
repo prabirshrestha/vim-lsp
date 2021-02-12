@@ -172,6 +172,7 @@ function! s:get_doc_win() abort
     call setbufvar(s:doc_win.get_bufnr(), '&buftype', 'nofile')
     call setbufvar(s:doc_win.get_bufnr(), '&bufhidden', 'hide')
     call setbufvar(s:doc_win.get_bufnr(), '&buflisted', 0)
+    call setbufvar(s:doc_win.get_bufnr(), '&swapfile', 0)
     return s:doc_win
 endfunction
 
