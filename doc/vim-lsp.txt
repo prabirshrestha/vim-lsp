@@ -1313,6 +1313,10 @@ lsp#scroll(count)                                             *lsp#scroll()*
 
     Scroll current displayed floating/popup window with specified count.
 
+    Example: >
+	inoremap <buffer> <expr><c-f> lsp#scroll(+4)
+	inoremap <buffer> <expr><c-d> lsp#scroll(-4)
+
 ==============================================================================
 Commands                                                  *vim-lsp-commands*
 
