@@ -21,14 +21,14 @@ function! lsp#internal#document_hover#under_cursor#do(options) abort
     call lsp#_new_command()
 
     " TODO: ask user to select server for formatting if there are multiple servers
-	let l:request = {
+    let l:request = {
         \ 'method': 'textDocument/hover',
         \ 'params': {
         \   'textDocument': lsp#get_text_document_identifier(),
         \   'position': lsp#get_position(),
         \ },
         \ }
-	call lsp#callbag#pipe(
+    call lsp#callbag#pipe(
         \ lsp#callbag#fromList(l:servers),
         \ lsp#callbag#flatMap({server->
         \   lsp#request(server, l:request)
