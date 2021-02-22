@@ -4,11 +4,11 @@
 " }
 function! lsp#internal#document_hover#under_cursor#do(options) abort
     let l:bufnr = bufnr('%')
-	if has_key(a:options, 'server')
-		let l:servers = [a:options['server']]
-	else
-    	let l:servers = filter(lsp#get_allowed_servers(), 'lsp#capabilities#has_hover_provider(v:val)')
-	endif
+    if has_key(a:options, 'server')
+        let l:servers = [a:options['server']]
+    else
+        let l:servers = filter(lsp#get_allowed_servers(), 'lsp#capabilities#has_hover_provider(v:val)')
+    endif
 
     if len(l:servers) == 0
         let l:filetype = getbufvar(l:bufnr, '&filetype')
@@ -18,28 +18,28 @@ function! lsp#internal#document_hover#under_cursor#do(options) abort
 
     redraw | echo 'Retrieving hover ...'
 
-	call lsp#_new_command()
+    call lsp#_new_command()
 
     " TODO: ask user to select server for formatting if there are multiple servers
 	let l:request = {
-		\ 'method': 'textDocument/hover',
+        \ 'method': 'textDocument/hover',
         \ 'params': {
         \   'textDocument': lsp#get_text_document_identifier(),
         \   'position': lsp#get_position(),
         \ },
-		\ }
+        \ }
 	call lsp#callbag#pipe(
-		\ lsp#callbag#fromList(l:servers),
-		\ lsp#callbag#flatMap({server->
-		\ 	lsp#request(server, l:request)
-		\ }),
-		\ lsp#callbag#tap({x->s:show_hover(x['server_name'], x['request'], x['response'])}),
+        \ lsp#callbag#fromList(l:servers),
+        \ lsp#callbag#flatMap({server->
+        \   lsp#request(server, l:request)
+        \ }),
+        \ lsp#callbag#tap({x->s:show_hover(x['server_name'], x['request'], x['response'])}),
         \ lsp#callbag#takeUntil(lsp#callbag#pipe(
         \   lsp#stream(),
         \   lsp#callbag#filter({x->has_key(x, 'command')}),
         \ )),
-		\ lsp#callbag#subscribe(),
-		\ )
+        \ lsp#callbag#subscribe(),
+        \ )
 endfunction
 
 function! s:show_hover(server_name, request, response) abort
