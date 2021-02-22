@@ -1148,6 +1148,23 @@ function! lsp#get_progress() abort
     return lsp#internal#work_done_progress#get_progress()
 endfunction
 
+"
+" Scroll vim-lsp related windows.
+"
+" NOTE: This method can be used to <expr> mapping.
+"
+function! lsp#scroll(count) abort
+    let l:ctx = {}
+    function! l:ctx.callback(count) abort
+        let l:Window = vital#lsp#import('VS.Vim.Window')
+        for l:winid in l:Window.find({ winid -> l:Window.is_floating(winid) })
+            call l:Window.scroll(l:winid, l:Window.info(l:winid).topline + a:count)
+        endfor
+    endfunction
+    call timer_start(0, { -> l:ctx.callback(a:count) })
+    return "\<Ignore>"
+endfunction
+
 function! s:merge_dict(dict_old, dict_new) abort
     for l:key in keys(a:dict_new)
         if has_key(a:dict_old, l:key) && type(a:dict_old[l:key]) == v:t_dict && type(a:dict_new[l:key]) == v:t_dict
