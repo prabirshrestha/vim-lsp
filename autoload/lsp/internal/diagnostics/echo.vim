@@ -17,7 +17,7 @@ function! lsp#internal#diagnostics#echo#_enable() abort
         \ lsp#callbag#filter({_->mode() is# 'n'}),
         \ lsp#callbag#filter({_->getbufvar(bufnr('%'), '&buftype') !=# 'terminal' }),
         \ lsp#callbag#map({_->lsp#internal#diagnostics#under_cursor#get_diagnostic()}),
-        \ lsp#callbag#subscribe({x->s:echo(x)}),
+        \ lsp#callbag#subscribe({x->lsp#internal#diagnostics#echo#diagnostic(x)}),
         \ )
 endfunction
 
@@ -30,7 +30,11 @@ function! lsp#internal#diagnostics#echo#_disable() abort
     let s:enabled = 0
 endfunction
 
-function! s:echo(diagnostic) abort
+function! lsp#internal#diagnostics#echo#do() abort
+    call lsp#internal#diagnostics#echo#diagnostic(lsp#internal#diagnostics#under_cursor#get_diagnostic())
+endfunction
+
+function! lsp#internal#diagnostics#echo#diagnostic(diagnostic) abort
     if !empty(a:diagnostic) && has_key(a:diagnostic, 'message')
         call lsp#utils#echo_with_truncation('LSP: '. substitute(a:diagnostic['message'], '\n\+', ' ', 'g'))
         let s:displaying_message = 1

@@ -26,6 +26,7 @@ CONTENTS                                                  *vim-lsp-contents*
       g:lsp_diagnostics_enabled             |g:lsp_diagnostics_enabled|
       g:lsp_diagnostics_echo_cursor         |g:lsp_diagnostics_echo_cursor|
       g:lsp_diagnostics_echo_delay          |g:lsp_diagnostics_echo_delay|
+      g:lsp_diagnostics_echo_movement       |g:lsp_diagnostics_echo_movement|
       g:lsp_diagnostics_float_cursor        |g:lsp_diagnostics_float_cursor|
       g:lsp_diagnostics_float_delay         |g:lsp_diagnostics_float_delay|
       g:lsp_diagnostics_highlights_enabled
@@ -458,6 +459,18 @@ g:lsp_diagnostics_echo_delay                *g:lsp_diagnostics_echo_delay*
     Example: >
 	let g:lsp_diagnostics_echo_delay = 200
 	let g:lsp_diagnostics_echo_delay = 1000
+
+g:lsp_diagnostics_echo_movement             *g:lsp_diagnostics_echo_movement*
+    Type: |Number|
+    Default: `0`
+
+    Enables automatically echoing the corresponding diagnostic when executing a
+    command such as |:LspNextDiagnostic| which jumps to a next/previous
+    diagnostic, mimicking the echoing behavior of commands such as |:cnext|.
+
+    Example: >
+	let g:lsp_diagnostics_echo_movement = 1
+	let g:lsp_diagnostics_echo_movement = 0
 
 g:lsp_diagnostics_float_cursor                *g:lsp_diagnostics_float_cursor*
     Type: |Number|
@@ -1509,6 +1522,21 @@ Gets the hover information and displays it in the |preview-window|.
    automatically on cursormove if not focused and can be closed with <esc> if
    focused.
 
+LspEchoDiagnostic                                        *:LspEchoDiagnostic*
+
+Gets the diagnostic information under the cursor and echos it.
+
+LspPreviewDiagnostic                                  *:LspPreviewDiagnostic*
+
+Gets the diagnostic information under the cursor and displays it in the
+|preview-window|.
+
+ * |preview-window| can be closed using the default vim mapping - `<c-w><c-z>`.
+ * If using neovim with nvim_win_open() available, |g:lsp_preview_float| can
+   be set to enable a floating preview at the cursor which is closed
+   automatically on cursormove if not focused and can be closed with <esc> if
+   focused.
+
 LspNextDiagnostic [-wrap=0]                              *:LspNextDiagnostic*
 
 Jump to Next diagnostics including error, warning, information, hint.
@@ -1734,6 +1762,8 @@ Available plug mappings are following:
   nnoremap <plug>(lsp-previous-reference)
   nnoremap <plug>(lsp-previous-warning)
   nnoremap <plug>(lsp-previous-warning-nowrap)
+  nnoremap <plug>(lsp-echo-diagnostic)
+  nnoremap <plug>(lsp-preview-diagnostic)
   nnoremap <plug>(lsp-references)
   nnoremap <plug>(lsp-rename)
   nnoremap <plug>(lsp-workspace-symbol)

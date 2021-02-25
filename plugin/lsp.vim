@@ -17,6 +17,7 @@ let g:lsp_completion_documentation_delay = get(g:, 'lsp_completion_documention_d
 let g:lsp_diagnostics_enabled = get(g:, 'lsp_diagnostics_enabled', 1)
 let g:lsp_diagnostics_echo_cursor = get(g:, 'lsp_diagnostics_echo_cursor', 0)
 let g:lsp_diagnostics_echo_delay = get(g:, 'lsp_diagnostics_echo_delay', 500)
+let g:lsp_diagnostics_echo_movement = get(g:, 'lsp_diagnostics_echo_movement', 0)
 let g:lsp_diagnostics_float_cursor = get(g:, 'lsp_diagnostics_float_cursor', 0)
 let g:lsp_diagnostics_float_delay = get(g:, 'lsp_diagnostics_float_delay', 500)
 let g:lsp_diagnostics_highlights_enabled = get(g:, 'lsp_diagnostics_highlights_enabled', lsp#utils#_has_highlights())
@@ -100,6 +101,8 @@ command! -nargs=? LspDocumentDiagnostics call lsp#internal#diagnostics#document_
             \   'buffers': {'type': type('')},
             \ })))
 command! -nargs=? -complete=customlist,lsp#utils#empty_complete LspHover call lsp#internal#document_hover#under_cursor#do({})
+command! -nargs=? -complete=customlist,lsp#utils#empty_complete LspEchoDiagnostic call lsp#internal#diagnostics#echo#do()
+command! -nargs=? -complete=customlist,lsp#utils#empty_complete LspPreviewDiagnostic call lsp#internal#diagnostics#float#do()
 command! -nargs=* LspNextError call lsp#internal#diagnostics#movement#_next_error(<f-args>)
 command! -nargs=* LspPreviousError call lsp#internal#diagnostics#movement#_previous_error(<f-args>)
 command! -nargs=* LspNextWarning call lsp#internal#diagnostics#movement#_next_warning(<f-args>)
@@ -158,6 +161,8 @@ nnoremap <silent> <plug>(lsp-next-warning) :<c-u>call lsp#internal#diagnostics#m
 nnoremap <silent> <plug>(lsp-next-warning-nowrap) :<c-u>call lsp#internal#diagnostics#movement#_next_warning("-wrap=0")<cr>
 nnoremap <silent> <plug>(lsp-previous-warning) :<c-u>call lsp#internal#diagnostics#movement#_previous_warning()<cr>
 nnoremap <silent> <plug>(lsp-previous-warning-nowrap) :<c-u>call lsp#internal#diagnostics#movement#_previous_warning("-wrap=0")<cr>
+nnoremap <silent> <plug>(lsp-echo-diagnostic) :<c-u>call lsp#internal#diagnostics#echo#do()<cr>
+nnoremap <silent> <plug>(lsp-preview-diagnostic) :<c-u>call lsp#internal#diagnostics#float#do()<cr>
 nnoremap <silent> <plug>(lsp-next-diagnostic) :<c-u>call lsp#internal#diagnostics#movement#_next_diagnostics()<cr>
 nnoremap <silent> <plug>(lsp-next-diagnostic-nowrap) :<c-u>call lsp#internal#diagnostics#movement#_next_diagnostics("-wrap=0")<cr>
 nnoremap <silent> <plug>(lsp-previous-diagnostic) :<c-u>call lsp#internal#diagnostics#movement#_previous_diagnostics()<cr>
