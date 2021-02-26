@@ -75,7 +75,7 @@ function! lsp#utils#range#is_valid_for_buffer(bufnr, range)
     let [l:start_line, l:start_col] = lsp#utils#position#lsp_to_vim(a:bufnr, a:range['start'])
     let [l:end_line, l:end_col] = lsp#utils#position#lsp_to_vim(a:bufnr, a:range['end'])
 
-    let l:buf_linecount = getbufinfo(a:bufnr)[0].linecount
+    let l:buf_linecount = getbufinfo(a:bufnr)[0]['linecount']
 
     if l:buf_linecount < l:start_line || l:buf_linecount < l:end_line
         return v:false
