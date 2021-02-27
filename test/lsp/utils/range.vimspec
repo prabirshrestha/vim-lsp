@@ -76,6 +76,23 @@ Describe lsp#utils#range
       Assert Equals(lsp#utils#range#is_valid_for_buffer(l:bufnr, l:range), v:false)
     End
 
+    It should return range is valid with multibyte
+      call setline(1, ['あいうえお', 'かきくけこ', 'さしすせそ'])
+      let l:bufnr = bufnr('%')
+
+      let l:range = {'start': {'character': 0, 'line': 0}, 'end': {'character': 1, 'line': 2}}
+      Assert Equals(lsp#utils#range#is_valid_for_buffer(l:bufnr, l:range), v:true)
+
+      let l:range = {'start': {'character': 0, 'line': 0}, 'end': {'character': 4, 'line': 2}}
+      Assert Equals(lsp#utils#range#is_valid_for_buffer(l:bufnr, l:range), v:true)
+
+      let l:range = {'start': {'character': 0, 'line': 0}, 'end': {'character': 1, 'line': 3}}
+      Assert Equals(lsp#utils#range#is_valid_for_buffer(l:bufnr, l:range), v:false)
+
+      let l:range = {'start': {'character': 0, 'line': 0}, 'end': {'character': 5, 'line': 2}}
+      Assert Equals(lsp#utils#range#is_valid_for_buffer(l:bufnr, l:range), v:false)
+    End
+
   End
 
 End
