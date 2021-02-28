@@ -8,11 +8,11 @@ let s:Buffer = vital#lsp#import('VS.Vim.Buffer')
 
 " options - {
 "   server - 'server_name'		" optional
-"   type - 'float'
+"   ui - 'float' | 'preview'
 " }
 function! lsp#internal#document_hover#under_cursor#do(options) abort
     let l:bufnr = bufnr('%')
-    let l:type = get(a:options, 'type', g:lsp_preview_float ? 'float' : 'preview')
+    let l:ui = get(a:options, 'ui', g:lsp_preview_float ? 'float' : 'preview')
     if has_key(a:options, 'server')
         let l:servers = [a:options['server']]
     else
@@ -42,7 +42,7 @@ function! lsp#internal#document_hover#under_cursor#do(options) abort
         \ lsp#callbag#flatMap({server->
         \   lsp#request(server, l:request)
         \ }),
-        \ lsp#callbag#tap({x->s:show_hover(l:type, x['server_name'], x['request'], x['response'])}),
+        \ lsp#callbag#tap({x->s:show_hover(l:ui, x['server_name'], x['request'], x['response'])}),
         \ lsp#callbag#takeUntil(lsp#callbag#pipe(
         \   lsp#stream(),
         \   lsp#callbag#filter({x->has_key(x, 'command')}),
@@ -51,7 +51,7 @@ function! lsp#internal#document_hover#under_cursor#do(options) abort
         \ )
 endfunction
 
-function! s:show_hover(type, server_name, request, response) abort
+function! s:show_hover(ui, server_name, request, response) abort
     if !has_key(a:response, 'result') || empty(a:response['result']) || 
         \ empty(a:response['result']['contents'])
         call lsp#utils#error('No hover information found in server - ' . a:server_name)
@@ -60,7 +60,7 @@ function! s:show_hover(type, server_name, request, response) abort
 
     echo ''
 
-	if s:FloatingWindow.is_available() && a:type ==? 'float'
+	if s:FloatingWindow.is_available() && a:ui ==? 'float'
 		" show floating window
 		call s:show_floating_window(a:server_name, a:request, a:response)
 	else
