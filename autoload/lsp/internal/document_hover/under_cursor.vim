@@ -97,12 +97,12 @@ function! s:show_floating_window(server_name, request, response) abort
 
    " Show popupmenu and apply markdown syntax.
     call l:doc_win.open({
-    \     'row': l:pos[0] + 1,
-    \     'col': l:pos[1] + 1,
-    \     'width': l:size.width,
-    \     'height': l:size.height,
-    \     'topline': 1,
-    \ })
+        \   'row': l:pos[0] + 1,
+        \   'col': l:pos[1] + 1,
+        \   'width': l:size.width,
+        \   'height': l:size.height,
+        \   'topline': 1,
+        \ })
     call s:Window.do(l:doc_win.get_winid(), { -> s:Markdown.apply() })
 endfunction
 
@@ -118,7 +118,7 @@ function! s:get_contents(contents) abort
     elseif type(a:contents) == type({})
         if has_key(a:contents, 'value')
             if has_key(a:contents, 'kind')
-                if a:contents['kind'] == 'markdown'
+                if a:contents['kind'] ==? 'markdown'
                     let l:detail = s:MarkupContent.normalize({
                         \ 'langauge': &filetype,
                         \ 'value': a:contents['value']
