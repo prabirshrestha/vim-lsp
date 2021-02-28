@@ -1036,7 +1036,7 @@ function! s:request_cancel(ctx) abort
     if lsp#get_server_status(a:ctx['server_name']) !=# 'running' | return | endif " if server is not running we cant send the request
     " send the actual cancel request
     let a:ctx['dispose'] = lsp#callbag#pipe(
-        \ lsp#request(a:ctx['server_name'], {
+        \ lsp#notification(a:ctx['server_name'], {
         \   'method': '$/cancelRequest',
         \   'params': { 'id': a:ctx['request_id'] },
         \ }),
@@ -1073,6 +1073,12 @@ endfunction
 function! s:send_request_error(ctx, error) abort
     call a:ctx['cb'](a:error)
     call s:send_request_dispose(a:ctx)
+endfunction
+" }}}
+
+" lsp#notification {{{
+function! lsp#notification(server_name, request) abort
+    return lsp#callbag#lazy(function('s:send_notification', [a:server_name, a:request]))
 endfunction
 " }}}
 
