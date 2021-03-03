@@ -160,6 +160,9 @@ function! lsp#ui#vim#output#setcontent(winid, lines, ft) abort
         call nvim_buf_set_option(winbufnr(a:winid), 'modifiable', v:false)
         call nvim_buf_set_option(winbufnr(a:winid), 'filetype', a:ft.'.lsp-hover')
         call nvim_win_set_cursor(a:winid, [1, 0])
+    elseif s:use_preview
+        call setbufline(winbufnr(a:winid), 1, a:lines)
+        call setbufvar(winbufnr(a:winid), '&filetype', a:ft . '.lsp-hover')
     endif
 endfunction
 
