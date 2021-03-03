@@ -1514,7 +1514,7 @@ LspDocumentSymbolSearch                             *:LspDocumentSymbolSearch*
 
 Search the symbols for the current document and navigate.
 
-LspHover                                                         *:LspHover*
+LspHover [--ui=float|preview]                                      *:LspHover*
 
 Gets the hover information and displays it in the |preview-window|.
 
@@ -1525,6 +1525,11 @@ Gets the hover information and displays it in the |preview-window|.
    be set to enable a floating preview at the cursor which is closed
    automatically on cursormove if not focused and can be closed with <esc> if
    focused.
+
+    Example: >
+	:LspHover
+	:LspHover --ui=float
+	:LspHover --ui=preview
 
 LspNextDiagnostic [-wrap=0]                              *:LspNextDiagnostic*
 

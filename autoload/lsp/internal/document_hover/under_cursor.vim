@@ -60,12 +60,14 @@ function! s:show_hover(ui, server_name, request, response) abort
 
     echo ''
 
-	if s:FloatingWindow.is_available() && a:ui ==? 'float'
+    if s:FloatingWindow.is_available() && a:ui ==? 'float'
 		" show floating window
 		call s:show_floating_window(a:server_name, a:request, a:response)
-	else
+    elseif a:ui ==? 'preview'
         " FIXME: user preview window
         call lsp#ui#vim#output#preview(a:server_name, a:response['result']['contents'], {'statusline': ' LSP Hover'})
+    else
+        call lsp#utils#error('Invalid ui for LspHover')
 	endif
 endfunction
 
