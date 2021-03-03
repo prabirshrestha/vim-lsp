@@ -12,7 +12,7 @@ let s:Buffer = vital#lsp#import('VS.Vim.Buffer')
 " }
 function! lsp#internal#document_hover#under_cursor#do(options) abort
     let l:bufnr = bufnr('%')
-    let l:ui = get(a:options, 'ui', g:lsp_preview_float ? 'float' : 'preview')
+    let l:ui = get(a:options, 'ui', s:FloatingWindow.is_available() ? 'float' : 'preview')
     if has_key(a:options, 'server')
         let l:servers = [a:options['server']]
     else
@@ -63,11 +63,9 @@ function! s:show_hover(ui, server_name, request, response) abort
     if s:FloatingWindow.is_available() && a:ui ==? 'float'
 		" show floating window
 		call s:show_floating_window(a:server_name, a:request, a:response)
-    elseif a:ui ==? 'preview'
+    else
         " FIXME: user preview window
         call lsp#ui#vim#output#preview(a:server_name, a:response['result']['contents'], {'statusline': ' LSP Hover'})
-    else
-        call lsp#utils#error('Invalid ui for LspHover')
 	endif
 endfunction
 
