@@ -65,6 +65,7 @@ CONTENTS                                                  *vim-lsp-contents*
       g:lsp_signature_help_enabled          |g:lsp_signature_help_enabled|
       g:lsp_fold_enabled                    |g:lsp_fold_enabled|
       g:lsp_hover_conceal                   |g:lsp_hover_conceal|
+      g:lsp_hover_ui			    |g:lsp_hover_ui|
       g:lsp_ignorecase                      |g:lsp_ignorecase|
       g:lsp_log_file                        |g:lsp_log_file|
       g:lsp_semantic_enabled                |g:lsp_semantic_enabled|
@@ -858,6 +859,19 @@ g:lsp_hover_conceal                                   *g:lsp_hover_conceal*
 
     To override this setting per server, see
     |vim-lsp-server_info-hover_conceal|.
+
+g:lsp_hover_ui                                                *g:lsp_hover_ui*
+    Type: |String|
+    Default: `''`
+
+    Controls deafult UI behavior for |LspHover|.
+    If empty string, defaults to `float` is popup is supported in vim or
+    floating window is supported in neovim else uses |preview-window|.
+
+    Example: >
+	let g:lsp_hover_ui = ''
+	let g:lsp_hover_ui = 'float'
+	let g:lsp_hover_ui = 'preview'
 
 g:lsp_ignorecase                                         *g:lsp_ignorecase*
     Type: |Boolean|
