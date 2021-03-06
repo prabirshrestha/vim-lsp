@@ -49,7 +49,6 @@ function! lsp#internal#document_code_action#signs#_enable() abort
         \       )
         \   )
         \ }),
-        \ lsp#callbag#filter({_->mode() is# 'n' && getbufvar(bufnr('%'), '&buftype') !=# 'terminal' }),
         \ lsp#callbag#subscribe({x->s:set_signs(x)}),
         \)
 endfunction
@@ -95,12 +94,7 @@ function! s:clear_signs() abort
 endfunction
 
 function! s:set_signs(data) abort
-    let l:bufnr = bufnr('%')
     call s:clear_signs()
-
-    " if !g:lsp_document_code_action_signs_insert_mode_enabled
-    "     if mode()[0] ==# 'i' | return | endif
-    " endif
 
     if lsp#client#is_error(a:data['response']) | return | endif
 
@@ -108,6 +102,7 @@ function! s:set_signs(data) abort
         return
     endif
 
+    let l:bufnr = bufnr(lsp#utils#uri_to_path(a:data['request']['params']['textDocument']['uri']))
     call s:place_signs(a:data, l:bufnr)
 endfunction
 
@@ -126,6 +121,9 @@ function! s:define_sign(sign_name, sign_default_text, sign_options) abort
 endfunction
 
 function! s:place_signs(data, bufnr) abort
+    if !bufexists(a:bufnr) || !bufloaded(a:bufnr)
+        return
+    endif
     let l:sign_priority = g:lsp_document_code_action_signs_priority
     let l:line = lsp#utils#position#lsp_line_to_vim(a:bufnr, a:data['request']['params']['range']['start'])
     let l:sign_id = sign_place(0, s:sign_group, 'LspCodeAction', a:bufnr, 
