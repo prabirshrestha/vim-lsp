@@ -69,19 +69,25 @@ function! s:send_request() abort
         return lsp#callbag#empty()
     endif
 
-    " TODO: support multiple servers
     let l:range = lsp#utils#range#_get_current_line_range()
-    return lsp#request(l:servers[0], {
-        \ 'method': 'textDocument/codeAction',
-        \ 'params': {
-        \   'textDocument': lsp#get_text_document_identifier(),
-        \   'range': l:range,
-        \   'context': {
-        \       'diagnostics': [],
-        \       'only': ['', 'quickfix', 'refactor', 'refactor.extract', 'refactor.inline', 'refactor.rewrite', 'source', 'source.organizeImports'],
-        \   }
-        \ }
-        \ })
+    return lsp#callbag#pipe(
+        \ lsp#callbag#fromList(l:servers),
+        \ lsp#callbag#flatMap({server->
+        \   lsp#request(server, {
+        \       'method': 'textDocument/codeAction',
+        \       'params': {
+        \           'textDocument': lsp#get_text_document_identifier(),
+        \           'range': l:range,
+        \           'context': {
+        \               'diagnostics': [],
+        \               'only': ['', 'quickfix', 'refactor', 'refactor.extract', 'refactor.inline', 'refactor.rewrite', 'source', 'source.organizeImports'],
+        \           }
+        \       }
+        \   })
+        \ }),
+        \ lsp#callbag#filter({x->!empty(x['response']['result'])}),
+        \ lsp#callbag#take(1),
+        \ )
 endfunction
 
 function! s:clear_signs() abort
