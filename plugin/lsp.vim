@@ -36,6 +36,11 @@ let g:lsp_diagnostics_virtual_text_insert_mode_enabled = get(g:, 'lsp_diagnostic
 let g:lsp_diagnostics_virtual_text_delay = get(g:, 'lsp_diagnostics_virtual_text_delay', 500)
 let g:lsp_diagnostics_virtual_text_prefix = get(g:, 'lsp_diagnostics_virtual_text_prefix', '')
 
+let g:lsp_document_code_action_signs_enabled = get(g:, 'lsp_document_code_action_signs_enabled', 1)
+let g:lsp_document_code_action_signs_delay = get(g:, 'lsp_document_code_action_signs_delay', 500)
+let g:lsp_document_code_action_signs_hint = get(g:, 'lsp_document_code_action_signs_hint', {})
+let g:lsp_document_code_action_signs_priority = get(g:, 'lsp_document_code_action_signs_priority', 10)
+
 let g:lsp_preview_keep_focus = get(g:, 'lsp_preview_keep_focus', 1)
 let g:lsp_use_event_queue = get(g:, 'lsp_use_event_queue', has('nvim') || has('patch-8.1.0889'))
 let g:lsp_insert_text_enabled= get(g:, 'lsp_insert_text_enabled', 1)

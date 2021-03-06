@@ -12,7 +12,7 @@ function! lsp#internal#document_highlight#_enable() abort
 
     " Note:
     " - update highlight references when CusorMoved or CursorHold
-    " - clear highlights when InsertEnter of BufLeave
+    " - clear highlights when InsertEnter or BufLeave
     " - debounce highlight requests
     " - automatically switch to latest highlight request via switchMap()
     " - cancel highlight request via takeUntil() when BufLeave
