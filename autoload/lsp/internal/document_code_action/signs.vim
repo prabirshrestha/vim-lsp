@@ -5,6 +5,10 @@ let s:enabled = 0
 
 let s:sign_group = 'vim_lsp_document_code_action_signs'
 
+if !hlexists('LspCodeActionText')
+    highlight link LspCodeActionText Normal
+endif
+
 function! lsp#internal#document_code_action#signs#_enable() abort
     if !lsp#utils#_has_signs() | return | endif
     " don't even bother registering if the feature is disabled
