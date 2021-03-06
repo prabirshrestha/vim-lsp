@@ -49,6 +49,10 @@ CONTENTS                                                  *vim-lsp-contents*
 			     |g:lsp_diagnostics_virtual_text_delay|
       g:lsp_diagnostics_virtual_text_prefix
 			     |g:lsp_diagnostics_virtual_text_prefix|
+      g:lsp_document_code_action_signs_enabled
+			     |g:lsp_document_code_actions_signs_enabled|
+      g:lsp_document_code_action_signs_delay
+			     |g:lsp_document_code_actions_signs_delay|
       g:lsp_format_sync_timeout             |g:lsp_format_sync_timeout|
       g:lsp_use_event_queue                 |g:lsp_use_event_queue|
       g:lsp_document_highlight_enabled      |g:lsp_document_highlight_enabled|
@@ -662,6 +666,29 @@ g:lsp_diagnostics_virtual_text_prefix   *g:lsp_diagnostics_virtual_text_prefix*
 	let g:lsp_diagnostics_virtual_text_prefix = "> "
 	let g:lsp_diagnostics_virtual_text_prefix = " ‣ "
 
+g:lsp_document_code_action_signs_enabled
+				      *g:lsp_document_code_action_signs_enabled*
+    Type: |Number|
+    Default: `1`
+
+    Enable support for document code action hints for |signs|.
+
+    Example: >
+	let g:lsp_document_code_action_signs_enabled = 1
+	let g:lsp_document_code_action_signs_enabled = 0
+<
+g:lsp_document_code_action_signs_delay
+					*g:lsp_document_code_action_signs_delay*
+    Type: |Number|
+    Default: `500`
+
+    Delay milliseconds to update code action signs. Requires
+    |g:lsp_document_code_action_signs_enabled|.
+
+    Example: >
+	let g:lsp_document_code_action_signs_delay = 200
+	let g:lsp_document_code_action_signs_delay = 1000
+>
 g:lsp_use_event_queue                               *g:lsp_use_event_queue*
     Type: |Number|
     Default: `1` for neovim or vim with patch-8.1.0889
