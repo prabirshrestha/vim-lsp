@@ -42,6 +42,7 @@ let g:lsp_document_code_action_signs_hint = get(g:, 'lsp_document_code_action_si
 let g:lsp_document_code_action_signs_priority = get(g:, 'lsp_document_code_action_signs_priority', 10)
 
 let g:lsp_preview_keep_focus = get(g:, 'lsp_preview_keep_focus', 1)
+let g:lsp_preview_markdown_enabled = get(g:, 'lsp_preview_markdown_enabled', 1)
 let g:lsp_use_event_queue = get(g:, 'lsp_use_event_queue', has('nvim') || has('patch-8.1.0889'))
 let g:lsp_insert_text_enabled= get(g:, 'lsp_insert_text_enabled', 1)
 let g:lsp_text_edit_enabled = get(g:, 'lsp_text_edit_enabled', has('patch-8.0.1493'))

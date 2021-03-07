@@ -13,6 +13,7 @@ CONTENTS                                                  *vim-lsp-contents*
       Wiki                                  |vim-lsp-configure-wiki|
     Options                               |vim-lsp-options|
       g:lsp_auto_enable                     |g:lsp_auto_enable|
+      g:lsp_preview_markdown_enabled        |g:lsp_preview_markdown_enabled| 
       g:lsp_preview_keep_focus              |g:lsp_preview_keep_focus|
       g:lsp_preview_float                   |g:lsp_preview_float|
       g:lsp_preview_autoclose               |g:lsp_preview_autoclose|
@@ -378,6 +379,19 @@ g:lsp_preview_doubletap                         *g:lsp_preview_doubletap*
 
 	" Disables double tap feature; refreshes the preview on consecutive taps
 	let g:lsp_preview_doubletap = 0
+
+g:lsp_preview_markdown_enabled                   *g:lsp_preview_markdown_enabled*
+	Type: |Number|
+	Default: `1`
+
+	Indicates whether markdown format must be used in preview windows.
+
+    Example: >
+	" Contents of preview windows are in markdown.
+	let g:lsp_preview_markdown_enabled = 1
+
+	" Contents of preview windows are in plain text.
+	let g:lsp_preview_markdown_enabled = 0
 
 g:lsp_insert_text_enabled                       *g:lsp_insert_text_enabled*
     Type: |Number|

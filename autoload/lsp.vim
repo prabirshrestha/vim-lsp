@@ -460,6 +460,11 @@ function! s:ensure_start(buf, server_name, cb) abort
 endfunction
 
 function! lsp#default_get_supported_capabilities(server_info) abort
+	let l:formats = ['plaintext']
+	if g:lsp_preview_markdown_enabled
+		let l:formats = ['markdown'] + l:formats
+	endif
+
     " Sorted alphabetically
     return {
     \   'textDocument': {
@@ -477,7 +482,7 @@ function! lsp#default_get_supported_capabilities(server_info) abort
     \       'completion': {
     \           'dynamicRegistration': v:false,
     \           'completionItem': {
-    \              'documentationFormat': ['markdown', 'plaintext'],
+    \              'documentationFormat': l:formats,
     \              'snippetSupport': v:false,
     \              'resolveSupport': {
     \                  'properties': ['additionalTextEdits']
@@ -516,7 +521,7 @@ function! lsp#default_get_supported_capabilities(server_info) abort
     \       },
     \       'hover': {
     \           'dynamicRegistration': v:false,
-    \           'contentFormat': ['markdown', 'plaintext'],
+    \           'contentFormat': l:formats,
     \       },
     \       'implementation': {
     \           'dynamicRegistration': v:false,
