@@ -1,5 +1,6 @@
 let s:save_cpo = &cpoptions
 set cpoptions&vim
+let s:has_lua = lsp#utils#has_lua() && has('nvim')
 
 let s:clients = {} " { client_id: ctx }
 
@@ -284,25 +285,43 @@ function! s:is_server_instantiated_notification(notification) abort
 endfunction
 
 " public apis {{{
+if s:has_lua
+    function! lsp#client#start(opts) abort
+        call lsp#log(keys(a:opts))
+        return luaeval('require("lsp/client").start(_A)', a:opts)
+    endfunction
+else
+    function! lsp#client#start(opts) abort
+        return s:lsp_start(a:opts)
+    endfunction
+endif
 
-function! lsp#client#start(opts) abort
-    return s:lsp_start(a:opts)
-endfunction
+if s:has_lua
+    function! lsp#client#stop(client_id) abort
+        return luaeval('require("lsp/client").stop(_A)', a:client_id)
+    endfunction
+else
+    function! lsp#client#stop(client_id) abort
+        return s:lsp_stop(a:client_id)
+    endfunction
+endif
 
-function! lsp#client#stop(client_id) abort
-    return s:lsp_stop(a:client_id)
-endfunction
-
-function! lsp#client#send_request(client_id, opts) abort
-    return s:lsp_send(a:client_id, a:opts, s:send_type_request)
-endfunction
+if s:has_lua
+    function! lsp#client#send_request(client_id, opts) abort
+        return luaeval('require("lsp/client").send(_A[1], _A[2], _A[3])', [a:client_id, a:opts, s:send_type_request])
+    endfunction
+else
+    function! lsp#client#send_request(client_id, opts) abort
+        return s:lsp_send(a:client_id, a:opts, s:send_type_request)
+    endfunction
+endif
 
 function! lsp#client#send_notification(client_id, opts) abort
-    return s:lsp_send(a:client_id, a:opts, s:send_type_notification)
+    " return s:lsp_send(a:client_id, a:opts, s:send_type_notification)
 endfunction
 
 function! lsp#client#send_response(client_id, opts) abort
-    return s:lsp_send(a:client_id, a:opts, s:send_type_response)
+    " return s:lsp_send(a:client_id, a:opts, s:send_type_response)
 endfunction
 
 function! lsp#client#get_last_request_id(client_id) abort
