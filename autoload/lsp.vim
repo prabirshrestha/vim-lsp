@@ -956,7 +956,7 @@ function! lsp#get_allowed_servers(...) abort
     let l:update_cnt = s:update_cnt
 
     if g:lsp_use_lua && s:has_lua
-      let l:active_servers = luaeval(
+      let l:active_servers = empty(s:servers) ? [] : luaeval(
             \ 'get_allowed_servers(_A.bf, _A.s, _A.o)',
             \ {'bf': l:buffer_filetype, 's': s:servers, 'o': s:lua_array_start_index}
             \ )
