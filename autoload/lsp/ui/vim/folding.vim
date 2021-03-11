@@ -1,11 +1,13 @@
 let s:has_lua = has('nvim-0.4.0') || (has('lua') && has('patch-8.2.0775'))
+let s:lua_array_start_index = has('nvim-0.4.0') || has('patch-8.2.1066')
 
 function! s:init_lua() abort
   lua <<EOF
-  function foldexpr(folding_ranges, linenr)
+  function foldexpr(folding_ranges, linenr, offset)
     local foldlevel = 0
     local prefix = ''
-    for i, folding_range in pairs(folding_ranges) do
+    for i = offset, #folding_ranges - 1 + offset do
+      local folding_range = folding_ranges[i]
       if type(folding_range) == 'table' and folding_range['startLine'] ~= nil and folding_range['endLine'] ~= nil then
         startline = folding_range['startLine'] + 1
         endline = folding_range['endLine'] + 1
@@ -111,7 +113,7 @@ endfunction
 
 function! s:foldexpr(server, buf, linenr) abort
     if g:lsp_use_lua && s:has_lua
-      return luaeval('foldexpr(_A.fr, _A.l)', {'fr': s:folding_ranges[a:server][a:buf], 'l': a:linenr })
+      return luaeval('foldexpr(_A.fr, _A.l, _A.o)', {'fr': s:folding_ranges[a:server][a:buf], 'l': a:linenr, 'o': s:lua_array_start_index})
     endif
 
     let l:valid_folding_ranges = copy(filter(

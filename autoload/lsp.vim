@@ -63,10 +63,20 @@ let s:lua_array_start_index = has('nvim-0.4.0') || has('patch-8.2.1066')
 
 function! s:init_lua() abort
   lua <<EOF
+  function my_pairs(servers)
+    if type(servers) == 'table' then
+      -- nvim dict is table
+      return  pairs(servers)
+    else
+      -- vim dict is userdata
+      return servers()
+    end
+  end
+
   function get_allowed_servers(buffer_filetype, servers, offset)
     local active_servers = {}
 
-    for server_name, server_config in pairs(servers) do
+    for server_name, server_config in my_pairs(servers) do
       local blocked = false
       local server_info = server_config['server_info']
       local blocklist = server_info['blocklist'] or server_info['blacklist']
