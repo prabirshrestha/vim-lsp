@@ -72,7 +72,8 @@ function! s:init_lua() abort
       local blocklist = server_info['blocklist'] or server_info['blacklist']
       local allowlist = server_info['allowlist'] or server_info['whitelist']
       if blocklist then
-        for i, filetype in pairs(blocklist) do
+        for i = 0, #blocklist - 1 do
+          local filetype = blocklist[i + offset]
           if filetype:upper() == buffer_filetype:upper() or filetype == '*' then
             blocked = true
             break
@@ -85,7 +86,8 @@ function! s:init_lua() abort
       end
 
       if allowlist then
-        for i, filetype in pairs(allowlist) do
+        for i = 0, #allowlist - 1 do
+          local filetype = allowlist[i + offset]
           if filetype:upper() == buffer_filetype:upper() or filetype == '*' then
             active_servers[#active_servers + offset] = server_name
             break
