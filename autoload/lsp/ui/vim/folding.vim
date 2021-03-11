@@ -1,3 +1,36 @@
+let s:has_lua = has('nvim-0.4.0') || (has('lua') && has('patch-8.2.0775'))
+
+function! s:init_lua() abort
+  lua <<EOF
+  function foldexpr(folding_ranges, linenr)
+    local foldlevel = 0
+    local prefix = ''
+    for i, folding_range in pairs(folding_ranges) do
+      if type(folding_range) == 'table' and folding_range['startLine'] ~= nil and folding_range['endLine'] ~= nil then
+        startline = folding_range['startLine'] + 1
+        endline = folding_range['endLine'] + 1
+
+        if startline <= linenr and linenr <= endline then
+          foldlevel = foldlevel + 1
+        end
+
+        if startline == linenr then
+          prefix = '>'
+        elseif endline == linenr then
+          prefix = '<'
+        end
+      end
+    end
+    return (prefix == '') and '=' or (prefix .. tostring(foldlevel))
+  end
+EOF
+  let s:lua = 1
+endfunction
+
+if s:has_lua && !exists('s:lua')
+  call s:init_lua()
+endif
+
 let s:folding_ranges = {}
 let s:textprop_name = 'vim-lsp-folding-linenr'
 
@@ -77,31 +110,26 @@ function! lsp#ui#vim#folding#send_request(server_name, buf, sync) abort
 endfunction
 
 function! s:foldexpr(server, buf, linenr) abort
-    let l:foldlevel = 0
-    let l:prefix = ''
+    if g:lsp_use_lua && s:has_lua
+      return luaeval('foldexpr(_A.fr, _A.l)', {'fr': s:folding_ranges[a:server][a:buf], 'l': a:linenr })
+    endif
 
-    for l:folding_range in s:folding_ranges[a:server][a:buf]
-        if type(l:folding_range) == type({}) &&
-         \ has_key(l:folding_range, 'startLine') &&
-         \ has_key(l:folding_range, 'endLine')
-            let l:start = l:folding_range['startLine'] + 1
-            let l:end = l:folding_range['endLine'] + 1
-
-            if (l:start <= a:linenr) && (a:linenr <= l:end)
-                let l:foldlevel += 1
-            endif
-
-            if l:start == a:linenr
-                let l:prefix = '>'
-            elseif l:end == a:linenr
-                let l:prefix = '<'
-            endif
-        endif
-    endfor
-
-    " Only return marker if a fold starts/ends at this line.
-    " Otherwise, return '='.
-    return (l:prefix ==# '') ? '=' : (l:prefix . l:foldlevel)
+    let l:valid_folding_ranges = copy(filter(
+          \ s:folding_ranges[a:server][a:buf],
+          \ "type(v:val) == type({}) && has_key(v:val, 'startLine') && has_key(v:val, 'endLine')"
+          \ ))
+    let l:foldings = filter(
+          \ l:valid_folding_ranges,
+          \ "v:val['startLine'] + 1 <= a:linenr && a:linenr <= v:val['endLine'] + 1"
+          \ )
+    let l:foldlevel = len(l:foldings)
+    if !empty(filter(copy(l:foldings), "v:val['startLine'] + 1 == a:linenr"))
+      return '>' . l:foldlevel
+    elseif !empty(filter(l:foldings, "v:val['endLine'] + 1 == a:linenr"))
+      return '<' . l:foldlevel
+    else
+      return '='
+    endif
 endfunction
 
 " Searches for text property of the correct type on the given line.
