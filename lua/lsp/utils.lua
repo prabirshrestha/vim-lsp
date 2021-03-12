@@ -2,6 +2,7 @@ local M = {}
 
 local DictM = {}
 function DictM.__call(tbl)
+  -- TODO: deal with `lua-special-tbl` in nvim
   return pairs(tbl)
 end
 
@@ -45,7 +46,11 @@ function M.is_dict(v)
   if vim.type then
     return vim.type(v) == 'dict'
   elseif type(v) == 'table' then
-    return v[vim.type_idx] == vim.types.dictionary
+    if v[vim.type_idx] ~= nil then
+      return v[vim.type_idx] == vim.types.dictionary
+    else
+      return true
+    end
   else
     return false
   end
