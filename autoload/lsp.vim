@@ -19,7 +19,7 @@ let s:notification_callbacks = [] " { name, callback }
 let s:file_content = {}
 
 " incr if s:servers update
-let s:update_cnt = 0
+let s:servers_update_cnt = 0
 
 " Cached active servers per file type
 " {
@@ -57,67 +57,6 @@ function! lsp#log(...) abort
         call writefile([strftime('%c') . ':' . json_encode(a:000)], g:lsp_log_file, 'a')
     endif
 endfunction
-
-let s:has_lua = has('nvim-0.4.0') || (has('lua') && has('patch-8.2.0775'))
-let s:lua_array_start_index = has('nvim-0.4.0') || has('patch-8.2.1066')
-
-function! s:init_lua() abort
-  lua <<EOF
-  function my_pairs(servers)
-    if type(servers) == 'table' then
-      -- nvim dict is table
-      return  pairs(servers)
-    else
-      -- vim dict is userdata
-      return servers()
-    end
-  end
-
-  function get_allowed_servers(buffer_filetype, servers, offset)
-    local active_servers = {}
-
-    for server_name, server_config in my_pairs(servers) do
-      local blocked = false
-      local server_info = server_config['server_info']
-      local blocklist = server_info['blocklist'] or server_info['blacklist']
-      local allowlist = server_info['allowlist'] or server_info['whitelist']
-      if blocklist then
-        for i = 0, #blocklist - 1 do
-          local filetype = blocklist[i + offset]
-          if filetype:upper() == buffer_filetype:upper() or filetype == '*' then
-            blocked = true
-            break
-          end
-        end
-      end
-
-      if blocked then
-        goto continue
-      end
-
-      if allowlist then
-        for i = 0, #allowlist - 1 do
-          local filetype = allowlist[i + offset]
-          if filetype:upper() == buffer_filetype:upper() or filetype == '*' then
-            active_servers[#active_servers + offset] = server_name
-            break
-          end
-        end
-      end
-
-      ::continue::
-    end
-
-    return active_servers
-  end
-EOF
-  let s:lua = 1
-endfunction
-
-if s:has_lua && !exists('s:lua')
-  call s:init_lua()
-endif
-
 
 function! lsp#enable() abort
     if s:enabled
@@ -242,7 +181,7 @@ function! lsp#register_server(server_info) abort
         \ }
     call lsp#log('lsp#register_server', 'server registered', l:server_name)
     doautocmd <nomodeline> User lsp_register_server
-    let s:update_cnt += 1
+    let s:servers_update_cnt += 1
 endfunction
 
 "
@@ -940,6 +879,26 @@ function! lsp#get_whitelisted_servers(...) abort
     return call(function('lsp#get_allowed_servers'), a:000)
 endfunction
 
+function! s:get_allowed_servers_vim(buffer_filetype) abort
+    let l:active_servers = []
+    let l:buffer_filetype = a:buffer_filetype
+    for l:server_name in keys(s:servers)
+        let l:server_info = s:servers[l:server_name]['server_info']
+        let l:blocked = 0
+
+        let l:blocklist = get(l:server_info, 'blocklist', get(l:server_info, 'blacklist', []))
+        if index(l:blocklist, '*') >= 0 || index(l:blocklist, l:buffer_filetype, 0, 1) >= 0
+          continue
+        endif
+
+        let l:allowlist = get(l:server_info, 'allowlist', get(l:server_info, 'whitelist', []))
+        if index(l:allowlist, '*') >= 0 || index(l:allowlist, l:buffer_filetype, 0, 1) >= 0
+          let l:active_servers += [l:server_name]
+        endif
+    endfor
+    return l:active_servers
+endfunction
+
 " call lsp#get_allowed_servers()
 " call lsp#get_allowed_servers(bufnr('%'))
 " call lsp#get_allowed_servers('typescript')
@@ -956,37 +915,23 @@ function! lsp#get_allowed_servers(...) abort
 
     if has_key(s:active_servers, l:buffer_filetype)
       let l:cached_servers = s:active_servers[l:buffer_filetype]
-      if get(l:cached_servers, 'update_cnt', -1) == s:update_cnt
+      if get(l:cached_servers, 'update_cnt', -1) == s:servers_update_cnt
         " copy the list to prevent inplace changes
         return copy(l:cached_servers['servers'])
       endif
     endif
 
     " TODO: cache active servers per buffer
-    let l:active_servers = []
+    let l:update_cnt = s:servers_update_cnt
 
-    let l:update_cnt = s:update_cnt
-
-    if g:lsp_use_lua && s:has_lua
+    if g:lsp_use_lua && lsp#utils#has_lua()
       let l:active_servers = empty(s:servers) ? [] : luaeval(
-            \ 'get_allowed_servers(_A.bf, _A.s, _A.o)',
-            \ {'bf': l:buffer_filetype, 's': s:servers, 'o': s:lua_array_start_index}
+            \ 'require("lsp/lsp").get_allowed_servers(_A.bf, _A.s)',
+            \ {'bf': l:buffer_filetype, 's': s:servers}
             \ )
+
     else
-      for l:server_name in keys(s:servers)
-          let l:server_info = s:servers[l:server_name]['server_info']
-          let l:blocked = 0
-
-          let l:blocklist = get(l:server_info, 'blocklist', get(l:server_info, 'blacklist', []))
-          if index(l:blocklist, '*') >= 0 || index(l:blocklist, l:buffer_filetype, 0, 1) >= 0
-            continue
-          endif
-
-          let l:allowlist = get(l:server_info, 'allowlist', get(l:server_info, 'whitelist', []))
-          if index(l:allowlist, '*') >= 0 || index(l:allowlist, l:buffer_filetype, 0, 1) >= 0
-            let l:active_servers += [l:server_name]
-          endif
-      endfor
+      let l:active_servers = s:get_allowed_servers_vim(l:buffer_filetype)
     endif
 
     " Only update cache when needed

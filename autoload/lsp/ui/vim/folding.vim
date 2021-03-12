@@ -1,38 +1,3 @@
-let s:has_lua = has('nvim-0.4.0') || (has('lua') && has('patch-8.2.0775'))
-let s:lua_array_start_index = has('nvim-0.4.0') || has('patch-8.2.1066')
-
-function! s:init_lua() abort
-  lua <<EOF
-  function foldexpr(folding_ranges, linenr, offset)
-    local foldlevel = 0
-    local prefix = ''
-    for i = offset, #folding_ranges - 1 + offset do
-      local folding_range = folding_ranges[i]
-      if type(folding_range) == 'table' and folding_range['startLine'] ~= nil and folding_range['endLine'] ~= nil then
-        startline = folding_range['startLine'] + 1
-        endline = folding_range['endLine'] + 1
-
-        if startline <= linenr and linenr <= endline then
-          foldlevel = foldlevel + 1
-        end
-
-        if startline == linenr then
-          prefix = '>'
-        elseif endline == linenr then
-          prefix = '<'
-        end
-      end
-    end
-    return (prefix == '') and '=' or (prefix .. tostring(foldlevel))
-  end
-EOF
-  let s:lua = 1
-endfunction
-
-if s:has_lua && !exists('s:lua')
-  call s:init_lua()
-endif
-
 let s:folding_ranges = {}
 let s:textprop_name = 'vim-lsp-folding-linenr'
 
@@ -111,11 +76,7 @@ function! lsp#ui#vim#folding#send_request(server_name, buf, sync) abort
                 \ })
 endfunction
 
-function! s:foldexpr(server, buf, linenr) abort
-    if g:lsp_use_lua && s:has_lua
-      return luaeval('foldexpr(_A.fr, _A.l, _A.o)', {'fr': s:folding_ranges[a:server][a:buf], 'l': a:linenr, 'o': s:lua_array_start_index})
-    endif
-
+function! s:foldexpr_vim(server, buf, linenr) abort
     let l:valid_folding_ranges = copy(filter(
           \ s:folding_ranges[a:server][a:buf],
           \ "type(v:val) == type({}) && has_key(v:val, 'startLine') && has_key(v:val, 'endLine')"
@@ -125,12 +86,23 @@ function! s:foldexpr(server, buf, linenr) abort
           \ "v:val['startLine'] + 1 <= a:linenr && a:linenr <= v:val['endLine'] + 1"
           \ )
     let l:foldlevel = len(l:foldings)
+
+    " Only return marker if a fold starts/ends at this line.
+    " Otherwise, return '='.
     if !empty(filter(copy(l:foldings), "v:val['startLine'] + 1 == a:linenr"))
       return '>' . l:foldlevel
     elseif !empty(filter(l:foldings, "v:val['endLine'] + 1 == a:linenr"))
       return '<' . l:foldlevel
     else
       return '='
+    endif
+endfunction
+
+function! s:foldexpr(server, buf, linenr) abort
+    if g:lsp_use_lua && lsp#utils#has_lua()
+      return luaeval('require("lsp/ui/vim/folding").foldexpr(_A.fr, _A.l)', {'fr': s:folding_ranges[a:server][a:buf], 'l': a:linenr})
+    else
+      return s:foldexpr_vim(a:server, a:buf, a:linenr)
     endif
 endfunction
 
