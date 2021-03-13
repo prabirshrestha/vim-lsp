@@ -70,6 +70,29 @@ Describe lsp#utils#text_edit
             Assert Equals(l:buffer_text, ['foo', 'bar', ''])
         End
 
+        It insert null newText
+            call s:set_text(['foo', 'bar'])
+
+            call lsp#utils#text_edit#apply_text_edits(
+                    \ expand('%'),
+                    \ [{
+                    \   'range': {
+                    \       'start': {
+                    \           'line': 1,
+                    \           'character': 1
+                    \       },
+                    \       'end': {
+                    \           'line': 1,
+                    \           'character': 1
+                    \       }
+                    \   },
+                    \   'newText': v:null
+                    \ }])
+
+            let l:buffer_text = s:get_text()
+            Assert Equals(l:buffer_text, ['foo', 'bar', ''])
+        End
+
         It replace range string to newText
             call s:set_text(['foo', 'bar'])
 
