@@ -89,12 +89,7 @@ function! s:_apply(bufnr, text_edit, cursor_position) abort
     let l:after_line = strcharpart(l:end_line, a:text_edit['range']['end']['character'], strchars(l:end_line) - a:text_edit['range']['end']['character'])
 
     " create new lines.
-    let l:new_text = a:text_edit['newText']
-    if empty(l:new_text)
-        " ensure newText is string
-        let l:new_text = ''
-    endif
-    let l:new_lines = lsp#utils#_split_by_eol(l:new_text)
+    let l:new_lines = lsp#utils#_split_by_eol(a:text_edit['newText'])
     let l:new_lines[0] = l:before_line . l:new_lines[0]
     let l:new_lines[-1] = l:new_lines[-1] . l:after_line
 

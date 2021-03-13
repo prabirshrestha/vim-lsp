@@ -93,8 +93,15 @@ endfunction
 
 function! s:get_filter_label(item) abort
     let l:user_data = lsp#omni#get_managed_user_data_from_completed_item(a:item)
-    if has_key(l:user_data, 'completion_item') && has_key(l:user_data['completion_item'], 'filterText') && !empty(l:user_data['completion_item']['filterText'])
-        return lsp#utils#_trim(l:user_data['completion_item']['filterText'])
+    if has_key(l:user_data, 'completion_item') && has_key(l:user_data['completion_item'], 'filterText')
+        let l:filter_text = l:user_data['completion_item']['filterText']
+        if empty(l:filter_text) && has_key(l:user_data['completion_item'], 'label')
+            " When filterText is `falsy` the label is used as the filter text
+            let l:filter_text = l:user_data['completion_item']['label']
+        endif
+        if !empty(l:filter_text)
+            return lsp#utils#_trim(l:filter_text)
+        endif
     endif
     return lsp#utils#_trim(a:item['word'])
 endfunction
