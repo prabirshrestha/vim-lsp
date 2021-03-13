@@ -107,7 +107,11 @@ function! s:on_complete_done_after() abort
     else
       let l:overflow_before = 0
       let l:overflow_after = 0
-      let l:text = get(l:completion_item, 'insertText', l:completed_item['word'])
+      let l:text = get(l:completion_item, 'insertText', '')
+      if empty(l:text)
+        " When insertText is `falsy` the label is used as the insert text
+        let l:text = get(l:completion_item, 'label', l:completed_item['word'])
+      endif
     endif
 
     " apply snipept or text_edit
