@@ -67,9 +67,35 @@ function! s:show_hover(ui, server_name, request, response) abort
 		" show floating window
 		call s:show_floating_window(a:server_name, a:request, a:response)
     else
-        " FIXME: user preview window
-        call lsp#ui#vim#output#preview(a:server_name, a:response['result']['contents'], {'statusline': ' LSP Hover'})
+        call s:show_preview_window(a:server_name, a:request, a:response)
 	endif
+endfunction
+
+function! s:show_preview_window(server_name, request, response) abort
+    let l:contents = s:get_contents(a:response['result']['contents'])
+
+    " Ignore if contents is empty.
+    if empty(l:contents)
+        call lsp#utils#error('Empty contents for LspHover')
+        return
+    endif
+
+    let l:view = winsaveview()
+    let l:alternate=@#
+    silent! pclose
+    sp LspHoverPreview
+    " execute 'resize '.min([len(l:contents), &previewheight])
+    set previewwindow
+    setlocal bufhidden=hide
+    setlocal nobuflisted
+    setlocal buftype=nofile
+    setlocal noswapfile
+    setlocal filetype=markdown
+    %d
+    call setline(1, lsp#utils#_split_by_eol(join(l:contents, "\n\n")))
+    execute "normal \<c-w>p"
+    call winrestview(l:view)
+    let @#=l:alternate
 endfunction
 
 function! s:show_floating_window(server_name, request, response) abort
