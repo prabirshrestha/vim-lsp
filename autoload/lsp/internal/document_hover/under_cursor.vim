@@ -95,6 +95,11 @@ function! s:show_floating_window(server_name, request, response) abort
         return
     endif
 
+    execute printf('augroup vim_lsp_hover_close_on_move_%d', bufnr('%'))
+        autocmd!
+        autocmd InsertEnter,CursorMoved <buffer> call s:close_floating_window_on_move()
+    augroup END
+
    " Show popupmenu and apply markdown syntax.
     call l:doc_win.open({
         \   'row': l:pos[0] + 1,
@@ -148,6 +153,13 @@ function! s:close_floating_window(force) abort
         call s:get_doc_win().close()
     endif
 endfunction
+
+function! s:close_floating_window_on_move() abort
+    echom 'on_moved' . bufnr('%')
+    if s:get_doc_win().get_bufnr() != bufnr('%')
+        call s:close_floating_window(v:true)
+    endif
+endf
 
 function! s:get_doc_win() abort
     if exists('s:doc_win')
