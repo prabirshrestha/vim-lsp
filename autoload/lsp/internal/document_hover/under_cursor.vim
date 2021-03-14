@@ -12,7 +12,10 @@ let s:Buffer = vital#lsp#import('VS.Vim.Buffer')
 " }
 function! lsp#internal#document_hover#under_cursor#do(options) abort
     let l:bufnr = bufnr('%')
-    let l:ui = get(a:options, 'ui', s:FloatingWindow.is_available() ? 'float' : 'preview')
+    let l:ui = get(a:options, 'ui', g:lsp_hover_ui)
+    if empty(l:ui)
+        let l:ui = s:FloatingWindow.is_available() ? 'float' : 'preview'
+    endif
     if has_key(a:options, 'server')
         let l:servers = [a:options['server']]
     else
