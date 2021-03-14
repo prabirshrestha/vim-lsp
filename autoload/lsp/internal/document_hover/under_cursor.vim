@@ -101,7 +101,6 @@ function! s:show_floating_window(server_name, request, response) abort
         \   'col': l:pos[1] + 1,
         \   'width': l:size.width,
         \   'height': l:size.height,
-        \   'topline': 1,
         \ })
     call s:Window.do(l:doc_win.get_winid(), { -> s:Markdown.apply() })
 endfunction
@@ -170,6 +169,8 @@ function! s:get_doc_win() abort
 endfunction
 
 function! s:compute_position(size) abort
-    " TODO
-    return [1,1]
+    let l:row = line('.')
+    let l:col = col('.')
+    let l:topline = line('w0')
+    return [l:row - l:topline + 1, l:col]
 endfunction
