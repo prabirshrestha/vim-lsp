@@ -159,7 +159,7 @@ function! s:get_contents(contents) abort
                 else
                     return [a:contents['value']]
                 endif
-            elseif has_key(a:contents, 'langauge')
+            elseif has_key(a:contents, 'language')
                 let l:detail = s:MarkupContent.normalize({
                     \ 'langauge': &filetype,
                     \ 'value': a:contents['value']
@@ -183,9 +183,7 @@ function! s:close_floating_window(force) abort
 endfunction
 
 function! s:close_floating_window_on_move() abort
-    if s:get_doc_win().get_bufnr() != bufnr('%')
-        call s:close_floating_window(v:true)
-    endif
+    call s:close_floating_window(v:true)
 endf
 
 function! s:get_doc_win() abort
@@ -211,5 +209,9 @@ function! s:compute_position(size) abort
     let l:row = line('.')
     let l:col = col('.')
     let l:topline = line('w0')
+    " try showing the popup at the top if space is available
+    if l:row - l:topline >= a:size.height
+        let l:row = l:row - a:size.height - 1
+    endif
     return [l:row - l:topline + 1, l:col]
 endfunction
