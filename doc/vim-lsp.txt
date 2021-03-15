@@ -553,10 +553,17 @@ g:lsp_diagnostics_signs_enabled
     `LspError`, `LspWarning`, `LspInformation`, `LspHint`.
 
     It is possible to set custom text or icon that will be used for each sign
-    (note that icons are only available in GUI). To do this, set some of the
-    following globals:
+    (note that icons are only available in GUI).
+
+    `LspError` defaults to `E>`.
+    `LspHint` defaults to `H>`.
+    `LspInformation` defaults to `I>`.
+    `LspWarning` defaults to `W>`.
+
+    To do this, set some of the following globals:
     `g:lsp_diagnostics_signs_error`, `g:lsp_diagnostics_signs_warning`,
     `g:lsp_diagnostics_signs_information`, `g:lsp_diagnostics_signs_hint`.
+
     They should be set to a dict, that contains either text that will be used
     as sign in terminal, or icon that will be used for GUI, or both.
 
@@ -671,12 +678,30 @@ g:lsp_document_code_action_signs_enabled
     Type: |Number|
     Default: `1`
 
-    Enable support for document code action hints for |signs|.
+    Enables signs for code actions. Requires NeoVim with |sign_define| or Vim
+    with |sign_define| and patch 8.1.0772 or newer.
 
     Example: >
 	let g:lsp_document_code_action_signs_enabled = 1
 	let g:lsp_document_code_action_signs_enabled = 0
 <
+    `LspCodeActionText` sign is defined and used.
+
+    It is possible to set custom text or icon that will be used for sign
+    (note that icons are only available in GUI).
+
+    `LspCodeActionText` defaults to `A>`.
+
+    To do this, set the following globals:
+    `g:lsp_document_code_action_signs_hint`.
+    They should be set to a dict, that contains either text that will be used
+    as sign in terminal, or icon that will be used for GUI, or both.
+
+    Example: >
+	let g:lsp_document_code_action_signs_hint = {'text': 'A>'}
+	let g:lsp_document_code_action_signs_hint = {'text': '‼', 'icon': '/path/to/some/icon'} " icons require GUI
+	let g:lsp_document_code_action_signs_hint = {'icon': '/path/to/some/other/icon'} " icons require GUI
+
 g:lsp_document_code_action_signs_delay
 					*g:lsp_document_code_action_signs_delay*
     Type: |Number|
