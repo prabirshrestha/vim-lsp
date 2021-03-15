@@ -56,4 +56,69 @@ function M.is_dict(v)
   end
 end
 
+function M.binary_search(a, value, comparator)
+  local lo = 1
+  local hi = #a
+  while lo <= hi do
+    local mid = lo + math.floor((hi - lo) / 2)
+    local cmp = comparator(value, a[mid])
+    if cmp < 0 then
+      hi = mid - 1
+    elseif cmp > 0 then
+      lo = mid + 1
+    else
+      return mid
+    end
+  end
+  return -1
+end
+
+function M.filter(lst, cond)
+  local new_lst = {}
+  for item in utils.list_wrapper(lst)() do
+    if cond(item) then
+      table.insert(new_lst, item)
+    end
+  end
+  return new_lst
+end
+
+function M.binary_filter(a, value, comparator)
+  local lo = 1
+  local hi = #a
+  while lo <= hi do
+    local mid = lo + math.floor((hi - lo) / 2)
+    local cmp = comparator(value, a[mid])
+    if cmp < 0 then
+      hi = mid - 1
+    elseif cmp > 0 then
+      lo = mid + 1
+    else
+      local result = {a[mid]}
+      local left = mid - 1
+      local right = mid + 1
+      while right <= #a do
+        local cmp = comparator(value, a[right])
+        if cmp > 0 then
+          break
+        elseif cmp == 0 then
+          result[#result + 1] = a[right]
+        end
+        right = right + 1
+      end
+      while left >= 1 do
+        local cmp = comparator(value, a[left])
+        if cmp < 0 then
+          break
+        elseif cmp == 0 then
+          table.insert(result, 1, a[left])
+        end
+        left = left - 1
+      end
+      return result
+    end
+  end
+  return {}
+end
+
 return M

@@ -1,6 +1,41 @@
 local M = {}
 local utils = require('lsp/utils')
 
+local function valid_range(a)
+  return utils.is_dict(a) and a['startLine'] ~= nil and a['endLine'] ~= nil
+end
+
+function M.sort(folding_ranges)
+  table.sort(folding_ranges, function(a, b)
+    if a['startLine'] ~= b['startLine'] then
+      return a['startLine'] < b['startLine']
+    end
+    return a['endLine'] < b['endLine']
+  end)
+  return folding_ranges
+end
+
+local function in_range(linenr, range)
+  return linenr < range['startLine'] and -1 or range['endLine'] < linenr and 1 or 0
+end
+
+function M.prepare(folding_ranges)
+  return M.sort(utils.filter(folding_ranges, valid_range))
+end
+
+function M.foldexpr_sorted(folding_ranges, linenr)
+  local linenr = linenr - 1
+  local in_ranges = utils.binary_filter(folding_ranges, linenr, in_range)
+  local foldlevel = #in_ranges
+  if utils.binary_search(in_ranges, linenr, function (a, r) return a - r['startLine'] end) > 0 then
+    return '>' .. tostring(foldlevel)
+  elseif utils.binary_search(in_ranges, linenr, function (a, r) return a - r['endLine'] end) > 0 then
+    return '<' .. tostring(foldlevel)
+  else
+    return '='
+  end
+end
+
 function M.foldexpr(folding_ranges, linenr)
   local foldlevel = 0
   local prefix = ''

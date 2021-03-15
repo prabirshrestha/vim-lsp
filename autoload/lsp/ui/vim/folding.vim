@@ -100,7 +100,7 @@ endfunction
 
 function! s:foldexpr(server, buf, linenr) abort
     if g:lsp_use_lua && lsp#utils#has_lua()
-      return luaeval('require("lsp/ui/vim/folding").foldexpr(_A.fr, _A.l)', {'fr': s:folding_ranges[a:server][a:buf], 'l': a:linenr})
+      return luaeval('require("lsp/ui/vim/folding").foldexpr_sorted(_A.fr, _A.l)', {'fr': s:folding_ranges[a:server][a:buf], 'l': a:linenr})
     else
       return s:foldexpr_vim(a:server, a:buf, a:linenr)
     endif
@@ -189,7 +189,11 @@ function! s:handle_fold_request(server, data) abort
     if !has_key(s:folding_ranges, a:server)
         let s:folding_ranges[a:server] = {}
     endif
-    let s:folding_ranges[a:server][l:bufnr] = l:result
+    if g:lsp_use_lua && lsp#utils#has_lua()
+      let s:folding_ranges[a:server][l:bufnr] = luaeval('require("lsp/ui/vim/folding").prepare(_A)', l:result)
+    else
+      let s:folding_ranges[a:server][l:bufnr] = l:result
+    endif
 
     " Set 'foldmethod' back to 'expr', which forces a re-evaluation of
     " 'foldexpr'. Only do this if the user hasn't changed 'foldmethod',
