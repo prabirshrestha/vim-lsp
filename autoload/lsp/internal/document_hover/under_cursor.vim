@@ -64,7 +64,6 @@ function! s:show_hover(ui, server_name, request, response) abort
     echo ''
 
     if s:FloatingWindow.is_available() && a:ui ==? 'float'
-		" show floating window
 		call s:show_floating_window(a:server_name, a:request, a:response)
     else
         call s:show_preview_window(a:server_name, a:request, a:response)
@@ -90,9 +89,9 @@ function! s:show_preview_window(server_name, request, response) abort
     setlocal nobuflisted
     setlocal buftype=nofile
     setlocal noswapfile
-    setlocal filetype=markdown
     %d
     call setline(1, lsp#utils#_split_by_eol(join(l:contents, "\n\n")))
+    call s:Window.do(win_getid(), {->s:Markdown.apply()})
     execute "normal \<c-w>p"
     call winrestview(l:view)
     let @#=l:alternate
@@ -184,7 +183,6 @@ function! s:close_floating_window(force) abort
 endfunction
 
 function! s:close_floating_window_on_move() abort
-    echom 'on_moved' . bufnr('%')
     if s:get_doc_win().get_bufnr() != bufnr('%')
         call s:close_floating_window(v:true)
     endif
