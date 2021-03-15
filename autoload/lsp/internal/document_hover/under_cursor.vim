@@ -125,7 +125,7 @@ function! s:show_floating_window(server_name, request, response) abort
 
     execute printf('augroup vim_lsp_hover_close_on_move_%d', bufnr('%'))
         autocmd!
-        autocmd InsertEnter,CursorMoved <buffer> call s:close_floating_window_on_move()
+        autocmd InsertEnter,BufLeave,CursorMoved <buffer> call s:close_floating_window_on_move()
     augroup END
 
    " Show popupmenu and apply markdown syntax.
@@ -162,7 +162,7 @@ function! s:get_contents(contents) abort
             elseif has_key(a:contents, 'language')
                 let l:detail = s:MarkupContent.normalize({
                     \ 'langauge': &filetype,
-                    \ 'value': a:contents['value']
+                    \ 'value': a:contents['value'],
                     \ })
                 return [l:detail]
             else
@@ -209,9 +209,23 @@ function! s:compute_position(size) abort
     let l:row = line('.')
     let l:col = col('.')
     let l:topline = line('w0')
+
     " try showing the popup at the top if space is available
     if l:row - l:topline >= a:size.height
         let l:row = l:row - a:size.height - 1
     endif
+    if l:row <= 0
+        let l:row = 1
+    endif
+
+    " if popup gets truncated when at the far right, try moving the start col to left
+    if l:col + a:size.width >= &columns
+        let l:col = &columns - (a:size.width - 1)
+    end
+
+    if l:col <= 0
+        let l:col = 1
+    endif
+
     return [l:row - l:topline + 1, l:col]
 endfunction
