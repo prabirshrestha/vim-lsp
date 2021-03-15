@@ -75,7 +75,7 @@ end
 
 function M.filter(lst, cond)
   local new_lst = {}
-  for item in utils.list_wrapper(lst)() do
+  for item in M.list_wrapper(lst)() do
     if cond(item) then
       table.insert(new_lst, item)
     end
