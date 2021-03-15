@@ -79,7 +79,7 @@ function! s:send_request() abort
         \           'range': l:range,
         \           'context': {
         \               'diagnostics': [],
-        \               'only': ['', 'quickfix', 'refactor', 'refactor.extract', 'refactor.inline', 'refactor.rewrite', 'source', 'source.organizeImports'],
+        \               'only': ['', 'quickfix', 'refactor', 'refactor.extract', 'refactor.inline', 'refactor.rewrite'],
         \           }
         \       }
         \   })
