@@ -2,6 +2,11 @@ let s:use_vim_popup = has('patch-8.1.1517') && g:lsp_preview_float && !has('nvim
 let s:use_nvim_float = exists('*nvim_open_win') && g:lsp_preview_float && has('nvim')
 let s:use_preview = !s:use_vim_popup && !s:use_nvim_float
 
+let s:Markdown = vital#lsp#import('VS.Vim.Syntax.Markdown')
+let s:MarkupContent = vital#lsp#import('VS.LSP.MarkupContent')
+let s:Window = vital#lsp#import('VS.Vim.Window')
+let s:Text = vital#lsp#import('VS.LSP.Text')
+
 let s:winid = v:false
 let s:prevwin = v:false
 let s:preview_data = v:false
@@ -386,6 +391,10 @@ function! lsp#ui#vim#output#preview(server, data, options) abort
       doautocmd <nomodeline> User lsp_float_opened
     endif
 
+    if l:ft ==? 'markdown'
+        call s:Window.do(s:winid, {->s:Markdown.apply()})
+    endif
+
     if !g:lsp_preview_keep_focus
         " set the focus to the preview window
         call win_gotoid(s:winid)
@@ -421,8 +430,14 @@ function! lsp#ui#vim#output#append(data, lines, syntax_lines) abort
 
         return 'markdown'
     elseif type(a:data) ==# type({}) && has_key(a:data, 'kind')
-        call extend(a:lines, split(s:escape_string_for_display(a:data.value), '\n', v:true))
-
+        if a:data.kind ==? 'markdown'
+            let l:detail = s:MarkupContent.normalize({
+                \ 'value': a:data.value
+                \ })
+            call extend(a:lines, s:Text.split_by_eol(l:detail))
+        else
+            call extend(a:lines, split(s:escape_string_for_display(a:data.value), '\n', v:true))
+        endif
         return a:data.kind ==? 'plaintext' ? 'text' : a:data.kind
     endif
 endfunction
