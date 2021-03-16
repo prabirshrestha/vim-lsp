@@ -2,10 +2,13 @@ let s:use_vim_popup = has('patch-8.1.1517') && g:lsp_preview_float && !has('nvim
 let s:use_nvim_float = exists('*nvim_open_win') && g:lsp_preview_float && has('nvim')
 let s:use_preview = !s:use_vim_popup && !s:use_nvim_float
 
-let s:Markdown = vital#lsp#import('VS.Vim.Syntax.Markdown')
-let s:MarkupContent = vital#lsp#import('VS.LSP.MarkupContent')
-let s:Window = vital#lsp#import('VS.Vim.Window')
-let s:Text = vital#lsp#import('VS.LSP.Text')
+function! s:import_modules() abort
+    if exists('s:Markdown') | return | endif
+    let s:Markdown = vital#lsp#import('VS.Vim.Syntax.Markdown')
+    let s:MarkupContent = vital#lsp#import('VS.LSP.MarkupContent')
+    let s:Window = vital#lsp#import('VS.Vim.Window')
+    let s:Text = vital#lsp#import('VS.LSP.Text')
+endfunction
 
 let s:winid = v:false
 let s:prevwin = v:false
@@ -392,6 +395,7 @@ function! lsp#ui#vim#output#preview(server, data, options) abort
     endif
 
     if l:ft ==? 'markdown'
+        call s:import_modules()
         call s:Window.do(s:winid, {->s:Markdown.apply()})
     endif
 
@@ -431,6 +435,7 @@ function! lsp#ui#vim#output#append(data, lines, syntax_lines) abort
         return 'markdown'
     elseif type(a:data) ==# type({}) && has_key(a:data, 'kind')
         if a:data.kind ==? 'markdown'
+            call s:import_modules()
             let l:detail = s:MarkupContent.normalize({
                 \ 'value': a:data.value
                 \ })
