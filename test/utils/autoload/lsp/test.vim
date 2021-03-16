@@ -12,6 +12,7 @@ function! lsp#test#openproject(name, options) abort
         call lsp#register_server({
             \ 'name': 'rust',
             \ 'cmd': ['rust-analyzer'],
+            \ 'blocklist': ['python'],
             \ 'allowlist': ['rust'],
             \ 'root_uri':{server_info->lsp#utils#path_to_uri(lsp#utils#find_nearest_parent_file_directory(lsp#utils#get_buffer_path(), 'Cargo.toml'))},
             \ 'capabilities': { 'experimental': { 'statusNotification': v:true } },

@@ -9,7 +9,7 @@ local function get_allowed_servers(buffer_filetype, servers)
     local blocklist = server_info['blocklist'] or server_info['blacklist']
     local allowlist = server_info['allowlist'] or server_info['whitelist']
     if blocklist then
-      for filetype in list_wrapper(blocklist)() do
+      for filetype in utils.list_wrapper(blocklist)() do
         if filetype:upper() == buffer_filetype:upper() or filetype == '*' then
           blocked = true
           break
