@@ -1,4 +1,4 @@
-let s:has_lua = has('nvim-0.4.0') || (has('lua') && has('patch-8.2.0775'))
+let s:has_lua = has('nvim-0.4.0') || (has('lua') && has('patch-8.2.1066'))
 function! lsp#utils#has_lua() abort
     return s:has_lua
 endfunction
