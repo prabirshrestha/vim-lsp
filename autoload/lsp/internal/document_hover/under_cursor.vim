@@ -109,7 +109,7 @@ function! s:show_floating_window(server_name, request, response) abort
 
     " Update contents.
     let l:doc_win = s:get_doc_win()
-    call deletebufline(l:doc_win.get_bufnr(), 1, '$')
+    silent! call deletebufline(l:doc_win.get_bufnr(), 1, '$')
     call setbufline(l:doc_win.get_bufnr(), 1, lsp#utils#_split_by_eol(join(l:contents, "\n\n")))
 
     " Calculate layout.
