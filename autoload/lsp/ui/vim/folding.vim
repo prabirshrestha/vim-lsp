@@ -76,32 +76,37 @@ function! lsp#ui#vim#folding#send_request(server_name, buf, sync) abort
                 \ })
 endfunction
 
-function! s:foldexpr(server, buf, linenr) abort
-    let l:foldlevel = 0
-    let l:prefix = ''
-
-    for l:folding_range in s:folding_ranges[a:server][a:buf]
-        if type(l:folding_range) == type({}) &&
-         \ has_key(l:folding_range, 'startLine') &&
-         \ has_key(l:folding_range, 'endLine')
-            let l:start = l:folding_range['startLine'] + 1
-            let l:end = l:folding_range['endLine'] + 1
-
-            if (l:start <= a:linenr) && (a:linenr <= l:end)
-                let l:foldlevel += 1
-            endif
-
-            if l:start == a:linenr
-                let l:prefix = '>'
-            elseif l:end == a:linenr
-                let l:prefix = '<'
-            endif
-        endif
-    endfor
+function! s:foldexpr_vim(server, buf, linenr) abort
+    let l:valid_folding_ranges = copy(filter(
+          \ s:folding_ranges[a:server][a:buf],
+          \ "type(v:val) == type({}) && has_key(v:val, 'startLine') && has_key(v:val, 'endLine')"
+          \ ))
+    let l:foldings = filter(
+          \ l:valid_folding_ranges,
+          \ "v:val['startLine'] + 1 <= a:linenr && a:linenr <= v:val['endLine'] + 1"
+          \ )
+    let l:foldlevel = len(l:foldings)
 
     " Only return marker if a fold starts/ends at this line.
     " Otherwise, return '='.
-    return (l:prefix ==# '') ? '=' : (l:prefix . l:foldlevel)
+    if !empty(filter(copy(l:foldings), "v:val['startLine'] + 1 == a:linenr"))
+      return '>' . l:foldlevel
+    elseif !empty(filter(l:foldings, "v:val['endLine'] + 1 == a:linenr"))
+      return '<' . l:foldlevel
+    else
+      return '='
+    endif
+endfunction
+
+function! s:foldexpr(server, buf, linenr) abort
+    if g:lsp_use_lua && lsp#utils#has_lua()
+      return luaeval(
+            \ 'require("lsp/ui/vim/folding").foldexpr(_A.folding_range, _A.linenr)',
+            \ {'folding_range': s:folding_ranges[a:server][a:buf], 'linenr': a:linenr}
+            \ )
+    else
+      return s:foldexpr_vim(a:server, a:buf, a:linenr)
+    endif
 endfunction
 
 " Searches for text property of the correct type on the given line.
@@ -187,7 +192,11 @@ function! s:handle_fold_request(server, data) abort
     if !has_key(s:folding_ranges, a:server)
         let s:folding_ranges[a:server] = {}
     endif
-    let s:folding_ranges[a:server][l:bufnr] = l:result
+    if g:lsp_use_lua && lsp#utils#has_lua()
+      let s:folding_ranges[a:server][l:bufnr] = luaeval('require("lsp/ui/vim/folding").prepare(_A)', l:result)
+    else
+      let s:folding_ranges[a:server][l:bufnr] = l:result
+    endif
 
     " Set 'foldmethod' back to 'expr', which forces a re-evaluation of
     " 'foldexpr'. Only do this if the user hasn't changed 'foldmethod',
