@@ -64,7 +64,7 @@ function! s:show_hover(ui, server_name, request, response) abort
     echo ''
 
     if s:FloatingWindow.is_available() && a:ui ==? 'float'
-		call s:show_floating_window(a:server_name, a:request, a:response)
+        call s:show_floating_window(a:server_name, a:request, a:response)
     else
         call s:show_preview_window(a:server_name, a:request, a:response)
 	endif
