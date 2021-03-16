@@ -71,10 +71,16 @@ function! s:encode_uri(path, start_pos_encode, default_prefix) abort
     return l:prefix . l:result
 endfunction
 
+let s:path_to_uri_cache = {}
 if has('win32') || has('win64')
     function! lsp#utils#path_to_uri(path) abort
+        if has_key(s:path_to_uri_cache, a:path)
+            return s:path_to_uri_cache[a:path]
+        endif
+
         if empty(a:path) || lsp#utils#is_remote_uri(a:path)
-            return a:path
+            let s:path_to_uri_cache[a:path] = a:path
+            return s:path_to_uri_cache[a:path]
         else
             " You must not encode the volume information on the path if
             " present
@@ -84,26 +90,44 @@ if has('win32') || has('win64')
                 let l:end_pos_volume = 0
             endif
 
-            return s:encode_uri(substitute(a:path, '\', '/', 'g'), l:end_pos_volume, 'file:///')
+            let s:path_to_uri_cache[a:path] = s:encode_uri(substitute(a:path, '\', '/', 'g'), l:end_pos_volume, 'file:///')
+            return s:path_to_uri_cache[a:path]
         endif
     endfunction
 else
     function! lsp#utils#path_to_uri(path) abort
+        if has_key(s:path_to_uri_cache, a:path)
+            return s:path_to_uri_cache[a:path]
+        endif
+
         if empty(a:path) || lsp#utils#is_remote_uri(a:path)
-            return a:path
+            let s:path_to_uri_cache[a:path] = a:path
+            return s:path_to_uri_cache[a:path]
         else
-            return s:encode_uri(a:path, 0, 'file://')
+            let s:path_to_uri_cache[a:path] = s:encode_uri(a:path, 0, 'file://')
+            return s:path_to_uri_cache[a:path]
         endif
     endfunction
 endif
 
+let s:uri_to_path_cache = {}
 if has('win32') || has('win64')
     function! lsp#utils#uri_to_path(uri) abort
-        return substitute(s:decode_uri(a:uri[len('file:///'):]), '/', '\\', 'g')
+        if has_key(s:uri_to_path_cache, a:uri)
+            return s:uri_to_path_cache[a:uri]
+        endif
+
+        let s:uri_to_path_cache[a:uri] = substitute(s:decode_uri(a:uri[len('file:///'):]), '/', '\\', 'g')
+        return s:uri_to_path_cache[a:uri]
     endfunction
 else
     function! lsp#utils#uri_to_path(uri) abort
-        return s:decode_uri(a:uri[len('file://'):])
+        if has_key(s:uri_to_path_cache, a:uri)
+            return s:uri_to_path_cache[a:uri]
+        endif
+
+        let s:uri_to_path_cache[a:uri] = s:decode_uri(a:uri[len('file://'):])
+        return s:uri_to_path_cache[a:uri]
     endfunction
 endif
 
