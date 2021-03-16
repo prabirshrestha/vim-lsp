@@ -18,6 +18,18 @@ let s:notification_callbacks = [] " { name, callback }
 "    }
 let s:file_content = {}
 
+" incr if s:servers update
+let s:servers_update_counter = 0
+
+" Cached active servers per file type
+" {
+"   "python": {
+"     "update_cnt": 0, " update cnt when caching
+"     "servers": [ "pyls" ]
+"   }
+" }
+let s:active_servers = {}
+
 " do nothing, place it here only to avoid the message
 augroup _lsp_silent_
     autocmd!
@@ -169,6 +181,7 @@ function! lsp#register_server(server_info) abort
         \ }
     call lsp#log('lsp#register_server', 'server registered', l:server_name)
     doautocmd <nomodeline> User lsp_register_server
+    let s:servers_update_counter += 1
 endfunction
 
 "
@@ -880,47 +893,7 @@ function! lsp#get_allowed_servers(...) abort
         endif
     endif
 
-    " TODO: cache active servers per buffer
-    let l:active_servers = []
-
-    for l:server_name in keys(s:servers)
-        let l:server_info = s:servers[l:server_name]['server_info']
-        let l:blocked = 0
-
-        if has_key(l:server_info, 'blocklist')
-            let l:blocklistkey = 'blocklist'
-        else
-            let l:blocklistkey = 'blacklist'
-        endif
-        if has_key(l:server_info, l:blocklistkey)
-            for l:filetype in l:server_info[l:blocklistkey]
-                if l:filetype ==? l:buffer_filetype || l:filetype ==# '*'
-                    let l:blocked = 1
-                    break
-                endif
-            endfor
-        endif
-
-        if l:blocked
-            continue
-        endif
-
-        if has_key(l:server_info, 'allowlist')
-            let l:allowlistkey = 'allowlist'
-        else
-            let l:allowlistkey = 'whitelist'
-        endif
-        if has_key(l:server_info, l:allowlistkey)
-            for l:filetype in l:server_info[l:allowlistkey]
-                if l:filetype ==? l:buffer_filetype || l:filetype ==# '*'
-                    let l:active_servers += [l:server_name]
-                    break
-                endif
-            endfor
-        endif
-    endfor
-
-    return l:active_servers
+    return lsp#internal#get_allowed_servers#get(l:buffer_filetype, s:servers, s:servers_update_counter, s:active_servers)
 endfunction
 
 function! s:get_text_document_text(buf, server_name) abort
