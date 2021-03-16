@@ -802,6 +802,17 @@ g:lsp_signature_help_enabled                *g:lsp_signature_help_enabled*
 	let g:lsp_signature_help_enabled = 1
 	let g:lsp_signature_help_enabled = 0
 
+g:lsp_signature_help_delay                         *g:lsp_signature_help_delay*
+    Type: |Number|
+    Default: `200`
+
+    The waiting time in milliseconds before sending textDocument/signatureHelp
+    to LSP servers.
+
+    Example: >
+	let g:lsp_signature_help_delay = 100
+	let g:lsp_signature_help_delay = 500
+
 g:lsp_show_workspace_edits                     *g:lsp_show_workspace_edits*
     Type: |Boolean|
     Default: `0`
