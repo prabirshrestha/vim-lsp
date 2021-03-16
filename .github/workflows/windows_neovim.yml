@@ -33,6 +33,17 @@ jobs:
       - name: Extract neovim
         shell: PowerShell
         run: Expand-Archive -Path neovim.zip -DestinationPath $env:USERPROFILE
+      - name: Install Go for gopls
+        uses: actions/setup-go@v2
+        with:
+          go-version: '^1.16.1'
+      - name: Install gopls
+        shell: PowerShell
+        run: |
+          go get golang.org/x/tools/gopls@latest
+          gopls version
+        env:
+          GO111MODULE: 'on'
       - name: Download test runner
         shell: PowerShell
         run: git clone --depth 1 --branch v1.5.5 --single-branch https://github.com/thinca/vim-themis $env:USERPROFILE\themis

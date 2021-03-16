@@ -31,13 +31,17 @@ jobs:
           mkdir -p ~/nvim/bin
           curl -L https://github.com/neovim/neovim/releases/download/${{matrix.neovim_version}}/nvim.appimage -o ~/nvim/bin/nvim
           chmod u+x ~/nvim/bin/nvim
-      - name: Download language servers
+      - name: Install Go for gopls
+        uses: actions/setup-go@v2
+        with:
+          go-version: '^1.16.1'
+      - name: Install gopls
         shell: bash
         run: |
-          mkdir -p ~/langservers
-          curl -L https://github.com/rust-analyzer/rust-analyzer/releases/download/2020-12-21/rust-analyzer-linux -o ~/langservers/rust-analyzer
-          chmod u+x ~/langservers/rust-analyzer
-          ~/langservers/rust-analyzer --version
+          go get golang.org/x/tools/gopls@latest
+          gopls version
+        env:
+          GO111MODULE: 'on'
       - name: Download test runner
         shell: bash
         run: git clone --depth 1 --branch v1.5.5 --single-branch https://github.com/thinca/vim-themis ~/themis
@@ -45,7 +49,6 @@ jobs:
         shell: bash
         run: |
           export PATH=~/nvim/bin:$PATH
-          export PATH=~/langservers:$PATH
           export PATH=~/themis/bin:$PATH
           export THEMIS_VIM=nvim
           nvim --version
