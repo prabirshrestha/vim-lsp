@@ -29,6 +29,9 @@ Describe integration#go#document_formatting
             \ '',
             \ 'func main() {',
             \ '	print("hello, world!")',
+            \ '	print("こんにちは、世界")',
+            \ '	print("a β c")',
+            \ '	print("δ")',
             \ '}'
             \ ]
         Assert Equals(got, want)
