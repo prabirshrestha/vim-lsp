@@ -1,4 +1,4 @@
-Describe integration#rust#document_formatting
+Describe integration#go#document_formatting
     Before
         %bwipeout!
         if lsp#test#hasproject('go')
