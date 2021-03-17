@@ -8,6 +8,10 @@ on:
     branches:
       - master
 
+env:
+  VIM_LSP_GO_VERSION: '1.16.2'
+  VIM_LSP_GOPLS_VERSION: '0.6.6'
+
 jobs:
   build:
     strategy:
@@ -36,11 +40,11 @@ jobs:
       - name: Install Go for gopls
         uses: actions/setup-go@v2
         with:
-          go-version: '^1.16.1'
+          go-version: ${{ env.VIM_LSP_GO_VERSION }}
       - name: Install gopls
         shell: bash
         run: |
-          go get golang.org/x/tools/gopls@latest
+          go get golang.org/x/tools/gopls@v${{ env.VIM_LSP_GOPLS_VERSION }}
           gopls version
         env:
           GO111MODULE: 'on'
