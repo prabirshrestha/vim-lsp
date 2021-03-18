@@ -171,7 +171,11 @@ function! s:is_expandable(done_line, done_position, complete_position, completio
     let l:text_edit_after = strcharpart(l:completed_line, a:completion_item['textEdit']['range']['end']['character'], strchars(l:completed_line) - a:completion_item['textEdit']['range']['end']['character'])
     return a:done_line !=# l:text_edit_before . s:trim_unmeaning_tabstop(a:completion_item['textEdit']['newText']) . l:text_edit_after
   endif
-  return get(a:completion_item, 'insertText', a:completed_item['word']) !=# s:trim_unmeaning_tabstop(a:completed_item['word'])
+  let l:text = get(a:completion_item, 'insertText', '')
+  if empty(l:text)
+    let l:text = get(a:completion_item, 'label', a:completed_item['word'])
+  endif
+  return l:text !=# s:trim_unmeaning_tabstop(a:completed_item['word'])
 endfunction
 
 "
