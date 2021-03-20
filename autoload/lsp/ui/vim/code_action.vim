@@ -110,9 +110,7 @@ function! s:handle_code_action(ctx, server_name, command_id, sync, query, bufnr,
     " Prompt to choose code actions when empty query provided.
     let l:index = 1
     if len(l:total_code_actions) > 1 || empty(a:query)
-        let l:index = inputlist(map(copy(l:total_code_actions), { i, action ->
-                    \   printf('%s - [%s] %s', i + 1, action['server_name'], action['code_action']['title'])
-                    \ }))
+        let l:index = inputlist(map(copy(l:total_code_actions), funcref('s:get_action_list_item_text')))
     endif
 
     " Execute code action.
@@ -150,3 +148,10 @@ function! s:handle_one_code_action(server_name, sync, bufnr, command_or_code_act
     endif
 endfunction
 
+function! s:get_action_list_item_text(index, action) abort
+    let l:text = printf('%s - [%s] %s', a:index + 1, a:action['server_name'], a:action['code_action']['title'])
+    if has_key(a:action['code_action'], 'kind') && a:action['code_action']['kind'] !=# ''
+        let l:text .= ' (' . a:action['code_action']['kind'] . ')'
+    endif
+    return l:text
+endfunction
