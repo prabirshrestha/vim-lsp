@@ -413,9 +413,12 @@ function! s:handle_call_hierarchy(ctx, server, type, data) abort
 
     if lsp#client#is_error(a:data['response']) || !has_key(a:data['response'], 'result')
         call lsp#utils#error('Failed to retrieve '. a:type . ' for ' . a:server . ': ' . lsp#client#error_message(a:data['response']))
-    else
+    elseif a:data['response']['result'] isnot v:null
         for l:item in a:data['response']['result']
-            let a:ctx['list'] = a:ctx['list'] + lsp#utils#location#_lsp_to_vim_list(l:item[a:ctx['key']])
+            let l:loc = s:hierarchy_item_to_vim(l:item[a:ctx['key']])
+            if l:loc isnot v:null
+                let a:ctx['list'] += [l:loc]
+            endif
         endfor
     endif
 
@@ -430,4 +433,22 @@ function! s:handle_call_hierarchy(ctx, server, type, data) abort
             botright copen
         endif
     endif
+endfunction
+
+function! s:hierarchy_item_to_vim(item) abort
+    let l:uri = a:item['uri']
+    if !lsp#utils#is_file_uri(l:uri)
+        return v:null
+    endif
+
+    let l:path = lsp#utils#uri_to_path(l:uri)
+    let [l:line, l:col] = lsp#utils#position#lsp_to_vim(l:path, a:item['range']['start'])
+    let l:text = get(a:item, 'detail', a:item['name'])
+
+    return {
+        \ 'filename': l:path,
+        \ 'lnum': l:line,
+        \ 'col': l:col,
+        \ 'text': l:text,
+        \ }
 endfunction
