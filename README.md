@@ -4,6 +4,8 @@ Async [Language Server Protocol](https://github.com/Microsoft/language-server-pr
 
 # Installing
 
+Install [vim-plug](https://github.com/junegunn/vim-plug) and then:
+
 ```viml
 Plug 'prabirshrestha/vim-lsp'
 ```
