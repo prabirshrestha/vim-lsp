@@ -105,7 +105,10 @@ endfunction
 
 function! s:quickpick_accept(next, error, complete, data, ...) abort
     call lsp#internal#ui#quickpick#close()
-    call a:next(a:data['items'][0]['item'])
+    let l:items = a:data['items']
+    if len(l:items) > 0
+        call a:next(l:items[0]['item'])
+    endif
     call a:complete()
 endfunction
 
