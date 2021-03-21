@@ -469,7 +469,8 @@ function! lsp#default_get_supported_capabilities(server_info) abort
     \           'codeActionKind': {
     \             'valueSet': ['', 'quickfix', 'refactor', 'refactor.extract', 'refactor.inline', 'refactor.rewrite', 'source', 'source.organizeImports'],
     \           }
-    \         }
+    \         },
+    \         'disabledSupport': v:true,
     \       },
     \       'codeLens': {
     \           'dynamicRegistration': v:false,
