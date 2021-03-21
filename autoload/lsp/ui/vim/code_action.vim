@@ -116,6 +116,13 @@ function! s:handle_code_action(ctx, server_name, command_id, sync, query, bufnr,
     " Execute code action.
     if 0 < l:index && l:index <= len(l:total_code_actions)
         let l:selected = l:total_code_actions[l:index - 1]
+        if has_key(l:selected, 'disabled')
+            let l:reason = l:selected['disabled']['reason']
+            " Avoid the message is overwritten by inputlist() call
+            redraw
+            echo 'This action is disabled: ' . l:reason
+            return
+        endif
         call s:handle_one_code_action(l:selected['server_name'], a:sync, a:bufnr, l:selected['code_action'])
     endif
 endfunction
