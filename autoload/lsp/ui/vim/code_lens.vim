@@ -74,6 +74,21 @@ function! s:chooseCodeLens(items, bufnr) abort
     return lsp#callbag#create(function('s:quickpick_open', [a:items, a:bufnr]))
 endfunction
 
+function! s:get_codelens_subtitle(item) abort
+    if !has_key(a:item['codelens']['command'], 'arguments')
+        return ''
+    endif
+
+    let l:arguments = a:item['codelens']['command']['arguments']
+    for l:argument in l:arguments
+        if type(l:argument) != type({}) || !has_key(l:argument, 'label')
+            return ''
+        endif
+    endfor
+
+    return ': ' . join(map(copy(l:arguments), 'v:val["label"]'), ' > ')
+endfunction
+
 function! s:quickpick_open(items, bufnr, next, error, complete) abort
     if empty(a:items)
         return lsp#callbag#empty()
@@ -81,9 +96,10 @@ function! s:quickpick_open(items, bufnr, next, error, complete) abort
 
     let l:items = []
     for l:item in a:items
-        let l:title = printf("[%s] %s\t| L%s:%s",
+        let l:title = printf("[%s] %s%s\t| L%s:%s",
             \ l:item['server'],
             \ l:item['codelens']['command']['title'],
+            \ s:get_codelens_subtitle(l:item),
             \ lsp#utils#position#lsp_line_to_vim(a:bufnr, l:item['codelens']['range']['start']),
             \ getbufline(a:bufnr, lsp#utils#position#lsp_line_to_vim(a:bufnr, l:item['codelens']['range']['start']))[0])
         call add(l:items, { 'title': l:title, 'item': l:item })
