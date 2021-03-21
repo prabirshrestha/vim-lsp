@@ -152,6 +152,7 @@ function! s:get_contents(contents) abort
             if has_key(a:contents, 'kind')
                 if a:contents['kind'] ==? 'markdown'
                     let l:detail = s:MarkupContent.normalize({
+                        \ 'language': 'markdown',
                         \ 'value': a:contents['value']
                         \ })
                     return [l:detail]
@@ -160,6 +161,7 @@ function! s:get_contents(contents) abort
                 endif
             elseif has_key(a:contents, 'language')
                 let l:detail = s:MarkupContent.normalize({
+                    \ 'language': a:contents['language'],
                     \ 'value': a:contents['value'],
                     \ })
                 return [l:detail]
