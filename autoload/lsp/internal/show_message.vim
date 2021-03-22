@@ -52,7 +52,7 @@ function! s:handle_show_message(server, params) abort
     endtry
 endfunction
 
-function s:name_to_level(name) abort
+function! s:name_to_level(name) abort
     if a:name ==# 'none'
         return 0
     elseif a:name ==# 'error'
@@ -68,7 +68,7 @@ function s:name_to_level(name) abort
     endif
 endfunction
 
-function s:type_to_name(type) abort
+function! s:type_to_name(type) abort
     return get(['unknown', 'error', 'warning', 'info', 'log'], a:type, 'unknown')
 endfunction
 
