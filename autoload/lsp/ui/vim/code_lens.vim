@@ -74,7 +74,11 @@ function! s:chooseCodeLens(items, bufnr) abort
     return lsp#callbag#create(function('s:quickpick_open', [a:items, a:bufnr]))
 endfunction
 
-function! s:get_codelens_subtitle(item) abort
+function! lsp#ui#vim#code_lens#_get_subtitle(item) abort
+    " Since element of arguments property of Command interface is defined as any in LSP spec, it is
+    " up to the language server implementation.
+    " Currently this only impacts rust-analyzer. See #1118 for more details.
+
     if !has_key(a:item['codelens']['command'], 'arguments')
         return ''
     endif
@@ -99,7 +103,7 @@ function! s:quickpick_open(items, bufnr, next, error, complete) abort
         let l:title = printf("[%s] %s%s\t| L%s:%s",
             \ l:item['server'],
             \ l:item['codelens']['command']['title'],
-            \ s:get_codelens_subtitle(l:item),
+            \ lsp#ui#vim#code_lens#_get_subtitle(l:item),
             \ lsp#utils#position#lsp_line_to_vim(a:bufnr, l:item['codelens']['range']['start']),
             \ getbufline(a:bufnr, lsp#utils#position#lsp_line_to_vim(a:bufnr, l:item['codelens']['range']['start']))[0])
         call add(l:items, { 'title': l:title, 'item': l:item })
