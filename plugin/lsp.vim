@@ -135,46 +135,46 @@ command! LspDocumentFold call lsp#ui#vim#folding#fold(0)
 command! LspDocumentFoldSync call lsp#ui#vim#folding#fold(1)
 command! -nargs=? LspSemanticScopes call lsp#ui#vim#semantic#display_scope_tree(<args>)
 
-nnoremap <plug>(lsp-call-hierarchy-incoming) :<c-u>call lsp#ui#vim#call_hierarchy_incoming()<cr>
-nnoremap <plug>(lsp-call-hierarchy-outgoing) :<c-u>call lsp#ui#vim#call_hierarchy_outgoing()<cr>
-nnoremap <plug>(lsp-code-action) :<c-u>call lsp#ui#vim#code_action()<cr>
-nnoremap <plug>(lsp-code-lens) :<c-u>call lsp#ui#vim#code_lens()<cr>
-nnoremap <plug>(lsp-declaration) :<c-u>call lsp#ui#vim#declaration(0)<cr>
-nnoremap <plug>(lsp-peek-declaration) :<c-u>call lsp#ui#vim#declaration(1)<cr>
-nnoremap <plug>(lsp-definition) :<c-u>call lsp#ui#vim#definition(0)<cr>
-nnoremap <plug>(lsp-peek-definition) :<c-u>call lsp#ui#vim#definition(1)<cr>
-nnoremap <plug>(lsp-document-symbol) :<c-u>call lsp#ui#vim#document_symbol()<cr>
-nnoremap <plug>(lsp-document-symbol-search) :<c-u>call lsp#internal#document_symbol#search#do({})<cr>
-nnoremap <plug>(lsp-document-diagnostics) :<c-u>call lsp#internal#diagnostics#document_diagnostics_command#do({})<cr>
-nnoremap <plug>(lsp-hover) :<c-u>call lsp#internal#document_hover#under_cursor#do({})<cr>
-nnoremap <plug>(lsp-preview-close) :<c-u>call lsp#ui#vim#output#closepreview()<cr>
-nnoremap <plug>(lsp-preview-focus) :<c-u>call lsp#ui#vim#output#focuspreview()<cr>
-nnoremap <plug>(lsp-next-error) :<c-u>call lsp#internal#diagnostics#movement#_next_error()<cr>
-nnoremap <plug>(lsp-next-error-nowrap) :<c-u>call lsp#internal#diagnostics#movement#_next_error("-wrap=0")<cr>
-nnoremap <plug>(lsp-previous-error) :<c-u>call lsp#internal#diagnostics#movement#_previous_error()<cr>
-nnoremap <plug>(lsp-previous-error-nowrap) :<c-u>call lsp#internal#diagnostics#movement#_previous_error("-wrap=0")<cr>
-nnoremap <plug>(lsp-next-warning) :<c-u>call lsp#internal#diagnostics#movement#_next_warning()<cr>
-nnoremap <plug>(lsp-next-warning-nowrap) :<c-u>call lsp#internal#diagnostics#movement#_next_warning("-wrap=0")<cr>
-nnoremap <plug>(lsp-previous-warning) :<c-u>call lsp#internal#diagnostics#movement#_previous_warning()<cr>
-nnoremap <plug>(lsp-previous-warning-nowrap) :<c-u>call lsp#internal#diagnostics#movement#_previous_warning("-wrap=0")<cr>
-nnoremap <plug>(lsp-next-diagnostic) :<c-u>call lsp#internal#diagnostics#movement#_next_diagnostics()<cr>
-nnoremap <plug>(lsp-next-diagnostic-nowrap) :<c-u>call lsp#internal#diagnostics#movement#_next_diagnostics("-wrap=0")<cr>
-nnoremap <plug>(lsp-previous-diagnostic) :<c-u>call lsp#internal#diagnostics#movement#_previous_diagnostics()<cr>
-nnoremap <plug>(lsp-previous-diagnostic-nowrap) :<c-u>call lsp#internal#diagnostics#movement#_previous_diagnostics("-wrap=0")<cr>
-nnoremap <plug>(lsp-references) :<c-u>call lsp#ui#vim#references()<cr>
-nnoremap <plug>(lsp-rename) :<c-u>call lsp#ui#vim#rename()<cr>
-nnoremap <plug>(lsp-type-definition) :<c-u>call lsp#ui#vim#type_definition(0)<cr>
-nnoremap <plug>(lsp-type-hierarchy) :<c-u>call lsp#internal#type_hierarchy#show()<cr>
-nnoremap <plug>(lsp-peek-type-definition) :<c-u>call lsp#ui#vim#type_definition(1)<cr>
-nnoremap <plug>(lsp-workspace-symbol) :<c-u>call lsp#ui#vim#workspace_symbol('')<cr>
-nnoremap <plug>(lsp-workspace-symbol-search) :<c-u>call lsp#internal#workspace_symbol#search#do({})<cr>
-nnoremap <plug>(lsp-document-format) :<c-u>call lsp#internal#document_formatting#format({ 'bufnr': bufnr('%') })<cr>
-vnoremap <plug>(lsp-document-format) :<Home>silent <End>call lsp#internal#document_range_formatting#format({ 'bufnr': bufnr('%') })<cr>
-nnoremap <plug>(lsp-document-range-format) :<c-u>set opfunc=lsp#internal#document_range_formatting#opfunc<cr>g@
-xnoremap <plug>(lsp-document-range-format) :<Home>silent <End>call lsp#internal#document_range_formatting#format({ 'bufnr': bufnr('%') })<cr>
-nnoremap <plug>(lsp-implementation) :<c-u>call lsp#ui#vim#implementation(0)<cr>
-nnoremap <plug>(lsp-peek-implementation) :<c-u>call lsp#ui#vim#implementation(1)<cr>
-nnoremap <plug>(lsp-status) :<c-u>echo lsp#get_server_status()<cr>
-nnoremap <plug>(lsp-next-reference) :<c-u>call lsp#internal#document_highlight#jump(+1)<cr>
-nnoremap <plug>(lsp-previous-reference) :<c-u>call lsp#internal#document_highlight#jump(-1)<cr>
-nnoremap <plug>(lsp-signature-help) :<c-u>call lsp#ui#vim#signature_help#get_signature_help_under_cursor()<cr>
+nnoremap <silent> <plug>(lsp-call-hierarchy-incoming) :<c-u>call lsp#ui#vim#call_hierarchy_incoming()<cr>
+nnoremap <silent> <plug>(lsp-call-hierarchy-outgoing) :<c-u>call lsp#ui#vim#call_hierarchy_outgoing()<cr>
+nnoremap <silent> <plug>(lsp-code-action) :<c-u>call lsp#ui#vim#code_action()<cr>
+nnoremap <silent> <plug>(lsp-code-lens) :<c-u>call lsp#ui#vim#code_lens()<cr>
+nnoremap <silent> <plug>(lsp-declaration) :<c-u>call lsp#ui#vim#declaration(0)<cr>
+nnoremap <silent> <plug>(lsp-peek-declaration) :<c-u>call lsp#ui#vim#declaration(1)<cr>
+nnoremap <silent> <plug>(lsp-definition) :<c-u>call lsp#ui#vim#definition(0)<cr>
+nnoremap <silent> <plug>(lsp-peek-definition) :<c-u>call lsp#ui#vim#definition(1)<cr>
+nnoremap <silent> <plug>(lsp-document-symbol) :<c-u>call lsp#ui#vim#document_symbol()<cr>
+nnoremap <silent> <plug>(lsp-document-symbol-search) :<c-u>call lsp#internal#document_symbol#search#do({})<cr>
+nnoremap <silent> <plug>(lsp-document-diagnostics) :<c-u>call lsp#internal#diagnostics#document_diagnostics_command#do({})<cr>
+nnoremap <silent> <plug>(lsp-hover) :<c-u>call lsp#internal#document_hover#under_cursor#do({})<cr>
+nnoremap <silent> <plug>(lsp-preview-close) :<c-u>call lsp#ui#vim#output#closepreview()<cr>
+nnoremap <silent> <plug>(lsp-preview-focus) :<c-u>call lsp#ui#vim#output#focuspreview()<cr>
+nnoremap <silent> <plug>(lsp-next-error) :<c-u>call lsp#internal#diagnostics#movement#_next_error()<cr>
+nnoremap <silent> <plug>(lsp-next-error-nowrap) :<c-u>call lsp#internal#diagnostics#movement#_next_error("-wrap=0")<cr>
+nnoremap <silent> <plug>(lsp-previous-error) :<c-u>call lsp#internal#diagnostics#movement#_previous_error()<cr>
+nnoremap <silent> <plug>(lsp-previous-error-nowrap) :<c-u>call lsp#internal#diagnostics#movement#_previous_error("-wrap=0")<cr>
+nnoremap <silent> <plug>(lsp-next-warning) :<c-u>call lsp#internal#diagnostics#movement#_next_warning()<cr>
+nnoremap <silent> <plug>(lsp-next-warning-nowrap) :<c-u>call lsp#internal#diagnostics#movement#_next_warning("-wrap=0")<cr>
+nnoremap <silent> <plug>(lsp-previous-warning) :<c-u>call lsp#internal#diagnostics#movement#_previous_warning()<cr>
+nnoremap <silent> <plug>(lsp-previous-warning-nowrap) :<c-u>call lsp#internal#diagnostics#movement#_previous_warning("-wrap=0")<cr>
+nnoremap <silent> <plug>(lsp-next-diagnostic) :<c-u>call lsp#internal#diagnostics#movement#_next_diagnostics()<cr>
+nnoremap <silent> <plug>(lsp-next-diagnostic-nowrap) :<c-u>call lsp#internal#diagnostics#movement#_next_diagnostics("-wrap=0")<cr>
+nnoremap <silent> <plug>(lsp-previous-diagnostic) :<c-u>call lsp#internal#diagnostics#movement#_previous_diagnostics()<cr>
+nnoremap <silent> <plug>(lsp-previous-diagnostic-nowrap) :<c-u>call lsp#internal#diagnostics#movement#_previous_diagnostics("-wrap=0")<cr>
+nnoremap <silent> <plug>(lsp-references) :<c-u>call lsp#ui#vim#references()<cr>
+nnoremap <silent> <plug>(lsp-rename) :<c-u>call lsp#ui#vim#rename()<cr>
+nnoremap <silent> <plug>(lsp-type-definition) :<c-u>call lsp#ui#vim#type_definition(0)<cr>
+nnoremap <silent> <plug>(lsp-type-hierarchy) :<c-u>call lsp#internal#type_hierarchy#show()<cr>
+nnoremap <silent> <plug>(lsp-peek-type-definition) :<c-u>call lsp#ui#vim#type_definition(1)<cr>
+nnoremap <silent> <plug>(lsp-workspace-symbol) :<c-u>call lsp#ui#vim#workspace_symbol('')<cr>
+nnoremap <silent> <plug>(lsp-workspace-symbol-search) :<c-u>call lsp#internal#workspace_symbol#search#do({})<cr>
+nnoremap <silent> <plug>(lsp-document-format) :<c-u>call lsp#internal#document_formatting#format({ 'bufnr': bufnr('%') })<cr>
+vnoremap <silent> <plug>(lsp-document-format) :<Home>silent <End>call lsp#internal#document_range_formatting#format({ 'bufnr': bufnr('%') })<cr>
+nnoremap <silent> <plug>(lsp-document-range-format) :<c-u>set opfunc=lsp#internal#document_range_formatting#opfunc<cr>g@
+xnoremap <silent> <plug>(lsp-document-range-format) :<Home>silent <End>call lsp#internal#document_range_formatting#format({ 'bufnr': bufnr('%') })<cr>
+nnoremap <silent> <plug>(lsp-implementation) :<c-u>call lsp#ui#vim#implementation(0)<cr>
+nnoremap <silent> <plug>(lsp-peek-implementation) :<c-u>call lsp#ui#vim#implementation(1)<cr>
+nnoremap <silent> <plug>(lsp-status) :<c-u>echo lsp#get_server_status()<cr>
+nnoremap <silent> <plug>(lsp-next-reference) :<c-u>call lsp#internal#document_highlight#jump(+1)<cr>
+nnoremap <silent> <plug>(lsp-previous-reference) :<c-u>call lsp#internal#document_highlight#jump(-1)<cr>
+nnoremap <silent> <plug>(lsp-signature-help) :<c-u>call lsp#ui#vim#signature_help#get_signature_help_under_cursor()<cr>
