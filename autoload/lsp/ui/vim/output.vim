@@ -419,7 +419,6 @@ function! lsp#ui#vim#output#append(data, lines, syntax_lines) abort
         return 'markdown'
     elseif type(a:data) ==# type('')
         call extend(a:lines, split(s:escape_string_for_display(a:data), "\n", v:true))
-
         return 'markdown'
     elseif type(a:data) ==# type({}) && has_key(a:data, 'language')
         let l:new_lines = split(s:escape_string_for_display(a:data.value), '\n')
@@ -431,14 +430,11 @@ function! lsp#ui#vim#output#append(data, lines, syntax_lines) abort
         endwhile
 
         call extend(a:lines, l:new_lines)
-
         return 'markdown'
     elseif type(a:data) ==# type({}) && has_key(a:data, 'kind')
         if a:data.kind ==? 'markdown'
             call s:import_modules()
-            let l:detail = s:MarkupContent.normalize({
-                \ 'value': a:data.value
-                \ })
+            let l:detail = s:MarkupContent.normalize(a:data.value)
             call extend(a:lines, s:Text.split_by_eol(l:detail))
         else
             call extend(a:lines, split(s:escape_string_for_display(a:data.value), '\n', v:true))
