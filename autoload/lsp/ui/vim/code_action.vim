@@ -107,24 +107,44 @@ function! s:handle_code_action(ctx, server_name, command_id, sync, query, bufnr,
     endif
     call lsp#log('s:handle_code_action', l:total_code_actions)
 
-    " Prompt to choose code actions when empty query provided.
-    let l:index = 1
-    if len(l:total_code_actions) > 1 || empty(a:query)
-        let l:index = inputlist(map(copy(l:total_code_actions), funcref('s:get_action_list_item_text')))
+    if len(l:total_code_actions) == 1 && !empty(a:query)
+        let l:action = l:total_code_actions[0]
+        if s:handle_disabled_action(l:action) | return | endif
+        " Clear 'Retrieving code actions ...' message
+        echo ''
+        call s:handle_one_code_action(l:action['server_name'], a:sync, a:bufnr, l:action['code_action'])
+        return
     endif
 
-    " Execute code action.
-    if 0 < l:index && l:index <= len(l:total_code_actions)
-        let l:selected = l:total_code_actions[l:index - 1]
-        if has_key(l:selected, 'disabled')
-            let l:reason = l:selected['disabled']['reason']
-            " Avoid the message is overwritten by inputlist() call
-            redraw
-            echo 'This action is disabled: ' . l:reason
-            return
+    " Prompt to choose code actions when empty query provided.
+    let l:items = []
+    for l:action in l:total_code_actions
+        let l:title = printf('[%s] %s', l:action['server_name'], l:action['code_action']['title'])
+        if has_key(l:action['code_action'], 'kind') && l:action['code_action']['kind'] !=# ''
+            let l:title .= ' (' . l:action['code_action']['kind'] . ')'
         endif
-        call s:handle_one_code_action(l:selected['server_name'], a:sync, a:bufnr, l:selected['code_action'])
+        call add(l:items, { 'title': l:title, 'item': l:action })
+    endfor
+    call lsp#internal#ui#quickpick#open({
+        \ 'items': l:items,
+        \ 'key': 'title',
+        \ 'on_accept': funcref('s:accept_code_action', [a:sync, a:bufnr]),
+        \ })
+endfunction
+
+function! s:accept_code_action(sync, bufnr, data, ...) abort
+    call lsp#internal#ui#quickpick#close()
+    let l:selected = a:data['items'][0]['item']
+    if s:handle_disabled_action(l:selected) | return | endif
+    call s:handle_one_code_action(l:selected['server_name'], a:sync, a:bufnr, l:selected['code_action'])
+endfunction
+
+function! s:handle_disabled_action(code_action) abort
+    if has_key(a:code_action, 'disabled')
+        echo 'This action is disabled: ' . a:code_action['disabled']['reason']
+        return v:true
     endif
+    return v:false
 endfunction
 
 function! s:handle_one_code_action(server_name, sync, bufnr, command_or_code_action) abort
@@ -153,12 +173,4 @@ function! s:handle_one_code_action(server_name, sync, bufnr, command_or_code_act
         \   'bufnr': a:bufnr,
         \ })
     endif
-endfunction
-
-function! s:get_action_list_item_text(index, action) abort
-    let l:text = printf('%s - [%s] %s', a:index + 1, a:action['server_name'], a:action['code_action']['title'])
-    if has_key(a:action['code_action'], 'kind') && a:action['code_action']['kind'] !=# ''
-        let l:text .= ' (' . a:action['code_action']['kind'] . ')'
-    endif
-    return l:text
 endfunction
