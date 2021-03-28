@@ -64,6 +64,7 @@ let g:lsp_text_document_did_save_delay = get(g:, 'lsp_text_document_did_save_del
 let g:lsp_completion_resolve_timeout = get(g:, 'lsp_completion_resolve_timeout', 200)
 let g:lsp_tagfunc_source_methods = get(g:, 'lsp_tagfunc_source_methods', ['definition', 'declaration', 'implementation', 'typeDefinition'])
 let g:lsp_show_message_request_enabled = get(g:, 'lsp_show_message_request_enabled', 1)
+let g:lsp_show_message_log_level = get(g:, 'lsp_show_message_log_level', 'warning')
 let g:lsp_work_done_progress_enabled = get(g:, 'lsp_work_done_progress_enabled', 0)
 
 let g:lsp_get_supported_capabilities = get(g:, 'lsp_get_supported_capabilities', [function('lsp#default_get_supported_capabilities')])
