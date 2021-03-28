@@ -1,0 +1,134 @@
+Describe lsp#uivim#code_lens
+    Describe lsp#ui#vim#code_lens#_get_subtitle
+        It should generate subtitle from response of rust-analyzer
+            " Example response of Code Lens extracted from #1118
+            let item = {
+            \     'codelens': {
+            \         'command': {
+            \             'arguments': [
+            \                 {
+            \                      'args': {
+            \                           'cargoArgs': ['test', '--package', 'tmp', '--lib'],
+            \                           'cargoExtraArgs': [],
+            \                           'executableArgs': ['tests::it_works', '--exact', '--nocapture'],
+            \                           'overrideCargo': v:null,
+            \                           'workspaceRoot': '/tmp'
+            \                      },
+            \                      'kind': 'cargo',
+            \                      'label': 'test tests::it_works',
+            \                      'location': {
+            \                           'targetRange': {'end': {'character': 5, 'line': 14}, 'start': {'character': 4, 'line': 11}},
+            \                           'targetSelectionRange': {'end': {'character': 15, 'line': 12}, 'start': {'character': 7, 'line': 12}},
+            \                           'targetUri': 'file:////tmp/src/lib.rs'
+            \                       }
+            \                 }
+            \             ],
+            \             'command': 'rust-analyzer.runSingle',
+            \             'title': '▶︎ Run Test'
+            \         },
+            \         'range': {'end': {'character': 5, 'line': 14}, 'start': {'character': 4, 'line': 11}}
+            \     },
+            \     'server': 'rust-analyzer'
+            \ }
+
+            let subtitle = lsp#ui#vim#code_lens#_get_subtitle(item)
+            Assert Equals(subtitle, ': test tests::it_works')
+        End
+
+        It should generate subtitle from multiple labels of command arguments
+            let item = {
+            \     'codelens': {
+            \         'command': {
+            \             'arguments': [
+            \                 {
+            \                      'args': {},
+            \                      'kind': 'kind1',
+            \                      'label': 'do command1',
+            \                      'location': {}
+            \                 },
+            \                 {
+            \                      'args': {},
+            \                      'kind': 'kind2',
+            \                      'label': 'do command2',
+            \                      'location': {}
+            \                 }
+            \             ],
+            \             'command': 'server.someCommand',
+            \             'title': 'lens title'
+            \         },
+            \         'range': {'end': {'character': 5, 'line': 14}, 'start': {'character': 4, 'line': 11}}
+            \     },
+            \     'server': 'rust-analyzer'
+            \ }
+
+            let subtitle = lsp#ui#vim#code_lens#_get_subtitle(item)
+            Assert Equals(subtitle, ': do command1 > do command2')
+        End
+
+        It should return empty string when 'arguments' field is not found
+            let item = {
+            \     'codelens': {
+            \         'command': {
+            \             'command': 'server.someCommand',
+            \             'title': 'lens title'
+            \         },
+            \         'range': {'end': {'character': 5, 'line': 14}, 'start': {'character': 4, 'line': 11}}
+            \     },
+            \     'server': 'rust-analyzer'
+            \ }
+
+            let subtitle = lsp#ui#vim#code_lens#_get_subtitle(item)
+            Assert Equals(subtitle, '')
+        End
+
+        It should return empty string when 'arguments' field is not an object
+            let item = {
+            \     'codelens': {
+            \         'command': {
+            \             'arguments': [
+            \                 'command1',
+            \                 'command2',
+            \                 'command3'
+            \             ],
+            \             'command': 'server.someCommand',
+            \             'title': 'lens title'
+            \         },
+            \         'range': {'end': {'character': 5, 'line': 14}, 'start': {'character': 4, 'line': 11}}
+            \     },
+            \     'server': 'rust-analyzer'
+            \ }
+
+            let subtitle = lsp#ui#vim#code_lens#_get_subtitle(item)
+            Assert Equals(subtitle, '')
+        End
+
+        It should return empty string when at least one of elements in 'arguments' field does not have 'label' field
+            let item = {
+            \     'codelens': {
+            \         'command': {
+            \             'arguments': [
+            \                 {
+            \                      'args': {},
+            \                      'kind': 'kind1',
+            \                      'label': 'do command1',
+            \                      'location': {}
+            \                 },
+            \                 {
+            \                      'args': {},
+            \                      'kind': 'kind2',
+            \                      'location': {}
+            \                 }
+            \             ],
+            \             'command': 'server.someCommand',
+            \             'title': 'lens title'
+            \         },
+            \         'range': {'end': {'character': 5, 'line': 14}, 'start': {'character': 4, 'line': 11}}
+            \     },
+            \     'server': 'rust-analyzer'
+            \ }
+
+            let subtitle = lsp#ui#vim#code_lens#_get_subtitle(item)
+            Assert Equals(subtitle, '')
+        End
+    End
+End

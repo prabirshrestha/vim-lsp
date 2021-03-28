@@ -1,4 +1,4 @@
-" https://github.com/prabirshrestha/quickpick.vim#37e29b28f65d3ae344ec8eaf7ce2d5f87e2f4b90
+" https://github.com/prabirshrestha/quickpick.vim#cf41eecb983c41e5fc45e83291b551a85fe554d3
 "    :QuickpickEmbed path=autoload/lsp/internal/ui/quickpick.vim namespace=lsp#internal#ui#quickpick prefix=lsp-quickpick
 
 let s:has_timer = exists('*timer_start') && exists('*timer_stop')
@@ -268,10 +268,11 @@ endfunction
 function! s:on_accept() abort
   if win_gotoid(s:state['resultswinid'])
     let l:index = line('.') - 1 " line is 1 index, list is 0 index
-    if l:index < 0
+    let l:fitems = s:state['fitems']
+    if l:index < 0 || len(l:fitems) <= l:index
       let l:items = []
     else
-      let l:items = [s:state['fitems'][l:index]]
+      let l:items = [l:fitems[l:index]]
     endif
     call win_gotoid(s:state['winid'])
     call s:notify('accept', { 'items': l:items })
