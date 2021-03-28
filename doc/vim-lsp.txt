@@ -73,6 +73,7 @@ CONTENTS                                                  *vim-lsp-contents*
       g:lsp_tagfunc_source_methods          |g:lsp_tagfunc_source_methods|
       g:lsp_show_message_request_enabled    |g:lsp_show_message_request_enabled|
       g:lsp_work_done_progress_enabled      |g:lsp_work_done_progress_enabled|
+      g:lsp_show_message_log_level          |g:lsp_show_message_log_level|
     Functions                             |vim-lsp-functions|
       lsp#enable                            |lsp#enable()|
       lsp#disable                           |lsp#disable()|
@@ -912,6 +913,17 @@ g:lsp_work_done_progress_enabled         *g:lsp_work_done_progress_enabled*
     Determines whether or not to ask the server to send `$/progress`
     notifications. This can be intercepted by listening to |lsp#stream()|.
     Set to `1` to enable.
+
+g:lsp_show_message_log_level                *g:lsp_show_message_log_level*
+    Type: |String|
+    Default: `'warning'`
+
+    Determines log level of messages sent from LSP servers. Possible values
+    are one of `'none'`, `'error'`, `'warning'`, `'info'`, `'log'`. Messages
+    are filtered by the value set to this variable. For example, when
+    `'warning'` is set, `'error'` level and `'warning'` level messages are
+    shown but `'info'` level and `'log'` level messages are not shown. Setting
+    `'none'` disables to show messages completely.
 
 ==============================================================================
 FUNCTIONS                                               *vim-lsp-functions*
