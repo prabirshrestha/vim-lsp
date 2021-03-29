@@ -472,6 +472,7 @@ function! lsp#default_get_supported_capabilities(server_info) abort
     \             'valueSet': ['', 'quickfix', 'refactor', 'refactor.extract', 'refactor.inline', 'refactor.rewrite', 'source', 'source.organizeImports'],
     \           }
     \         },
+    \         'isPreferredSupport': v:true,
     \         'disabledSupport': v:true,
     \       },
     \       'codeLens': {
