@@ -94,10 +94,15 @@ function! s:handle_code_action(ctx, server_name, command_id, sync, query, bufnr,
         endif
 
         for l:code_action in l:code_actions
-            call add(l:total_code_actions, {
-            \    'server_name': l:server_name,
-            \    'code_action': l:code_action,
-            \})
+            let l:item = {
+            \   'server_name': l:server_name,
+            \   'code_action': l:code_action,
+            \ }
+            if get(l:code_action, 'isPreferred', v:false)
+                let l:total_code_actions = [l:item] + l:total_code_actions
+            else
+                call add(l:total_code_actions, l:item)
+            endif
         endfor
     endfor
 
