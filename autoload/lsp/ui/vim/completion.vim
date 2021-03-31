@@ -29,7 +29,7 @@ endfunction
 " 6. then the line is `call getbufline(|` in `s:on_complete_done_after`
 "
 function! s:on_complete_done() abort
-  " Somtimes, vim occurs `CompleteDone` unexpectedly.
+  " Sometimes, vim occurs `CompleteDone` unexpectedly.
   " We try to detect it by checking empty completed_item.
   if empty(v:completed_item) || get(v:completed_item, 'word', '') ==# '' && get(v:completed_item, 'abbr', '') ==# ''
     doautocmd <nomodeline> User lsp_complete_done

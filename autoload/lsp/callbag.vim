@@ -1464,7 +1464,7 @@ endfunction
 "   \ 'env': {},
 "   \ })
 "   call s:Stdin(1, 'hi')
-"   call s:Stdin(2, lsp#callbag#undefined()) " requried to close stdin
+"   call s:Stdin(2, lsp#callbag#undefined()) " required to close stdin
 function! lsp#callbag#spawn(cmd, ...) abort
     let l:data = { 'cmd': a:cmd, 'opt': a:0 > 0 ? copy(a:000[0]) : {} }
     return lsp#callbag#create(function('s:spawnCreate', [l:data]))
