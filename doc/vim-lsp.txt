@@ -1328,7 +1328,7 @@ This method is mainly used to generate 'root_uri' when registering server.
 	* If there is not directory with the specific files or diretories
 	  found, the method will return an empty string.
 
-lsp#enable_diagnostics_for_buffer()          *lsp#enable_diagnotics_for_buffer()*
+lsp#enable_diagnostics_for_buffer()          *lsp#enable_diagnostic_for_buffer()*
 
 Re-enable diagnsostics for the specified buffer. By default diagnostics are
 enabled for all buffers.

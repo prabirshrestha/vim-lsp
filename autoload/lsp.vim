@@ -156,7 +156,7 @@ function! lsp#print_server_status() abort
 endfunction
 
 " @params {server_info} = {
-"   'name': 'go-langserver',        " requried, must be unique
+"   'name': 'go-langserver',        " required, must be unique
 "   'allowlist': ['go'],            " optional, array of filetypes to allow, * for all filetypes
 "   'blocklist': [],                " optional, array of filetypes to block, * for all filetypes,
 "   'cmd': {server_info->['go-langserver]} " function that takes server_info and returns array of cmd and args, return empty if you don't want to start the server

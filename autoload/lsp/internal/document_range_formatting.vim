@@ -1,6 +1,6 @@
 " options - {
 "   bufnr: bufnr('%')       " required
-"   type: ''                " optional: defaults to visualmode(). overriden by opfunc
+"   type: ''                " optional: defaults to visualmode(). overridden by opfunc
 "   server - 'server_name'  " optional
 "   sync: 0                 " optional, defaults to 0 (async)
 " }

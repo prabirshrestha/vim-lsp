@@ -49,7 +49,7 @@ function! lsp#internal#diagnostics#virtual_text#_enable() abort
     let s:enabled = 1
 
     if empty(s:namespace_id)
-        let s:namespace_id = nvim_create_namespace('vim_lsp_diagnotics_virtual_text')
+        let s:namespace_id = nvim_create_namespace('vim_lsp_diagnostic_virtual_text')
     endif
 
     let s:Dispose = lsp#callbag#pipe(
