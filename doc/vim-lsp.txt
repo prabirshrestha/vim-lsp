@@ -451,8 +451,9 @@ g:lsp_diagnostics_echo_delay                *g:lsp_diagnostics_echo_delay*
     Type: |Number|
     Default: `500`
 
-    Delay milliseconds to echo diagnostic error for the current line to status. Requires
-    |g:lsp_diagnostics_enabled| and |g:lsp_diagnostics_echo_cursor| set to 1.
+    Delay milliseconds to echo diagnostic error for the current line to status.
+    Requires |g:lsp_diagnostics_enabled| and |g:lsp_diagnostics_echo_cursor| set
+    to 1.
 
     Example: >
 	let g:lsp_diagnostics_echo_delay = 200
@@ -462,8 +463,9 @@ g:lsp_diagnostics_float_cursor                *g:lsp_diagnostics_float_cursor*
     Type: |Number|
     Default: `0`
 
-    Enables a floating window of diagnostic error for the current line to status. Requires
-    nvim_win_open() or popup_create is available, and |g:lsp_diagnostics_enabled| set to 1.
+    Enables a floating window of diagnostic error for the current line to
+    status. Requires nvim_win_open() or popup_create is available, and
+    |g:lsp_diagnostics_enabled| set to 1.
 
     Example: >
 	let g:lsp_diagnostics_float_cursor = 1
@@ -515,7 +517,7 @@ g:lsp_diagnostics_highlights_enabled    *g:lsp_diagnostics_highlights_enabled*
 	highlight link LspErrorHighlight Error
 
 g:lsp_diagnostics_highlights_insert_mode_enabled
-			          *g:lsp_diagnostics_highlights_insert_mode_enabled*
+			     *g:lsp_diagnostics_highlights_insert_mode_enabled*
     Type: |Number|
     Default: `1`
 
@@ -526,7 +528,7 @@ g:lsp_diagnostics_highlights_insert_mode_enabled
 	let g:lsp_diagnostics_highlights_insert_mode_enabled = 1
 	let g:lsp_diagnostics_highlights_insert_mode_enabled = 0
 
-g:lsp_diagnostics_highlights_delay			*g:lsp_diagnostics_highlights_delay*
+g:lsp_diagnostics_highlights_delay	   *g:lsp_diagnostics_highlights_delay*
     Type: |Number|
     Default: `500`
 
@@ -883,7 +885,8 @@ g:lsp_snippet_expand                                 *g:lsp_snippet_expand*
     Type: |List|
 
     The integration point to other snippet plugin.
-    vim-lsp may invoke the first item of this value when it needs snippet expansion.
+    vim-lsp may invoke the first item of this value when it needs snippet
+    expansion.
 
 g:lsp_completion_resolve_timeout         *g:lsp_completion_resolve_timeout*
     Type: |Number|
@@ -1073,19 +1076,19 @@ The vim |dict| containing information about the server.
     For example: >
 	'config': { 'prefer_local': 1 }
 <
-	This can then be used by cmd function.
+    This can then be used by cmd function.
 >
-	    function! s:myserver_cmd(server_info) abort
-		let l:config = get(a:server_info, 'config', {})
-		let l:prefer_local = get(l:config, 'prefer_local', 1)
-		if (l:prefer_local)
-		    return ['./local-executable']
-		else
-		    return ['/bin/global-exectuable']
-		endif
-	    endfunction
+	function! s:myserver_cmd(server_info) abort
+	    let l:config = get(a:server_info, 'config', {})
+	    let l:prefer_local = get(l:config, 'prefer_local', 1)
+	    if (l:prefer_local)
+	        return ['./local-executable']
+	    else
+	        return ['/bin/global-exectuable']
+	    endif
+	endfunction
 
-	    'cmd': function('s:myserver_cmd')
+	'cmd': function('s:myserver_cmd')
 <
     Using the `config` key, you can also specify a custom 'typed word
     pattern', or a custom filter for completion items, see
@@ -1204,7 +1207,8 @@ You can use this function to add custom command handler.
   })
 <
 
-For example, the rust-analyzer expects the client handles some custom command as below example.
+For example, the rust-analyzer expects the client handles some custom command
+as below example.
 >
   function! s:rust_analyzer_apply_source_change(context)
       let l:command = get(a:context, 'command', {})
@@ -1227,17 +1231,16 @@ Stream api to listen to responses and notifications from language server or
 vim-lsp. Always verify the existence of request, response and server before
 accessing. Subscribing to stream should never throw an error.
 >
-function! s:on_textDocumentDiagnostics(x) abort
-    echom 'Diagnostics for ' . a:x['server'] . ' ' . json_encode(a:x['response'])
-endfunction
+  function! s:on_textDocumentDiagnostics(x) abort
+      echom 'Diagnostics for ' . a:x['server'] . ' ' . json_encode(a:x['response'])
+  endfunction
 
-au User lsp_setup call lsp#callbag#pipe(
-    \ lsp#stream(),
-    \ lsp#callbag#filter({x-> has_key(x, 'response') && !has_key(x['response'], 'error') && get(x['response'], 'method', '') == 'textDocument/publishDiagnostics'}),
-    \ lsp#callbag#subscribe({ 'next':{x->s:on_textDocumentDiagnostics(x)} }),
-    \ )
+  au User lsp_setup call lsp#callbag#pipe(
+      \ lsp#stream(),
+      \ lsp#callbag#filter({x-> has_key(x, 'response') && !has_key(x['response'], 'error') && get(x['response'], 'method', '') == 'textDocument/publishDiagnostics'}),
+      \ lsp#callbag#subscribe({ 'next':{x->s:on_textDocumentDiagnostics(x)} }),
+      \ )
 <
-
 Custom vim-lsp notifications streams:
 vimp-lsp events mimic lsp server notifications.
 * `server` is always `$vimlsp`.
@@ -1270,7 +1273,6 @@ Used to stop the server.
 lsp#get_server_status({name-of-server})            *lsp#get_server_status()*
 
 Get the status of a server.
-
 
     Example: >
   call lsp#get_server_status('name-of-server')
@@ -1817,8 +1819,8 @@ https://github.com/thomasfaingnaert/vim-lsp-ultisnips
 https://github.com/Shougo/neosnippet.vim
 https://github.com/thomasfaingnaert/vim-lsp-neosnippet
 
-Refer to the readme and docs of vim-vsnip, vim-lsp-ultisnips and vim-lsp-neosnippet
-for more information and configuration options.
+Refer to the readme and docs of vim-vsnip, vim-lsp-ultisnips and
+vim-lsp-neosnippet for more information and configuration options.
 
 ==============================================================================
 Folding                                                    *vim-lsp-folding*
@@ -1850,7 +1852,7 @@ To display open and closed folds at the side of the window, see
 If you want to remove the dashes at the end of the folds, you can change
 the fold item of 'fillchars'.
 
-===============================================================================
+==============================================================================
 Semantic highlighting                                      *vim-lsp-semantic*
 
 To use semantic highlighting, you need Neovim highlights, or Vim with the
@@ -1929,7 +1931,7 @@ want function calls to still use the |Label| group, but use |Identifier| for
         \ }
         \ })
 <
-===============================================================================
+==============================================================================
 License                                                    *vim-lsp-license*
 
 The MIT License (MIT)
