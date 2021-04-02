@@ -29,7 +29,7 @@ jobs:
             neovim_version: nightly
     runs-on: ${{matrix.os}}
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v2
       - name: Download neovim
         shell: bash
         run: |
@@ -58,13 +58,16 @@ jobs:
         env:
           GO111MODULE: 'on'
       - name: Download test runner
-        shell: bash
-        run: git clone --depth 1 --branch v1.5.5 --single-branch https://github.com/thinca/vim-themis ~/themis
+        uses: actions/checkout@v2
+        with:
+          repository: thinca/vim-themis
+          path: ./vim-themis
+          ref: v1.5.5
       - name: Run tests
         shell: bash
         run: |
           export PATH=~/nvim/bin:$PATH
-          export PATH=~/themis/bin:$PATH
+          export PATH=./vim-themis/bin:$PATH
           export PATH=./bin:$PATH
           export THEMIS_VIM=nvim
           nvim --version
