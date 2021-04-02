@@ -2,6 +2,14 @@ let s:use_vim_popup = has('patch-8.1.1517') && g:lsp_preview_float && !has('nvim
 let s:use_nvim_float = exists('*nvim_open_win') && g:lsp_preview_float && has('nvim')
 let s:use_preview = !s:use_vim_popup && !s:use_nvim_float
 
+function! s:import_modules() abort
+    if exists('s:Markdown') | return | endif
+    let s:Markdown = vital#lsp#import('VS.Vim.Syntax.Markdown')
+    let s:MarkupContent = vital#lsp#import('VS.LSP.MarkupContent')
+    let s:Window = vital#lsp#import('VS.Vim.Window')
+    let s:Text = vital#lsp#import('VS.LSP.Text')
+endfunction
+
 let s:winid = v:false
 let s:prevwin = v:false
 let s:preview_data = v:false
@@ -15,6 +23,11 @@ function! lsp#ui#vim#output#closepreview() abort
         " Don't close if window got focus
         return
     endif
+
+    if s:winid == v:false
+        return
+    endif
+
     "closing floats in vim8.1 must use popup_close()
     "nvim must use nvim_win_close. pclose is not reliable and does not always work
     if s:use_vim_popup && s:winid
@@ -154,12 +167,16 @@ function! lsp#ui#vim#output#setcontent(winid, lines, ft) abort
         call setbufline(winbufnr(a:winid), 1, a:lines)
         call setbufvar(winbufnr(a:winid), '&filetype', a:ft . '.lsp-hover')
     elseif s:use_nvim_float
-        " nvim floating or preview
+        " nvim floating
         call nvim_buf_set_lines(winbufnr(a:winid), 0, -1, v:false, a:lines)
         call nvim_buf_set_option(winbufnr(a:winid), 'readonly', v:true)
         call nvim_buf_set_option(winbufnr(a:winid), 'modifiable', v:false)
         call nvim_buf_set_option(winbufnr(a:winid), 'filetype', a:ft.'.lsp-hover')
         call nvim_win_set_cursor(a:winid, [1, 0])
+    elseif s:use_preview
+        " preview window
+        call setbufline(winbufnr(a:winid), 1, a:lines)
+        call setbufvar(winbufnr(a:winid), '&filetype', a:ft . '.lsp-hover')
     endif
 endfunction
 
@@ -377,6 +394,11 @@ function! lsp#ui#vim#output#preview(server, data, options) abort
       doautocmd <nomodeline> User lsp_float_opened
     endif
 
+    if l:ft ==? 'markdown'
+        call s:import_modules()
+        call s:Window.do(s:winid, {->s:Markdown.apply()})
+    endif
+
     if !g:lsp_preview_keep_focus
         " set the focus to the preview window
         call win_gotoid(s:winid)
@@ -397,7 +419,6 @@ function! lsp#ui#vim#output#append(data, lines, syntax_lines) abort
         return 'markdown'
     elseif type(a:data) ==# type('')
         call extend(a:lines, split(s:escape_string_for_display(a:data), "\n", v:true))
-
         return 'markdown'
     elseif type(a:data) ==# type({}) && has_key(a:data, 'language')
         let l:new_lines = split(s:escape_string_for_display(a:data.value), '\n')
@@ -409,11 +430,15 @@ function! lsp#ui#vim#output#append(data, lines, syntax_lines) abort
         endwhile
 
         call extend(a:lines, l:new_lines)
-
         return 'markdown'
     elseif type(a:data) ==# type({}) && has_key(a:data, 'kind')
-        call extend(a:lines, split(s:escape_string_for_display(a:data.value), '\n', v:true))
-
+        if a:data.kind ==? 'markdown'
+            call s:import_modules()
+            let l:detail = s:MarkupContent.normalize(a:data.value)
+            call extend(a:lines, s:Text.split_by_eol(l:detail))
+        else
+            call extend(a:lines, split(s:escape_string_for_display(a:data.value), '\n', v:true))
+        endif
         return a:data.kind ==? 'plaintext' ? 'text' : a:data.kind
     endif
 endfunction

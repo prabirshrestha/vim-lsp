@@ -4,6 +4,8 @@ Async [Language Server Protocol](https://github.com/Microsoft/language-server-pr
 
 # Installing
 
+Install [vim-plug](https://github.com/junegunn/vim-plug) and then:
+
 ```viml
 Plug 'prabirshrestha/vim-lsp'
 ```
@@ -183,5 +185,5 @@ let g:asyncomplete_log_file = expand('~/asyncomplete.log')
 ## Tests
 
 [vim-themis](https://github.com/thinca/vim-themis) is used for testing. To run
-integration tests [rust-analyzer](https://github.com/rust-analyzer/rust-analyzer) 
+integration tests [gopls](https://github.com/golang/tools/tree/master/gopls)
 executable must be in path.

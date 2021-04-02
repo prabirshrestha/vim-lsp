@@ -1,4 +1,4 @@
-name: mac_neovim
+name: mac_vim
 
 on:
   push:
@@ -15,27 +15,12 @@ env:
 
 jobs:
   build:
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [macos-latest]
-        name: [neovim-v04-x64,neovim-nightly-x64]
-        include:
-          - name: neovim-v04-x64
-            os: macos-latest
-            neovim_version: v0.4.4
-          - name: neovim-nightly-x64
-            os: macos-latest
-            neovim_version: nightly
-    runs-on: ${{matrix.os}}
+    runs-on: macos-latest
     steps:
       - uses: actions/checkout@v1
-      - name: Download neovim
+      - name: Install MacVim
         shell: bash
-        run: curl -L https://github.com/neovim/neovim/releases/download/${{matrix.neovim_version}}/nvim-macos.tar.gz -o ~/nvim.tar.gz
-      - name: Extract neovim
-        shell: bash
-        run: tar xzf ~/nvim.tar.gz -C ~/
+        run: brew install macvim
       - name: Download test runner
         shell: bash
         run: git clone --depth 1 --branch v1.5.5 --single-branch https://github.com/thinca/vim-themis ~/themis
@@ -63,9 +48,8 @@ jobs:
       - name: Run tests
         shell: bash
         run: |
-          export PATH=~/nvim-osx64/bin:$PATH
           export PATH=~/themis/bin:$PATH
           export PATH=./bin:$PATH
-          export THEMIS_VIM=nvim
-          nvim --version
+          export THEMIS_VIM=vim
+          vim --version
           themis

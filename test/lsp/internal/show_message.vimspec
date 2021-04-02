@@ -1,0 +1,92 @@
+let s:Error = 1
+let s:Warn = 2
+let s:Info = 3
+let s:Log = 4
+
+function! s:response(type, message) abort
+    return {
+        \   'server': 'server1',
+        \   'response': {
+        \       'method': 'window/showMessage',
+        \       'params': {
+        \           'type': a:type,
+        \           'message': a:message
+        \       }
+        \   }
+        \ }
+endfunction
+
+Describe lsp#internal#show_message
+    Before
+        %bwipeout!
+        let g:lsp_show_message_log_level = 'warning'
+        call lsp#internal#show_message#_disable()
+        call lsp#internal#show_message#_enable()
+    End
+
+    After all
+        %bwipeout!
+        let g:lsp_show_message_log_level = 'none'
+        call lsp#internal#show_message#_disable()
+    End
+
+    It should show all messages when 'log' is set to g:lsp_show_message_log_level
+        let g:lsp_show_message_log_level = 'log'
+
+        redir => message_area
+            call lsp#stream(1, s:response(s:Error, 'error message'))
+            call lsp#stream(1, s:response(s:Warn, 'warn message'))
+            call lsp#stream(1, s:response(s:Info, 'info message'))
+            call lsp#stream(1, s:response(s:Log, 'log message'))
+            call lsp#stream(1, s:response(s:Info, 'info message2'))
+            call lsp#stream(1, s:response(s:Info, 'info message3'))
+        redir END
+
+        Assert Match(message_area, 'server1: error: error message')
+        Assert Match(message_area, 'server1: warning: warn message')
+        Assert Match(message_area, 'server1: info: info message')
+        Assert Match(message_area, 'server1: log: log message')
+        Assert Match(message_area, 'server1: info: info message2')
+        Assert Match(message_area, 'server1: info: info message3')
+    End
+
+    It should filter shown messages by log level set to g:lsp_show_message_log_level
+        let g:lsp_show_message_log_level = 'warning'
+
+        redir => message_area
+            call lsp#stream(1, s:response(s:Error, 'error message'))
+            call lsp#stream(1, s:response(s:Warn, 'warn message'))
+            call lsp#stream(1, s:response(s:Info, 'info message'))
+            call lsp#stream(1, s:response(s:Log, 'log message'))
+            call lsp#stream(1, s:response(s:Info, 'info message2'))
+            call lsp#stream(1, s:response(s:Info, 'info message3'))
+        redir END
+
+        Assert Match(message_area, 'server1: error: error message')
+        Assert Match(message_area, 'server1: warning: warn message')
+        Assert NotMatch(message_area, 'server1: info: info message')
+        Assert NotMatch(message_area, 'server1: log: log message')
+        Assert NotMatch(message_area, 'server1: info: info message2')
+        Assert NotMatch(message_area, 'server1: info: info message3')
+    End
+
+    It should show no message when 'none' is set to g:lsp_show_message_log_level
+        let g:lsp_show_message_log_level = 'none'
+
+        redir => message_area
+            call lsp#stream(1, s:response(s:Error, 'error message'))
+            call lsp#stream(1, s:response(s:Warn, 'warn message'))
+            call lsp#stream(1, s:response(s:Info, 'info message'))
+            call lsp#stream(1, s:response(s:Log, 'log message'))
+            call lsp#stream(1, s:response(s:Info, 'info message2'))
+            call lsp#stream(1, s:response(s:Info, 'info message3'))
+        redir END
+
+        Assert NotMatch(message_area, 'server1: error: error message')
+        Assert NotMatch(message_area, 'server1: warning: warn message')
+        Assert NotMatch(message_area, 'server1: info: info message')
+        Assert NotMatch(message_area, 'server1: log: log message')
+        Assert NotMatch(message_area, 'server1: info: info message2')
+        Assert NotMatch(message_area, 'server1: info: info message3')
+    End
+End

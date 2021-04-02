@@ -1,0 +1,40 @@
+Describe integration#go#document_formatting
+    Before
+        %bwipeout!
+        if lsp#test#hasproject('go')
+            call lsp#test#openproject('go', {})
+        endif
+    End
+
+    After all
+        %bwipeout!
+        call lsp#test#closeproject('go')
+    End
+
+    It should correctly format document when using LspDocumentFormatSync
+        if !lsp#test#hasproject('go')
+            Skip go project not supported
+        endif
+
+        Assert Equals(lsp#get_server_status('gopls'), 'running')
+
+        execute printf('keepalt keepjumps edit %s', lsp#test#projectdir('go') . '/documentformat.go')
+        let l:original = getline(1, "$")
+
+        call execute('LspDocumentFormatSync')
+
+        let got = getline(1, "$")
+        let want = [
+            \ 'package main',
+            \ '',
+            \ 'func main() {',
+            \ '	print("hello, world!")',
+            \ '	print("こんにちは、世界")',
+            \ '	print("a β c")',
+            \ '	print("δ")',
+            \ '}'
+            \ ]
+        Assert Equals(got, want)
+    End
+
+End

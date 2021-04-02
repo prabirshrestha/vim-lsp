@@ -97,7 +97,7 @@ function! s:LastDifference(old, new, start_char) abort
   if g:lsp_use_lua && s:has_lua
     let l:eval = has('nvim') ? 'vim.api.nvim_eval' : 'vim.eval'
     let l:i = luaeval('vimlsp_last_difference('
-        \.l:eval.'("a:old"),'.l:eval.'("a:new"),'.l:eval.'("has(\"nvim\")"),'.l:line_count.')')
+        \.l:eval.'("a:old"),'.l:eval.'("a:new"),'.s:lua_array_start_index.','.l:line_count.')')
   else
 	for l:i in range(-1, -1 * l:line_count, -1)
 	  if a:old[l:i] !=# a:new[l:i] | break | endif

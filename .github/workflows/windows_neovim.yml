@@ -8,6 +8,11 @@ on:
     branches:
       - master
 
+env:
+  VIM_LSP_GO_VERSION: '1.16.2'
+  VIM_LSP_GOPLS_VERSION: '0.6.6'
+  VIM_LSP_GOPLS_CACHE_VER: 1
+
 jobs:
   build:
     strategy:
@@ -33,6 +38,27 @@ jobs:
       - name: Extract neovim
         shell: PowerShell
         run: Expand-Archive -Path neovim.zip -DestinationPath $env:USERPROFILE
+      - name: Cache gopls
+        id: cache-gopls
+        uses: actions/cache@v2
+        with:
+          path: bin/gopls
+          key: ${{ runner.os }}-${{ env.VIM_LSP_GO_VERSION }}-${{ env.VIM_LSP_GOPLS_VERSION }}-${{ env.VIM_LSP_GOPLS_CACHE_VER }}-gopls
+      - name: Install Go for gopls
+        if: steps.cache-gopls.outputs.cache-hit != 'true'
+        uses: actions/setup-go@v2
+        with:
+          go-version: ${{ env.VIM_LSP_GO_VERSION }}
+      - name: Install gopls
+        if: steps.cache-gopls.outputs.cache-hit != 'true'
+        shell: bash
+        run: |
+          go get golang.org/x/tools/gopls@v${{ env.VIM_LSP_GOPLS_VERSION }}
+          gopls version
+          mkdir bin
+          mv "$(which gopls)" ./bin/
+        env:
+          GO111MODULE: 'on'
       - name: Download test runner
         shell: PowerShell
         run: git clone --depth 1 --branch v1.5.5 --single-branch https://github.com/thinca/vim-themis $env:USERPROFILE\themis
@@ -41,6 +67,7 @@ jobs:
         run: |
           SET PATH=%USERPROFILE%\Neovim\bin;%PATH%;
           SET PATH=%USERPROFILE%\themis\bin;%PATH%;
+          SET PATH=.\bin;%PATH%;
           SET THEMIS_VIM=nvim
           nvim --version
           themis

@@ -94,10 +94,15 @@ function! s:handle_code_action(ctx, server_name, command_id, sync, query, bufnr,
         endif
 
         for l:code_action in l:code_actions
-            call add(l:total_code_actions, {
-            \    'server_name': l:server_name,
-            \    'code_action': l:code_action,
-            \})
+            let l:item = {
+            \   'server_name': l:server_name,
+            \   'code_action': l:code_action,
+            \ }
+            if get(l:code_action, 'isPreferred', v:false)
+                let l:total_code_actions = [l:item] + l:total_code_actions
+            else
+                call add(l:total_code_actions, l:item)
+            endif
         endfor
     endfor
 
@@ -107,19 +112,44 @@ function! s:handle_code_action(ctx, server_name, command_id, sync, query, bufnr,
     endif
     call lsp#log('s:handle_code_action', l:total_code_actions)
 
-    " Prompt to choose code actions when empty query provided.
-    let l:index = 1
-    if len(l:total_code_actions) > 1 || empty(a:query)
-        let l:index = inputlist(map(copy(l:total_code_actions), { i, action ->
-                    \   printf('%s - [%s] %s', i + 1, action['server_name'], action['code_action']['title'])
-                    \ }))
+    if len(l:total_code_actions) == 1 && !empty(a:query)
+        let l:action = l:total_code_actions[0]
+        if s:handle_disabled_action(l:action) | return | endif
+        " Clear 'Retrieving code actions ...' message
+        echo ''
+        call s:handle_one_code_action(l:action['server_name'], a:sync, a:bufnr, l:action['code_action'])
+        return
     endif
 
-    " Execute code action.
-    if 0 < l:index && l:index <= len(l:total_code_actions)
-        let l:selected = l:total_code_actions[l:index - 1]
-        call s:handle_one_code_action(l:selected['server_name'], a:sync, a:bufnr, l:selected['code_action'])
+    " Prompt to choose code actions when empty query provided.
+    let l:items = []
+    for l:action in l:total_code_actions
+        let l:title = printf('[%s] %s', l:action['server_name'], l:action['code_action']['title'])
+        if has_key(l:action['code_action'], 'kind') && l:action['code_action']['kind'] !=# ''
+            let l:title .= ' (' . l:action['code_action']['kind'] . ')'
+        endif
+        call add(l:items, { 'title': l:title, 'item': l:action })
+    endfor
+    call lsp#internal#ui#quickpick#open({
+        \ 'items': l:items,
+        \ 'key': 'title',
+        \ 'on_accept': funcref('s:accept_code_action', [a:sync, a:bufnr]),
+        \ })
+endfunction
+
+function! s:accept_code_action(sync, bufnr, data, ...) abort
+    call lsp#internal#ui#quickpick#close()
+    let l:selected = a:data['items'][0]['item']
+    if s:handle_disabled_action(l:selected) | return | endif
+    call s:handle_one_code_action(l:selected['server_name'], a:sync, a:bufnr, l:selected['code_action'])
+endfunction
+
+function! s:handle_disabled_action(code_action) abort
+    if has_key(a:code_action, 'disabled')
+        echo 'This action is disabled: ' . a:code_action['disabled']['reason']
+        return v:true
     endif
+    return v:false
 endfunction
 
 function! s:handle_one_code_action(server_name, sync, bufnr, command_or_code_action) abort
@@ -149,4 +179,3 @@ function! s:handle_one_code_action(server_name, sync, bufnr, command_or_code_act
         \ })
     endif
 endfunction
-

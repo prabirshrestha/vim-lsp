@@ -73,7 +73,9 @@ function! lsp#enable() abort
     call lsp#ui#vim#completion#_setup()
     call lsp#internal#document_highlight#_enable()
     call lsp#internal#diagnostics#_enable()
+    call lsp#internal#document_code_action#signs#_enable()
     call lsp#internal#show_message_request#_enable()
+    call lsp#internal#show_message#_enable()
     call lsp#internal#work_done_progress#_enable()
     call lsp#internal#completion#documentation#_enable()
     call s:register_events()
@@ -87,7 +89,9 @@ function! lsp#disable() abort
     call lsp#ui#vim#completion#_disable()
     call lsp#internal#document_highlight#_disable()
     call lsp#internal#diagnostics#_disable()
+    call lsp#internal#document_code_action#signs#_disable()
     call lsp#internal#show_message_request#_disable()
+    call lsp#internal#show_message#_disable()
     call lsp#internal#work_done_progress#_disable()
     call lsp#internal#completion#documentation#_disable()
     call s:unregister_events()
@@ -164,7 +168,7 @@ function! lsp#print_server_status() abort
 endfunction
 
 " @params {server_info} = {
-"   'name': 'go-langserver',        " requried, must be unique
+"   'name': 'go-langserver',        " required, must be unique
 "   'allowlist': ['go'],            " optional, array of filetypes to allow, * for all filetypes
 "   'blocklist': [],                " optional, array of filetypes to block, * for all filetypes,
 "   'cmd': {server_info->['go-langserver]} " function that takes server_info and returns array of cmd and args, return empty if you don't want to start the server
@@ -480,7 +484,9 @@ function! lsp#default_get_supported_capabilities(server_info) abort
     \           'codeActionKind': {
     \             'valueSet': ['', 'quickfix', 'refactor', 'refactor.extract', 'refactor.inline', 'refactor.rewrite', 'source', 'source.organizeImports'],
     \           }
-    \         }
+    \         },
+    \         'isPreferredSupport': v:true,
+    \         'disabledSupport': v:true,
     \       },
     \       'codeLens': {
     \           'dynamicRegistration': v:false,

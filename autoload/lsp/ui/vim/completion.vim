@@ -29,7 +29,7 @@ endfunction
 " 6. then the line is `call getbufline(|` in `s:on_complete_done_after`
 "
 function! s:on_complete_done() abort
-  " Somtimes, vim occurs `CompleteDone` unexpectedly.
+  " Sometimes, vim occurs `CompleteDone` unexpectedly.
   " We try to detect it by checking empty completed_item.
   if empty(v:completed_item) || get(v:completed_item, 'word', '') ==# '' && get(v:completed_item, 'abbr', '') ==# ''
     doautocmd <nomodeline> User lsp_complete_done
@@ -107,7 +107,11 @@ function! s:on_complete_done_after() abort
     else
       let l:overflow_before = 0
       let l:overflow_after = 0
-      let l:text = get(l:completion_item, 'insertText', l:completed_item['word'])
+      let l:text = get(l:completion_item, 'insertText', '')
+      if empty(l:text)
+        " When insertText is `falsy` the label is used as the insert text
+        let l:text = get(l:completion_item, 'label', l:completed_item['word'])
+      endif
     endif
 
     " apply snipept or text_edit
@@ -167,7 +171,11 @@ function! s:is_expandable(done_line, done_position, complete_position, completio
     let l:text_edit_after = strcharpart(l:completed_line, a:completion_item['textEdit']['range']['end']['character'], strchars(l:completed_line) - a:completion_item['textEdit']['range']['end']['character'])
     return a:done_line !=# l:text_edit_before . s:trim_unmeaning_tabstop(a:completion_item['textEdit']['newText']) . l:text_edit_after
   endif
-  return get(a:completion_item, 'insertText', a:completed_item['word']) !=# s:trim_unmeaning_tabstop(a:completed_item['word'])
+  let l:text = get(a:completion_item, 'insertText', '')
+  if empty(l:text)
+    let l:text = get(a:completion_item, 'label', a:completed_item['word'])
+  endif
+  return l:text !=# s:trim_unmeaning_tabstop(a:completed_item['word'])
 endfunction
 
 "
