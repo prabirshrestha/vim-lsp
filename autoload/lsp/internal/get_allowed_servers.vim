@@ -14,7 +14,7 @@ function! lsp#internal#get_allowed_servers#get(buffer_filetype, servers, servers
             \ )
 
     else
-      let l:active_servers = s:get_allowed_servers_vim(a:buffer_filetype)
+      let l:active_servers = s:get_allowed_servers_vim(a:buffer_filetype, a:servers)
     endif
 
     " Only update cache when needed
@@ -30,7 +30,7 @@ function! lsp#internal#get_allowed_servers#get(buffer_filetype, servers, servers
 endfunction
 
 
-function! s:get_allowed_servers_vim(buffer_filetype) abort
+function! s:get_allowed_servers_vim(buffer_filetype, servers) abort
     let l:active_servers = []
     for l:server_name in keys(a:servers)
         let l:server_info = a:servers[l:server_name]['server_info']
