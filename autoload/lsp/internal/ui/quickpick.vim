@@ -1,4 +1,4 @@
-" https://github.com/prabirshrestha/quickpick.vim#cf41eecb983c41e5fc45e83291b551a85fe554d3
+" https://github.com/prabirshrestha/quickpick.vim#3d4d574d16d2a6629f32e11e9d33b0134aa1e2d9
 "    :QuickpickEmbed path=autoload/lsp/internal/ui/quickpick.vim namespace=lsp#internal#ui#quickpick prefix=lsp-quickpick
 
 let s:has_timer = exists('*timer_start') && exists('*timer_stop')
@@ -187,6 +187,14 @@ function! lsp#internal#ui#quickpick#busy(busy) abort
       echohl None
       echo ''
     endif
+  endif
+endfunction
+
+function! lsp#internal#ui#quickpick#results_winid() abort
+  if exists('s:state')
+    return s:state['resultswinid']
+  else
+    return 0
   endif
 endfunction
 
@@ -400,7 +408,7 @@ if exists('*trim')
   endfunction
 else
   function! s:trim(str) abort
-    return substitute(a:string, '^\s*\|\s*$', '', 'g')
+    return substitute(a:str, '^\s*\|\s*$', '', 'g')
   endfunction
 endif
 
