@@ -53,6 +53,7 @@ CONTENTS                                                  *vim-lsp-contents*
 			     |g:lsp_document_code_actions_signs_enabled|
       g:lsp_document_code_action_signs_delay
 			     |g:lsp_document_code_actions_signs_delay|
+      g:lsp_tree_incoming_prefix            |g:lsp_tree_incoming_prefix|
       g:lsp_format_sync_timeout             |g:lsp_format_sync_timeout|
       g:lsp_use_event_queue                 |g:lsp_use_event_queue|
       g:lsp_document_highlight_enabled      |g:lsp_document_highlight_enabled|
@@ -89,6 +90,7 @@ CONTENTS                                                  *vim-lsp-contents*
       lsp#get_buffer_first_error_line()   |lsp#get_buffer_first_error_line()|
       lsp#get_progress()                  |lsp#get_progress()|
     Commands                              |vim-lsp-commands|
+      LspAddTreeCallHierarchyIncoming       |:LspAddTreeCallHierarchyIncoming|
       LspCallHierarchyIncoming              |:LspCallHierarchyIncoming|
       LspCallHierarchyOutgoing              |:LspCallHierarchyOutgoing|
       LspCodeAction                         |:LspCodeAction|
@@ -717,6 +719,16 @@ g:lsp_document_code_action_signs_delay
 	let g:lsp_document_code_action_signs_delay = 200
 	let g:lsp_document_code_action_signs_delay = 1000
 >
+g:lsp_tree_incoming_prefix                          *g:lsp_tree_incoming_prefix*
+    Type: |String|
+    Default: `"<= "`
+
+    Specifies the prefix of items added by |LspAddTreeCallHierarchyIncoming|.
+
+    Example: >
+	let g:lsp_tree_incoming_prefix = "← "
+	let g:lsp_tree_incoming_prefix = "⬅️  "
+
 g:lsp_use_event_queue                               *g:lsp_use_event_queue*
     Type: |Number|
     Default: `1` for neovim or vim with patch-8.1.0889
@@ -1396,6 +1408,11 @@ lsp#scroll(count)                                             *lsp#scroll()*
 
 ==============================================================================
 Commands                                                  *vim-lsp-commands*
+
+LspAddTreeCallHierarchyIncoming           *:LspAddTreeCallHierarchyIncoming*
+
+Just like |LspCallHierarchyIncoming| , but instead of making a new list the
+result is appended to the current list.
 
 LspCallHierarchyIncoming                         *:LspCallHierarchyIncoming*
 
