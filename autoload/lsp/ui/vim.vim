@@ -216,7 +216,11 @@ function! s:handle_symbol(server, last_command_id, type, data) abort
         call lsp#utils#error('No ' . a:type .' found')
     else
         echo 'Retrieved ' . a:type
-        botright copen
+        if exists('g:Lsp_copen_funcref')
+          call g:Lsp_copen_funcref()
+        else
+          botright copen
+        endif
     endif
 endfunction
 
@@ -249,7 +253,11 @@ function! s:handle_location(ctx, server, type, data) abort "ctx = {counter, list
                 call setqflist([])
                 call setqflist(a:ctx['list'])
                 echo 'Retrieved ' . a:type
-                botright copen
+                if exists('g:Lsp_copen_funcref')
+                  call g:Lsp_copen_funcref()
+                else
+                  botright copen
+                endif
             else
                 let l:lines = readfile(l:loc['filename'])
                 if has_key(l:loc,'viewstart') " showing a locationLink
@@ -430,7 +438,11 @@ function! s:handle_call_hierarchy(ctx, server, type, data) abort
             call setqflist([])
             call setqflist(a:ctx['list'])
             echo 'Retrieved ' . a:type
-            botright copen
+            if exists('g:Lsp_copen_funcref')
+              call g:Lsp_copen_funcref()
+            else
+              botright copen
+            endif
         endif
     endif
 endfunction

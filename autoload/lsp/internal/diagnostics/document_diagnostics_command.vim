@@ -35,6 +35,10 @@ function! lsp#internal#diagnostics#document_diagnostics_command#do(options) abor
     else
         call setloclist(0, l:result)
         echo 'Retrieved diagnostics results'
-        botright lopen
+        if exists('g:Lsp_lopen_funcref')
+          call g:Lsp_lopen_funcref()
+        else
+          botright lopen
+        endif
     endif
 endfunction

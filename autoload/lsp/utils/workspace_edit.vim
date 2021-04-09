@@ -14,7 +14,11 @@ function! lsp#utils#workspace_edit#apply_workspace_edit(workspace_edit) abort
 
     if g:lsp_show_workspace_edits
         call setloclist(0, l:loclist_items, 'r')
-        execute 'lopen'
+        if exists('g:Lsp_lopen_funcref')
+          call g:Lsp_lopen_funcref()
+        else
+          execute 'lopen'
+        endif
     endif
 endfunction
 
