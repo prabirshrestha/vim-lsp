@@ -110,11 +110,12 @@ function! lsp#ui#vim#utils#diagnostics_to_loc_list(result) abort
     if !empty(l:diagnostics) && lsp#utils#is_file_uri(l:uri)
         let l:path = lsp#utils#uri_to_path(l:uri)
         for l:item in l:diagnostics
+            let l:has_severity = has_key(l:item, 'severity') && !empty(l:item['severity'])
             let l:text = ''
             if has_key(l:item, 'source') && !empty(l:item['source'])
                 let l:text .= l:item['source'] . ':'
             endif
-            if has_key(l:item, 'severity') && !empty(l:item['severity'])
+            if l:has_severity
                 let l:text .= s:get_diagnostic_severity_text(l:item['severity']) . ':'
             endif
             if has_key(l:item, 'code') && !empty(l:item['code'])
@@ -122,12 +123,17 @@ function! lsp#ui#vim#utils#diagnostics_to_loc_list(result) abort
             endif
             let l:text .= l:item['message']
             let [l:line, l:col] = lsp#utils#position#lsp_to_vim(l:path, l:item['range']['start'])
-            call add(l:list, {
+            let l:location_item = {
                 \ 'filename': l:path,
                 \ 'lnum': l:line,
                 \ 'col': l:col,
                 \ 'text': l:text,
-                \ })
+                \ }
+            if l:has_severity
+                " 'E' for error, 'W' for warning, 'I' for information, 'H' for hint
+                let l:location_item['type'] = s:diagnostic_severity[l:item['severity']][0]
+            endif
+            call add(l:list, l:location_item)
         endfor
     endif
 
