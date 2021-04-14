@@ -117,13 +117,21 @@ else
 endif
 
 let s:uri_to_path_cache = {}
-if has('win32') || has('win64')
+if has('win32') || has('win64') || has('win32unix')
     function! lsp#utils#uri_to_path(uri) abort
         if has_key(s:uri_to_path_cache, a:uri)
             return s:uri_to_path_cache[a:uri]
         endif
 
-        let s:uri_to_path_cache[a:uri] = substitute(s:decode_uri(a:uri[len('file:///'):]), '/', '\\', 'g')
+        let l:path = substitute(s:decode_uri(a:uri[len('file:///'):]), '/', '\\', 'g')
+
+        " Transform windows paths to cygwin paths
+        if has('win32unix')
+            let l:path = substitute(l:path, '\c^\([A-Z]\):\\', '/\l\1/', '')
+            let l:path = substitute(l:path, '\\', '/', 'g')
+        endif
+
+        let s:uri_to_path_cache[a:uri] = l:path
         return s:uri_to_path_cache[a:uri]
     endfunction
 else
