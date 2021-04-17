@@ -5,6 +5,7 @@ call themis#helper('command').with(themis#helper('assert'))
 
 set runtimepath+=./test/utils
 
+let g:lsp_auto_enable = 0
 " let g:lsp_log_verbose = 1
 " let g:lsp_log_file = expand("~/.config/nvim/data/lsp.log")
 autocmd BufNewFile,BufRead *.rs setfiletype rust
