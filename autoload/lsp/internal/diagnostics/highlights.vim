@@ -93,13 +93,8 @@ function! s:clear_all_highlights() abort
                     try
                         " TODO: need to check for valid range before calling prop_add
                         " See https://github.com/prabirshrestha/vim-lsp/pull/721
-                        let l:prop_type = s:get_prop_type_name(l:severity)
-                        let l:props = prop_find({ 'type': l:prop_type, 'bufnr': l:bufnr })
-                        " if empty do not call prop_remove.
-                        " See https://github.com/prabirshrestha/vim-lsp/issues/1043
-                        if empty(l:props) | continue | endif
                         silent! call prop_remove({
-                            \ 'type': l:prop_type,
+                            \ 'type': s:get_prop_type_name(l:severity),
                             \ 'bufnr': l:bufnr,
                             \ 'all': v:true })
                     catch
