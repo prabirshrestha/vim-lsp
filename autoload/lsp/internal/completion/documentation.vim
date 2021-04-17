@@ -64,7 +64,7 @@ function! s:resolve_completion(event) abort
             \ }})
             \ )
     else
-        return lsp#callbag#of({})
+        return lsp#callbag#of(l:managed_user_data)
     endif
 endfunction
 
