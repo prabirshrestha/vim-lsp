@@ -69,13 +69,6 @@ let g:lsp_work_done_progress_enabled = get(g:, 'lsp_work_done_progress_enabled',
 
 let g:lsp_get_supported_capabilities = get(g:, 'lsp_get_supported_capabilities', [function('lsp#default_get_supported_capabilities')])
 
-if g:lsp_auto_enable
-    augroup lsp_auto_enable
-        autocmd!
-        autocmd VimEnter * call lsp#enable()
-    augroup END
-endif
-
 command! LspCallHierarchyIncoming call lsp#ui#vim#call_hierarchy_incoming()
 command! LspCallHierarchyOutgoing call lsp#ui#vim#call_hierarchy_outgoing()
 command! -range -nargs=* -complete=customlist,lsp#ui#vim#code_action#complete LspCodeAction call lsp#ui#vim#code_action#do({
@@ -179,3 +172,14 @@ nnoremap <silent> <plug>(lsp-status) :<c-u>echo lsp#get_server_status()<cr>
 nnoremap <silent> <plug>(lsp-next-reference) :<c-u>call lsp#internal#document_highlight#jump(+1)<cr>
 nnoremap <silent> <plug>(lsp-previous-reference) :<c-u>call lsp#internal#document_highlight#jump(-1)<cr>
 nnoremap <silent> <plug>(lsp-signature-help) :<c-u>call lsp#ui#vim#signature_help#get_signature_help_under_cursor()<cr>
+
+if g:lsp_auto_enable
+    if has('vim_starting')
+        augroup lsp_auto_enable
+            autocmd!
+            autocmd VimEnter * call lsp#enable()
+        augroup END
+    else
+        call lsp#enable()
+    endif
+endif
