@@ -629,12 +629,12 @@ endfunction
 function! s:ensure_conf(buf, server_name, cb) abort
     let l:server = s:servers[a:server_name]
     let l:server_info = l:server['server_info']
-    if has_key(l:server_info, 'workspace_config')
-        let l:workspace_config = l:server_info['workspace_config']
+    if has_key(l:server_info, 'workspace_config') && !get(l:server_info, '_workspace_config_sent', v:false)
+        let l:server_info['_workspace_config_sent'] = v:true
         call s:send_notification(a:server_name, {
             \ 'method': 'workspace/didChangeConfiguration',
             \ 'params': {
-            \   'settings': l:workspace_config,
+            \   'settings': l:server_info['workspace_config'],
             \ }
             \ })
     endif
@@ -1168,6 +1168,7 @@ function! lsp#update_workspace_config(server_name, workspace_config) abort
     else
         let l:server_info['workspace_config'] = a:workspace_config
     endif
+    let l:server_info['_workspace_config_sent'] = v:false
     call s:ensure_conf(bufnr('%'), a:server_name, function('s:Noop'))
 endfunction
 

@@ -38,7 +38,7 @@ jobs:
             vim_ver_path: vim80
     runs-on: ${{matrix.os}}
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v2
       - name: Download vim
         shell: PowerShell
         run: Invoke-WebRequest -Uri https://github.com/vim/vim-win32-installer/releases/download/v${{matrix.vim_version}}/gvim_${{matrix.vim_version}}_${{matrix.vim_arch}}.zip -OutFile vim.zip
@@ -67,13 +67,16 @@ jobs:
         env:
           GO111MODULE: 'on'
       - name: Download test runner
-        shell: PowerShell
-        run: git clone --depth 1 --branch v1.5.5 --single-branch https://github.com/thinca/vim-themis $env:USERPROFILE\themis
+        uses: actions/checkout@v2
+        with:
+          repository: thinca/vim-themis
+          path: ./vim-themis
+          ref: v1.5.5
       - name: Run tests
         shell: cmd
         run: |
           SET PATH=%USERPROFILE%\vim\${{matrix.vim_ver_path}};%PATH%;
-          SET PATH=%USERPROFILE%\themis\bin;%PATH%;
+          SET PATH=.\vim-themis\bin;%PATH%;
           SET PATH=.\bin;%PATH%;
           vim --version
           themis

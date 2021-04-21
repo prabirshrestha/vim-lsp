@@ -17,13 +17,16 @@ jobs:
   build:
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v2
       - name: Install MacVim
         shell: bash
         run: brew install macvim
       - name: Download test runner
-        shell: bash
-        run: git clone --depth 1 --branch v1.5.5 --single-branch https://github.com/thinca/vim-themis ~/themis
+        uses: actions/checkout@v2
+        with:
+          repository: thinca/vim-themis
+          path: ./vim-themis
+          ref: v1.5.5
       - name: Cache gopls
         id: cache-gopls
         uses: actions/cache@v2
@@ -48,7 +51,7 @@ jobs:
       - name: Run tests
         shell: bash
         run: |
-          export PATH=~/themis/bin:$PATH
+          export PATH=./vim-themis/bin:$PATH
           export PATH=./bin:$PATH
           export THEMIS_VIM=vim
           vim --version

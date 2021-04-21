@@ -187,3 +187,11 @@ let g:asyncomplete_log_file = expand('~/asyncomplete.log')
 [vim-themis](https://github.com/thinca/vim-themis) is used for testing. To run
 integration tests [gopls](https://github.com/golang/tools/tree/master/gopls)
 executable must be in path.
+
+## Maintainers
+
+- [Prabir Shrestha](https://github.com/prabirshrestha) (author, maintainer)
+- [mattn](https://github.com/mattn) (maintainer)
+- [hrsh7th](https://github.com/hrsh7th) (maintainer)
+- [Thomas Faingnaert](https://github.com/thomasfaingnaert) (maintainer)
+- [rhysd](https://github.com/rhysd) (maintainer)

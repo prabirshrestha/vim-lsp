@@ -443,10 +443,9 @@ function! s:hierarchy_item_to_vim(item, server) abort
 
     let l:path = lsp#utils#uri_to_path(l:uri)
     let [l:line, l:col] = lsp#utils#position#lsp_to_vim(l:path, a:item['range']['start'])
+    let l:text = '[' . lsp#ui#vim#utils#_get_symbol_text_from_kind(a:server, a:item['kind']) . '] ' . a:item['name']
     if has_key(a:item, 'detail')
-        let l:text = a:item['detail']
-    else
-        let l:text = '[' . lsp#ui#vim#utils#_get_symbol_text_from_kind(a:server, a:item['kind']) . '] ' . a:item['name']
+        let l:text .= ": " . a:item['detail']
     endif
 
     return {
