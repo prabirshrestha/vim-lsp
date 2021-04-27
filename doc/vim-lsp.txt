@@ -74,6 +74,7 @@ CONTENTS                                                  *vim-lsp-contents*
       g:lsp_show_message_request_enabled    |g:lsp_show_message_request_enabled|
       g:lsp_work_done_progress_enabled      |g:lsp_work_done_progress_enabled|
       g:lsp_show_message_log_level          |g:lsp_show_message_log_level|
+      g:lsp_unnamed_buffer_enabled          |g:lsp_unnamed_buffer_enabled|
     Functions                             |vim-lsp-functions|
       lsp#enable                            |lsp#enable()|
       lsp#disable                           |lsp#disable()|
@@ -927,6 +928,13 @@ g:lsp_show_message_log_level                *g:lsp_show_message_log_level*
     `'warning'` is set, `'error'` level and `'warning'` level messages are
     shown but `'info'` level and `'log'` level messages are not shown. Setting
     `'none'` disables to show messages completely.
+
+g:lsp_unnamed_buffer_enabled                *g:lsp_unnamed_buffer_enabled*
+    Type: |Number|
+    Default: `1`
+
+    Determines whether or not vim-lsp plugin is enabled for unnamed buffer.
+    Set to `0` to disable for unnamed buffer.
 
 ==============================================================================
 FUNCTIONS                                               *vim-lsp-functions*
