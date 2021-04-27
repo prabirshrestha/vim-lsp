@@ -46,6 +46,7 @@ function! s:show_hover(server_name, request, response) abort
     if !has_key(a:response, 'result') || empty(a:response['result']) || 
         \ empty(a:response['result']['contents'])
         call lsp#utils#error('No hover information found in server - ' . a:server_name)
+        return
     endif
 
     call lsp#ui#vim#output#preview(a:server_name, a:response['result']['contents'], {'statusline': ' LSP Hover'})
