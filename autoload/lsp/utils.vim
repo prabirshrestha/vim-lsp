@@ -167,7 +167,12 @@ function! lsp#utils#get_buffer_path(...) abort
 endfunction
 
 function! lsp#utils#get_buffer_uri(...) abort
-    return lsp#utils#path_to_uri(expand((a:0 > 0 ? '#' . a:1 : '%') . ':p'))
+    let l:name = expand((a:0 > 0 ? '#' . a:1 : '%') . ':p')
+    if empty(l:name)
+        let l:nr = bufnr(a:0 > 0 ? '#' . a:1 : '%')
+        let l:name = printf('%s/__NO_NAME_%d__', getcwd(), l:nr)
+    endif
+    return lsp#utils#path_to_uri(l:name)
 endfunction
 
 " Find a nearest to a `path` parent directory `directoryname` by traversing the filesystem upwards
