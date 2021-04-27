@@ -204,7 +204,6 @@ function! s:register_events() abort
         autocmd!
         autocmd BufNewFile * call s:on_text_document_did_open()
         autocmd BufReadPost * call s:on_text_document_did_open()
-        autocmd FileType * call s:on_text_document_did_open()
         autocmd BufWritePost * call s:on_text_document_did_save()
         autocmd BufWinLeave * call s:on_text_document_did_close()
         autocmd BufWipeout * call s:on_buf_wipeout(bufnr('<afile>'))
@@ -212,6 +211,9 @@ function! s:register_events() abort
         autocmd TextChanged * call s:on_text_document_did_change()
         if exists('##TextChangedP')
             autocmd TextChangedP * call s:on_text_document_did_change()
+        endif
+        if g:lsp_untitled_buffer_enabled
+            autocmd FileType * call s:on_text_document_did_open()
         endif
     augroup END
 
