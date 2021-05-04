@@ -13,7 +13,7 @@ endif
 
 source ~/plug.vim
 
-call plug#begin('/tmp/plugged')
+call plug#begin('~/.vim.plugged')
 Plug 'prabirshrestha/asyncomplete.vim'
 Plug 'prabirshrestha/vim-lsp'
 Plug 'prabirshrestha/asyncomplete-lsp.vim'
