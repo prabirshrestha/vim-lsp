@@ -390,6 +390,7 @@ else
     \   'tabpage': 0,
     \   'firstline': l:style.topline,
     \   'padding': [0, 0, 0, 0],
+    \   'border': [],
     \   'fixed': v:true,
     \ }
   endfunction
