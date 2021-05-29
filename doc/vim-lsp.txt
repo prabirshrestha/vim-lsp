@@ -1484,8 +1484,8 @@ Format the current document selection.
 
 LspDocumentRangeFormatSync                     *:LspDocumentRangeFormatSync*
 
-Same as |:LspDocumentRangeFormat| but synchronous. Useful when running running
-:autocmd commands. Set |g:lsp_format_sync_timeout| to configure timeouts.
+Same as |:LspDocumentRangeFormat| but synchronous. Useful when running :autocmd
+commands. Set |g:lsp_format_sync_timeout| to configure timeouts.
 
 Note that this may slow down vim.
 
