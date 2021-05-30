@@ -63,6 +63,7 @@ function! s:on_stdout(id, data, event) abort
     let l:ctx['content-length'] = -1
     let l:ctx['current-content-length'] = 0
     if l:remain !=# ''
+        " NOTE: criticial to be on next tick for perf
         call timer_start(0, {->s:on_stdout(a:id, l:remain, a:event)})
     endif
 endfunction
