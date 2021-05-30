@@ -121,6 +121,7 @@ function! s:show_floating_window(event, managed_user_data) abort
     \     'col': l:pos[1] + 1,
     \     'width': l:size.width,
     \     'height': l:size.height,
+    \     'border': v:true,
     \     'topline': 1,
     \ })
     call s:Window.do(l:doc_win.get_winid(), { -> s:Markdown.apply() })
