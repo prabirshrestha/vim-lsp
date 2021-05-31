@@ -65,7 +65,7 @@ CONTENTS                                                  *vim-lsp-contents*
       g:lsp_signature_help_enabled          |g:lsp_signature_help_enabled|
       g:lsp_fold_enabled                    |g:lsp_fold_enabled|
       g:lsp_hover_conceal                   |g:lsp_hover_conceal|
-      g:lsp_hover_ui			    |g:lsp_hover_ui|
+      g:lsp_hover_ui                        |g:lsp_hover_ui|
       g:lsp_ignorecase                      |g:lsp_ignorecase|
       g:lsp_log_file                        |g:lsp_log_file|
       g:lsp_semantic_enabled                |g:lsp_semantic_enabled|
