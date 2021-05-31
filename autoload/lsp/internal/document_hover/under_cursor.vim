@@ -16,6 +16,19 @@ function! lsp#internal#document_hover#under_cursor#do(options) abort
     if empty(l:ui)
         let l:ui = s:FloatingWindow.is_available() ? 'float' : 'preview'
     endif
+
+    if l:ui == 'float'
+        let l:doc_win = s:get_doc_win()
+        if l:doc_win.is_visible()
+            if bufnr('%') ==# l:doc_win.get_bufnr()
+                call s:close_floating_window(v:true)
+            else
+                call l:doc_win.enter()
+            endif
+            return
+        endif
+    endif
+
     if has_key(a:options, 'server')
         let l:servers = [a:options['server']]
     else
