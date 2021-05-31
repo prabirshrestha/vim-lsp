@@ -136,6 +136,7 @@ CONTENTS                                                  *vim-lsp-contents*
       lsp_complete_done                     |lsp_complete_done|
       lsp_float_opened                      |lsp_float_opened|
       lsp_float_closed                      |lsp_float_closed|
+      lsp_float_focused                     |lsp_float_focused|
       lsp_register_server                   |lsp_register_server|
       lsp_unregister_server                 |lsp_unregister_server|
       lsp_server_init                       |lsp_server_init|
@@ -1691,6 +1692,13 @@ lsp_float_closed                                          *lsp_float_closed*
 
 This autocommand is run after the floating window is closed.
 See also |preview-window|
+
+lsp_float_focused                                          *lsp_float_focused*
+
+This autocommand is run after the floating window is focused. Only support in
+neovim.
+
+You can map `<Plug>(lsp-float-close)` to close the floating window.
 
 lsp_register_server                                    *lsp_register_server*
 

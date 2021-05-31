@@ -29,6 +29,7 @@ augroup _lsp_silent_
     autocmd User lsp_complete_done silent
     autocmd User lsp_float_opened silent
     autocmd User lsp_float_closed silent
+    autocmd User lsp_float_focused silent
     autocmd User lsp_buffer_enabled silent
     autocmd User lsp_diagnostics_updated silent
     autocmd User lsp_progress_updated silent
