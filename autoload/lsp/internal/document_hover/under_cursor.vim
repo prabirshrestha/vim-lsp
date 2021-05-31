@@ -17,13 +17,23 @@ function! lsp#internal#document_hover#under_cursor#do(options) abort
         let l:ui = s:FloatingWindow.is_available() ? 'float' : 'preview'
     endif
 
-    if l:ui == 'float'
+    if l:ui ==# 'float'
         let l:doc_win = s:get_doc_win()
         if l:doc_win.is_visible()
             if bufnr('%') ==# l:doc_win.get_bufnr()
                 call s:close_floating_window(v:true)
             else
                 call l:doc_win.enter()
+                inoremap <buffer><silent> <Plug>(lsp-float-close) <ESC>:<C-u>call <SID>close_floating_window(v:true)<CR>
+                nnoremap <buffer><silent> <Plug>(lsp-float-close) :<C-u>call <SID>close_floating_window(v:true)<CR>
+                execute('doautocmd <nomodeline> User lsp_float_focused')
+                if !hasmapto('<Plug>(lsp-float-close)')
+                    echom 'register'
+                    imap <silent> <buffer> <C-c> <Plug>(lsp-float-close)
+                    map  <silent> <buffer> <C-c> <Plug>(lsp-float-close)
+                    imap <silent> <buffer> <Esc> <Plug>(lsp-float-close)
+                    map  <silent> <buffer> <Esc> <Plug>(lsp-float-close)
+                endif
             endif
             return
         endif
@@ -194,14 +204,31 @@ function! s:close_floating_window_on_move(curpos) abort
     if a:curpos != getcurpos() | call s:close_floating_window(v:true) | endif
 endf
 
+function! s:on_opened() abort
+    inoremap <buffer><silent> <Plug>(lsp-float-close) <ESC>:<C-u>call <SID>close_floating_window(v:true)<CR>
+    nnoremap <buffer><silent> <Plug>(lsp-float-close) :<C-u>call <SID>close_floating_window(v:true)<CR>
+    execute('doautocmd <nomodeline> User lsp_float_opened')
+    if !hasmapto('<Plug>(lsp-float-close)')
+        echom 'register'
+        imap <silent> <buffer> <C-c> <Plug>(lsp-float-close)
+        map  <silent> <buffer> <C-c> <Plug>(lsp-float-close)
+        imap <silent> <buffer> <Esc> <Plug>(lsp-float-close)
+        map  <silent> <buffer> <Esc> <Plug>(lsp-float-close)
+    endif
+endfunction
+
+function! s:on_closed() abort
+    execute('doautocmd <nomodeline> User lsp_float_closed')
+endfunction
+
 function! s:get_doc_win() abort
     if exists('s:doc_win')
         return s:doc_win
     endif
 
 	let s:doc_win = s:FloatingWindow.new({
-		\   'on_opened': { -> execute('doautocmd <nomodeline> User lsp_float_opened') },
-		\   'on_closed': { -> execute('doautocmd <nomodeline> User lsp_float_closed') }
+		\   'on_opened': function('s:on_opened'),
+		\   'on_closed': function('s:on_closed')
 		\ })
     call s:doc_win.set_var('&wrap', 1)
     call s:doc_win.set_var('&conceallevel', 2)
