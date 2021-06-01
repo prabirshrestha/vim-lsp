@@ -1342,7 +1342,7 @@ This method is mainly used to generate 'root_uri' when registering server.
 
 lsp#enable_diagnostics_for_buffer()          *lsp#enable_diagnostic_for_buffer()*
 
-Re-enable diagnsostics for the specified buffer. By default diagnostics are
+Re-enable diagnostics for the specified buffer. By default diagnostics are
 enabled for all buffers.
 
     Example: >
