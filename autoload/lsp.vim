@@ -206,7 +206,7 @@ function! s:register_events() abort
         autocmd BufReadPost * call s:on_text_document_did_open()
         autocmd BufWritePost * call s:on_text_document_did_save()
         autocmd BufWinLeave * call s:on_text_document_did_close()
-        autocmd BufWipeout * call s:on_buf_wipeout(bufnr('<afile>'))
+        autocmd BufWipeout * call s:on_buf_wipeout(expand('<afile>'))
         autocmd InsertLeave * call s:on_text_document_did_change()
         autocmd TextChanged * call s:on_text_document_did_change()
         if exists('##TextChangedP')

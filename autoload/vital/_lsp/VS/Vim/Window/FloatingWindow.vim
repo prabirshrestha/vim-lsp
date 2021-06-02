@@ -327,7 +327,11 @@ endif
 "
 if has('nvim')
   function! s:_exists(winid) abort
-    return type(a:winid) == type(0) && nvim_win_is_valid(a:winid) && nvim_win_get_number(a:winid) != -1
+    try
+      return type(a:winid) == type(0) && nvim_win_is_valid(a:winid) && nvim_win_get_number(a:winid) != -1
+    catch /.*/
+      return v:false
+    endtry
   endfunction
 else
   function! s:_exists(winid) abort
@@ -442,7 +446,11 @@ endfunction
 if has('nvim')
   function! s:_resolve_border(style) abort
     if !empty(get(a:style, 'border', v:null))
-      let a:style.border = ['┌', '─', '┐', '│', '┘', '─', '└', '│']
+      if &ambiwidth ==# 'single'
+        let a:style.border = ['┌', '─', '┐', '│', '┘', '─', '└', '│']
+      else
+        let a:style.border = ['+', '-', '+', '|', '+', '-', '+', '|']
+      endif
     elseif has_key(a:style, 'border')
       unlet a:style.border
     endif
@@ -451,7 +459,11 @@ if has('nvim')
 else
   function! s:_resolve_border(style) abort
     if !empty(get(a:style, 'border', v:null))
-      let a:style.border = ['─', '│', '─', '│', '┌', '┐', '┘', '└']
+      if &ambiwidth ==# 'single'
+        let a:style.border = ['─', '│', '─', '│', '┌', '┐', '┘', '└']
+      else
+        let a:style.border = ['-', '|', '-', '|', '+', '+', '+', '+']
+      endif
     elseif has_key(a:style, 'border')
       unlet a:style.border
     endif
@@ -468,7 +480,7 @@ function! s:_init() abort
     return
   endif
   let s:has_init = v:true
-  augroup printf('<sfile>')
+  augroup printf('VS_Vim_Window_FloatingWindow:%s', expand('<sfile>'))
     autocmd!
     autocmd WinEnter * call <SID>_notify_closed()
   augroup END
