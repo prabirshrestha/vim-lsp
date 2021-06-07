@@ -66,7 +66,9 @@ function! s:apply(...) abort
         \   l:group
         \ )
       catch /.*/
-        unsilent echomsg printf('[VS.Vim.Syntax.Markdown] The `%s` is not valid filetype! You can add `"let g:markdown_fenced_languages = ["FILETYPE=%s"]`.', l:mark, l:mark)
+        if has_key(l:args, 'verbose')
+          unsilent echomsg printf('[VS.Vim.Syntax.Markdown] The `%s` is not valid filetype! You can add `"let g:markdown_fenced_languages = ["FILETYPE=%s"]`.', l:mark, l:mark)
+        endif
       endtry
     endfor
   catch /.*/
@@ -140,8 +142,8 @@ function! s:_get_filetype_from_mark(mark) abort
       endif
     else
       let l:config = split(l:config, '=')
-      if l:config[1] ==# a:mark
-        return l:config[0]
+      if l:config[0] ==# a:mark
+        return l:config[1]
       endif
     endif
   endfor

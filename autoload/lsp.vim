@@ -206,7 +206,7 @@ function! s:register_events() abort
         autocmd BufReadPost * call s:on_text_document_did_open()
         autocmd BufWritePost * call s:on_text_document_did_save()
         autocmd BufWinLeave * call s:on_text_document_did_close()
-        autocmd BufWipeout * call s:on_buf_wipeout(bufnr('<afile>'))
+        autocmd BufWipeout * call s:on_buf_wipeout(expand('<afile>'))
         autocmd InsertLeave * call s:on_text_document_did_change()
         autocmd TextChanged * call s:on_text_document_did_change()
         if exists('##TextChangedP')
@@ -1031,8 +1031,12 @@ endfunction
 function! s:request_on_notification(ctx, id, data, event) abort
     if a:ctx['cancelled'] | return | endif " caller already unsubscribed so don't bother notifying
     let a:ctx['done'] = 1
-    call a:ctx['next'](extend({ 'server_name': a:ctx['server_name'] }, a:data))
-    call a:ctx['complete']()
+    if has_key(a:data, 'response') && has_key(a:data['response'], 'error')
+        call a:ctx['error'](extend({ 'server_name': a:ctx['server_name'] }, a:data))
+    else
+        call a:ctx['next'](extend({ 'server_name': a:ctx['server_name'] }, a:data))
+        call a:ctx['complete']()
+    endif
 endfunction
 
 function! s:request_cancel(ctx) abort

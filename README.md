@@ -109,6 +109,7 @@ Refer to `:h vim-lsp-semantic` for more info.
 
 | Command | Description|
 |--|--|
+|`:LspAddTreeCallHierarchyIncoming`| Find incoming call hierarchy for the symbol under cursor, but add the result to the current list |
 |`:LspCallHierarchyIncoming`| Find incoming call hierarchy for the symbol under cursor |
 |`:LspCallHierarchyOutgoing`| Find outgoing call hierarchy for the symbol under cursor |
 |`:LspCodeAction`| Gets a list of possible commands that can be applied to a file so it can be fixed (quick fix) |

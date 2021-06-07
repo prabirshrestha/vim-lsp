@@ -41,6 +41,8 @@ let g:lsp_document_code_action_signs_delay = get(g:, 'lsp_document_code_action_s
 let g:lsp_document_code_action_signs_hint = get(g:, 'lsp_document_code_action_signs_hint', {})
 let g:lsp_document_code_action_signs_priority = get(g:, 'lsp_document_code_action_signs_priority', 10)
 
+let g:lsp_tree_incoming_prefix = get(g:, 'lsp_tree_incoming_prefix', '<= ')
+
 let g:lsp_preview_keep_focus = get(g:, 'lsp_preview_keep_focus', 1)
 let g:lsp_use_event_queue = get(g:, 'lsp_use_event_queue', has('nvim') || has('patch-8.1.0889'))
 let g:lsp_insert_text_enabled= get(g:, 'lsp_insert_text_enabled', 1)
@@ -76,7 +78,8 @@ if g:lsp_auto_enable
     augroup END
 endif
 
-command! LspCallHierarchyIncoming call lsp#ui#vim#call_hierarchy_incoming()
+command! LspAddTreeCallHierarchyIncoming call lsp#ui#vim#add_tree_call_hierarchy_incoming()
+command! LspCallHierarchyIncoming call lsp#ui#vim#call_hierarchy_incoming({})
 command! LspCallHierarchyOutgoing call lsp#ui#vim#call_hierarchy_outgoing()
 command! -range -nargs=* -complete=customlist,lsp#ui#vim#code_action#complete LspCodeAction call lsp#ui#vim#code_action#do({
       \   'sync': v:false,
@@ -136,7 +139,7 @@ command! LspDocumentFold call lsp#ui#vim#folding#fold(0)
 command! LspDocumentFoldSync call lsp#ui#vim#folding#fold(1)
 command! -nargs=? LspSemanticScopes call lsp#ui#vim#semantic#display_scope_tree(<args>)
 
-nnoremap <silent> <plug>(lsp-call-hierarchy-incoming) :<c-u>call lsp#ui#vim#call_hierarchy_incoming()<cr>
+nnoremap <silent> <plug>(lsp-call-hierarchy-incoming) :<c-u>call lsp#ui#vim#call_hierarchy_incoming({})<cr>
 nnoremap <silent> <plug>(lsp-call-hierarchy-outgoing) :<c-u>call lsp#ui#vim#call_hierarchy_outgoing()<cr>
 nnoremap <silent> <plug>(lsp-code-action) :<c-u>call lsp#ui#vim#code_action()<cr>
 nnoremap <silent> <plug>(lsp-code-lens) :<c-u>call lsp#ui#vim#code_lens()<cr>

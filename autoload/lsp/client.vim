@@ -10,8 +10,10 @@ function! s:create_context(client_id, opts) abort
 
     let l:ctx = {
         \ 'opts': a:opts,
-        \ 'buffer': '',
         \ 'content-length': -1,
+        \ 'current-content-length': 0,
+        \ 'headers': [],
+        \ 'contents': [],
         \ 'requests': {},
         \ 'request_sequence': 0,
         \ 'on_notifications': {},
@@ -32,123 +34,110 @@ endfunction
 
 function! s:on_stdout(id, data, event) abort
     let l:ctx = get(s:clients, a:id, {})
+    if empty(l:ctx) | return | endif
 
-    if empty(l:ctx)
-        return
-    endif
-
-    if empty(l:ctx['buffer'])
-        let l:ctx['buffer'] = join(a:data, "\n")
+    if l:ctx['content-length'] ==# -1
+        if !s:on_header(l:ctx, a:data)
+            return
+        endif
     else
-        let l:ctx['buffer'] .= join(a:data, "\n")
+        call add(l:ctx['contents'], a:data)
+        let l:ctx['current-content-length'] += strlen(a:data)
+        if l:ctx['current-content-length'] < l:ctx['content-length']
+            return
+        endif
     endif
 
-    while 1
-        if l:ctx['content-length'] < 0
-            " wait for all headers to arrive
-            let l:header_end_index = stridx(l:ctx['buffer'], "\r\n\r\n")
-            if l:header_end_index < 0
-                " no headers found
-                return
-            endif
-            let l:headers = l:ctx['buffer'][:l:header_end_index - 1]
-            let l:ctx['content-length'] = s:get_content_length(l:headers)
-            if l:ctx['content-length'] < 0
-                " invalid content-length
-                call lsp#log('on_stdout', a:id, 'invalid content-length')
-                call s:lsp_stop(a:id)
-                return
-            endif
-            let l:ctx['buffer'] = l:ctx['buffer'][l:header_end_index + 4:] " 4 = len(\r\n\r\n)
-        endif
+    let l:buffer = join(l:ctx['contents'], '')
+    let l:content = strpart(l:buffer, 0, l:ctx['content-length'])
+    let l:remain = strpart(l:buffer, l:ctx['content-length'])
 
-        if len(l:ctx['buffer']) < l:ctx['content-length']
-            " incomplete message, wait for next buffer to arrive
-            return
-        endif
+    try
+        call s:on_message(a:id, l:ctx, json_decode(l:content))
+    catch /.*/
+        echomsg string({ 'exception': v:exception, 'throwpoint': v:throwpoint })
+    endtry
 
-        " we have full message
-        let l:response_str = l:ctx['buffer'][:l:ctx['content-length'] - 1]
-        let l:ctx['content-length'] = -1
-
-        try
-            let l:response = json_decode(l:response_str)
-        catch
-            call lsp#log('s:on_stdout json_decode failed', v:exception)
-        endtry
-
-        let l:ctx['buffer'] = l:ctx['buffer'][len(l:response_str):]
-
-        if exists('l:response')
-            " call appropriate callbacks
-            let l:on_notification_data = { 'response': l:response }
-            if has_key(l:response, 'method') && has_key(l:response, 'id')
-                " it is a request from a server
-                let l:request = l:response
-                if has_key(l:ctx['opts'], 'on_request')
-                    call l:ctx['opts']['on_request'](a:id, l:request)
-                endif
-            elseif has_key(l:response, 'id')
-                " it is a request->response
-                if !(type(l:response['id']) == type(0) || type(l:response['id']) == type(''))
-                    " response['id'] can be number | string | null based on the spec
-                    call lsp#log('invalid response id. ignoring message', l:response)
-                    continue
-                endif
-                if has_key(l:ctx['requests'], l:response['id'])
-                    let l:on_notification_data['request'] = l:ctx['requests'][l:response['id']]
-                endif
-                if has_key(l:ctx['opts'], 'on_notification')
-                    " call client's on_notification first
-                    try
-                        call l:ctx['opts']['on_notification'](a:id, l:on_notification_data, 'on_notification')
-                    catch
-                        call lsp#log('s:on_stdout client option on_notification() error', v:exception, v:throwpoint)
-                    endtry
-                endif
-                if has_key(l:ctx['on_notifications'], l:response['id'])
-                    " call lsp#client#send({ 'on_notification }) second
-                    try
-                        call l:ctx['on_notifications'][l:response['id']](a:id, l:on_notification_data, 'on_notification')
-                    catch
-                        call lsp#log('s:on_stdout client request on_notification() error', v:exception, v:throwpoint)
-                    endtry
-                    unlet l:ctx['on_notifications'][l:response['id']]
-                endif
-                if has_key(l:ctx['requests'], l:response['id'])
-                    unlet l:ctx['requests'][l:response['id']]
-                else
-                    call lsp#log('cannot find the request corresponding to response: ', l:response)
-                endif
-            else
-                " it is a notification
-                if has_key(l:ctx['opts'], 'on_notification')
-                    try
-                        call l:ctx['opts']['on_notification'](a:id, l:on_notification_data, 'on_notification')
-                    catch
-                        call lsp#log('s:on_stdout on_notification() error', v:exception, v:throwpoint)
-                    endtry
-                endif
-            endif
-        endif
-
-        if empty(l:response_str)
-            " buffer is empty, wait for next message to arrive
-            return
-        endif
-    endwhile
+    let l:ctx['headers'] = []
+    let l:ctx['contents'] = []
+    let l:ctx['content-length'] = -1
+    let l:ctx['current-content-length'] = 0
+    if l:remain !=# ''
+        " NOTE: criticial to be on next tick for perf
+        call timer_start(0, {->s:on_stdout(a:id, l:remain, a:event)})
+    endif
 endfunction
 
-function! s:get_content_length(headers) abort
-    for l:header in split(a:headers, "\r\n")
-        let l:kvp = split(l:header, ':')
-        if len(l:kvp) == 2
-            if l:kvp[0] =~? '^Content-Length'
-                return str2nr(l:kvp[1], 10)
-            endif
-        endif
-    endfor
-    return -1
+function! s:on_header(ctx, data) abort
+    let l:header_offset = stridx(a:data, "\r\n\r\n") + 4
+    if l:header_offset < 4
+        call add(a:ctx['headers'], a:data)
+        return v:false
+    else
+        call add(a:ctx['headers'], strpart(a:data, 0, l:header_offset))
+        call add(a:ctx['contents'], strpart(a:data, l:header_offset))
+        let a:ctx['current-content-length'] += strlen(a:ctx['contents'][-1])
+    endif
+    let a:ctx['content-length'] = str2nr(get(matchlist(join(a:ctx['headers'], ''), '\ccontent-length:\s*\(\d\+\)'), 1, '-1'))
+    return a:ctx['current-content-length'] >= a:ctx['content-length']
+endfunction
+
+function! s:on_message(clientid, ctx, message) abort
+    if !has_key(a:message, 'id') && has_key(a:message, 'method')
+        call s:handle_notification(a:clientid, a:ctx, a:message)
+    elseif has_key(a:message, 'id') && has_key(a:message, 'method')
+        call s:handle_request(a:clientid, a:ctx, a:message)
+    elseif has_key(a:message, 'id')
+        call s:handle_response(a:clientid, a:ctx, a:message)
+    endif
+endfunction
+
+function! s:handle_notification(clientid, ctx, message) abort
+    " it is a notification
+    let l:on_notification_data = { 'response': a:message }
+    if has_key(a:ctx['opts'], 'on_notification')
+        try
+            call a:ctx['opts']['on_notification'](a:clientid, l:on_notification_data, 'on_notification')
+        catch
+            call lsp#log('s:on_stdout on_notification() error', v:exception, v:throwpoint, a:message)
+        endtry
+    endif
+endfunction
+
+function! s:handle_request(clientid, ctx, message) abort
+    if has_key(a:ctx['opts'], 'on_request')
+        call a:ctx['opts']['on_request'](a:clientid, a:message)
+    endif
+endfunction
+
+function! s:handle_response(clientid, ctx, message) abort
+    let l:response = a:message
+    let l:on_notification_data = { 'response': l:response }
+    if has_key(a:ctx['requests'], l:response['id'])
+        let l:on_notification_data['request'] = a:ctx['requests'][l:response['id']]
+    endif
+    if has_key(a:ctx['opts'], 'on_notification')
+        " call client's on_notification first
+        try
+            call a:ctx['opts']['on_notification'](a:clientid, l:on_notification_data, 'on_notification')
+        catch
+            call lsp#log('s:handle_response client option on_notification() error', v:exception, v:throwpoint)
+        endtry
+    endif
+    if has_key(a:ctx['on_notifications'], l:response['id'])
+        " call lsp#client#send({ 'on_notification }) second
+        try
+            call a:ctx['on_notifications'][l:response['id']](a:clientid, l:on_notification_data, 'on_notification')
+        catch
+            call lsp#log('s:handle_response client request on_notification() error', v:exception, v:throwpoint, a:message, l:on_notification_data)
+        endtry
+        unlet a:ctx['on_notifications'][l:response['id']]
+    endif
+    if has_key(a:ctx['requests'], l:response['id'])
+        unlet a:ctx['requests'][l:response['id']]
+    else
+        call lsp#log('cannot find the request corresponding to response: ', l:response)
+    endif
 endfunction
 
 function! s:on_stderr(id, data, event) abort
@@ -185,13 +174,13 @@ endfunction
 function! s:lsp_start(opts) abort
     if has_key(a:opts, 'cmd')
         let l:client_id = lsp#utils#job#start(a:opts.cmd, {
-            \ 'on_stdout': function('s:on_stdout'),
+            \ 'on_stdout': {id, data, event->s:on_stdout(id, join(data, "\n"), event)},
             \ 'on_stderr': function('s:on_stderr'),
             \ 'on_exit': function('s:on_exit'),
             \ })
     elseif has_key(a:opts, 'tcp')
         let l:client_id = lsp#utils#job#connect(a:opts.tcp, {
-            \ 'on_stdout': function('s:on_stdout'),
+            \ 'on_stdout': {id, data, event->s:on_stdout(id, join(data, "\n"), event)},
             \ 'on_stderr': function('s:on_stderr'),
             \ 'on_exit': function('s:on_exit'),
             \ })

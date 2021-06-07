@@ -198,6 +198,7 @@ endfunction
 " @param {number} args.col 0-based indexing
 " @param {number} args.width
 " @param {number} args.height
+" @param {boolean?} args.border
 " @param {number?} args.topline
 " @param {string?} args.origin - topleft/topright/botleft/botright
 "
@@ -207,6 +208,7 @@ function! s:FloatingWindow.open(args) abort
   \   'col': a:args.col,
   \   'width': a:args.width,
   \   'height': a:args.height,
+  \   'border': get(a:args, 'border', v:false),
   \   'topline': get(a:args, 'topline', 1),
   \   'origin': get(a:args, 'origin', 'topleft'),
   \ }
@@ -325,7 +327,11 @@ endif
 "
 if has('nvim')
   function! s:_exists(winid) abort
-    return type(a:winid) == type(0) && nvim_win_is_valid(a:winid) && nvim_win_get_number(a:winid) != -1
+    try
+      return type(a:winid) == type(0) && nvim_win_is_valid(a:winid) && nvim_win_get_number(a:winid) != -1
+    catch /.*/
+      return v:false
+    endtry
   endfunction
 else
   function! s:_exists(winid) abort
@@ -362,8 +368,9 @@ endif
 "
 if has('nvim')
   function! s:_style(style) abort
-    let l:style = s:_resolve_style(a:style)
-    return {
+    let l:style = s:_resolve_origin(a:style)
+    let l:style = s:_resolve_border(l:style)
+    let l:style = {
     \   'relative': 'editor',
     \   'row': l:style.row - 1,
     \   'col': l:style.col - 1,
@@ -371,11 +378,17 @@ if has('nvim')
     \   'height': l:style.height,
     \   'focusable': v:true,
     \   'style': 'minimal',
+    \   'border': has_key(l:style, 'border') ? l:style.border : 'none',
     \ }
+    if !exists('*win_execute') " We can't detect neovim features via patch version so we try it by function existence.
+      unlet l:style.border
+    endif
+    return l:style
   endfunction
 else
   function! s:_style(style) abort
-    let l:style = s:_resolve_style(a:style)
+    let l:style = s:_resolve_origin(a:style)
+    let l:style = s:_resolve_border(l:style)
     return {
     \   'line': l:style.row,
     \   'col': l:style.col,
@@ -390,15 +403,17 @@ else
     \   'tabpage': 0,
     \   'firstline': l:style.topline,
     \   'padding': [0, 0, 0, 0],
+    \   'border': has_key(l:style, 'border') ? [1, 1, 1, 1] : [0, 0, 0, 0],
+    \   'borderchars': get(l:style, 'border', []),
     \   'fixed': v:true,
     \ }
   endfunction
 endif
 
 "
-" resolve_style
+" _resolve_origin
 "
-function! s:_resolve_style(style) abort
+function! s:_resolve_origin(style) abort
   if index(['topleft', 'topright', 'bottomleft', 'bottomright', 'topcenter', 'bottomcenter'], a:style.origin) == -1
     let a:style.origin = 'topleft'
   endif
@@ -421,9 +436,40 @@ function! s:_resolve_style(style) abort
   elseif a:style.origin ==# 'bottomcenter'
     let a:style.col = a:style.col - float2nr(a:style.width / 2)
     let a:style.row = a:style.row - (a:style.height - 1)
+  elseif a:style.origin ==# 'centercenter'
+    let a:style.col = a:style.col - float2nr(a:style.width / 2)
+    let a:style.row = a:style.row - float2nr(a:style.height / 2)
   endif
   return a:style
 endfunction
+
+if has('nvim')
+  function! s:_resolve_border(style) abort
+    if !empty(get(a:style, 'border', v:null))
+      if &ambiwidth ==# 'single'
+        let a:style.border = ['┌', '─', '┐', '│', '┘', '─', '└', '│']
+      else
+        let a:style.border = ['+', '-', '+', '|', '+', '-', '+', '|']
+      endif
+    elseif has_key(a:style, 'border')
+      unlet a:style.border
+    endif
+    return a:style
+  endfunction
+else
+  function! s:_resolve_border(style) abort
+    if !empty(get(a:style, 'border', v:null))
+      if &ambiwidth ==# 'single'
+        let a:style.border = ['─', '│', '─', '│', '┌', '┐', '┘', '└']
+      else
+        let a:style.border = ['-', '|', '-', '|', '+', '+', '+', '+']
+      endif
+    elseif has_key(a:style, 'border')
+      unlet a:style.border
+    endif
+    return a:style
+  endfunction
+endif
 
 "
 " init
@@ -434,7 +480,7 @@ function! s:_init() abort
     return
   endif
   let s:has_init = v:true
-  augroup printf('<sfile>')
+  augroup printf('VS_Vim_Window_FloatingWindow:%s', expand('<sfile>'))
     autocmd!
     autocmd WinEnter * call <SID>_notify_closed()
   augroup END
