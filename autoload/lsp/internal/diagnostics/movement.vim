@@ -168,16 +168,14 @@ function! s:get_all_buffer_diagnostics(...) abort
     endif
 
     let l:diagnostics_by_server = lsp#internal#diagnostics#state#_get_all_diagnostics_grouped_by_server_for_uri(l:uri)
+    let l:diagnostics = []
     if empty(l:server)
-        let l:diagnostics = []
         for l:item in values(l:diagnostics_by_server)
-            let l:diagnostics += l:item['params']['diagnostics']
+            let l:diagnostics += lsp#utils#iteratable(l:item['params']['diagnostics'])
         endfor
     else
         if has_key(l:diagnostics_by_server, l:server)
-            let l:diagnostics = l:diagnostics_by_server[l:server]['params']['diagnostics']
-        else
-            let l:diagnostics = []
+            let l:diagnostics = lsp#utils#iteratable(l:diagnostics_by_server[l:server]['params']['diagnostics'])
         endif
     endif
 

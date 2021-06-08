@@ -127,7 +127,7 @@ function! s:set_signs(params) abort
 endfunction
 
 function! s:place_signs(server, diagnostics_response, bufnr) abort
-    for l:item in a:diagnostics_response['params']['diagnostics']
+    for l:item in lsp#utils#iteratable(a:diagnostics_response['params']['diagnostics'])
         let l:line = lsp#utils#position#lsp_line_to_vim(a:bufnr, l:item['range']['start'])
         if has_key(l:item, 'severity') && !empty(l:item['severity'])
             let l:sign_name = get(s:severity_sign_names_mapping, l:item['severity'], 'LspError')
