@@ -15,11 +15,7 @@ function! lsp#internal#diagnostics#first_line#get_first_error_line(options) abor
 
     let l:first_error_line = v:null
     for l:diagnostics_response in values(l:diagnostics_by_server)
-        let l:items = l:diagnostics_response['params']['diagnostics']
-        if empty(l:items)
-            continue
-        endif
-        for l:item in l:items
+        for l:item in lsp#utils#iteratable(l:diagnostics_response['params']['diagnostics'])
             let l:severity = get(l:item, 'severity', 1)
             if l:severity ==# 1 && (l:first_error_line ==# v:null || l:first_error_line ># l:item['range']['start']['line'])
                 let l:first_error_line = l:item['range']['start']['line']

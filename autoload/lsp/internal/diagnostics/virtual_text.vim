@@ -123,11 +123,7 @@ function! s:set_virtual_text(params) abort
 endfunction
 
 function! s:place_virtual_text(server, diagnostics_response, bufnr) abort
-    let l:items = a:diagnostics_response['params']['diagnostics']
-    if empty(l:items)
-        return
-    endif
-    for l:item in l:items
+    for l:item in lsp#utils#iteratable(a:diagnostics_response['params']['diagnostics'])
         " need to do -1 for virtual text
         let l:line = lsp#utils#position#lsp_line_to_vim(a:bufnr, l:item['range']['start']) - 1
         let l:name = get(s:severity_sign_names_mapping, get(l:item, 'severity', 3), 'LspError')
