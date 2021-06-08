@@ -18,11 +18,17 @@ function! lsp#internal#diagnostics#under_cursor#get_diagnostic(...) abort
     if empty(l:server)
         let l:diagnostics = []
         for l:item in values(l:diagnostics_by_server)
-            let l:diagnostics += l:item['params']['diagnostics']
+            let l:more = l:item['params']['diagnostics']
+            if !empty(l:more)
+                let l:diagnostics += l:more
+            endif
         endfor
     else
         if has_key(l:diagnostics_by_server, l:server)
-            let l:diagnostics = l:diagnostics_by_server[l:server]['params']['diagnostics']
+            let l:more = l:diagnostics_by_server[l:server]['params']['diagnostics']
+            if !empty(l:more)
+                let l:diagnostics = l:more
+            endif
         else
             let l:diagnostics = []
         endif
