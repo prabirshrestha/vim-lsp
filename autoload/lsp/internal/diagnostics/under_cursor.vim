@@ -15,8 +15,8 @@ function! lsp#internal#diagnostics#under_cursor#get_diagnostic(...) abort
     let l:uri = lsp#utils#get_buffer_uri(l:bufnr)
 
     let l:diagnostics_by_server = lsp#internal#diagnostics#state#_get_all_diagnostics_grouped_by_server_for_uri(l:uri)
+    let l:diagnostics = []
     if empty(l:server)
-        let l:diagnostics = []
         for l:item in values(l:diagnostics_by_server)
             let l:more = l:item['params']['diagnostics']
             if !empty(l:more)
@@ -29,8 +29,6 @@ function! lsp#internal#diagnostics#under_cursor#get_diagnostic(...) abort
             if !empty(l:more)
                 let l:diagnostics = l:more
             endif
-        else
-            let l:diagnostics = []
         endif
     endif
 
