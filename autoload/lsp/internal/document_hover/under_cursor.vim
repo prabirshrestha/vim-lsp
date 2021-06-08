@@ -49,5 +49,5 @@ function! s:show_hover(server_name, request, response) abort
         return
     endif
 
-    call lsp#ui#vim#output#preview(a:server_name, a:response['result']['contents'], {'statusline': ' LSP Hover'})
+    call lsp#ui#vim#output#preview(a:server_name, a:response['result']['contents'], {'statusline': ' LSP Hover'}, 1)
 endfunction

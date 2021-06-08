@@ -36,7 +36,7 @@ function! s:show_float(diagnostic) abort
         let l:lines = split(a:diagnostic['message'], '\n', 1)
         call lsp#ui#vim#output#preview('', l:lines, {
             \   'statusline': ' LSP Diagnostics'
-            \})
+            \}, 0)
         let s:displaying_message = 1
     elseif get(s:, 'displaying_message', 0)
         call lsp#ui#vim#output#closepreview()

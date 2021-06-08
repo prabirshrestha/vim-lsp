@@ -77,7 +77,7 @@ function! s:handle_signature_help(server, data) abort
             call add(l:contents, l:signature['documentation'])
         endif
 
-        call lsp#ui#vim#output#preview(a:server, l:contents, {'statusline': ' LSP SignatureHelp'})
+        call lsp#ui#vim#output#preview(a:server, l:contents, {'statusline': ' LSP SignatureHelp'}, 1)
         return
     else
         " signature help is used while inserting. So this must be graceful.
