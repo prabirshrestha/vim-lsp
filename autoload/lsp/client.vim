@@ -73,6 +73,8 @@ function! s:on_header(ctx, data) abort
     if l:header_offset < 4
         call add(a:ctx['headers'], a:data)
         return v:false
+    elseif l:header_offset == strlen(a:data)
+        call add(a:ctx['headers'], a:data)
     else
         call add(a:ctx['headers'], strpart(a:data, 0, l:header_offset))
         call add(a:ctx['contents'], strpart(a:data, l:header_offset))
