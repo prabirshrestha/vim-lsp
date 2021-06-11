@@ -1,4 +1,4 @@
-" https://github.com/prabirshrestha/callbag.vim#72acf412812da633cb570fcb971064177719cf35
+" https://github.com/prabirshrestha/callbag.vim#82f96a7d97342fbf0286e6578b65a60f2bc1ce33
 "    :CallbagEmbed path=autoload/lsp/callbag.vim namespace=lsp#callbag
 
 let s:undefined_token = '__callbag_undefined__'
@@ -1464,7 +1464,7 @@ endfunction
 "   \ 'env': {},
 "   \ })
 "   call s:Stdin(1, 'hi')
-"   call s:Stdin(2, lsp#callbag#undefined()) " required to close stdin
+"   call s:Stdin(2, lsp#callbag#undefined()) " requried to close stdin
 function! lsp#callbag#spawn(cmd, ...) abort
     let l:data = { 'cmd': a:cmd, 'opt': a:0 > 0 ? copy(a:000[0]) : {} }
     return lsp#callbag#create(function('s:spawnCreate', [l:data]))
