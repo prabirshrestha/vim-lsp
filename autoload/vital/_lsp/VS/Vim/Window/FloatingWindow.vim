@@ -339,6 +339,9 @@ else
   endfunction
 endif
 
+"
+" info
+"
 if has('nvim')
   function! s:_info(winid) abort
     let l:info = getwininfo(a:winid)[0]

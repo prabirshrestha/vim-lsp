@@ -16,6 +16,7 @@ function! s:apply(...) abort
   let l:text = type(l:text) == v:t_list ? join(l:text, "\n") : l:text
 
   if !exists('b:___VS_Vim_Syntax_Markdown')
+    call s:_execute('syntax sync clear')
     call s:_execute('runtime! syntax/markdown.vim')
 
     " Remove markdownCodeBlock because we support it manually.
