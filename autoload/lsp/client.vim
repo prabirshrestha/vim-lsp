@@ -36,46 +36,48 @@ function! s:on_stdout(id, data, event) abort
     let l:ctx = get(s:clients, a:id, {})
     if empty(l:ctx) | return | endif
 
-    if l:ctx['content-length'] ==# -1
-        if !s:on_header(l:ctx, a:data)
-            return
+    let l:data = a:data
+    while l:data !=# ''
+        if l:ctx['content-length'] ==# -1
+            if !s:on_header(l:ctx, l:data)
+                return
+            endif
+        else
+            call add(l:ctx['contents'], l:data)
+            let l:ctx['current-content-length'] += strlen(l:data)
+            if l:ctx['current-content-length'] < l:ctx['content-length']
+                return
+            endif
         endif
-    else
-        call add(l:ctx['contents'], a:data)
-        let l:ctx['current-content-length'] += strlen(a:data)
-        if l:ctx['current-content-length'] < l:ctx['content-length']
-            return
-        endif
-    endif
 
-    let l:buffer = join(l:ctx['contents'], '')
-    let l:content = strpart(l:buffer, 0, l:ctx['content-length'])
-    let l:remain = strpart(l:buffer, l:ctx['content-length'])
+        let l:buffer = join(l:ctx['contents'], '')
+        let l:content = strpart(l:buffer, 0, l:ctx['content-length'])
+        let l:remain = strpart(l:buffer, l:ctx['content-length'])
 
-    try
-        call s:on_message(a:id, l:ctx, json_decode(l:content))
-    catch /.*/
-        echomsg string({ 'exception': v:exception, 'throwpoint': v:throwpoint })
-    endtry
+        try
+            call s:on_message(a:id, l:ctx, json_decode(l:content))
+        catch /.*/
+            echomsg string({ 'exception': v:exception, 'throwpoint': v:throwpoint })
+        endtry
 
-    let l:ctx['headers'] = []
-    let l:ctx['contents'] = []
-    let l:ctx['content-length'] = -1
-    let l:ctx['current-content-length'] = 0
-    if l:remain !=# ''
-        " NOTE: criticial to be on next tick for perf
-        call timer_start(0, {->s:on_stdout(a:id, l:remain, a:event)})
-    endif
+        let l:ctx['headers'] = []
+        let l:ctx['contents'] = []
+        let l:ctx['content-length'] = -1
+        let l:ctx['current-content-length'] = 0
+        let l:data = l:remain
+    endwhile
 endfunction
 
 function! s:on_header(ctx, data) abort
     let l:header_offset = stridx(a:data, "\r\n\r\n") + 4
     if l:header_offset < 4
-        call add(a:ctx['headers'], a:data)
+        let a:ctx['headers'] += [a:data]
         return v:false
+    elseif l:header_offset == strlen(a:data)
+        let a:ctx['headers'] += [a:data]
     else
-        call add(a:ctx['headers'], strpart(a:data, 0, l:header_offset))
-        call add(a:ctx['contents'], strpart(a:data, l:header_offset))
+        let a:ctx['headers'] += [strpart(a:data, 0, l:header_offset)]
+        let a:ctx['contents'] += [strpart(a:data, l:header_offset)]
         let a:ctx['current-content-length'] += strlen(a:ctx['contents'][-1])
     endif
     let a:ctx['content-length'] = str2nr(get(matchlist(join(a:ctx['headers'], ''), '\ccontent-length:\s*\(\d\+\)'), 1, '-1'))
@@ -83,12 +85,14 @@ function! s:on_header(ctx, data) abort
 endfunction
 
 function! s:on_message(clientid, ctx, message) abort
-    if !has_key(a:message, 'id') && has_key(a:message, 'method')
+    if has_key(a:message, 'id')
+        if has_key(a:message, 'method')
+            call s:handle_request(a:clientid, a:ctx, a:message)
+        else
+            call s:handle_response(a:clientid, a:ctx, a:message)
+        endif
+    else
         call s:handle_notification(a:clientid, a:ctx, a:message)
-    elseif has_key(a:message, 'id') && has_key(a:message, 'method')
-        call s:handle_request(a:clientid, a:ctx, a:message)
-    elseif has_key(a:message, 'id')
-        call s:handle_response(a:clientid, a:ctx, a:message)
     endif
 endfunction
 
