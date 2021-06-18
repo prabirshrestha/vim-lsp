@@ -31,6 +31,10 @@ function! lsp#internal#diagnostics#float#_disable() abort
     let s:enabled = 0
 endfunction
 
+function! lsp#internal#diagnostics#float#do() abort
+    call s:show_float(lsp#internal#diagnostics#under_cursor#get_diagnostic())
+endfunction
+
 function! s:show_float(diagnostic) abort
     if !empty(a:diagnostic) && has_key(a:diagnostic, 'message')
         let l:lines = split(a:diagnostic['message'], '\n', 1)

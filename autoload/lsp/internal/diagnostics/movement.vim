@@ -41,6 +41,7 @@ function! s:next_diagnostic(diagnostics, options) abort
             \ || (l:line == l:view['lnum'] && l:col > l:view['col'] + 1)
             let l:next_line = l:line
             let l:next_col = l:col - 1
+            let l:echo_diagnostic = l:diagnostic
             break
         endif
     endfor
@@ -52,6 +53,7 @@ function! s:next_diagnostic(diagnostics, options) abort
         " Wrap to start
         let [l:next_line, l:next_col] = lsp#utils#position#lsp_to_vim('%', a:diagnostics[0]['range']['start'])
         let l:next_col -= 1
+        let l:echo_diagnostic = a:diagnostics[0]
     endif
 
     let l:view['lnum'] = l:next_line
@@ -68,6 +70,10 @@ function! s:next_diagnostic(diagnostics, options) abort
         endif
     endif
     call winrestview(l:view)
+
+    if g:lsp_diagnostics_echo_movement
+        call lsp#internal#diagnostics#echo#diagnostic(l:echo_diagnostic)
+    endif
 endfunction
 
 function! lsp#internal#diagnostics#movement#_previous_error(...) abort
@@ -110,6 +116,7 @@ function! s:previous_diagnostic(diagnostics, options) abort
             \ || (l:line == l:view['lnum'] && l:col < l:view['col'])
             let l:next_line = l:line
             let l:next_col = l:col - 1
+            let l:echo_diagnostic = a:diagnostics[l:index - 1]
             break
         endif
         let l:index = l:index - 1
@@ -122,6 +129,7 @@ function! s:previous_diagnostic(diagnostics, options) abort
         " Wrap to end
         let [l:next_line, l:next_col] = lsp#utils#position#lsp_to_vim('%', a:diagnostics[-1]['range']['start'])
         let l:next_col -= 1
+        let l:echo_diagnostic = a:diagnostics[-1]
     endif
 
     let l:view['lnum'] = l:next_line
@@ -138,6 +146,10 @@ function! s:previous_diagnostic(diagnostics, options) abort
         endif
     endif
     call winrestview(l:view)
+
+    if g:lsp_diagnostics_echo_movement
+        call lsp#internal#diagnostics#echo#diagnostic(l:echo_diagnostic)
+    endif
 endfunction
 
 function! s:get_diagnostics(uri) abort
