@@ -3,9 +3,9 @@ function! lsp#internal#diagnostics#_enable() abort
     if !g:lsp_diagnostics_enabled | return | endif
 
     call lsp#internal#diagnostics#state#_enable() " Needs to be the first one to register
+    call lsp#internal#diagnostics#float#_enable() " Needs to be registered before echo to avoid visual glitches in nvim
     call lsp#internal#diagnostics#echo#_enable()
     call lsp#internal#diagnostics#highlights#_enable()
-    call lsp#internal#diagnostics#float#_enable()
     call lsp#internal#diagnostics#signs#_enable()
     call lsp#internal#diagnostics#virtual_text#_enable()
 endfunction

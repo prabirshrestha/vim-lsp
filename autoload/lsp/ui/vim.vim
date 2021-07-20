@@ -257,7 +257,7 @@ function! s:handle_location(ctx, server, type, data) abort "ctx = {counter, list
                     call lsp#ui#vim#output#preview(a:server, l:view, {
                         \   'statusline': ' LSP Peek ' . a:type,
                         \   'filetype': &filetype
-                        \ })
+                        \ }, 1)
                 else " showing a location
                     call lsp#ui#vim#output#preview(a:server, l:lines, {
                         \   'statusline': ' LSP Peek ' . a:type,

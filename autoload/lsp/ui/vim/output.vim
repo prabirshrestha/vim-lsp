@@ -326,7 +326,7 @@ function! lsp#ui#vim#output#float_supported() abort
     return s:use_vim_popup || s:use_nvim_float
 endfunction
 
-function! lsp#ui#vim#output#preview(server, data, options) abort
+function! lsp#ui#vim#output#preview(server, data, options, clear_commandbar) abort
     if s:is_cmdwin()
         return
     endif
@@ -337,7 +337,7 @@ function! lsp#ui#vim#output#preview(server, data, options) abort
         \ && len(g:lsp_preview_doubletap) >= 1
         \ && type(g:lsp_preview_doubletap[0]) ==# 2
         \ && index(['i', 's'], mode()[0]) ==# -1
-        echo ''
+        if a:clear_commandbar | echo '' | endif
         return call(g:lsp_preview_doubletap[0], [])
     endif
     " Close any previously opened preview window
@@ -379,7 +379,7 @@ function! lsp#ui#vim#output#preview(server, data, options) abort
     " Go to the previous window to adjust positioning
     call win_gotoid(l:current_window_id)
 
-    echo ''
+    if a:clear_commandbar | echo '' | endif
 
     if s:winid && (s:use_vim_popup || s:use_nvim_float)
       if s:use_nvim_float
