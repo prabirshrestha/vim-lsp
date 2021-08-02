@@ -50,9 +50,8 @@ function! s:ensure(expr) abort
   if !bufexists(a:expr)
     if type(a:expr) == type(0)
       throw printf('VS.Vim.Buffer: `%s` is not valid expr.', l:bufnr)
-    else
-      badd `=a:expr`
     endif
+    badd `=a:expr`
   endif
   return bufnr(a:expr)
 endfunction

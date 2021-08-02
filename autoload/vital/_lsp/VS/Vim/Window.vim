@@ -19,7 +19,7 @@ function! s:do(winid, func) abort
     return
   endif
 
-  if exists('*win_execute')
+  if !has('nvim') && exists('*win_execute')
     let s:Do = a:func
     try
       noautocmd keepalt keepjumps call win_execute(a:winid, 'call s:Do()')
