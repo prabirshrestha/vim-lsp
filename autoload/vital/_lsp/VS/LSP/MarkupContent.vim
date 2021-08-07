@@ -51,6 +51,9 @@ function! s:_compact(string) abort
   " normalize eol.
   let l:string = s:Text.normalize_eol(a:string)
 
+  " trim trailing whitespace from each line
+  let l:string = substitute(l:string, '\v\s+\ze%(\n|$)', '', 'g')
+
   " compact fenced code block start.
   let l:string = substitute(l:string, s:_compact_fenced_start . '```\s*\w\+\s*\zs' . s:_compact_fenced_empty, ' ', 'g')
 
