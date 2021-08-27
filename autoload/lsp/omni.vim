@@ -297,8 +297,8 @@ function! lsp#omni#get_vim_completion_items(options) abort
             \ 'empty': 1,
             \ 'icase': 1,
             \ }
-        if has_key(l:completion_item, 'textEdit') && type(l:completion_item['textEdit']) == type(s:t_dict) && has_key(l:completion_item['textEdit'], 'nextText')
-            let l:vim_complete_item['word'] = l:completion_item['textEdit']['nextText']
+        if has_key(l:completion_item, 'textEdit') && type(l:completion_item['textEdit']) == s:t_dict && has_key(l:completion_item['textEdit'], 'newText')
+            let l:vim_complete_item['word'] = l:completion_item['textEdit']['newText']
         elseif has_key(l:completion_item, 'insertText') && !empty(l:completion_item['insertText'])
             let l:vim_complete_item['word'] = l:completion_item['insertText']
         else
