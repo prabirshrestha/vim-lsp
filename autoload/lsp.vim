@@ -535,6 +535,9 @@ function! lsp#default_get_supported_capabilities(server_info) abort
     \       'semanticHighlightingCapabilities': {
     \           'semanticHighlighting': lsp#ui#vim#semantic#is_enabled()
     \       },
+    \       'publishDiagnostics': {
+    \           'relatedInformation': v:true,
+    \       },
     \       'synchronization': {
     \           'didSave': v:true,
     \           'dynamicRegistration': v:false,
