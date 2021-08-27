@@ -304,7 +304,9 @@ else
       let a:self._on_closed = l:On_closed
       return s:_open(a:bufnr, a:style, { -> a:self._on_closed() })
     endif
-    call popup_move(a:winid, s:_style(a:style))
+    let l:style = s:_style(a:style)
+    call popup_move(a:winid, l:style)
+    call popup_setoptions(a:winid, l:style)
     return a:winid
   endfunction
 endif
@@ -478,12 +480,13 @@ endif
 " init
 "
 let s:has_init = v:false
+let s:filepath = expand('<sfile>:p')
 function! s:_init() abort
   if s:has_init || !has('nvim')
     return
   endif
   let s:has_init = v:true
-  augroup printf('VS_Vim_Window_FloatingWindow:%s', expand('<sfile>'))
+  execute printf('augroup VS_Vim_Window_FloatingWindow:%s', s:filepath)
     autocmd!
     autocmd WinEnter * call <SID>_notify_closed()
   augroup END

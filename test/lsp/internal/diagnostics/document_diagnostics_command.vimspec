@@ -8,6 +8,12 @@ function! s:sort_item_by_text(lhs, rhs) abort
   return 0
 endfunction
 
+function! s:add_end_pos(loc) abort
+    let a:loc['end_lnum'] = 0
+    let a:loc['end_col'] = 0
+    return a:loc
+endfunction
+
 Describe lsp#internal#diagnostics#document_diagnostics_command
     Before
         %bwipeout!
@@ -49,10 +55,14 @@ Describe lsp#internal#diagnostics#document_diagnostics_command
         call sort(l:result, function('s:sort_item_by_text'))
         call map(l:result, {_, v -> extend(v, {'module': ''})})
 
-        Assert Equals(l:result, [
-            \ {'lnum': 2, 'bufnr': l:bufnr, 'col': 2, 'pattern': '', 'valid': 1, 'vcol': 0, 'nr': 0, 'type': 'E', 'module': '', 'text': 'Error:m1'},
-            \ {'lnum': 2, 'bufnr': l:bufnr, 'col': 3, 'pattern': '', 'valid': 1, 'vcol': 0, 'nr': 0, 'type': 'E', 'module': '', 'text': 'Error:m2'},
-            \ ])
+        let l:expected = [
+            \ {'bufnr': l:bufnr, 'lnum': 2, 'col': 2, 'pattern': '', 'valid': 1, 'vcol': 0, 'nr': 0, 'type': 'E', 'module': '', 'text': 'Error:m1'},
+            \ {'bufnr': l:bufnr, 'lnum': 2, 'col': 3, 'pattern': '', 'valid': 1, 'vcol': 0, 'nr': 0, 'type': 'E', 'module': '', 'text': 'Error:m2'},
+            \ ]
+        if has_key(l:result[0], 'end_lnum') " feature detection
+            call map(l:expected, { _, v -> s:add_end_pos(v) })
+        endif
+        Assert Equals(l:result, l:expected)
         execute ':lclose'
 
         execute ':LspDocumentDiagnostics --buffers=*'
@@ -63,12 +73,16 @@ Describe lsp#internal#diagnostics#document_diagnostics_command
         call map(l:result, {_, v -> extend(v, {'module': ''})})
 
         " +2 for bufnr because original bufnr + loclist + new unopened file
-        Assert Equals(l:result, [
-            \ {'lnum': 2, 'bufnr': l:bufnr, 'col': 2, 'pattern': '', 'valid': 1, 'vcol': 0, 'nr': 0, 'type': 'E', 'module': '', 'text': 'Error:m1'},
-            \ {'lnum': 2, 'bufnr': l:bufnr, 'col': 3, 'pattern': '', 'valid': 1, 'vcol': 0, 'nr': 0, 'type': 'E', 'module': '', 'text': 'Error:m2'},
-            \ {'lnum': 3, 'bufnr': l:bufnr + 2, 'col': 2, 'pattern': '', 'valid': 1, 'vcol': 0, 'nr': 0, 'type': 'W', 'module': '', 'text': 'Warning:m3'},
-            \ {'lnum': 4, 'bufnr': l:bufnr + 2, 'col': 3, 'pattern': '', 'valid': 1, 'vcol': 0, 'nr': 0, 'type': 'W', 'module': '', 'text': 'Warning:m4'},
-            \ ])
+        let l:expected = [
+            \ {'bufnr': l:bufnr,     'lnum': 2, 'col': 2, 'pattern': '', 'valid': 1, 'vcol': 0, 'nr': 0, 'type': 'E', 'module': '', 'text': 'Error:m1'},
+            \ {'bufnr': l:bufnr,     'lnum': 2, 'col': 3, 'pattern': '', 'valid': 1, 'vcol': 0, 'nr': 0, 'type': 'E', 'module': '', 'text': 'Error:m2'},
+            \ {'bufnr': l:bufnr + 2, 'lnum': 3, 'col': 2, 'pattern': '', 'valid': 1, 'vcol': 0, 'nr': 0, 'type': 'W', 'module': '', 'text': 'Warning:m3'},
+            \ {'bufnr': l:bufnr + 2, 'lnum': 4, 'col': 3, 'pattern': '', 'valid': 1, 'vcol': 0, 'nr': 0, 'type': 'W', 'module': '', 'text': 'Warning:m4'},
+            \ ]
+        if has_key(l:result[0], 'end_lnum') " feature detection
+            call map(l:expected, { _, v -> s:add_end_pos(v) })
+        endif
+        Assert Equals(l:result, l:expected)
         execute ':lclose'
     End
 End

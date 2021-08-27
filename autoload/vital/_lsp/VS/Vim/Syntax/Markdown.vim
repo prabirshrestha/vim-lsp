@@ -10,35 +10,36 @@ delfunction s:_SID
 "
 " apply
 "
+" TODO: Refactor
+"
 function! s:apply(...) abort
   let l:args = get(a:000, 0, {})
   let l:text = has_key(l:args, 'text') ? l:args.text : getbufline('%', 1, '$')
   let l:text = type(l:text) == v:t_list ? join(l:text, "\n") : l:text
 
+  call s:_execute('syntax sync clear')
   if !exists('b:___VS_Vim_Syntax_Markdown')
-    call s:_execute('syntax sync clear')
-    call s:_execute('runtime! syntax/markdown.vim')
+    " Avoid automatic highlighting by built-in runtime syntax.
+    if !has_key(g:, 'markdown_fenced_languages')
+      call s:_execute('runtime! syntax/markdown.vim')
+    else
+      let l:markdown_fenced_languages = g:markdown_fenced_languages
+      unlet g:markdown_fenced_languages
+      call s:_execute('runtime! syntax/markdown.vim')
+      let g:markdown_fenced_languages = l:markdown_fenced_languages
+    endif
 
     " Remove markdownCodeBlock because we support it manually.
-    call s:_clear('markdownCodeBlock') " tpope/vim-markdown
+    call s:_clear('markdownCodeBlock') " runtime
     call s:_clear('mkdCode') " plasticboy/vim-markdown
 
     " Modify markdownCode (`codes...`)
     call s:_clear('markdownCode')
     syntax region markdownCode matchgroup=Conceal start=/\%(``\)\@!`/ matchgroup=Conceal end=/\%(``\)\@!`/ containedin=TOP keepend concealends
 
-    " Modify markdownEscape (_bold\_text_)
+    " Modify markdownEscape (_bold\_text_) @see nvim's syntax/lsp_markdown.vim
     call s:_clear('markdownEscape')
-    let l:name = 0
-    for l:char in split('!"#$%&()*+,-.g:;<=>?@[]^_`{|}~' . "'", '\zs')
-      let l:name += 1
-      execute printf('syntax match vital_vs_vim_syntax_markdown_escape_%s /[^\\]\?\zs\\\V%s/ conceal cchar=%s containedin=ALL',
-      \   l:name,
-      \   l:char,
-      \   l:char,
-      \ )
-    endfor
-    syntax match vital_vs_vim_syntax_markdown_escape_escape /[^\\]\?\zs\\\\/ conceal cchar=\ containedin=ALL
+    syntax region markdownEscape matchgroup=markdownEscape start=/\\\ze[\\\x60*{}\[\]()#+\-,.!_>~|"$%&'\/:;<=?@^ ]/ end=/./ containedin=ALL keepend oneline concealends
 
     " Add syntax for basic html entities.
     syntax match vital_vs_vim_syntax_markdown_entities_lt /&lt;/ containedin=ALL conceal cchar=<
@@ -48,33 +49,34 @@ function! s:apply(...) abort
     syntax match vital_vs_vim_syntax_markdown_entities_nbsp /&nbsp;/ containedin=ALL conceal cchar= 
 
     let b:___VS_Vim_Syntax_Markdown = {}
+    let b:___VS_Vim_Syntax_Markdown.marks = {}
+    let b:___VS_Vim_Syntax_Markdown.filetypes = {}
   endif
 
-  try
-    for [l:mark, l:filetype] in items(s:_get_filetype_map(l:text))
-      let l:group = substitute(toupper(l:mark), '\.', '_', 'g')
-      if has_key(b:___VS_Vim_Syntax_Markdown, l:group)
+  for [l:mark, l:filetype] in items(s:_get_filetype_map(l:text))
+    try
+      let l:mark_group = substitute(toupper(l:mark), '\.', '_', 'g')
+      if has_key(b:___VS_Vim_Syntax_Markdown.marks, l:mark_group)
         continue
       endif
-      let b:___VS_Vim_Syntax_Markdown[l:group] = v:true
+      let b:___VS_Vim_Syntax_Markdown.marks[l:mark_group] = v:true
 
-      try
-        call s:_execute('syntax include @%s syntax/%s.vim', l:group, l:filetype)
-        call s:_execute('syntax region %s matchgroup=Conceal start=/%s/rs=e matchgroup=Conceal end=/%s/re=s contains=@%s containedin=TOP keepend concealends',
-        \   l:group,
-        \   printf('```\s*%s\s*', l:mark),
-        \   '```\s*\%(\s\|' . "\n" . '\|$\)',
-        \   l:group
-        \ )
-      catch /.*/
-        if has_key(l:args, 'verbose')
-          unsilent echomsg printf('[VS.Vim.Syntax.Markdown] The `%s` is not valid filetype! You can add `"let g:markdown_fenced_languages = ["FILETYPE=%s"]`.', l:mark, l:mark)
-        endif
-      endtry
-    endfor
-  catch /.*/
-    unsilent echomsg string({ 'exception': v:exception, 'throwpoint': v:throwpoint })
-  endtry
+      let l:filetype_group = substitute(toupper(l:filetype), '\.', '_', 'g')
+      if !has_key(b:___VS_Vim_Syntax_Markdown.filetypes, l:filetype_group)
+        call s:_execute('syntax include @%s syntax/%s.vim', l:filetype_group, l:filetype)
+        let b:___VS_Vim_Syntax_Markdown.filetypes[l:filetype_group] = v:true
+      endif
+
+      call s:_execute('syntax region %s matchgroup=Conceal start=/%s/ matchgroup=Conceal end=/%s/ contains=@%s containedin=TOP keepend concealends',
+      \   l:mark_group,
+      \   printf('```\s*%s\s*', l:mark),
+      \   '```\s*\%(' . "\n" . '\|$\)',
+      \   l:filetype_group
+      \ )
+    catch /.*/
+      unsilent echomsg string({ 'exception': v:exception, 'throwpoint': v:throwpoint })
+    endtry
+  endfor
 endfunction
 
 "
