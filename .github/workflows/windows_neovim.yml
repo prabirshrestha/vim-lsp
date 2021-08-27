@@ -25,15 +25,19 @@ jobs:
             os: windows-latest
             neovim_version: v0.4.4
             neovim_arch: win64
+            allow_failure: false
           - name: neovim-v05-x64
             os: windows-latest
             neovim_version: v0.5.0
             neovim_arch: win64
+            allow_failure: false
           - name: neovim-nightly-x64
             os: windows-latest
             neovim_version: nightly
             neovim_arch: win64
+            allow_failure: true
     runs-on: ${{matrix.os}}
+    continue-on-error: ${{matrix.allow_failure}}
     steps:
       - uses: actions/checkout@v2
       - name: Download neovim
@@ -78,3 +82,4 @@ jobs:
           SET THEMIS_VIM=nvim
           nvim --version
           themis
+        continue-on-error: ${{matrix.allow_failure}}
