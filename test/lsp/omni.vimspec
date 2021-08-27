@@ -64,7 +64,7 @@ Describe lsp#omni
 
             let want = {
             \ 'items': [{
-            \  'word': 'my-label',
+            \  'word': 'yyy',
             \  'abbr': 'my-label',
             \  'icase': 1,
             \  'dup': 1,
