@@ -19,11 +19,15 @@ jobs:
       fail-fast: false
       matrix:
         os: [windows-latest]
-        name: [neovim-v04-x64,neovim-nightly-x64]
+        name: [neovim-v04-x64, neovim-v05-x64, neovim-nightly-x64]
         include:
           - name: neovim-v04-x64
             os: windows-latest
             neovim_version: v0.4.4
+            neovim_arch: win64
+          - name: neovim-v05-x64
+            os: windows-latest
+            neovim_version: v0.5.0
             neovim_arch: win64
           - name: neovim-nightly-x64
             os: windows-latest
