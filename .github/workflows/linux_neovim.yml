@@ -19,15 +19,22 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
-        name: [neovim-v04-x64,neovim-nightly-x64]
+        name: [neovim-v04-x64, neovim-v05-x64, neovim-nightly-x64]
         include:
           - name: neovim-v04-x64
             os: ubuntu-latest
             neovim_version: v0.4.4
+            allow_failure: false
+          - name: neovim-v05-x64
+            os: ubuntu-latest
+            neovim_version: v0.5.0
+            allow_failure: false
           - name: neovim-nightly-x64
             os: ubuntu-latest
             neovim_version: nightly
+            allow_failure: true
     runs-on: ${{matrix.os}}
+    continue-on-error: ${{matrix.allow_failure}}
     steps:
       - uses: actions/checkout@v2
       - name: Download neovim
@@ -72,3 +79,4 @@ jobs:
           export THEMIS_VIM=nvim
           nvim --version
           themis
+        continue-on-error: ${{matrix.allow_failure}}
