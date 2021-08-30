@@ -46,6 +46,23 @@ function! lsp#log(...) abort
     endif
 endfunction
 
+function! lsp#log_json_verbose(obj) abort
+    if g:lsp_log_verbose
+        call lsp#log_json(a:obj)
+    end
+endfunction
+
+function! lsp#log_json(obj) abort
+    if !empty(g:lsp_json_log_file)
+        " Since the objects passed to this function are almost always
+        " going to be literals at the callsite, this copy() is prudent but
+        " likely unnecessary.
+        let l:logrec = copy(a:obj)
+        let l:logrec['timestamp'] = strftime('%c')
+        call writefile([json_encode(l:logrec)], g:lsp_json_log_file, 'a')
+    endif
+endfunction
+
 function! lsp#enable() abort
     if s:enabled
         return
@@ -164,6 +181,7 @@ endfunction
 function! lsp#register_server(server_info) abort
     let l:server_name = a:server_info['name']
     if has_key(s:servers, l:server_name)
+        call lsp#log_json({'event': 'lsp#register_server', 'msg': 'server already registered', 'server_name': l:server_name})
         call lsp#log('lsp#register_server', 'server already registered', l:server_name)
     endif
     let s:servers[l:server_name] = {
@@ -171,6 +189,7 @@ function! lsp#register_server(server_info) abort
         \ 'lsp_id': 0,
         \ 'buffers': {},
         \ }
+    call lsp#log_json({'event': 'lsp#register_server', 'msg': 'server registered', 'server_name': l:server_name})
     call lsp#log('lsp#register_server', 'server registered', l:server_name)
     doautocmd <nomodeline> User lsp_register_server
 endfunction
@@ -232,6 +251,7 @@ function! s:on_text_document_did_open(...) abort
     let l:buf = a:0 > 0 ? a:1 : bufnr('%')
     if getbufvar(l:buf, '&buftype') ==# 'terminal' | return | endif
     if getcmdwintype() !=# '' | return | endif
+    call lsp#log_json({'event': 's:on_text_document_did_open()', 'bufnr': l:buf, 'filetype': &filetype, 'cwd': getcwd(), 'bufuri': lsp#utils#get_buffer_uri(l:buf)})
     call lsp#log('s:on_text_document_did_open()', l:buf, &filetype, getcwd(), lsp#utils#get_buffer_uri(l:buf))
 
     " Some language server notify diagnostics to the buffer that has not been loaded yet.
@@ -251,7 +271,9 @@ endfunction
 function! s:on_text_document_did_save() abort
     let l:buf = bufnr('%')
     if getbufvar(l:buf, '&buftype') ==# 'terminal' | return | endif
+    call lsp#log_json({'event': 's:on_text_document_did_save()', 'bufnr': l:buf})
     call lsp#log('s:on_text_document_did_save()', l:buf)
+
     for l:server_name in lsp#get_allowed_servers(l:buf)
         if g:lsp_text_document_did_save_delay >= 0
             " We delay the callback by one loop iteration as calls to ensure_flush
@@ -267,6 +289,7 @@ endfunction
 function! s:on_text_document_did_change() abort
     let l:buf = bufnr('%')
     if getbufvar(l:buf, '&buftype') ==# 'terminal' | return | endif
+    call lsp#log_json({'event': 's:on_text_document_did_change()', 'bufnr': l:buf})
     call lsp#log('s:on_text_document_did_change()', l:buf)
     call s:add_didchange_queue(l:buf)
 endfunction
@@ -282,6 +305,7 @@ function! s:call_did_save(buf, server_name, result, cb) abort
     let [l:supports_did_save, l:did_save_options] = lsp#capabilities#get_text_document_save_registration_options(a:server_name)
     if !l:supports_did_save
         let l:msg = s:new_rpc_success('---> ignoring textDocument/didSave. not supported by server', { 'server_name': a:server_name, 'path': l:path })
+        call lsp#log_json({'event': 'call_did_save()', 'msg': l:msg})
         call lsp#log(l:msg)
         call a:cb(l:msg)
         return
@@ -305,6 +329,7 @@ function! s:call_did_save(buf, server_name, result, cb) abort
         \ })
 
     let l:msg = s:new_rpc_success('textDocument/didSave sent', { 'server_name': a:server_name, 'path': l:path })
+    call lsp#log_json({'event': 'call_did_save()', 'msg': l:msg})
     call lsp#log(l:msg)
     call a:cb(l:msg)
 endfunction
@@ -312,6 +337,7 @@ endfunction
 function! s:on_text_document_did_close() abort
     let l:buf = bufnr('%')
     if getbufvar(l:buf, '&buftype') ==# 'terminal' | return | endif
+    call lsp#log_json({'event': 's:on_text_document_did_close()', 'bufnr': l:buf})
     call lsp#log('s:on_text_document_did_close()', l:buf)
 endfunction
 
@@ -326,6 +352,7 @@ function! s:update_file_content(buf, server_name, new) abort
     if !has_key(s:file_content, a:buf)
         let s:file_content[a:buf] = {}
     endif
+    call lsp#log_json({'event': 's:update_file_content()', 'bufnr': a:buf})
     call lsp#log('s:update_file_content()', a:buf)
     let s:file_content[a:buf][a:server_name] = a:new
 endfunction
@@ -400,6 +427,7 @@ function! s:ensure_start(buf, server_name, cb) abort
 
     if lsp#utils#is_remote_uri(l:path)
         let l:msg = s:new_rpc_error('ignoring start server due to remote uri', { 'server_name': a:server_name, 'uri': l:path})
+        call lsp#log_json({'event': 'rpc', 'msg': l:msg})
         call lsp#log(l:msg)
         call a:cb(l:msg)
         return
@@ -409,6 +437,7 @@ function! s:ensure_start(buf, server_name, cb) abort
     let l:server_info = l:server['server_info']
     if l:server['lsp_id'] > 0
         let l:msg = s:new_rpc_success('server already started', { 'server_name': a:server_name })
+        call lsp#log_json({'event': 'rpc', 'msg': l:msg})
         call lsp#log(l:msg)
         call a:cb(l:msg)
         return
@@ -433,11 +462,13 @@ function! s:ensure_start(buf, server_name, cb) abort
 
         if empty(l:cmd)
             let l:msg = s:new_rpc_error('ignore server start since cmd is empty', { 'server_name': a:server_name })
+            call lsp#log_json({'event': 'rpc', 'msg': l:msg})
             call lsp#log(l:msg)
             call a:cb(l:msg)
             return
         endif
 
+        call lsp#log_json({'event': 'ensure_start()', 'msg': 'Starting server', 'server_name': a:server_name, 'cmd': l:cmd})
         call lsp#log('Starting server', a:server_name, l:cmd)
 
         let l:lsp_id = lsp#client#start({
@@ -452,10 +483,12 @@ function! s:ensure_start(buf, server_name, cb) abort
     if l:lsp_id > 0
         let l:server['lsp_id'] = l:lsp_id
         let l:msg = s:new_rpc_success('started lsp server successfully', { 'server_name': a:server_name, 'lsp_id': l:lsp_id })
+        call lsp#log_json({'event': 'rpc', 'msg': l:msg})
         call lsp#log(l:msg)
         call a:cb(l:msg)
     else
         let l:msg = s:new_rpc_error('failed to start server', { 'server_name': a:server_name, 'cmd': l:cmd })
+        call lsp#log_json({'event': 'rpc', 'msg': l:msg})
         call lsp#log(l:msg)
         call a:cb(l:msg)
     endif
@@ -565,6 +598,7 @@ function! s:ensure_init(buf, server_name, cb) abort
 
     if has_key(l:server, 'init_result')
         let l:msg = s:new_rpc_success('lsp server already initialized', { 'server_name': a:server_name, 'init_result': l:server['init_result'] })
+        call lsp#log_json({'event': 'rpc', 'msg': l:msg})
         call lsp#log(l:msg)
         call a:cb(l:msg)
         return
@@ -574,6 +608,7 @@ function! s:ensure_init(buf, server_name, cb) abort
         " waiting for initialize response
         call add(l:server['init_callbacks'], a:cb)
         let l:msg = s:new_rpc_success('waiting for lsp server to initialize', { 'server_name': a:server_name })
+        call lsp#log_json({'event': 'rpc', 'msg': l:msg})
         call lsp#log(l:msg)
         return
     endif
@@ -584,6 +619,7 @@ function! s:ensure_init(buf, server_name, cb) abort
     let l:root_uri = has_key(l:server_info, 'root_uri') ?  l:server_info['root_uri'](l:server_info) : ''
     if empty(l:root_uri)
         let l:msg = s:new_rpc_error('ignore initialization lsp server due to empty root_uri', { 'server_name': a:server_name, 'lsp_id': l:server['lsp_id'] })
+        call lsp#log_json({'event': 'rpc', 'msg': l:msg})
         call lsp#log(l:msg)
         let l:root_uri = lsp#utils#get_default_root_uri()
     endif
@@ -629,6 +665,7 @@ function! s:ensure_conf(buf, server_name, cb) abort
             \ })
     endif
     let l:msg = s:new_rpc_success('configuration sent', { 'server_name': a:server_name })
+    call lsp#log_json({'event': 'rpc', 'msg': l:msg})
     call lsp#log(l:msg)
     call a:cb(l:msg)
 endfunction
@@ -667,6 +704,7 @@ function! s:ensure_changed(buf, server_name, cb) abort
     let l:buffers = l:server['buffers']
     if !has_key(l:buffers, l:path)
         let l:msg = s:new_rpc_success('file is not managed', { 'server_name': a:server_name, 'path': l:path })
+        call lsp#log_json({'event': 'rpc', 'msg': l:msg})
         call lsp#log(l:msg)
         call a:cb(l:msg)
         return
@@ -677,6 +715,7 @@ function! s:ensure_changed(buf, server_name, cb) abort
 
     if l:buffer_info['changed_tick'] == l:changed_tick
         let l:msg = s:new_rpc_success('not dirty', { 'server_name': a:server_name, 'path': l:path })
+        call lsp#log_json({'event': 'rpc', 'msg': l:msg})
         call lsp#log(l:msg)
         call a:cb(l:msg)
         return
@@ -695,6 +734,7 @@ function! s:ensure_changed(buf, server_name, cb) abort
     call lsp#ui#vim#folding#send_request(a:server_name, a:buf, 0)
 
     let l:msg = s:new_rpc_success('textDocument/didChange sent', { 'server_name': a:server_name, 'path': l:path })
+    call lsp#log_json({'event': 'rpc', 'msg': l:msg})
     call lsp#log(l:msg)
     call a:cb(l:msg)
 endfunction
@@ -705,6 +745,7 @@ function! s:ensure_open(buf, server_name, cb) abort
 
     if empty(l:path)
         let l:msg = s:new_rpc_success('ignore open since not a valid uri', { 'server_name': a:server_name, 'path': l:path })
+        call lsp#log_json({'event': 'rpc', 'msg': l:msg})
         call lsp#log(l:msg)
         call a:cb(l:msg)
         return
@@ -714,6 +755,7 @@ function! s:ensure_open(buf, server_name, cb) abort
 
     if has_key(l:buffers, l:path)
         let l:msg = s:new_rpc_success('already opened', { 'server_name': a:server_name, 'path': l:path })
+        call lsp#log_json({'event': 'rpc', 'msg': l:msg})
         call lsp#log(l:msg)
         call a:cb(l:msg)
         return
@@ -734,6 +776,7 @@ function! s:ensure_open(buf, server_name, cb) abort
     call lsp#ui#vim#folding#send_request(a:server_name, a:buf, 0)
 
     let l:msg = s:new_rpc_success('textDocument/open sent', { 'server_name': a:server_name, 'path': l:path, 'filetype': getbufvar(a:buf, '&filetype') })
+    call lsp#log_json({'event': 'rpc', 'msg': l:msg})
     call lsp#log(l:msg)
     call a:cb(l:msg)
 endfunction
@@ -744,6 +787,7 @@ function! s:send_request(server_name, data) abort
     if has_key(l:data, 'on_notification')
         let l:data['on_notification'] = '---funcref---'
     endif
+    call lsp#log_json_verbose({'event': 'send_request', 'lsp_id': l:lsp_id, 'server_name': a:server_name, 'data': l:data})
     call lsp#log_verbose('--->', l:lsp_id, a:server_name, l:data)
     return lsp#client#send_request(l:lsp_id, a:data)
 endfunction
@@ -754,6 +798,7 @@ function! s:send_notification(server_name, data) abort
     if has_key(l:data, 'on_notification')
         let l:data['on_notification'] = '---funcref---'
     endif
+    call lsp#log_json_verbose({'event': 'send_notification', 'lsp_id': l:lsp_id, 'server_name': a:server_name, 'data': l:data})
     call lsp#log_verbose('--->', l:lsp_id, a:server_name, l:data)
     call lsp#client#send_notification(l:lsp_id, a:data)
 endfunction
@@ -761,15 +806,18 @@ endfunction
 function! s:send_response(server_name, data) abort
     let l:lsp_id = s:servers[a:server_name]['lsp_id']
     let l:data = copy(a:data)
+    call lsp#log_json_verbose({'event': 'send_response', 'lsp_id': l:lsp_id, 'server_name': a:server_name, 'data': l:data})
     call lsp#log_verbose('--->', l:lsp_id, a:server_name, l:data)
     call lsp#client#send_response(l:lsp_id, a:data)
 endfunction
 
 function! s:on_stderr(server_name, id, data, event) abort
+    call lsp#log_json_verbose({'event': 'on_stderr', 'lsp_id': a:id, 'server_name': a:server_name, 'data': a:data})
     call lsp#log_verbose('<---(stderr)', a:id, a:server_name, a:data)
 endfunction
 
 function! s:on_exit(server_name, id, data, event) abort
+    call lsp#log_json({'event': 's:on_exit', 'id': a:id, 'server_name': a:server_name, 'exited': a:data})
     call lsp#log('s:on_exit', a:id, a:server_name, 'exited', a:data)
     if has_key(s:servers, a:server_name)
         let l:server = s:servers[a:server_name]
@@ -786,6 +834,7 @@ function! s:on_exit(server_name, id, data, event) abort
 endfunction
 
 function! s:on_notification(server_name, id, data, event) abort
+    call lsp#log_json_verbose({'event': 'on_notification', 'lsp_id': a:id, 'server_name': a:server_name, 'data': a:data})
     call lsp#log_verbose('<---', a:id, a:server_name, a:data)
     let l:response = a:data['response']
     let l:server = s:servers[a:server_name]
@@ -818,6 +867,7 @@ function! s:on_notification(server_name, id, data, event) abort
 endfunction
 
 function! s:on_request(server_name, id, request) abort
+    call lsp#log_json_verbose({'event': 'on_request', 'lsp_id': a:id, 'server_name': a:server_name, 'request': a:request})
     call lsp#log_verbose('<---', 's:on_request', a:id, a:request)
 
     let l:stream_data = { 'server': a:server_name, 'request': a:request }
@@ -1114,6 +1164,7 @@ function! s:add_didchange_queue(buf) abort
         return
     endif
     call add(s:didchange_queue, a:buf)
+    call lsp#log_json({'event': 'generic', 'msg': 's:send_didchange_queue() will be triggered'})
     call lsp#log('s:send_didchange_queue() will be triggered')
     call timer_stop(s:didchange_timer)
     let l:lazy = &updatetime > 1000 ? &updatetime : 1000
@@ -1121,6 +1172,7 @@ function! s:add_didchange_queue(buf) abort
 endfunction
 
 function! s:send_didchange_queue(...) abort
+    call lsp#log_json({'event': 's:send_event_queue()'})
     call lsp#log('s:send_event_queue()')
     for l:buf in s:didchange_queue
         if !bufexists(l:buf)

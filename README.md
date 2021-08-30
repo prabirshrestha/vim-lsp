@@ -176,11 +176,22 @@ highlight lspReference ctermfg=red guifg=red ctermbg=green guibg=green
 In order to enable file logging set `g:lsp_log_file`.
 
 ```vim
-let g:lsp_log_verbose = 1
 let g:lsp_log_file = expand('~/vim-lsp.log')
+
+" only if you want diagnostic wire traces
+let g:lsp_log_verbose = 1
 
 " for asyncomplete.vim log
 let g:asyncomplete_log_file = expand('~/asyncomplete.log')
+```
+
+Alternatively, if you prefer pure-JSON logs, you can enable that like so:
+
+```vim
+let g:lsp_json_log_file = expand('~/vim-lsp.json')
+
+" only if you want diagnostic wire traces
+let g:lsp_log_verbose = 1
 ```
 
 ## Tests

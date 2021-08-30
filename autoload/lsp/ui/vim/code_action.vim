@@ -110,6 +110,7 @@ function! s:handle_code_action(ctx, server_name, command_id, sync, query, bufnr,
         echo 'No code actions found'
         return
     endif
+    call lsp#log_json({'event': 's:handle_code_action', 'total_code_actions': l:total_code_actions})
     call lsp#log('s:handle_code_action', l:total_code_actions)
 
     if len(l:total_code_actions) == 1 && !empty(a:query)

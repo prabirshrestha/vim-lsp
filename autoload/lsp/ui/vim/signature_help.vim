@@ -25,6 +25,7 @@ function! lsp#ui#vim#signature_help#get_signature_help_under_cursor() abort
             \ })
     endfor
 
+    call lsp#log_json({'event': 'debug', 'msg': 'Retrieving signature help'})
     call lsp#log('Retrieving signature help')
     return
 endfunction

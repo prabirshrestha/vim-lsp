@@ -172,6 +172,7 @@ function! s:_check(text_edits) abort
       \   l:range.end.line == l:text_edit.range.start.line &&
       \   l:range.end.character > l:text_edit.range.start.character
       \ )
+        call lsp#log_json({'event': 'text_edit', 'msg': 'range overlapped.'})
         call lsp#log('text_edit: range overlapped.')
       endif
       let l:range = l:text_edit.range

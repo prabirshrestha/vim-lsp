@@ -98,6 +98,7 @@ function! s:clear_all_highlights() abort
                             \ 'bufnr': l:bufnr,
                             \ 'all': v:true })
                     catch
+                        call lsp#log_json({'event': 'diagnostics', 'func': 'clear_all_highlights', 'call': 'prop_remove', 'exception': v:exception, 'throwpoint': v:throwpoint})
                         call lsp#log('diagnostics', 'clear_all_highlights', 'prop_remove', v:exception, v:throwpoint)
                     endtry
                 endfor
