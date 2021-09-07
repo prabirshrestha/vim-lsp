@@ -37,8 +37,6 @@ function! s:normalize(markup_content, ...) abort
     let l:normalized = a:markup_content.value
     if has_key(a:markup_content, 'language')
       let l:normalized = '```' . a:markup_content.language . ' ' . l:normalized . ' ```'
-    elseif get(a:markup_content, 'kind', 'plaintext') ==# 'plaintext'
-      let l:string = '```plaintext ' . l:string . ' ```'
     endif
   endif
   if l:option.compact
