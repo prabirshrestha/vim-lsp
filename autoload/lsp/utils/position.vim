@@ -12,6 +12,10 @@ function! s:to_col(expr, lnum, char) abort
         endif
         " a:expr is a file that is not yet loaded as a buffer
         let l:lines = readfile(a:expr, '', a:lnum)
+        if l:lines == []
+            " when the file is empty. a:char should be 0 in the case
+            return a:char + 1
+        endif
     endif
     let l:linestr = l:lines[-1]
     return strlen(strcharpart(l:linestr, 0, a:char)) + 1

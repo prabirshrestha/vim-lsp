@@ -103,31 +103,40 @@ function! lsp#ui#vim#utils#diagnostics_to_loc_list(result) abort
     endif
 
     let l:uri = a:result['response']['params']['uri']
-    let l:diagnostics = a:result['response']['params']['diagnostics']
+    let l:diagnostics = lsp#utils#iteratable(a:result['response']['params']['diagnostics'])
 
     let l:list = []
 
     if !empty(l:diagnostics) && lsp#utils#is_file_uri(l:uri)
         let l:path = lsp#utils#uri_to_path(l:uri)
         for l:item in l:diagnostics
+            let l:severity_text = ''
+            if has_key(l:item, 'severity') && !empty(l:item['severity'])
+                let l:severity_text = s:get_diagnostic_severity_text(l:item['severity'])
+            endif
             let l:text = ''
             if has_key(l:item, 'source') && !empty(l:item['source'])
                 let l:text .= l:item['source'] . ':'
             endif
-            if has_key(l:item, 'severity') && !empty(l:item['severity'])
-                let l:text .= s:get_diagnostic_severity_text(l:item['severity']) . ':'
+            if l:severity_text !=# ''
+                let l:text .= l:severity_text . ':'
             endif
             if has_key(l:item, 'code') && !empty(l:item['code'])
                 let l:text .= l:item['code'] . ':'
             endif
             let l:text .= l:item['message']
             let [l:line, l:col] = lsp#utils#position#lsp_to_vim(l:path, l:item['range']['start'])
-            call add(l:list, {
+            let l:location_item = {
                 \ 'filename': l:path,
                 \ 'lnum': l:line,
                 \ 'col': l:col,
                 \ 'text': l:text,
-                \ })
+                \ }
+            if l:severity_text !=# ''
+                " 'E' for error, 'W' for warning, 'I' for information, 'H' for hint
+                let l:location_item['type'] = l:severity_text[0]
+            endif
+            call add(l:list, l:location_item)
         endfor
     endif
 

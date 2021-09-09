@@ -485,3 +485,7 @@ else
         endtry
     endfunction
 endif
+
+function! lsp#utils#iteratable(list) abort
+    return type(a:list) !=# v:t_list ? [] : a:list
+endfunction

@@ -139,6 +139,7 @@ endfunction
 
 function! s:accept_code_action(sync, bufnr, data, ...) abort
     call lsp#internal#ui#quickpick#close()
+    if empty(a:data['items']) | return | endif
     let l:selected = a:data['items'][0]['item']
     if s:handle_disabled_action(l:selected) | return | endif
     call s:handle_one_code_action(l:selected['server_name'], a:sync, a:bufnr, l:selected['code_action'])

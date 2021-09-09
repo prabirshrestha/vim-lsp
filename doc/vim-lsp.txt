@@ -53,6 +53,7 @@ CONTENTS                                                  *vim-lsp-contents*
 			     |g:lsp_document_code_actions_signs_enabled|
       g:lsp_document_code_action_signs_delay
 			     |g:lsp_document_code_actions_signs_delay|
+      g:lsp_tree_incoming_prefix            |g:lsp_tree_incoming_prefix|
       g:lsp_format_sync_timeout             |g:lsp_format_sync_timeout|
       g:lsp_use_event_queue                 |g:lsp_use_event_queue|
       g:lsp_document_highlight_enabled      |g:lsp_document_highlight_enabled|
@@ -90,6 +91,7 @@ CONTENTS                                                  *vim-lsp-contents*
       lsp#get_buffer_first_error_line()   |lsp#get_buffer_first_error_line()|
       lsp#get_progress()                  |lsp#get_progress()|
     Commands                              |vim-lsp-commands|
+      LspAddTreeCallHierarchyIncoming       |:LspAddTreeCallHierarchyIncoming|
       LspCallHierarchyIncoming              |:LspCallHierarchyIncoming|
       LspCallHierarchyOutgoing              |:LspCallHierarchyOutgoing|
       LspCodeAction                         |:LspCodeAction|
@@ -718,6 +720,16 @@ g:lsp_document_code_action_signs_delay
 	let g:lsp_document_code_action_signs_delay = 200
 	let g:lsp_document_code_action_signs_delay = 1000
 >
+g:lsp_tree_incoming_prefix                          *g:lsp_tree_incoming_prefix*
+    Type: |String|
+    Default: `"<= "`
+
+    Specifies the prefix of items added by |LspAddTreeCallHierarchyIncoming|.
+
+    Example: >
+	let g:lsp_tree_incoming_prefix = "← "
+	let g:lsp_tree_incoming_prefix = "⬅️  "
+
 g:lsp_use_event_queue                               *g:lsp_use_event_queue*
     Type: |Number|
     Default: `1` for neovim or vim with patch-8.1.0889
@@ -1338,7 +1350,7 @@ This method is mainly used to generate 'root_uri' when registering server.
 
 lsp#enable_diagnostics_for_buffer()          *lsp#enable_diagnostic_for_buffer()*
 
-Re-enable diagnsostics for the specified buffer. By default diagnostics are
+Re-enable diagnostics for the specified buffer. By default diagnostics are
 enabled for all buffers.
 
     Example: >
@@ -1404,6 +1416,11 @@ lsp#scroll(count)                                             *lsp#scroll()*
 
 ==============================================================================
 Commands                                                  *vim-lsp-commands*
+
+LspAddTreeCallHierarchyIncoming           *:LspAddTreeCallHierarchyIncoming*
+
+Just like |LspCallHierarchyIncoming| , but instead of making a new list the
+result is appended to the current list.
 
 LspCallHierarchyIncoming                         *:LspCallHierarchyIncoming*
 
@@ -1492,8 +1509,8 @@ Format the current document selection.
 
 LspDocumentRangeFormatSync                     *:LspDocumentRangeFormatSync*
 
-Same as |:LspDocumentRangeFormat| but synchronous. Useful when running running
-:autocmd commands. Set |g:lsp_format_sync_timeout| to configure timeouts.
+Same as |:LspDocumentRangeFormat| but synchronous. Useful when running :autocmd
+commands. Set |g:lsp_format_sync_timeout| to configure timeouts.
 
 Note that this may slow down vim.
 

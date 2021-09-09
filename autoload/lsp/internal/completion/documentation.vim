@@ -121,6 +121,7 @@ function! s:show_floating_window(event, managed_user_data) abort
     \     'col': l:pos[1] + 1,
     \     'width': l:size.width,
     \     'height': l:size.height,
+    \     'border': v:true,
     \     'topline': 1,
     \ })
     call s:Window.do(l:doc_win.get_winid(), { -> s:Markdown.apply() })
@@ -168,7 +169,8 @@ function! s:get_doc_win() abort
     \ })
     call s:doc_win.set_var('&wrap', 1)
     call s:doc_win.set_var('&conceallevel', 2)
-    call s:doc_win.set_bufnr(s:Buffer.create())
+    silent let l:bufnr = s:Buffer.create()
+    call s:doc_win.set_bufnr(l:bufnr)
     call setbufvar(s:doc_win.get_bufnr(), '&buftype', 'nofile')
     call setbufvar(s:doc_win.get_bufnr(), '&bufhidden', 'hide')
     call setbufvar(s:doc_win.get_bufnr(), '&buflisted', 0)

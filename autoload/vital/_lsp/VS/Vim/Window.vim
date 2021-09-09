@@ -19,7 +19,7 @@ function! s:do(winid, func) abort
     return
   endif
 
-  if exists('*win_execute')
+  if !has('nvim') && exists('*win_execute')
     let s:Do = a:func
     try
       noautocmd keepalt keepjumps call win_execute(a:winid, 'call s:Do()')
@@ -106,8 +106,8 @@ function! s:scroll(winid, topline) abort
   function! l:ctx.callback(winid, topline) abort
     let l:wininfo = s:info(a:winid)
     let l:topline = a:topline
-    let l:topline = max([l:topline, 1])
     let l:topline = min([l:topline, line('$') - l:wininfo.height + 1])
+    let l:topline = max([l:topline, 1])
 
     if l:topline == l:wininfo.topline
       return

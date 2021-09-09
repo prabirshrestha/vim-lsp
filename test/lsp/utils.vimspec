@@ -298,4 +298,19 @@ Describe lsp#utils
           \), '/path/to/short')
         End
     End
+
+    Describe lsp#utils#iteratable
+        It should return empty list if non-list is given
+            Assert Equals(lsp#utils#iteratable(''), [])
+            Assert Equals(lsp#utils#iteratable(1), [])
+            Assert Equals(lsp#utils#iteratable(2.3), [])
+            Assert Equals(lsp#utils#iteratable(v:false), [])
+            Assert Equals(lsp#utils#iteratable(v:true), [])
+            Assert Equals(lsp#utils#iteratable({}), [])
+        End
+
+        It should return the list it self if list is given
+            Assert Equals(lsp#utils#iteratable([1,2,3]), [1,2,3])
+        End
+    End
 End
