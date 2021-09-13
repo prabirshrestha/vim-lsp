@@ -118,8 +118,7 @@ function! s:set_highlights(data) abort
                     \ 'type': 'vim-lsp-reference-highlight'})
                 call add(b:lsp_reference_matches, l:position[0])
             catch
-                call lsp#log_json({'event': 'document_highlight', 'func': 'set_highlights', 'exception': v:exception, 'throwpoint': v:throwpoint})
-                call lsp#log('document_highlight', 'set_highlights', v:exception, v:throwpoint)
+                call lsp#log({'event': 'internal error', 'request': 'document_highlight', 'func': 'set_highlights', 'exception': v:exception, 'throwpoint': v:throwpoint})
             endtry
         endfor
     else

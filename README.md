@@ -185,14 +185,9 @@ let g:lsp_log_verbose = 1
 let g:asyncomplete_log_file = expand('~/asyncomplete.log')
 ```
 
-Alternatively, if you prefer pure-JSON logs, you can enable that like so:
+The log file will contain JSON messages. You can use tools such as `jq` to
+pretty-print the log and filter it down to just the messages you care about.
 
-```vim
-let g:lsp_json_log_file = expand('~/vim-lsp.json')
-
-" only if you want diagnostic wire traces
-let g:lsp_log_verbose = 1
-```
 
 ## Tests
 

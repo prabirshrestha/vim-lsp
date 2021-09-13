@@ -1,8 +1,7 @@
 let s:tag_kind_priority = ['definition', 'declaration', 'implementation', 'type definition']
 
 function! s:not_supported(what) abort
-    call lsp#log_json({'event': 'not_supported', 'what': a:what, 'filetype': &filetype})
-    call lsp#log(a:what . ' not supported for ' . &filetype)
+    call lsp#log({'event': 'request rejected', 'error': 'not supported', 'what': a:what, 'filetype': &filetype})
 endfunction
 
 function! s:location_to_tag(loc) abort

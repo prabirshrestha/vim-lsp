@@ -23,8 +23,7 @@ function! lsp#internal#show_message_request#_disable() abort
 endfunction
 
 function! s:on_error(e) abort
-    call lsp#log_json({'event':'lsp#internal#show_message_request error', 'error': a:e})
-    call lsp#log('lsp#internal#show_message_request error', a:e)
+    call lsp#log({'event': 'request error', 'msg': 'lsp#internal#show_message_request error', 'error': a:e})
     if exists('s:Dispose')
         call s:Dispose()
         unlet s:Dispose

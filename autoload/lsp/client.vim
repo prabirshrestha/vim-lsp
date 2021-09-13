@@ -55,8 +55,7 @@ function! s:on_stdout(id, data, event) abort
             let l:ctx['content-length'] = s:get_content_length(l:headers)
             if l:ctx['content-length'] < 0
                 " invalid content-length
-                call lsp#log_json({'event': 'on_stdout', 'client_id': a:id, 'error': 'invalid content-length'})
-                call lsp#log('on_stdout', a:id, 'invalid content-length')
+                call lsp#log({'event': 'on_stdout', 'client_id': a:id, 'error': 'invalid content-length'})
                 call s:lsp_stop(a:id)
                 return
             endif
@@ -75,8 +74,7 @@ function! s:on_stdout(id, data, event) abort
         try
             let l:response = json_decode(l:response_str)
         catch
-            call lsp#log_json({'event': 's:on_stdout', 'error': 'json_decode failed', 'exception': v:exception})
-            call lsp#log('s:on_stdout json_decode failed', v:exception)
+            call lsp#log({'event': 's:on_stdout', 'error': 'json_decode failed', 'exception': v:exception})
         endtry
 
         let l:ctx['buffer'] = l:ctx['buffer'][len(l:response_str):]
@@ -94,8 +92,7 @@ function! s:on_stdout(id, data, event) abort
                 " it is a request->response
                 if !(type(l:response['id']) == type(0) || type(l:response['id']) == type(''))
                     " response['id'] can be number | string | null based on the spec
-                    call lsp#log_json({'event': 'invalid response id. ignoring message', 'response': l:response})
-                    call lsp#log('invalid response id. ignoring message', l:response)
+                    call lsp#log({'event': 'internal error', 'msg': 'invalid response id. ignoring message', 'response': l:response})
                     continue
                 endif
                 if has_key(l:ctx['requests'], l:response['id'])
@@ -106,8 +103,7 @@ function! s:on_stdout(id, data, event) abort
                     try
                         call l:ctx['opts']['on_notification'](a:id, l:on_notification_data, 'on_notification')
                     catch
-                        call lsp#log_json({'event': 's:on_stdout', 'error': 'client option on_notification() error', 'exception': v:exception, 'throwpoint': v:throwpoint})
-                        call lsp#log('s:on_stdout client option on_notification() error', v:exception, v:throwpoint)
+                        call lsp#log({'event': 's:on_stdout', 'error': 'client option on_notification() error', 'exception': v:exception, 'throwpoint': v:throwpoint})
                     endtry
                 endif
                 if has_key(l:ctx['on_notifications'], l:response['id'])
@@ -115,16 +111,14 @@ function! s:on_stdout(id, data, event) abort
                     try
                         call l:ctx['on_notifications'][l:response['id']](a:id, l:on_notification_data, 'on_notification')
                     catch
-                        call lsp#log_json({'event': 's:on_stdout', 'error': 'client request on_notification() error', 'exception': v:exception, 'throwpoint': v:throwpoint})
-                        call lsp#log('s:on_stdout client request on_notification() error', v:exception, v:throwpoint)
+                        call lsp#log({'event': 's:on_stdout', 'error': 'client request on_notification() error', 'exception': v:exception, 'throwpoint': v:throwpoint})
                     endtry
                     unlet l:ctx['on_notifications'][l:response['id']]
                 endif
                 if has_key(l:ctx['requests'], l:response['id'])
                     unlet l:ctx['requests'][l:response['id']]
                 else
-                    call lsp#log_json({'event': 'error', 'error': 'cannot find the request corresponding to response: ', 'response': l:response})
-                    call lsp#log('cannot find the request corresponding to response: ', l:response)
+                    call lsp#log({'event': 'internal error', 'error': 'cannot find the request corresponding to response: ', 'response': l:response})
                 endif
             else
                 " it is a notification
@@ -132,8 +126,7 @@ function! s:on_stdout(id, data, event) abort
                     try
                         call l:ctx['opts']['on_notification'](a:id, l:on_notification_data, 'on_notification')
                     catch
-                        call lsp#log_json({'event': 's:on_stdout', 'error': 'on_notification() error', 'exception': v:exception, 'throwpoint': v:throwpoint})
-                        call lsp#log('s:on_stdout on_notification() error', v:exception, v:throwpoint)
+                        call lsp#log({'event': 's:on_stdout', 'error': 'on_notification() error', 'exception': v:exception, 'throwpoint': v:throwpoint})
                     endtry
                 endif
             endif
@@ -167,8 +160,7 @@ function! s:on_stderr(id, data, event) abort
         try
             call l:ctx['opts']['on_stderr'](a:id, a:data, a:event)
         catch
-            call lsp#log_json({'event': 'error', 'error': 's:on_stderr exception', 'exception': v:exception, 'throwpoint': v:throwpoint})
-            call lsp#log('s:on_stderr exception', v:exception, v:throwpoint)
+            call lsp#log({'event': 'internal error', 'error': 's:on_stderr exception', 'exception': v:exception, 'throwpoint': v:throwpoint})
             echom v:exception
         endtry
     endif
@@ -183,8 +175,7 @@ function! s:on_exit(id, status, event) abort
         try
             call l:ctx['opts']['on_exit'](a:id, a:status, a:event)
         catch
-            call lsp#log_json({'event': 's:on_exit', 'exception': v:exception, 'throwpoint': v:throwpoint})
-            call lsp#log('s:on_exit exception', v:exception, v:throwpoint)
+            call lsp#log({'event': 'internal error', 'error': 's:on_exit exception', 'exception': v:exception, 'throwpoint': v:throwpoint})
             echom v:exception
         endtry
     endif

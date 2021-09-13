@@ -76,8 +76,7 @@ function! s:format_next(x) abort
 endfunction
 
 function! s:format_error(e) abort
-    call lsp#log_json({'event': 'debug', 'msg': 'Formatting Document Failed', 'error': a:e})
-    call lsp#log('Formatting Document Failed', a:e)
+    call lsp#log({'event': 'request error', 'msg': 'Formatting Document Failed', 'error': a:e})
     call lsp#utils#error('Formatting Document Failed.' . (type(a:e) == type('') ? a:e : ''))
 endfunction
 

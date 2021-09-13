@@ -72,6 +72,5 @@ endfunction
 
 function! s:on_error(e) abort
     call lsp#internal#ui#quickpick#close()
-    call lsp#log_json({'event': 'LspDocumentSymbolSearch error', 'error': a:e})
-    call lsp#log('LspDocumentSymbolSearch error', a:e)
+    call lsp#log({'event': 'request error', 'msg': 'LspDocumentSymbolSearch error', 'error': a:e})
 endfunction

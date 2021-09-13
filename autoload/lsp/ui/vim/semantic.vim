@@ -28,8 +28,7 @@ function! lsp#ui#vim#semantic#handle_semantic(server, data) abort
     if !g:lsp_semantic_enabled | return | endif
 
     if lsp#client#is_error(a:data['response'])
-        call lsp#log_json({'event': 'debug', 'msg': 'Skipping semantic highlight: response is invalid'})
-        call lsp#log('Skipping semantic highlight: response is invalid')
+        call lsp#log({'event': 'debug', 'msg': 'Skipping semantic highlight: response is invalid'})
         return
     endif
 

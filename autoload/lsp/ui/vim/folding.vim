@@ -57,8 +57,7 @@ function! lsp#ui#vim#folding#send_request(server_name, buf, sync) abort
     endif
 
     if !g:lsp_fold_enabled
-        call lsp#log_json({'event': 'debug', 'msg': 'Skip sending fold request: folding was disabled explicitly'})
-        call lsp#log('Skip sending fold request: folding was disabled explicitly')
+        call lsp#log({'event': 'debug', 'msg': 'Skip sending fold request: folding was disabled explicitly'})
         return
     endif
 
