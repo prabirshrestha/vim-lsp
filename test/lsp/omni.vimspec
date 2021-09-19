@@ -182,5 +182,62 @@ Describe lsp#omni
                         \   'complete_position': { 'line': 1, 'character': 1 }
                         \ })
         End
+
+        It should sort by sortText
+            let items = [{
+            \ 'label': 'my-label3',
+            \ 'kind': '3',
+            \ 'sortText': '3'
+            \},
+            \{
+            \ 'label': 'my-label1',
+            \ 'kind': '3',
+            \ 'sortText': '1'
+            \},
+            \{
+            \ 'label': 'my-label2',
+            \ 'kind': '3',
+            \ 'sortText': '2'
+            \}]
+
+            let options = {
+            \ 'server': { 'name': 'dummy-server' },
+            \ 'position': lsp#get_position(),
+            \ 'response': { 'result': items },
+            \}
+
+            let want = {
+            \ 'items': [{
+            \   'word': 'my-label1',
+            \   'abbr': 'my-label1',
+            \   'icase': 1,
+            \   'dup': 1,
+            \   'empty': 1,
+            \   'kind': 'function',
+            \   'user_data': '{"vim-lsp/key":"0"}',
+            \ },
+            \ {
+            \   'word': 'my-label2',
+            \   'abbr': 'my-label2',
+            \   'icase': 1,
+            \   'dup': 1,
+            \   'empty': 1,
+            \   'kind': 'function',
+            \   'user_data': '{"vim-lsp/key":"1"}',
+            \ },
+            \ {
+            \   'word': 'my-label3',
+            \   'abbr': 'my-label3',
+            \   'icase': 1,
+            \   'dup': 1,
+            \   'empty': 1,
+            \   'kind': 'function',
+            \   'user_data': '{"vim-lsp/key":"2"}',
+            \ }],
+            \ 'incomplete': 0,
+            \}
+
+            Assert Equals(lsp#omni#get_vim_completion_items(options), want)
+        End
     End
 End
