@@ -863,8 +863,9 @@ g:lsp_ignorecase                                         *g:lsp_ignorecase*
     Type: |Boolean|
     Default: the value of 'ignorecase'
 
-    Determines whether or not case should be ignored when filtering completion
-    items. See |vim-lsp-completion-filter|. By default, the value of
+    Determines whether or not case should be ignored when filtering or sorting
+    completion items.
+    See |vim-lsp-completion-filter| or |vim-lsp-completion-sort|. By default, the value of
     'ignorecase' is used.
 
 g:lsp_log_file                                           *g:lsp_log_file*
@@ -1202,6 +1203,16 @@ only possible by adding to the already typed prefix (even if you're using the
 `contains` filter). If you'd like to retrigger the filtering, you will have to
 press CTRL-X CTRL-O again.
 
+sort                                              *vim-lsp-completion-sort*
+
+You can sort the completion items returned from the server by using the `sort` key in the server info's `config` |dict|.
+The value of the `sort` key is itself a |dict| containing at least a key
+`max`, which specifies max number of completion items count before ignore sort for performance reason.
+
+The case (in)sensitivity of the matching is determined by |g:lsp_ignorecase|.
+
+    Example: >
+        'config': { 'sort': { 'max': 100 } }
 
 lsp#register_command({command-name}, {callback})     *lsp#register_command()*
 

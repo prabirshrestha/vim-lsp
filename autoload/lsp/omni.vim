@@ -265,10 +265,18 @@ function! s:get_completion_result(server_name, data) abort
 endfunction
 
 function! s:sort_by_sorttext(i1, i2) abort
-  if has_key(a:i1, 'sortText') && has_key(a:i2, 'sortText')
-    return a:i1.sortText == a:i2.sortText ? 0 : a:i1.sortText > a:i2.sortText ? 1 : -1
-  endif
-  return 0
+    let l:text1 = get(a:i1, 'sortText')
+    let l:text2 = get(a:i2, 'sortText')
+
+    " sortText is possibly empty string
+    let l:text1 = l:text1 ? l:text1 : a:i1['label']
+    let l:text2 = l:text2 ? l:text2 : a:i2['label']
+
+    if g:lsp_ignorecase
+        return tolower(l:text1) == tolower(l:text2) ? 0 : tolower(l:text1) > tolower(l:text2) ? 1 : -1
+    else
+        return l:text1 == l:text2 ? 0 : l:text1 > l:text2 ? 1 : -1
+    endif
 endfunction
 
 " options = {
@@ -295,7 +303,9 @@ function! lsp#omni#get_vim_completion_items(options) abort
         let l:incomplete = 0
     endif
 
-    if len(l:items) > 0 && has_key(l:items[0], 'sortText')
+    let l:sort = has_key(l:server, 'config') && has_key(l:server['config'], 'sort') ? l:server['config']['sort'] : v:none
+
+    if len(l:items) > 0 && type(l:sort) == s:t_dict && len(l:items) <= l:sort['max']
       " If first item contains sortText, maybe we can use sortText
       call sort(l:items, function('s:sort_by_sorttext'))
     endif
