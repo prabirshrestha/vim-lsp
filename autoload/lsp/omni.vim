@@ -303,7 +303,7 @@ function! lsp#omni#get_vim_completion_items(options) abort
         let l:incomplete = 0
     endif
 
-    let l:sort = has_key(l:server, 'config') && has_key(l:server['config'], 'sort') ? l:server['config']['sort'] : v:none
+    let l:sort = has_key(l:server, 'config') && has_key(l:server['config'], 'sort') ? l:server['config']['sort'] : v:null
 
     if len(l:items) > 0 && type(l:sort) == s:t_dict && len(l:items) <= l:sort['max']
       " If first item contains sortText, maybe we can use sortText
