@@ -1207,7 +1207,7 @@ sort                                              *vim-lsp-completion-sort*
 
 You can sort the completion items returned from the server by using the `sort` key in the server info's `config` |dict|.
 The value of the `sort` key is itself a |dict| containing at least a key
-`max`, which specifies max number of completion items count before ignore sort for performance reason.
+`max`, which specifies max number of completion items count before giving up sorting for performance reason.
 
 The case (in)sensitivity of the matching is determined by |g:lsp_ignorecase|.
 
