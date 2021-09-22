@@ -273,9 +273,9 @@ function! s:sort_by_sorttext(i1, i2) abort
     let l:text2 = l:text2 ? l:text2 : a:i2['label']
 
     if g:lsp_ignorecase
-        return tolower(l:text1) == tolower(l:text2) ? 0 : tolower(l:text1) > tolower(l:text2) ? 1 : -1
+        return l:text1 ==? l:text2 ? 0 : l:text1 >? l:text2 ? 1 : -1
     else
-        return l:text1 == l:text2 ? 0 : l:text1 > l:text2 ? 1 : -1
+        return l:text1 ==# l:text2 ? 0 : l:text1 ># l:text2 ? 1 : -1
     endif
 endfunction
 
