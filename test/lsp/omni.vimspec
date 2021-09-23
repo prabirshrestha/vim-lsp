@@ -424,5 +424,65 @@ Describe lsp#omni
             \}
             Assert Equals(lsp#omni#get_vim_completion_items(options), want)
         End
+
+        Describe g:lsp_ignorecase
+            Before all
+                let saved_ignorecase = get(g:, 'lsp_ignorecase', v:null)
+            End
+
+            After all
+                if saved_ignorecase isnot v:null
+                    let g:lsp_ignorecase = saved_ignorecase
+                endif
+            End
+
+            It should sort completion items case-insensitive when true is set
+                let g:lsp_ignorecase = v:true
+
+                " 'B' < 'a' but 'a' < 'b'
+                let result = [{
+                \ 'label': 'my-label1',
+                \ 'kind': '3',
+                \ 'sortText': 'B'
+                \},
+                \{
+                \ 'label': 'my-label2',
+                \ 'kind': '3',
+                \ 'sortText': 'a'
+                \}]
+
+                let options = {
+                \ 'server': {
+                \   'name': 'dummy-server',
+                \   'config': {
+                \     'sort': { 'max': 10 },
+                \   },
+                \ },
+                \ 'position': lsp#get_position(),
+                \ 'response': { 'result': result },
+                \}
+
+                let want = [{
+                \  'word': 'my-label2',
+                \  'abbr': 'my-label2',
+                \  'icase': 1,
+                \  'dup': 1,
+                \  'empty': 1,
+                \  'kind': 'function',
+                \  'user_data': '{"vim-lsp/key":"0"}',
+                \},
+                \{
+                \  'word': 'my-label1',
+                \  'abbr': 'my-label1',
+                \  'icase': 1,
+                \  'dup': 1,
+                \  'empty': 1,
+                \  'kind': 'function',
+                \  'user_data': '{"vim-lsp/key":"1"}',
+                \}]
+
+                Assert Equals(lsp#omni#get_vim_completion_items(options).items, want)
+            End
+        End
     End
 End
