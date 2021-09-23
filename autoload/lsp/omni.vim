@@ -269,8 +269,8 @@ function! s:sort_by_sorttext(i1, i2) abort
     let l:text2 = get(a:i2, 'sortText')
 
     " sortText is possibly empty string
-    let l:text1 = l:text1 ? l:text1 : a:i1['label']
-    let l:text2 = l:text2 ? l:text2 : a:i2['label']
+    let l:text1 = !empty(l:text1) ? l:text1 : a:i1['label']
+    let l:text2 = !empty(l:text2) ? l:text2 : a:i2['label']
 
     if g:lsp_ignorecase
         return l:text1 ==? l:text2 ? 0 : l:text1 >? l:text2 ? 1 : -1

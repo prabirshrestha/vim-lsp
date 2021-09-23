@@ -185,19 +185,19 @@ Describe lsp#omni
 
         It should sort by sortText
             let items = [{
-            \ 'label': 'my-label3',
-            \ 'kind': '3',
-            \ 'sortText': '3'
-            \},
-            \{
             \ 'label': 'my-label1',
             \ 'kind': '3',
-            \ 'sortText': '1'
+            \ 'sortText': 'c'
             \},
             \{
             \ 'label': 'my-label2',
             \ 'kind': '3',
-            \ 'sortText': '2'
+            \ 'sortText': 'a'
+            \},
+            \{
+            \ 'label': 'my-label3',
+            \ 'kind': '3',
+            \ 'sortText': 'b'
             \}]
 
             let options = {
@@ -213,8 +213,8 @@ Describe lsp#omni
 
             let want = {
             \ 'items': [{
-            \   'word': 'my-label1',
-            \   'abbr': 'my-label1',
+            \   'word': 'my-label2',
+            \   'abbr': 'my-label2',
             \   'icase': 1,
             \   'dup': 1,
             \   'empty': 1,
@@ -222,8 +222,8 @@ Describe lsp#omni
             \   'user_data': '{"vim-lsp/key":"0"}',
             \ },
             \ {
-            \   'word': 'my-label2',
-            \   'abbr': 'my-label2',
+            \   'word': 'my-label3',
+            \   'abbr': 'my-label3',
             \   'icase': 1,
             \   'dup': 1,
             \   'empty': 1,
@@ -231,8 +231,8 @@ Describe lsp#omni
             \   'user_data': '{"vim-lsp/key":"1"}',
             \ },
             \ {
-            \   'word': 'my-label3',
-            \   'abbr': 'my-label3',
+            \   'word': 'my-label1',
+            \   'abbr': 'my-label1',
             \   'icase': 1,
             \   'dup': 1,
             \   'empty': 1,
