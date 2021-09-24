@@ -68,6 +68,7 @@ let g:lsp_tagfunc_source_methods = get(g:, 'lsp_tagfunc_source_methods', ['defin
 let g:lsp_show_message_request_enabled = get(g:, 'lsp_show_message_request_enabled', 1)
 let g:lsp_show_message_log_level = get(g:, 'lsp_show_message_log_level', 'warning')
 let g:lsp_work_done_progress_enabled = get(g:, 'lsp_work_done_progress_enabled', 0)
+let g:lsp_copen_command = get(g:, 'lsp_copen_command', 'botright copen')
 
 let g:lsp_get_supported_capabilities = get(g:, 'lsp_get_supported_capabilities', [function('lsp#default_get_supported_capabilities')])
 
