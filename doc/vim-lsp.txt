@@ -75,6 +75,7 @@ CONTENTS                                                  *vim-lsp-contents*
       g:lsp_show_message_request_enabled    |g:lsp_show_message_request_enabled|
       g:lsp_work_done_progress_enabled      |g:lsp_work_done_progress_enabled|
       g:lsp_show_message_log_level          |g:lsp_show_message_log_level|
+      g:lsp_copen_command                   |g:lsp_copen_command|
     Functions                             |vim-lsp-functions|
       lsp#enable                            |lsp#enable()|
       lsp#disable                           |lsp#disable()|
@@ -940,6 +941,12 @@ g:lsp_show_message_log_level                *g:lsp_show_message_log_level*
     `'warning'` is set, `'error'` level and `'warning'` level messages are
     shown but `'info'` level and `'log'` level messages are not shown. Setting
     `'none'` disables to show messages completely.
+
+g:lsp_copen_command                                  *g:lsp_copen_command*
+    Type: |String|
+    Default: `'botright copen'`
+
+    Determines the command to use opening quickfix list.
 
 ==============================================================================
 FUNCTIONS                                               *vim-lsp-functions*

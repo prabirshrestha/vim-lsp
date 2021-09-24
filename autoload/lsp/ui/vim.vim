@@ -216,7 +216,7 @@ function! s:handle_symbol(server, last_command_id, type, data) abort
         call lsp#utils#error('No ' . a:type .' found')
     else
         echo 'Retrieved ' . a:type
-        botright copen
+        execute g:lsp_copen_command
     endif
 endfunction
 
@@ -249,7 +249,7 @@ function! s:handle_location(ctx, server, type, data) abort "ctx = {counter, list
                 call setqflist([])
                 call setqflist(a:ctx['list'])
                 echo 'Retrieved ' . a:type
-                botright copen
+                execute g:lsp_copen_command
             else
                 let l:lines = readfile(l:loc['filename'])
                 if has_key(l:loc,'viewstart') " showing a locationLink
@@ -442,7 +442,7 @@ function! s:handle_call_hierarchy(ctx, server, type, data) abort
             call setqflist([])
             call setqflist(a:ctx['list'])
             echo 'Retrieved ' . a:type
-            botright copen
+            execute g:lsp_copen_command
             if get(a:ctx, 'add_tree', v:false)
                 " move the cursor to the newly added item
                 execute l:pos + 1
