@@ -264,6 +264,21 @@ function! s:get_completion_result(server_name, data) abort
     return {'matches': l:completion_result['items'], 'incomplete': l:completion_result['incomplete'] }
 endfunction
 
+function! s:sort_by_sorttext(i1, i2) abort
+    let l:text1 = get(a:i1, 'sortText')
+    let l:text2 = get(a:i2, 'sortText')
+
+    " sortText is possibly empty string
+    let l:text1 = !empty(l:text1) ? l:text1 : a:i1['label']
+    let l:text2 = !empty(l:text2) ? l:text2 : a:i2['label']
+
+    if g:lsp_ignorecase
+        return l:text1 ==? l:text2 ? 0 : l:text1 >? l:text2 ? 1 : -1
+    else
+        return l:text1 ==# l:text2 ? 0 : l:text1 ># l:text2 ? 1 : -1
+    endif
+endfunction
+
 " options = {
 "   server: {}, " needs to be server_info and not server_name
 "   position: lsp#get_position(),
@@ -286,6 +301,13 @@ function! lsp#omni#get_vim_completion_items(options) abort
     else
         let l:items = []
         let l:incomplete = 0
+    endif
+
+    let l:sort = has_key(l:server, 'config') && has_key(l:server['config'], 'sort') ? l:server['config']['sort'] : v:null
+
+    if len(l:items) > 0 && type(l:sort) == s:t_dict && len(l:items) <= l:sort['max']
+      " If first item contains sortText, maybe we can use sortText
+      call sort(l:items, function('s:sort_by_sorttext'))
     endif
 
     let l:vim_complete_items = []
