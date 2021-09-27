@@ -212,6 +212,9 @@ function! s:register_events() abort
         if exists('##TextChangedP')
             autocmd TextChangedP * call s:on_text_document_did_change()
         endif
+        if g:lsp_untitled_buffer_enabled
+            autocmd FileType * call s:on_filetype_changed(bufnr('<afile>'))
+        endif
     augroup END
 
     for l:bufnr in range(1, bufnr('$'))
@@ -226,6 +229,12 @@ function! s:unregister_events() abort
         autocmd!
     augroup END
     doautocmd <nomodeline> User lsp_unregister_server
+endfunction
+
+function! s:on_filetype_changed(buf) abort
+  call s:on_buf_wipeout(a:buf)
+  " TODO: stop unused servers
+  call s:on_text_document_did_open()
 endfunction
 
 function! s:on_text_document_did_open(...) abort
