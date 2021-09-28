@@ -28,7 +28,7 @@ jobs:
             allow_failure: false
           - name: neovim-v05-x64
             os: windows-latest
-            neovim_version: v0.5.0
+            neovim_version: v0.5.1
             neovim_arch: win64
             allow_failure: false
           - name: neovim-nightly-x64
@@ -43,9 +43,11 @@ jobs:
       - name: Download neovim
         shell: PowerShell
         run: Invoke-WebRequest -Uri https://github.com/neovim/neovim/releases/download/${{matrix.neovim_version}}/nvim-${{matrix.neovim_arch}}.zip -OutFile neovim.zip
+        continue-on-error: ${{matrix.allow_failure}}
       - name: Extract neovim
         shell: PowerShell
         run: Expand-Archive -Path neovim.zip -DestinationPath $env:USERPROFILE
+        continue-on-error: ${{matrix.allow_failure}}
       - name: Cache gopls
         id: cache-gopls
         uses: actions/cache@v2
