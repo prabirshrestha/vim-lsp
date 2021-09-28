@@ -43,6 +43,7 @@ jobs:
           mkdir -p ~/nvim/bin
           curl -L https://github.com/neovim/neovim/releases/download/${{matrix.neovim_version}}/nvim.appimage -o ~/nvim/bin/nvim
           chmod u+x ~/nvim/bin/nvim
+        continue-on-error: ${{matrix.allow_failure}}
       - name: Cache gopls
         id: cache-gopls
         uses: actions/cache@v2
