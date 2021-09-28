@@ -167,7 +167,7 @@ function! s:is_expandable(done_line, done_position, complete_position, completio
     let l:text_edit_after = strcharpart(l:completed_line, a:completion_item['textEdit']['range']['end']['character'], strchars(l:completed_line) - a:completion_item['textEdit']['range']['end']['character'])
     return a:done_line !=# l:text_edit_before . s:trim_unmeaning_tabstop(a:completion_item['textEdit']['newText']) . l:text_edit_after
   endif
-  return s:get_completion_text(a:completed_item) !=# s:trim_unmeaning_tabstop(a:completed_item['word'])
+  return s:get_completion_text(a:completion_item) !=# s:trim_unmeaning_tabstop(a:completed_item['word'])
 endfunction
 
 "
@@ -276,10 +276,10 @@ endfunction
 " Get completion text from CompletionItem. Fallback to label when insertText
 " is falsy
 "
-function! s:get_completion_text(item) abort
-  let l:text = get(a:item, 'insertText', '')
+function! s:get_completion_text(completion_item) abort
+  let l:text = get(a:completion_item, 'insertText', '')
   if empty(l:text)
-    let l:text = get(a:item, 'label', a:item['word'])
+    let l:text = a:completion_item['label']
   endif
   return l:text
 endfunction
