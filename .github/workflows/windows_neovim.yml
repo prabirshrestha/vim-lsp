@@ -28,7 +28,7 @@ jobs:
             allow_failure: false
           - name: neovim-v05-x64
             os: windows-latest
-            neovim_version: v0.5.0
+            neovim_version: v0.5.1
             neovim_arch: win64
             allow_failure: false
           - name: neovim-nightly-x64
