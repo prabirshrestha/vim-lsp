@@ -42,7 +42,7 @@ jobs:
         if: steps.cache-gopls.outputs.cache-hit != 'true'
         shell: bash
         run: |
-          go get golang.org/x/tools/gopls@v${{ env.VIM_LSP_GOPLS_VERSION }}
+          go install golang.org/x/tools/gopls@v${{ env.VIM_LSP_GOPLS_VERSION }}
           gopls version
           mkdir bin
           mv "$(which gopls)" ./bin/
