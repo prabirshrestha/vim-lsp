@@ -9,8 +9,8 @@ on:
       - master
 
 env:
-  VIM_LSP_GO_VERSION: '1.16.2'
-  VIM_LSP_GOPLS_VERSION: '0.6.6'
+  VIM_LSP_GO_VERSION: '1.17'
+  VIM_LSP_GOPLS_VERSION: '0.7.3'
   VIM_LSP_GOPLS_CACHE_VER: 1
 
 jobs:
@@ -59,7 +59,7 @@ jobs:
         if: steps.cache-gopls.outputs.cache-hit != 'true'
         shell: bash
         run: |
-          go get golang.org/x/tools/gopls@v${{ env.VIM_LSP_GOPLS_VERSION }}
+          go install golang.org/x/tools/gopls@v${{ env.VIM_LSP_GOPLS_VERSION }}
           gopls version
           mkdir bin
           mv "$(which gopls)" ./bin/
