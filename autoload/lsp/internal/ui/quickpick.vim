@@ -1,4 +1,4 @@
-" https://github.com/prabirshrestha/quickpick.vim#d9d18841b03b633eca411f69dc7997cca4203194
+" https://github.com/prabirshrestha/quickpick.vim#d1e58d188d32cd634e272d9878e686071069909f
 "    :QuickpickEmbed path=autoload/lsp/internal/ui/quickpick.vim namespace=lsp#internal#ui#quickpick prefix=lsp-quickpick
 
 let s:has_timer = exists('*timer_start') && exists('*timer_stop')
@@ -212,7 +212,7 @@ function! s:busy_tick(...) abort
 endfunction
 
 function! s:update_items() abort
-  call s:win_execute(s:state['resultswinid'], 'silent! %delete')
+  call s:win_execute(s:state['resultswinid'], 'silent! %delete _')
 
   let s:state['highlights'] = []
 
