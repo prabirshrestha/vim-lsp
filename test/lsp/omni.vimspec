@@ -32,6 +32,7 @@ Describe lsp#omni
             \   'user_data': '{"vim-lsp/key":"0"}',
             \ }],
             \ 'incomplete': 0,
+            \ 'startcol': lsp#utils#position#lsp_character_to_vim('%', lsp#get_position()),
             \}
 
             Assert Equals(lsp#omni#get_vim_completion_items(options), want)
@@ -73,6 +74,7 @@ Describe lsp#omni
             \  'user_data': '{"vim-lsp/key":"0"}',
             \  }],
             \  'incomplete': 0,
+            \  'startcol': lsp#utils#position#lsp_character_to_vim('%', {'line': 1, 'character': 0}),
             \}
 
             let got = lsp#omni#get_vim_completion_items(options)
@@ -107,6 +109,7 @@ Describe lsp#omni
             \  'user_data': '{"vim-lsp/key":"0"}',
             \  }],
             \  'incomplete': 0,
+            \  'startcol': lsp#utils#position#lsp_character_to_vim('%', lsp#get_position()),
             \}
 
             let got = lsp#omni#get_vim_completion_items(options)
@@ -135,6 +138,7 @@ Describe lsp#omni
             \  'user_data': '{"vim-lsp/key":"1"}',
             \  }],
             \  'incomplete': 0,
+            \  'startcol': lsp#utils#position#lsp_character_to_vim('%', lsp#get_position()),
             \}
 
             let got = lsp#omni#get_vim_completion_items(options)
@@ -172,6 +176,7 @@ Describe lsp#omni
             \  'user_data': '{"vim-lsp/key":"0"}',
             \  }],
             \  'incomplete': 0,
+            \  'startcol': lsp#utils#position#lsp_character_to_vim('%', { 'line': 1, 'character': 1 }),
             \}
 
             let got = lsp#omni#get_vim_completion_items(options)
@@ -240,6 +245,7 @@ Describe lsp#omni
             \   'user_data': '{"vim-lsp/key":"2"}',
             \ }],
             \ 'incomplete': 0,
+            \ 'startcol': lsp#utils#position#lsp_character_to_vim('%', lsp#get_position()),
             \}
 
             Assert Equals(lsp#omni#get_vim_completion_items(options), want)
@@ -302,6 +308,7 @@ Describe lsp#omni
             \   'user_data': '{"vim-lsp/key":"2"}',
             \ }],
             \ 'incomplete': 0,
+            \ 'startcol': lsp#utils#position#lsp_character_to_vim('%', lsp#get_position()),
             \}
             Assert Equals(lsp#omni#get_vim_completion_items(options), want)
         End
@@ -360,6 +367,7 @@ Describe lsp#omni
             \   'user_data': '{"vim-lsp/key":"2"}',
             \ }],
             \ 'incomplete': 0,
+            \ 'startcol': lsp#utils#position#lsp_character_to_vim('%', lsp#get_position()),
             \}
             Assert Equals(lsp#omni#get_vim_completion_items(options), want)
         End
@@ -421,6 +429,7 @@ Describe lsp#omni
             \   'user_data': '{"vim-lsp/key":"2"}',
             \ }],
             \ 'incomplete': 0,
+            \ 'startcol': lsp#utils#position#lsp_character_to_vim('%', lsp#get_position()),
             \}
             Assert Equals(lsp#omni#get_vim_completion_items(options), want)
         End

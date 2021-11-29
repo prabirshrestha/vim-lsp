@@ -213,7 +213,7 @@ function! s:register_events() abort
             autocmd TextChangedP * call s:on_text_document_did_change()
         endif
         if g:lsp_untitled_buffer_enabled
-            autocmd FileType * call s:on_filetype_changed(bufnr('<afile>'))
+            autocmd FileType * call s:on_filetype_changed(bufnr(expand('<afile>')))
         endif
     augroup END
 
