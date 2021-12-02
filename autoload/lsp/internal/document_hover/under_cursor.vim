@@ -28,7 +28,6 @@ function! lsp#internal#document_hover#under_cursor#do(options) abort
                 nnoremap <buffer><silent> <Plug>(lsp-float-close) :<C-u>call <SID>close_floating_window(v:true)<CR>
                 execute('doautocmd <nomodeline> User lsp_float_focused')
                 if !hasmapto('<Plug>(lsp-float-close)')
-                    echom 'register'
                     imap <silent> <buffer> <C-c> <Plug>(lsp-float-close)
                     map  <silent> <buffer> <C-c> <Plug>(lsp-float-close)
                     imap <silent> <buffer> <Esc> <Plug>(lsp-float-close)
@@ -209,7 +208,6 @@ function! s:on_opened() abort
     nnoremap <buffer><silent> <Plug>(lsp-float-close) :<C-u>call <SID>close_floating_window(v:true)<CR>
     execute('doautocmd <nomodeline> User lsp_float_opened')
     if !hasmapto('<Plug>(lsp-float-close)')
-        echom 'register'
         imap <silent> <buffer> <C-c> <Plug>(lsp-float-close)
         map  <silent> <buffer> <C-c> <Plug>(lsp-float-close)
         imap <silent> <buffer> <Esc> <Plug>(lsp-float-close)
