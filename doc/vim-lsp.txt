@@ -867,7 +867,7 @@ g:lsp_hover_ui                                                *g:lsp_hover_ui*
     Default: `''`
 
     Controls deafult UI behavior for |LspHover|.
-    If empty string, defaults to `float` is popup is supported in vim or
+    If empty string, defaults to `float` if popup is supported in vim or
     floating window is supported in neovim else uses |preview-window|.
 
     Example: >
