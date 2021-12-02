@@ -224,10 +224,10 @@ function! s:get_doc_win() abort
         return s:doc_win
     endif
 
-	let s:doc_win = s:FloatingWindow.new({
-		\   'on_opened': function('s:on_opened'),
-		\   'on_closed': function('s:on_closed')
-		\ })
+    let s:doc_win = s:FloatingWindow.new({
+        \   'on_opened': function('s:on_opened'),
+        \   'on_closed': function('s:on_closed')
+        \ })
     call s:doc_win.set_var('&wrap', 1)
     call s:doc_win.set_var('&conceallevel', 2)
     call s:doc_win.set_bufnr(s:Buffer.create())
