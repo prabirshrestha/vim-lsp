@@ -1716,7 +1716,7 @@ See also |preview-window|
 
 lsp_float_focused                                          *lsp_float_focused*
 
-This autocommand is run after the floating window is focused. Only support in
+This autocommand is run after the floating window is focused. Only supported in
 neovim.
 
 You can map `<Plug>(lsp-float-close)` to close the floating window.
