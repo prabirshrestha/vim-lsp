@@ -156,6 +156,8 @@ nnoremap <silent> <plug>(lsp-document-symbol) :<c-u>call lsp#ui#vim#document_sym
 nnoremap <silent> <plug>(lsp-document-symbol-search) :<c-u>call lsp#internal#document_symbol#search#do({})<cr>
 nnoremap <silent> <plug>(lsp-document-diagnostics) :<c-u>call lsp#internal#diagnostics#document_diagnostics_command#do({})<cr>
 nnoremap <silent> <plug>(lsp-hover) :<c-u>call lsp#internal#document_hover#under_cursor#do({})<cr>
+nnoremap <silent> <plug>(lsp-hover-float) :<c-u>call lsp#internal#document_hover#under_cursor#do({ 'ui': 'float' })<cr>
+nnoremap <silent> <plug>(lsp-hover-preview) :<c-u>call lsp#internal#document_hover#under_cursor#do({ 'ui': 'preview' })<cr>
 nnoremap <silent> <plug>(lsp-preview-close) :<c-u>call lsp#ui#vim#output#closepreview()<cr>
 nnoremap <silent> <plug>(lsp-preview-focus) :<c-u>call lsp#ui#vim#output#focuspreview()<cr>
 nnoremap <silent> <plug>(lsp-next-error) :<c-u>call lsp#internal#diagnostics#movement#_next_error()<cr>

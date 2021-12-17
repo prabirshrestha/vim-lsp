@@ -1783,6 +1783,8 @@ Available plug mappings are following:
   nnoremap <plug>(lsp-document-symbol-search)
   nnoremap <plug>(lsp-document-diagnostics)
   nnoremap <plug>(lsp-hover)
+  nnoremap <plug>(lsp-hover-float)
+  nnoremap <plug>(lsp-hover-preview)
   nnoremap <plug>(lsp-next-diagnostic)
   nnoremap <plug>(lsp-next-diagnostic-nowrap)
   nnoremap <plug>(lsp-next-error)

@@ -105,7 +105,7 @@ function! s:show_preview_window(server_name, request, response) abort
     let l:alternate=@#
     silent! pclose
     sp LspHoverPreview
-    " execute 'resize '.min([len(l:contents), &previewheight])
+    execute 'resize '.min([len(l:contents), &previewheight])
     set previewwindow
     setlocal bufhidden=hide
     setlocal nobuflisted
