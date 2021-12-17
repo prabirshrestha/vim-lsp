@@ -115,7 +115,9 @@ endfunction
 function! s:on_cursor_moved() abort
     let l:bufnr = bufnr('%')
     call timer_stop(s:debounce_timer_id)
-    let s:debounce_timer_id = timer_start(g:lsp_signature_help_delay, function('s:on_text_changed_after', [l:bufnr]), { 'repeat': 1 })
+    if g:lsp_signature_help_enabled
+        let s:debounce_timer_id = timer_start(g:lsp_signature_help_delay, function('s:on_text_changed_after', [l:bufnr]), { 'repeat': 1 })
+    endif
 endfunction
 
 function! s:on_text_changed_after(bufnr, timer) abort
