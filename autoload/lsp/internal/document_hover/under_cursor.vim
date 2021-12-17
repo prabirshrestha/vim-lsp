@@ -1,9 +1,43 @@
 " https://microsoft.github.io/language-server-protocol/specification#textDocument_hover
+
+let s:Markdown = vital#lsp#import('VS.Vim.Syntax.Markdown')
+let s:MarkupContent = vital#lsp#import('VS.LSP.MarkupContent')
+let s:FloatingWindow = vital#lsp#import('VS.Vim.Window.FloatingWindow')
+let s:Window = vital#lsp#import('VS.Vim.Window')
+let s:Buffer = vital#lsp#import('VS.Vim.Buffer')
+
 " options - {
 "   server - 'server_name'		" optional
+"   ui - 'float' | 'preview'
 " }
 function! lsp#internal#document_hover#under_cursor#do(options) abort
     let l:bufnr = bufnr('%')
+    let l:ui = get(a:options, 'ui', g:lsp_hover_ui)
+    if empty(l:ui)
+        let l:ui = s:FloatingWindow.is_available() ? 'float' : 'preview'
+    endif
+
+    if l:ui ==# 'float'
+        let l:doc_win = s:get_doc_win()
+        if l:doc_win.is_visible()
+            if bufnr('%') ==# l:doc_win.get_bufnr()
+                call s:close_floating_window(v:true)
+            else
+                call l:doc_win.enter()
+                inoremap <buffer><silent> <Plug>(lsp-float-close) <ESC>:<C-u>call <SID>close_floating_window(v:true)<CR>
+                nnoremap <buffer><silent> <Plug>(lsp-float-close) :<C-u>call <SID>close_floating_window(v:true)<CR>
+                execute('doautocmd <nomodeline> User lsp_float_focused')
+                if !hasmapto('<Plug>(lsp-float-close)')
+                    imap <silent> <buffer> <C-c> <Plug>(lsp-float-close)
+                    map  <silent> <buffer> <C-c> <Plug>(lsp-float-close)
+                    imap <silent> <buffer> <Esc> <Plug>(lsp-float-close)
+                    map  <silent> <buffer> <Esc> <Plug>(lsp-float-close)
+                endif
+            endif
+            return
+        endif
+    endif
+
     if has_key(a:options, 'server')
         let l:servers = [a:options['server']]
     else
@@ -33,7 +67,7 @@ function! lsp#internal#document_hover#under_cursor#do(options) abort
         \ lsp#callbag#flatMap({server->
         \   lsp#request(server, l:request)
         \ }),
-        \ lsp#callbag#tap({x->s:show_hover(x['server_name'], x['request'], x['response'])}),
+        \ lsp#callbag#tap({x->s:show_hover(l:ui, x['server_name'], x['request'], x['response'])}),
         \ lsp#callbag#takeUntil(lsp#callbag#pipe(
         \   lsp#stream(),
         \   lsp#callbag#filter({x->has_key(x, 'command')}),
@@ -42,12 +76,189 @@ function! lsp#internal#document_hover#under_cursor#do(options) abort
         \ )
 endfunction
 
-function! s:show_hover(server_name, request, response) abort
+function! s:show_hover(ui, server_name, request, response) abort
     if !has_key(a:response, 'result') || empty(a:response['result']) || 
         \ empty(a:response['result']['contents'])
         call lsp#utils#error('No hover information found in server - ' . a:server_name)
         return
     endif
 
-    call lsp#ui#vim#output#preview(a:server_name, a:response['result']['contents'], {'statusline': ' LSP Hover'})
+    echo ''
+
+    if s:FloatingWindow.is_available() && a:ui ==? 'float'
+        call s:show_floating_window(a:server_name, a:request, a:response)
+    else
+        call s:show_preview_window(a:server_name, a:request, a:response)
+	endif
+endfunction
+
+function! s:show_preview_window(server_name, request, response) abort
+    let l:contents = s:get_contents(a:response['result']['contents'])
+
+    " Ignore if contents is empty.
+    if empty(l:contents)
+        call lsp#utils#error('Empty contents for LspHover')
+        return
+    endif
+
+    let l:view = winsaveview()
+    let l:alternate=@#
+    silent! pclose
+    sp LspHoverPreview
+    execute 'resize '.min([len(l:contents), &previewheight])
+    set previewwindow
+    setlocal bufhidden=hide
+    setlocal nobuflisted
+    setlocal buftype=nofile
+    setlocal noswapfile
+    %d
+    call setline(1, lsp#utils#_split_by_eol(join(l:contents, "\n\n")))
+    call s:Window.do(win_getid(), {->s:Markdown.apply()})
+    execute "normal \<c-w>p"
+    call winrestview(l:view)
+    let @#=l:alternate
+endfunction
+
+function! s:show_floating_window(server_name, request, response) abort
+    call s:close_floating_window(v:true)
+
+    let l:contents = s:get_contents(a:response['result']['contents'])
+
+    " Ignore if contents is empty.
+    if empty(l:contents)
+        return s:close_floating_window(v:true)
+    endif
+
+    " Update contents.
+    let l:doc_win = s:get_doc_win()
+    silent! call deletebufline(l:doc_win.get_bufnr(), 1, '$')
+    call setbufline(l:doc_win.get_bufnr(), 1, lsp#utils#_split_by_eol(join(l:contents, "\n\n")))
+
+    " Calculate layout.
+    let l:size = l:doc_win.get_size({
+        \   'maxwidth': float2nr(&columns * 0.4),
+        \   'maxheight': float2nr(&lines * 0.4),
+        \ })
+    let l:pos = s:compute_position(l:size)
+    if empty(l:pos)
+        call s:close_floating_window(v:true)
+        return
+    endif
+
+    execute printf('augroup vim_lsp_hover_close_on_move_%d', bufnr('%'))
+        autocmd!
+        execute printf('autocmd InsertEnter,BufLeave,CursorMoved <buffer> call s:close_floating_window_on_move(%s)', getcurpos())
+    augroup END
+
+   " Show popupmenu and apply markdown syntax.
+    call l:doc_win.open({
+        \   'row': l:pos[0] + 1,
+        \   'col': l:pos[1] + 1,
+        \   'width': l:size.width,
+        \   'height': l:size.height,
+        \   'border': v:true,
+        \ })
+    call s:Window.do(l:doc_win.get_winid(), { -> s:Markdown.apply() })
+endfunction
+
+function! s:get_contents(contents) abort
+    if type(a:contents) == type('')
+        return [a:contents]
+    elseif type(a:contents) == type([])
+        let l:result = []
+        for l:content in a:contents
+            let l:result += s:get_contents(l:content)
+        endfor
+        return l:result
+    elseif type(a:contents) == type({})
+        if has_key(a:contents, 'value')
+            if has_key(a:contents, 'kind')
+                if a:contents['kind'] ==? 'markdown'
+                    let l:detail = s:MarkupContent.normalize(a:contents['value'])
+                    return [l:detail]
+                else
+                    return [a:contents['value']]
+                endif
+            elseif has_key(a:contents, 'language')
+                let l:detail = s:MarkupContent.normalize(a:contents)
+                return [l:detail]
+            else
+                return ''
+            endif
+        else
+            return ''
+        endif
+    else
+        return ''
+    endif
+endfunction
+
+function! s:close_floating_window(force) abort
+    if a:force
+        call s:get_doc_win().close()
+    endif
+endfunction
+
+function! s:close_floating_window_on_move(curpos) abort
+    if a:curpos != getcurpos() | call s:close_floating_window(v:true) | endif
+endf
+
+function! s:on_opened() abort
+    inoremap <buffer><silent> <Plug>(lsp-float-close) <ESC>:<C-u>call <SID>close_floating_window(v:true)<CR>
+    nnoremap <buffer><silent> <Plug>(lsp-float-close) :<C-u>call <SID>close_floating_window(v:true)<CR>
+    execute('doautocmd <nomodeline> User lsp_float_opened')
+    if !hasmapto('<Plug>(lsp-float-close)')
+        imap <silent> <buffer> <C-c> <Plug>(lsp-float-close)
+        map  <silent> <buffer> <C-c> <Plug>(lsp-float-close)
+        imap <silent> <buffer> <Esc> <Plug>(lsp-float-close)
+        map  <silent> <buffer> <Esc> <Plug>(lsp-float-close)
+    endif
+endfunction
+
+function! s:on_closed() abort
+    execute('doautocmd <nomodeline> User lsp_float_closed')
+endfunction
+
+function! s:get_doc_win() abort
+    if exists('s:doc_win')
+        return s:doc_win
+    endif
+
+    let s:doc_win = s:FloatingWindow.new({
+        \   'on_opened': function('s:on_opened'),
+        \   'on_closed': function('s:on_closed')
+        \ })
+    call s:doc_win.set_var('&wrap', 1)
+    call s:doc_win.set_var('&conceallevel', 2)
+    call s:doc_win.set_bufnr(s:Buffer.create())
+    call setbufvar(s:doc_win.get_bufnr(), '&buftype', 'nofile')
+    call setbufvar(s:doc_win.get_bufnr(), '&bufhidden', 'hide')
+    call setbufvar(s:doc_win.get_bufnr(), '&buflisted', 0)
+    call setbufvar(s:doc_win.get_bufnr(), '&swapfile', 0)
+    return s:doc_win
+endfunction
+
+function! s:compute_position(size) abort
+    let l:row = line('.')
+    let l:col = col('.')
+    let l:topline = line('w0')
+
+    " try showing the popup at the top if space is available
+    if l:row - l:topline >= a:size.height
+        let l:row = l:row - a:size.height - 1
+    endif
+    if l:row <= 0
+        let l:row = 1
+    endif
+
+    " if popup gets truncated when at the far right, try moving the start col to left
+    if l:col + a:size.width >= &columns
+        let l:col = &columns - (a:size.width - 1)
+    end
+
+    if l:col <= 0
+        let l:col = 1
+    endif
+
+    return [l:row - l:topline + 1, l:col]
 endfunction

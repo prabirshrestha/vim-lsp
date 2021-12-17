@@ -65,6 +65,7 @@ CONTENTS                                                  *vim-lsp-contents*
       g:lsp_signature_help_enabled          |g:lsp_signature_help_enabled|
       g:lsp_fold_enabled                    |g:lsp_fold_enabled|
       g:lsp_hover_conceal                   |g:lsp_hover_conceal|
+      g:lsp_hover_ui                        |g:lsp_hover_ui|
       g:lsp_ignorecase                      |g:lsp_ignorecase|
       g:lsp_log_file                        |g:lsp_log_file|
       g:lsp_semantic_enabled                |g:lsp_semantic_enabled|
@@ -136,6 +137,7 @@ CONTENTS                                                  *vim-lsp-contents*
       lsp_complete_done                     |lsp_complete_done|
       lsp_float_opened                      |lsp_float_opened|
       lsp_float_closed                      |lsp_float_closed|
+      lsp_float_focused                     |lsp_float_focused|
       lsp_register_server                   |lsp_register_server|
       lsp_unregister_server                 |lsp_unregister_server|
       lsp_server_init                       |lsp_server_init|
@@ -860,6 +862,19 @@ g:lsp_hover_conceal                                   *g:lsp_hover_conceal*
     To override this setting per server, see
     |vim-lsp-server_info-hover_conceal|.
 
+g:lsp_hover_ui                                                *g:lsp_hover_ui*
+    Type: |String|
+    Default: `''`
+
+    Controls deafult UI behavior for |LspHover|.
+    If empty string, defaults to `float` if popup is supported in vim or
+    floating window is supported in neovim else uses |preview-window|.
+
+    Example: >
+	let g:lsp_hover_ui = ''
+	let g:lsp_hover_ui = 'float'
+	let g:lsp_hover_ui = 'preview'
+
 g:lsp_ignorecase                                         *g:lsp_ignorecase*
     Type: |Boolean|
     Default: the value of 'ignorecase'
@@ -1535,7 +1550,7 @@ LspDocumentSymbolSearch                             *:LspDocumentSymbolSearch*
 
 Search the symbols for the current document and navigate.
 
-LspHover                                                         *:LspHover*
+LspHover [--ui=float|preview]                                      *:LspHover*
 
 Gets the hover information and displays it in the |preview-window|.
 
@@ -1546,6 +1561,11 @@ Gets the hover information and displays it in the |preview-window|.
    be set to enable a floating preview at the cursor which is closed
    automatically on cursormove if not focused and can be closed with <esc> if
    focused.
+
+    Example: >
+	:LspHover
+	:LspHover --ui=float
+	:LspHover --ui=preview
 
 LspNextDiagnostic [-wrap=0]                              *:LspNextDiagnostic*
 
@@ -1694,6 +1714,13 @@ lsp_float_closed                                          *lsp_float_closed*
 This autocommand is run after the floating window is closed.
 See also |preview-window|
 
+lsp_float_focused                                          *lsp_float_focused*
+
+This autocommand is run after the floating window is focused. Only supported in
+neovim.
+
+You can map `<Plug>(lsp-float-close)` to close the floating window.
+
 lsp_register_server                                    *lsp_register_server*
 
 This autocommand is run after the server is registered.
@@ -1756,6 +1783,8 @@ Available plug mappings are following:
   nnoremap <plug>(lsp-document-symbol-search)
   nnoremap <plug>(lsp-document-diagnostics)
   nnoremap <plug>(lsp-hover)
+  nnoremap <plug>(lsp-hover-float)
+  nnoremap <plug>(lsp-hover-preview)
   nnoremap <plug>(lsp-next-diagnostic)
   nnoremap <plug>(lsp-next-diagnostic-nowrap)
   nnoremap <plug>(lsp-next-error)

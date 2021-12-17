@@ -60,6 +60,7 @@ let g:lsp_signature_help_delay = get(g:, 'lsp_signature_help_delay', 200)
 let g:lsp_show_workspace_edits = get(g:, 'lsp_show_workspace_edits', 0)
 let g:lsp_fold_enabled = get(g:, 'lsp_fold_enabled', 1)
 let g:lsp_hover_conceal = get(g:, 'lsp_hover_conceal', 1)
+let g:lsp_hover_ui = get(g:, 'lsp_hover_ui', '')
 let g:lsp_ignorecase = get(g:, 'lsp_ignorecase', &ignorecase)
 let g:lsp_semantic_enabled = get(g:, 'lsp_semantic_enabled', 0)
 let g:lsp_text_document_did_save_delay = get(g:, 'lsp_text_document_did_save_delay', -1)
@@ -103,7 +104,10 @@ command! -nargs=? LspDocumentDiagnostics call lsp#internal#diagnostics#document_
             \ extend({}, lsp#utils#args#_parse(<q-args>, {
             \   'buffers': {'type': type('')},
             \ })))
-command! -nargs=? -complete=customlist,lsp#utils#empty_complete LspHover call lsp#internal#document_hover#under_cursor#do({})
+command! -nargs=? -complete=customlist,lsp#utils#empty_complete LspHover call lsp#internal#document_hover#under_cursor#do(
+            \ extend({}, lsp#utils#args#_parse(<q-args>, {
+            \   'ui': { 'type': type('') },
+            \ })))
 command! -nargs=* LspNextError call lsp#internal#diagnostics#movement#_next_error(<f-args>)
 command! -nargs=* LspPreviousError call lsp#internal#diagnostics#movement#_previous_error(<f-args>)
 command! -nargs=* LspNextWarning call lsp#internal#diagnostics#movement#_next_warning(<f-args>)
@@ -152,6 +156,8 @@ nnoremap <silent> <plug>(lsp-document-symbol) :<c-u>call lsp#ui#vim#document_sym
 nnoremap <silent> <plug>(lsp-document-symbol-search) :<c-u>call lsp#internal#document_symbol#search#do({})<cr>
 nnoremap <silent> <plug>(lsp-document-diagnostics) :<c-u>call lsp#internal#diagnostics#document_diagnostics_command#do({})<cr>
 nnoremap <silent> <plug>(lsp-hover) :<c-u>call lsp#internal#document_hover#under_cursor#do({})<cr>
+nnoremap <silent> <plug>(lsp-hover-float) :<c-u>call lsp#internal#document_hover#under_cursor#do({ 'ui': 'float' })<cr>
+nnoremap <silent> <plug>(lsp-hover-preview) :<c-u>call lsp#internal#document_hover#under_cursor#do({ 'ui': 'preview' })<cr>
 nnoremap <silent> <plug>(lsp-preview-close) :<c-u>call lsp#ui#vim#output#closepreview()<cr>
 nnoremap <silent> <plug>(lsp-preview-focus) :<c-u>call lsp#ui#vim#output#focuspreview()<cr>
 nnoremap <silent> <plug>(lsp-next-error) :<c-u>call lsp#internal#diagnostics#movement#_next_error()<cr>
