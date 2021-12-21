@@ -1,4 +1,4 @@
-" https://github.com/prabirshrestha/quickpick.vim#d1e58d188d32cd634e272d9878e686071069909f
+" https://github.com/prabirshrestha/quickpick.vim#b1d7fd820a2e52afe8be01ceb570537e1a10256c
 "    :QuickpickEmbed path=autoload/lsp/internal/ui/quickpick.vim namespace=lsp#internal#ui#quickpick prefix=lsp-quickpick
 
 let s:has_timer = exists('*timer_start') && exists('*timer_stop')
@@ -24,7 +24,6 @@ function! lsp#internal#ui#quickpick#open(opt) abort
       \ 'maxheight': 10,
       \ 'debounce': 250,
       \ 'filter': 1,
-      \ 'winrestcmd': '',
       \ }, a:opt)
 
   let s:inputecharpre = 0
@@ -32,7 +31,7 @@ function! lsp#internal#ui#quickpick#open(opt) abort
 
   let s:state['bufnr'] = bufnr('%')
   let s:state['winid'] = win_getid()
-  let s:state['winrestcmd'] = winrestcmd()
+  let s:state['wininfo'] = getwininfo()
 
   " create result buffer
   exe printf('keepalt botright 3new %s', s:state['filetype'])
@@ -152,7 +151,7 @@ function! lsp#internal#ui#quickpick#close() abort
 
   call lsp#internal#ui#quickpick#busy(0)
 
-  call win_gotoid(s:state['bufnr'])
+  call win_gotoid(s:state['winid'])
   call s:notify('close', { 'bufnr': s:state['bufnr'], 'winid': s:state['winid'], 'resultsbufnr': s:state['resultsbufnr'], 'resultswinid': s:state['winid'] })
 
   augroup lsp#internal#ui#quickpick
@@ -161,11 +160,39 @@ function! lsp#internal#ui#quickpick#close() abort
 
   exe 'silent! bunload! ' . s:state['promptbufnr']
   exe 'silent! bunload! ' . s:state['resultsbufnr']
-  exe 'silent! ' . s:state['winrestcmd']
+  call s:restore_windows()
 
   let s:inputecharpre = 0
 
   unlet s:state
+endfunction
+
+function! s:restore_windows() abort
+  let [tabnr, _] = win_id2tabwin(s:state['winid'])
+  if tabnr == 0
+    return
+  endif
+
+  let Resizable = {_, info ->
+        \ info.tabnr == tabnr &&
+        \ index(['popup', 'unknown'], win_gettype(info.winid)) == -1
+        \ }
+  let wins_to_resize = sort(filter(s:state['wininfo'], Resizable), {l, r -> l.winnr - r.winnr})
+  let open_winids_to_resize = map(filter(getwininfo(), Resizable), {_, info -> info.winid})
+
+  let resize_cmd = ''
+  for info in wins_to_resize
+    if index(open_winids_to_resize, info.winid) == -1
+      return
+    endif
+
+    let resize_cmd .= printf('%dresize %d | vert %dresize %d |', info.winnr, info.height, info.winnr, info.width)
+  endfor
+
+  " winrestcmd repeats :resize commands twice after patch-8.2.2631.
+  " To simulate this behavior, execute the :resize commands twice.
+  " see https://github.com/vim/vim/issues/7988
+  exe 'silent! ' . resize_cmd . resize_cmd
 endfunction
 
 function! lsp#internal#ui#quickpick#items(items) abort
