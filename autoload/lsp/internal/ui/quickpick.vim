@@ -1,4 +1,4 @@
-" https://github.com/prabirshrestha/quickpick.vim#b1d7fd820a2e52afe8be01ceb570537e1a10256c
+" https://github.com/prabirshrestha/quickpick.vim#e0e38f40e4fa9b32c5ff1a3f7de449e930b6513c
 "    :QuickpickEmbed path=autoload/lsp/internal/ui/quickpick.vim namespace=lsp#internal#ui#quickpick prefix=lsp-quickpick
 
 let s:has_timer = exists('*timer_start') && exists('*timer_stop')
@@ -168,31 +168,31 @@ function! lsp#internal#ui#quickpick#close() abort
 endfunction
 
 function! s:restore_windows() abort
-  let [tabnr, _] = win_id2tabwin(s:state['winid'])
-  if tabnr == 0
+  let [l:tabnr, l:_] = win_id2tabwin(s:state['winid'])
+  if l:tabnr == 0
     return
   endif
 
-  let Resizable = {_, info ->
-        \ info.tabnr == tabnr &&
+  let l:Resizable = {_, info ->
+        \ info.tabnr == l:tabnr &&
         \ index(['popup', 'unknown'], win_gettype(info.winid)) == -1
         \ }
-  let wins_to_resize = sort(filter(s:state['wininfo'], Resizable), {l, r -> l.winnr - r.winnr})
-  let open_winids_to_resize = map(filter(getwininfo(), Resizable), {_, info -> info.winid})
+  let l:wins_to_resize = sort(filter(s:state['wininfo'], l:Resizable), {l, r -> l.winnr - r.winnr})
+  let l:open_winids_to_resize = map(filter(getwininfo(), l:Resizable), {_, info -> info.winid})
 
-  let resize_cmd = ''
-  for info in wins_to_resize
-    if index(open_winids_to_resize, info.winid) == -1
+  let l:resize_cmd = ''
+  for l:info in l:wins_to_resize
+    if index(l:open_winids_to_resize, l:info.winid) == -1
       return
     endif
 
-    let resize_cmd .= printf('%dresize %d | vert %dresize %d |', info.winnr, info.height, info.winnr, info.width)
+    let l:resize_cmd .= printf('%dresize %d | vert %dresize %d |', l:info.winnr, l:info.height, l:info.winnr, l:info.width)
   endfor
 
   " winrestcmd repeats :resize commands twice after patch-8.2.2631.
   " To simulate this behavior, execute the :resize commands twice.
   " see https://github.com/vim/vim/issues/7988
-  exe 'silent! ' . resize_cmd . resize_cmd
+  exe 'silent! ' . l:resize_cmd . l:resize_cmd
 endfunction
 
 function! lsp#internal#ui#quickpick#items(items) abort
