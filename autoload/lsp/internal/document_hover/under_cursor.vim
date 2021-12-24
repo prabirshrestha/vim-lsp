@@ -101,18 +101,19 @@ function! s:show_preview_window(server_name, request, response) abort
         return
     endif
 
+    let l:lines = lsp#utils#_split_by_eol(join(l:contents, "\n\n"))
     let l:view = winsaveview()
     let l:alternate=@#
     silent! pclose
     sp LspHoverPreview
-    execute 'resize '.min([len(l:contents), &previewheight])
+    execute 'resize '.min([len(l:lines), &previewheight])
     set previewwindow
     setlocal bufhidden=hide
     setlocal nobuflisted
     setlocal buftype=nofile
     setlocal noswapfile
     %d
-    call setline(1, lsp#utils#_split_by_eol(join(l:contents, "\n\n")))
+    call setline(1, l:lines)
     call s:Window.do(win_getid(), {->s:Markdown.apply()})
     execute "normal \<c-w>p"
     call winrestview(l:view)
