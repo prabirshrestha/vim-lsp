@@ -108,6 +108,7 @@ function! s:show_preview_window(server_name, request, response) abort
     sp LspHoverPreview
     execute 'resize '.min([len(l:lines), &previewheight])
     set previewwindow
+    setlocal conceallevel=2
     setlocal bufhidden=hide
     setlocal nobuflisted
     setlocal buftype=nofile
