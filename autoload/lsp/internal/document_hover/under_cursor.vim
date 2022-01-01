@@ -21,17 +21,17 @@ function! lsp#internal#document_hover#under_cursor#do(options) abort
         let l:doc_win = s:get_doc_win()
         if l:doc_win.is_visible()
             if bufnr('%') ==# l:doc_win.get_bufnr()
-                call s:close_floating_window(v:true)
+                call s:close_floating_window()
             else
                 call l:doc_win.enter()
-                inoremap <buffer><silent> <Plug>(lsp-float-close) <ESC>:<C-u>call <SID>close_floating_window(v:true)<CR>
-                nnoremap <buffer><silent> <Plug>(lsp-float-close) :<C-u>call <SID>close_floating_window(v:true)<CR>
+                inoremap <buffer><silent> <Plug>(lsp-float-close) <ESC>:<C-u>call <SID>close_floating_window()<CR>
+                nnoremap <buffer><silent> <Plug>(lsp-float-close) :<C-u>call <SID>close_floating_window()<CR>
                 execute('doautocmd <nomodeline> User lsp_float_focused')
                 if !hasmapto('<Plug>(lsp-float-close)')
                     imap <silent> <buffer> <C-c> <Plug>(lsp-float-close)
-                    map  <silent> <buffer> <C-c> <Plug>(lsp-float-close)
+                    nmap  <silent> <buffer> <C-c> <Plug>(lsp-float-close)
                     imap <silent> <buffer> <Esc> <Plug>(lsp-float-close)
-                    map  <silent> <buffer> <Esc> <Plug>(lsp-float-close)
+                    nmap  <silent> <buffer> <Esc> <Plug>(lsp-float-close)
                 endif
             endif
             return
@@ -122,13 +122,13 @@ function! s:show_preview_window(server_name, request, response) abort
 endfunction
 
 function! s:show_floating_window(server_name, request, response) abort
-    call s:close_floating_window(v:true)
+    call s:close_floating_window()
 
     let l:contents = s:get_contents(a:response['result']['contents'])
 
     " Ignore if contents is empty.
     if empty(l:contents)
-        return s:close_floating_window(v:true)
+        return s:close_floating_window()
     endif
 
     " Update contents.
@@ -143,7 +143,7 @@ function! s:show_floating_window(server_name, request, response) abort
         \ })
     let l:pos = s:compute_position(l:size)
     if empty(l:pos)
-        call s:close_floating_window(v:true)
+        call s:close_floating_window()
         return
     endif
 
@@ -195,19 +195,17 @@ function! s:get_contents(contents) abort
     endif
 endfunction
 
-function! s:close_floating_window(force) abort
-    if a:force
-        call s:get_doc_win().close()
-    endif
+function! s:close_floating_window() abort
+    call s:get_doc_win().close()
 endfunction
 
 function! s:close_floating_window_on_move(curpos) abort
-    if a:curpos != getcurpos() | call s:close_floating_window(v:true) | endif
+    if a:curpos != getcurpos() | call s:close_floating_window() | endif
 endf
 
 function! s:on_opened() abort
-    inoremap <buffer><silent> <Plug>(lsp-float-close) <ESC>:<C-u>call <SID>close_floating_window(v:true)<CR>
-    nnoremap <buffer><silent> <Plug>(lsp-float-close) :<C-u>call <SID>close_floating_window(v:true)<CR>
+    inoremap <buffer><silent> <Plug>(lsp-float-close) <ESC>:<C-u>call <SID>close_floating_window()<CR>
+    nnoremap <buffer><silent> <Plug>(lsp-float-close) :<C-u>call <SID>close_floating_window()<CR>
     execute('doautocmd <nomodeline> User lsp_float_opened')
     if !hasmapto('<Plug>(lsp-float-close)')
         imap <silent> <buffer> <C-c> <Plug>(lsp-float-close)
