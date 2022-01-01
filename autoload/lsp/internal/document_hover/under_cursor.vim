@@ -29,9 +29,9 @@ function! lsp#internal#document_hover#under_cursor#do(options) abort
                 execute('doautocmd <nomodeline> User lsp_float_focused')
                 if !hasmapto('<Plug>(lsp-float-close)')
                     imap <silent> <buffer> <C-c> <Plug>(lsp-float-close)
-                    map  <silent> <buffer> <C-c> <Plug>(lsp-float-close)
+                    nmap  <silent> <buffer> <C-c> <Plug>(lsp-float-close)
                     imap <silent> <buffer> <Esc> <Plug>(lsp-float-close)
-                    map  <silent> <buffer> <Esc> <Plug>(lsp-float-close)
+                    nmap  <silent> <buffer> <Esc> <Plug>(lsp-float-close)
                 endif
             endif
             return
