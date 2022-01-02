@@ -239,7 +239,8 @@ function! s:get_doc_win() abort
 endfunction
 
 function! s:compute_position(size) abort
-    let l:pos = s:Window.screenpos([line('.') + 1, col('.') + 1])
+    let l:pos = screenpos(0, line('.'), col('.'))
+    let l:pos = [l:pos.row + 1, l:pos.curscol + 1]
     if l:pos[0] + a:size.height > &lines
         let l:pos[0] = l:pos[0] - a:size.height - 3
     endif
