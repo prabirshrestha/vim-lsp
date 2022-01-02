@@ -154,8 +154,8 @@ function! s:show_floating_window(server_name, request, response) abort
 
    " Show popupmenu and apply markdown syntax.
     call l:doc_win.open({
-        \   'row': l:pos[0] + 1,
-        \   'col': l:pos[1] + 1,
+        \   'row': l:pos[0],
+        \   'col': l:pos[1],
         \   'width': l:size.width,
         \   'height': l:size.height,
         \   'border': v:true,
@@ -239,26 +239,14 @@ function! s:get_doc_win() abort
 endfunction
 
 function! s:compute_position(size) abort
-    let l:row = line('.')
-    let l:col = col('.')
-    let l:topline = line('w0')
-
-    " try showing the popup at the top if space is available
-    if l:row - l:topline >= a:size.height
-        let l:row = l:row - a:size.height - 1
+    let l:pos = screenpos(0, line('.'), col('.'))
+    let l:pos = [l:pos.row + 1, l:pos.curscol + 1]
+    if l:pos[0] + a:size.height > &lines
+        let l:pos[0] = l:pos[0] - a:size.height - 3
     endif
-    if l:row <= 0
-        let l:row = 1
+    if l:pos[1] + a:size.width > &columns
+        let l:pos[1] = l:pos[1] - a:size.width - 3
     endif
-
-    " if popup gets truncated when at the far right, try moving the start col to left
-    if l:col + a:size.width >= &columns
-        let l:col = &columns - (a:size.width - 1)
-    end
-
-    if l:col <= 0
-        let l:col = 1
-    endif
-
-    return [l:row - l:topline + 1, l:col]
+    return l:pos
 endfunction
+
