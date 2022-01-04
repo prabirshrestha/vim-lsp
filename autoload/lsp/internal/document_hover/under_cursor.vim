@@ -89,7 +89,7 @@ function! s:show_hover(ui, server_name, request, response) abort
         call s:show_floating_window(a:server_name, a:request, a:response)
     else
         call s:show_preview_window(a:server_name, a:request, a:response)
-	endif
+    endif
 endfunction
 
 function! s:show_preview_window(server_name, request, response) abort
@@ -161,6 +161,14 @@ function! s:show_floating_window(server_name, request, response) abort
         \   'border': v:true,
         \ })
     call s:Window.do(l:doc_win.get_winid(), { -> s:Markdown.apply() })
+
+    " Format contents to fit window
+    call setbufvar(l:doc_win.get_bufnr(), '&textwidth', l:size.width)
+    call s:Window.do(l:doc_win.get_winid(), { -> s:format_window() })
+endfunction
+
+function! s:format_window()
+    global/^/normal! gqgq
 endfunction
 
 function! s:get_contents(contents) abort
