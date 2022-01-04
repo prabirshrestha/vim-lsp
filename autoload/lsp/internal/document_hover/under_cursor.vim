@@ -167,7 +167,7 @@ function! s:show_floating_window(server_name, request, response) abort
     call s:Window.do(l:doc_win.get_winid(), { -> s:format_window() })
 endfunction
 
-function! s:format_window()
+function! s:format_window() abort
     global/^/normal! gqgq
 endfunction
 
