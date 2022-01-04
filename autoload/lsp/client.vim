@@ -37,11 +37,7 @@ function! s:on_stdout(id, data, event) abort
         return
     endif
 
-    if empty(l:ctx['buffer'])
-        let l:ctx['buffer'] = join(a:data, "\n")
-    else
-        let l:ctx['buffer'] .= join(a:data, "\n")
-    endif
+    let l:ctx['buffer'] .= a:data
 
     while 1
         if l:ctx['content-length'] < 0
@@ -188,12 +184,14 @@ function! s:lsp_start(opts) abort
             \ 'on_stdout': function('s:on_stdout'),
             \ 'on_stderr': function('s:on_stderr'),
             \ 'on_exit': function('s:on_exit'),
+            \ 'normalize': 'string'
             \ })
     elseif has_key(a:opts, 'tcp')
         let l:client_id = lsp#utils#job#connect(a:opts.tcp, {
             \ 'on_stdout': function('s:on_stdout'),
             \ 'on_stderr': function('s:on_stderr'),
             \ 'on_exit': function('s:on_exit'),
+            \ 'normalize': 'string'
             \ })
     else
         return -1

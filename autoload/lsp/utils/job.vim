@@ -1,4 +1,4 @@
-" https://github.com/prabirshrestha/async.vim#0fb846e1eb3c2bf04d52a57f41088afb3395212e (dirty)
+" https://github.com/prabirshrestha/async.vim#f20569020d65bec3249222606c073c0943045b5e (dirty)
 "    :AsyncEmbed path=./autoload/lsp/utils/job.vim namespace=lsp#utils#job
 
 " Author: Prabir Shrestha <mail at prabir dot me>
@@ -55,10 +55,18 @@ function! s:job_supports_type(type) abort
 endfunction
 
 function! s:out_cb(jobid, opts, job, data) abort
+    call a:opts.on_stdout(a:jobid, a:data, 'stdout')
+endfunction
+
+function! s:out_cb_array(jobid, opts, job, data) abort
     call a:opts.on_stdout(a:jobid, split(a:data, "\n", 1), 'stdout')
 endfunction
 
 function! s:err_cb(jobid, opts, job, data) abort
+    call a:opts.on_stderr(a:jobid, a:data, 'stderr')
+endfunction
+
+function! s:err_cb_array(jobid, opts, job, data) abort
     call a:opts.on_stderr(a:jobid, split(a:data, "\n", 1), 'stderr')
 endfunction
 
@@ -76,9 +84,19 @@ function! s:on_stdout(jobid, data, event) abort
     call l:jobinfo.opts.on_stdout(a:jobid, a:data, a:event)
 endfunction
 
+function! s:on_stdout_string(jobid, data, event) abort
+    let l:jobinfo = s:jobs[a:jobid]
+    call l:jobinfo.opts.on_stdout(a:jobid, join(a:data, "\n"), a:event)
+endfunction
+
 function! s:on_stderr(jobid, data, event) abort
     let l:jobinfo = s:jobs[a:jobid]
     call l:jobinfo.opts.on_stderr(a:jobid, a:data, a:event)
+endfunction
+
+function! s:on_stderr_string(jobid, data, event) abort
+    let l:jobinfo = s:jobs[a:jobid]
+    call l:jobinfo.opts.on_stderr(a:jobid, join(a:data, "\n"), a:event)
 endfunction
 
 function! s:on_exit(jobid, status, event) abort
@@ -127,12 +145,17 @@ function! s:job_start(cmd, opts) abort
       let l:jobopt.cwd = a:opts.cwd 
     endif
 
+    let l:normalize = get(a:opts, 'normalize', 'array') " array/string/raw
+
     if l:jobtype == s:job_type_nvimjob
-        call extend(l:jobopt, {
-            \ 'on_stdout': has_key(a:opts, 'on_stdout') ? function('s:on_stdout') : function('s:noop'),
-            \ 'on_stderr': has_key(a:opts, 'on_stderr') ? function('s:on_stderr') : function('s:noop'),
-            \ 'on_exit': function('s:on_exit'),
-        \})
+        if l:normalize ==# 'string'
+            let l:jobopt['on_stdout'] = has_key(a:opts, 'on_stdout') ? function('s:on_stdout_string') : function('s:noop')
+            let l:jobopt['on_stderr'] = has_key(a:opts, 'on_stderr') ? function('s:on_stderr_string') : function('s:noop')
+        else " array or raw
+            let l:jobopt['on_stdout'] = has_key(a:opts, 'on_stdout') ? function('s:on_stdout') : function('s:noop')
+            let l:jobopt['on_stderr'] = has_key(a:opts, 'on_stderr') ? function('s:on_stderr') : function('s:noop')
+        endif
+        call extend(l:jobopt, { 'on_exit': function('s:on_exit') })
         let l:job = jobstart(a:cmd, l:jobopt)
         if l:job <= 0
             return l:job
@@ -146,9 +169,14 @@ function! s:job_start(cmd, opts) abort
     elseif l:jobtype == s:job_type_vimjob
         let s:jobidseq = s:jobidseq + 1
         let l:jobid = s:jobidseq
+        if l:normalize ==# 'array'
+            let l:jobopt['out_cb'] = has_key(a:opts, 'on_stdout') ? function('s:out_cb_array', [l:jobid, a:opts]) : function('s:noop')
+            let l:jobopt['err_cb'] = has_key(a:opts, 'on_stderr') ? function('s:err_cb_array', [l:jobid, a:opts]) : function('s:noop')
+        else " raw or string
+            let l:jobopt['out_cb'] = has_key(a:opts, 'on_stdout') ? function('s:out_cb', [l:jobid, a:opts]) : function('s:noop')
+            let l:jobopt['err_cb'] = has_key(a:opts, 'on_stderr') ? function('s:err_cb', [l:jobid, a:opts]) : function('s:noop')
+        endif
         call extend(l:jobopt, {
-            \ 'out_cb': has_key(a:opts, 'on_stdout') ? function('s:out_cb', [l:jobid, a:opts]) : function('s:noop'),
-            \ 'err_cb': has_key(a:opts, 'on_stderr') ? function('s:err_cb', [l:jobid, a:opts]) : function('s:noop'),
             \ 'exit_cb': function('s:exit_cb', [l:jobid, a:opts]),
             \ 'mode': 'raw',
         \ })
@@ -303,6 +331,12 @@ endfunction
 
 function! s:callback_cb(jobid, opts, ch, data) abort
     if has_key(a:opts, 'on_stdout')
+        call a:opts.on_stdout(a:jobid, a:data, 'stdout')
+    endif
+endfunction
+
+function! s:callback_cb_array(jobid, opts, ch, data) abort
+    if has_key(a:opts, 'on_stdout')
         call a:opts.on_stdout(a:jobid, split(a:data, "\n", 1), 'stdout')
     endif
 endfunction
@@ -343,10 +377,11 @@ function! lsp#utils#job#connect(addr, opts) abort
     let s:jobidseq = s:jobidseq + 1
     let l:jobid = s:jobidseq
     let l:retry = 0
+    let l:normalize = get(a:opts, 'normalize', 'array') " array/string/raw
     while l:retry < 5
         let l:ch = ch_open(a:addr, {'waittime': 1000})
         call ch_setoptions(l:ch, {
-            \ 'callback': function('s:callback_cb', [l:jobid, a:opts]),
+            \ 'callback': function(l:normalize ==# 'array' ? 's:callback_cb_array' : 's:callback_cb', [l:jobid, a:opts]),
             \ 'close_cb': function('s:close_cb', [l:jobid, a:opts]),
             \ 'mode': 'raw',
         \})
