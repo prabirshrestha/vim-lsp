@@ -1,4 +1,4 @@
-" https://github.com/prabirshrestha/quickpick.vim#e0e38f40e4fa9b32c5ff1a3f7de449e930b6513c
+" https://github.com/prabirshrestha/quickpick.vim#663aeacc6bd50f4612ffdb9fd1d438eab09f02b0
 "    :QuickpickEmbed path=autoload/lsp/internal/ui/quickpick.vim namespace=lsp#internal#ui#quickpick prefix=lsp-quickpick
 
 let s:has_timer = exists('*timer_start') && exists('*timer_stop')
@@ -67,11 +67,11 @@ function! lsp#internal#ui#quickpick#open(opt) abort
   inoremap <buffer><silent> <Plug>(lsp-quickpick-cancel) <ESC>:<C-u>call <SID>on_cancel()<CR>
   nnoremap <buffer><silent> <Plug>(lsp-quickpick-cancel) :<C-u>call <SID>on_cancel()<CR>
 
-  inoremap <buffer><silent> <Plug>(lsp-quickpick-move-next) <ESC>:<C-u>call <SID>on_move_next(1)<CR>
-  nnoremap <buffer><silent> <Plug>(lsp-quickpick-move-next) :<C-u>call <SID>on_move_next(0)<CR>
+  inoremap <buffer><silent> <Plug>(lsp-quickpick-move-next) <C-o>:<C-u>call <SID>on_move_next()<CR>
+  nnoremap <buffer><silent> <Plug>(lsp-quickpick-move-next) :<C-u>call <SID>on_move_next()<CR>
 
-  inoremap <buffer><silent> <Plug>(lsp-quickpick-move-previous) <ESC>:<C-u>call <SID>on_move_previous(1)<CR>
-  nnoremap <buffer><silent> <Plug>(lsp-quickpick-move-previous) :<C-u>call <SID>on_move_previous(0)<CR>
+  inoremap <buffer><silent> <Plug>(lsp-quickpick-move-previous) <C-o>:<C-u>call <SID>on_move_previous()<CR>
+  nnoremap <buffer><silent> <Plug>(lsp-quickpick-move-previous) :<C-u>call <SID>on_move_previous()<CR>
 
   exec printf('setlocal filetype=' . s:state['promptfiletype'])
 
@@ -323,21 +323,15 @@ function! s:on_cancel() abort
   call lsp#internal#ui#quickpick#close()
 endfunction
 
-function! s:on_move_next(insertmode) abort
+function! s:on_move_next() abort
   let l:col = col('.')
   call s:win_execute(s:state['resultswinid'], 'normal! j')
-  if a:insertmode
-    call s:win_execute(s:state['promptwinid'], 'startinsert | call setpos(".", [0, 1, ' . (l:col + 1) .', 1])')
-  endif
   call s:notify_selection()
 endfunction
 
-function! s:on_move_previous(insertmode) abort
+function! s:on_move_previous() abort
   let l:col = col('.')
   call s:win_execute(s:state['resultswinid'], 'normal! k')
-  if a:insertmode
-    call s:win_execute(s:state['promptwinid'], 'startinsert | call setpos(".", [0, 1, ' . (l:col + 1) .', 1])')
-  endif
   call s:notify_selection()
 endfunction
 
@@ -362,9 +356,9 @@ function! s:notify_selection() abort
     \ 'resultswinid': s:state['resultswinid'],
     \ 'items': l:items,
     \ }
-  call win_gotoid(s:state['winid'])
+  noautocmd call win_gotoid(s:state['winid'])
   call s:notify('selection', l:data)
-  call win_gotoid(l:original_winid)
+  noautocmd call win_gotoid(l:original_winid)
 endfunction
 
 function! s:on_inputchanged() abort
