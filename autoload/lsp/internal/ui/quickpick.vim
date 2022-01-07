@@ -1,4 +1,4 @@
-" https://github.com/prabirshrestha/quickpick.vim#80a64e17a30b125046d9a3ba3d44f1b23c4a5963
+" https://github.com/prabirshrestha/quickpick.vim#968f00787c1a118228aee869351e754bec555298
 "    :QuickpickEmbed path=autoload/lsp/internal/ui/quickpick.vim namespace=lsp#internal#ui#quickpick prefix=lsp-quickpick
 
 let s:has_timer = exists('*timer_start') && exists('*timer_stop')
@@ -11,14 +11,21 @@ let s:has_proptype = exists('*prop_type_add') && exists('*prop_type_delete')
 "
 if has('nvim')
   function! s:is_floating(winid) abort
+    if !s:win_exists(a:winid)
+      return 0
+    endif
     let l:config = nvim_win_get_config(a:winid)
     return empty(l:config) || !empty(get(l:config, 'relative', ''))
   endfunction
 else
   function! s:is_floating(winid) abort
-    return winheight(a:winid) != -1 && win_id2win(a:winid) == 0
+    return s:win_exists(a:winid) && win_id2win(a:winid) == 0
   endfunction
 endif
+
+function! s:win_exists(winid) abort
+  return winheight(a:winid) != -1
+endfunction
 
 function! lsp#internal#ui#quickpick#open(opt) abort
   call lsp#internal#ui#quickpick#close() " hide existing picker if exists
@@ -189,6 +196,7 @@ function! s:restore_windows() abort
 
   let l:Resizable = {_, info ->
         \ info.tabnr == l:tabnr &&
+        \ s:win_exists(info.winid) &&
         \ !s:is_floating(info.winid)
         \ }
   let l:wins_to_resize = sort(filter(s:state['wininfo'], l:Resizable), {l, r -> l.winnr - r.winnr})
