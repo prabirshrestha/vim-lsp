@@ -617,6 +617,13 @@ function! s:ensure_init(buf, server_name, cb) abort
     \     'trace': 'off',
     \   },
     \ }
+    
+    let l:workspace_capabilities = get(l:capabilities, 'workspace', {})
+    if get(l:workspace_capabilities, 'workspaceFolders', v:false)
+        let l:request['params']['workspaceFolders'] = [
+            \  { 'uri': l:root_uri, 'name': l:root_uri },
+            \ ]
+    endif
 
     if has_key(l:server_info, 'initialization_options')
         let l:request.params['initializationOptions'] = l:server_info['initialization_options']
