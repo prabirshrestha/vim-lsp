@@ -565,7 +565,8 @@ function! lsp#default_get_supported_capabilities(server_info) abort
     \   },
     \   'workspace': {
     \       'applyEdit': v:true,
-    \       'configuration': v:true
+    \       'configuration': v:true,
+    \       'workspaceFolders': g:lsp_experimental_workspace_folders ? v:true : v:false,
     \   },
     \ }
 endfunction
