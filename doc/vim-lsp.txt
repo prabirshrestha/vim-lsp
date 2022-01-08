@@ -68,6 +68,7 @@ CONTENTS                                                  *vim-lsp-contents*
       g:lsp_hover_ui                        |g:lsp_hover_ui|
       g:lsp_ignorecase                      |g:lsp_ignorecase|
       g:lsp_log_file                        |g:lsp_log_file|
+      g:lsp_log_verbose                     |g:lsp_log_verbose|
       g:lsp_semantic_enabled                |g:lsp_semantic_enabled|
       g:lsp_text_document_did_save_delay    |g:lsp_text_document_did_save_delay|
       g:lsp_snippet_expand                  |g:lsp_snippet_expand|
@@ -895,6 +896,20 @@ g:lsp_log_file                                           *g:lsp_log_file*
     Example: >
 	let g:lsp_log_file = ''
 	let g:lsp_log_file = expand('~/vim-lsp.log')
+
+g:lsp_log_verbose                                           *g:lsp_log_verbose*
+    Type: |Number|
+    Default: `'1'`
+
+    Determines whether or not verbose logging should be enabled. This usually
+    includes logging the entire request and response from the LSP servers and
+    clients which can have significant performance impact. Requires
+    |g:lsp_log_file| to be set else there is no impact on enabling or
+    disabling this flag.
+
+    Example: >
+	let g:lsp_log_verbose = 1
+	let g:lsp_log_verbose = 0
 
 g:lsp_semantic_enabled                             *g:lsp_semantic_enabled*
     Type: |Boolean|
