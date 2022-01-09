@@ -113,7 +113,7 @@ function! s:show_preview_window(server_name, request, response) abort
     setlocal nobuflisted
     setlocal buftype=nofile
     setlocal noswapfile
-    %d
+    %d _
     call setline(1, l:lines)
     call s:Window.do(win_getid(), {->s:Markdown.apply()})
     execute "normal \<c-w>p"
