@@ -141,7 +141,7 @@ let s:color_map = {
 \ 'starting': 'MoreMsg',
 \ 'failed': 'WarningMsg',
 \ 'running': 'Keyword',
-\ 'not running': 'NonText'
+\ 'not running': 'Comment'
 \}
 
 " Print the current status of all servers (if called with no arguments)
