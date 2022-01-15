@@ -157,6 +157,7 @@ CONTENTS                                                  *vim-lsp-contents*
     Folding                               |vim-lsp-folding|
     Semantic highlighting                 |vim-lsp-semantic|
     Popup Formatting                      |vim-lsp-popup-format|
+    Workspace Folders			  |vim-lsp-workspace-folders|
     License                               |vim-lsp-license|
     Maintainers                           |vim-lsp-maintainers|
 
@@ -2023,6 +2024,18 @@ For customization, see
 |formatprg|.
 
 ==============================================================================
+Workspace Folders                                  *vim-lsp-workspace-folders*
+
+Workspace folders is an experimental feature of vim-lsp. To enable workspace
+folders set `let g:lsp_experimental_workspace_folders = 1`. In the future this
+flag will be removed and workspace folders will be enabled by default.
+
+When a new buffer is opened, if the server supports workspace folder, it will
+call `root_uri` function to detect the workspace folder. If the folder is not
+part of workspace folder, it will automatically notify the server to add the
+workspace folder.
+
+=============================================================================
 License                                                    *vim-lsp-license*
 
 The MIT License (MIT)

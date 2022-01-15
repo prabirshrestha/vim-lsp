@@ -1,6 +1,7 @@
 let s:enabled = 0
 let s:already_setup = 0
 let s:Stream = lsp#callbag#makeSubject()
+" workspace_folders = { 'uri': { uri, name } }
 let s:servers = {} " { lsp_id, server_info, workspace_folders, init_callbacks, init_result, buffers: { path: { changed_tick } }
 let s:last_command_id = 0
 let s:notification_callbacks = [] " { name, callback }
