@@ -28,10 +28,8 @@ function! lsp#internal#document_hover#under_cursor#do(options) abort
                 nnoremap <buffer><silent> <Plug>(lsp-float-close) :<C-u>call <SID>close_floating_window()<CR>
                 execute('doautocmd <nomodeline> User lsp_float_focused')
                 if !hasmapto('<Plug>(lsp-float-close)')
-                    imap <silent> <buffer> <C-c> <Plug>(lsp-float-close)
-                    nmap  <silent> <buffer> <C-c> <Plug>(lsp-float-close)
-                    imap <silent> <buffer> <Esc> <Plug>(lsp-float-close)
-                    nmap  <silent> <buffer> <Esc> <Plug>(lsp-float-close)
+                    call s:register_key_bindings(['i', 'n'], "\<C-c>", "\<Plug>(lsp-float-close)")
+                    call s:register_key_bindings(['i', 'n'], "\<Esc>", "\<Plug>(lsp-float-close)")
                 endif
             endif
             return
@@ -119,6 +117,14 @@ function! s:show_preview_window(server_name, request, response) abort
     execute "normal \<c-w>p"
     call winrestview(l:view)
     let @#=l:alternate
+endfunction
+
+function! s:register_key_bindings(modes, lhs, rhs) abort
+    for mode in a:modes
+        if empty(mapcheck(a:lhs, mode))
+            execute printf('%smap <silent> <buffer> %s %s', mode, a:lhs, a:rhs)
+        endif
+    endfor
 endfunction
 
 function! s:show_floating_window(server_name, request, response) abort
@@ -216,10 +222,8 @@ function! s:on_opened() abort
     nnoremap <buffer><silent> <Plug>(lsp-float-close) :<C-u>call <SID>close_floating_window()<CR>
     execute('doautocmd <nomodeline> User lsp_float_opened')
     if !hasmapto('<Plug>(lsp-float-close)')
-        imap <silent> <buffer> <C-c> <Plug>(lsp-float-close)
-        nmap  <silent> <buffer> <C-c> <Plug>(lsp-float-close)
-        imap <silent> <buffer> <Esc> <Plug>(lsp-float-close)
-        nmap  <silent> <buffer> <Esc> <Plug>(lsp-float-close)
+        call s:register_key_bindings(['i', 'n'], "\<C-c>", "\<Plug>(lsp-float-close)")
+        call s:register_key_bindings(['i', 'n'], "\<Esc>", "\<Plug>(lsp-float-close)")
     endif
 endfunction
 
