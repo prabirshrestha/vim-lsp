@@ -30,8 +30,6 @@ function! lsp#internal#document_hover#under_cursor#do(options) abort
                 if !hasmapto('<Plug>(lsp-float-close)')
                     imap <silent> <buffer> <C-c> <Plug>(lsp-float-close)
                     nmap  <silent> <buffer> <C-c> <Plug>(lsp-float-close)
-                    imap <silent> <buffer> <Esc> <Plug>(lsp-float-close)
-                    nmap  <silent> <buffer> <Esc> <Plug>(lsp-float-close)
                 endif
             endif
             return
@@ -218,8 +216,6 @@ function! s:on_opened() abort
     if !hasmapto('<Plug>(lsp-float-close)')
         imap <silent> <buffer> <C-c> <Plug>(lsp-float-close)
         nmap  <silent> <buffer> <C-c> <Plug>(lsp-float-close)
-        imap <silent> <buffer> <Esc> <Plug>(lsp-float-close)
-        nmap  <silent> <buffer> <Esc> <Plug>(lsp-float-close)
     endif
 endfunction
 
