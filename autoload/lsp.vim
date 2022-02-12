@@ -626,8 +626,8 @@ function! s:ensure_init(buf, server_name, cb) abort
     if get(l:workspace_capabilities, 'workspaceFolders', v:false)
         " TODO: extract folder name for l:root_uri
         let l:server_info['workspaceFolders'] = [
-                    \ { 'uri': l:root_uri, 'name': l:root_uri }
-                    \ ]
+            \ { 'uri': l:root_uri, 'name': l:root_uri }
+            \ ]
         let l:request['params']['workspaceFolders'] = l:server_info['workspaceFolders']
     endif
 
