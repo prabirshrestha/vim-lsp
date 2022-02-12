@@ -157,7 +157,7 @@ CONTENTS                                                  *vim-lsp-contents*
     Folding                               |vim-lsp-folding|
     Semantic highlighting                 |vim-lsp-semantic|
     Popup Formatting                      |vim-lsp-popup-format|
-    Workspace Folders			  |vim-lsp-workspace-folders|
+    Workspace Folders                     |vim-lsp-workspace-folders|
     License                               |vim-lsp-license|
     Maintainers                           |vim-lsp-maintainers|
 
