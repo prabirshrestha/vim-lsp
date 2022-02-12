@@ -33,6 +33,22 @@ function! lsp#capabilities#has_rename_prepare_provider(server_name) abort
     return s:has_provider(a:server_name, 'renameProvider', 'prepareProvider')
 endfunction
 
+function! lsp#capabilities#has_workspace_folders_change_notifications(server_name) abort
+    let l:capabilities = lsp#get_server_capabilities(a:server_name)
+    if type(l:capabilities) == type({}) && !empty(l:capabilities)
+        let l:workspace = get(l:capabilities, 'workspace', {})
+        if type(l:workspace) == type({}) && !empty(l:workspace)
+            let l:workspace_folders = get(l:workspace, 'workspaceFolders', {})
+            if type(l:workspace_folders) == type({}) && !empty(l:workspace_folders)
+                if get(l:workspace_folders, 'supported', v:false) && get(l:workspace_folders, 'changeNotifications', '') ==# 'workspace/didChangeWorkspaceFolders'
+                    return v:true
+                endif
+            endif
+        endif
+    endif
+    return v:false
+endfunction
+
 function! lsp#capabilities#has_document_formatting_provider(server_name) abort
     return s:has_provider(a:server_name, 'documentFormattingProvider')
 endfunction

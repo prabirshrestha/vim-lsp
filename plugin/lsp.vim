@@ -73,6 +73,8 @@ let g:lsp_untitled_buffer_enabled = get(g:, 'lsp_untitled_buffer_enabled', 1)
 
 let g:lsp_get_supported_capabilities = get(g:, 'lsp_get_supported_capabilities', [function('lsp#default_get_supported_capabilities')])
 
+let g:lsp_experimental_workspace_folders = get(g:, 'lsp_experimental_workspace_folders', 0)
+
 if g:lsp_auto_enable
     augroup lsp_auto_enable
         autocmd!
