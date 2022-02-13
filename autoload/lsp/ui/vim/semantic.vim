@@ -124,7 +124,8 @@ function! s:add_highlight(server, buf, line, col, length, token_idx, token_modif
         call nvim_buf_clear_namespace(a:buf, s:namespace_id, a:line, a:line + 1)
 
         for l:highlight in l:highlights
-            call nvim_buf_add_highlight(a:buf, s:namespace_id, s:get_hl_name(a:server, l:scopes[l:highlight['scope']]), a:line, l:highlight['char'], l:highlight['char'] + l:highlight['length'])
+            let l:token_name = l:legend['tokenTypes'][token_idx]
+            call nvim_buf_add_highlight(a:buf, s:namespace_id, s:get_hl_name(a:server, l:token_name), a:line, a:col, a:col + a:length)
         endfor
     endif
 endfunction
