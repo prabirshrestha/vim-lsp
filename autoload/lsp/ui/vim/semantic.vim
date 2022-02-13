@@ -80,10 +80,6 @@ function! s:handle_semantic_full(server, data) abort
 endfunction
 
 function! s:init_highlight(server, buf) abort
-    if !empty(getbufvar(a:buf, 'lsp_did_semantic_setup'))
-        return
-    endif
-
     if s:use_vim_textprops
         let l:scopes = lsp#ui#vim#semantic#get_scopes(a:server)
         for l:scope_idx in range(len(l:scopes))
@@ -102,8 +98,6 @@ function! s:init_highlight(server, buf) abort
             silent! call prop_type_add(l:textprop_name, {'bufnr': a:buf, 'highlight': l:hl, 'combine': v:true})
         endfor
     endif
-
-    call setbufvar(a:buf, 'lsp_did_semantic_setup', 1)
 endfunction
 
 function! s:clear_highlights(server, buf) abort
