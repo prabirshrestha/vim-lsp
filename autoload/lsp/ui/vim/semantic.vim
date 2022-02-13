@@ -24,7 +24,7 @@ function! lsp#ui#vim#semantic#get_legend(server) abort
     return l:capabilities['semanticTokensProvider']['legend']
 endfunction
 
-function! lsp#ui#vim#semantic#semantic_full(server, buf) abort
+function! lsp#ui#vim#semantic#semantic_full(server, buf, ...) abort
     if lsp#ui#vim#semantic#is_enabled() && lsp#capabilities#has_semantic_tokens(a:server)
         call lsp#send_request(a:server, {
           \ 'method': 'textDocument/semanticTokens/full',
@@ -33,6 +33,10 @@ function! lsp#ui#vim#semantic#semantic_full(server, buf) abort
           \ },
           \ 'on_notification': function('s:handle_semantic_full', [a:server]),
           \ })
+    else
+        if !lsp#capabilities#has_semantic_tokens(a:server)
+            call lsp#log_verbose(a:server..' does not support semantic tokens')
+        endif
     endif
 endfunction
 

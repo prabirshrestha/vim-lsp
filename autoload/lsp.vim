@@ -253,9 +253,13 @@ function! s:on_text_document_did_open(...) abort
     call lsp#internal#diagnostics#state#_force_notify_buffer(l:buf)
 
     for l:server_name in lsp#get_allowed_servers(l:buf)
-        call s:ensure_flush(l:buf, l:server_name, function('s:fire_lsp_buffer_enabled', [l:server_name, l:buf]))
-        call lsp#ui#vim#semantic#semantic_full(l:server_name, l:buf)
+        call s:ensure_flush(l:buf, l:server_name, function('s:done_text_document_did_open', [l:server_name, l:buf]))
     endfor
+endfunction
+
+function! s:done_text_document_did_open(server_name, buf, ...) abort
+    call lsp#ui#vim#semantic#semantic_full(a:server_name, a:buf)
+    call s:fire_lsp_buffer_enabled(a:server_name, a:buf)
 endfunction
 
 function! lsp#activate() abort
@@ -1157,8 +1161,7 @@ let s:didchange_timer = -1
 function! s:add_didchange_queue(buf) abort
     if g:lsp_use_event_queue == 0
         for l:server_name in lsp#get_allowed_servers(a:buf)
-            call s:ensure_flush(a:buf, l:server_name, function('s:Noop'))
-            call lsp#ui#vim#semantic#semantic_full(l:server_name, a:buf)
+            call s:ensure_flush(a:buf, l:server_name, function('lsp#ui#vim#semantic#semantic_full', [l:server_name, a:buf]))
         endfor
         return
     endif
@@ -1179,8 +1182,7 @@ function! s:send_didchange_queue(...) abort
             continue
         endif
         for l:server_name in lsp#get_allowed_servers(l:buf)
-            call s:ensure_flush(l:buf, l:server_name, function('s:Noop'))
-            call lsp#ui#vim#semantic#semantic_full(l:server_name, l:buf)
+            call s:ensure_flush(l:buf, l:server_name, function('lsp#ui#vim#semantic#semantic_full', [l:server_name, l:buf]))
         endfor
     endfor
     let s:didchange_queue = []
