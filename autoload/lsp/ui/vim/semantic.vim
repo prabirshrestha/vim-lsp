@@ -15,16 +15,29 @@ function! lsp#ui#vim#semantic#is_enabled() abort
     return g:lsp_semantic_enabled && (s:use_vim_textprops || s:use_nvim_highlight) ? v:true : v:false
 endfunction
 
-function! lsp#ui#vim#semantic#get_scopes(server) abort
-    if !lsp#capabilities#has_semantic_highlight(a:server)
-        return []
+function! lsp#ui#vim#semantic#get_legend(server) abort
+    if !lsp#capabilities#has_semantic_tokens(a:server)
+        return {'tokenTypes': [], 'tokenModifiers': []}
     endif
 
     let l:capabilities = lsp#get_server_capabilities(a:server)
-    return l:capabilities['semanticHighlighting']['scopes']
+    return l:capabilities['semanticTokensProvider']['legend']
 endfunction
 
-function! lsp#ui#vim#semantic#handle_semantic(server, data) abort
+function! lsp#ui#vim#semantic#semantic_full(server, buf) abort
+    if lsp#ui#vim#semantic#is_enabled() && lsp#capabilities#has_semantic_tokens(a:server)
+        call lsp#send_request(a:server, {
+          \ 'method': 'textDocument/semanticTokens/full',
+          \ 'params': {
+          \     'textDocument': lsp#get_text_document_identifier(a:buf)
+          \ },
+          \ 'on_notification': function('s:handle_semantic_full', [a:server]),
+          \ })
+    endif
+endfunction
+
+" Highlight helper functions {{{1
+function! s:handle_semantic_full(server, data) abort
     if !g:lsp_semantic_enabled | return | endif
 
     if lsp#client#is_error(a:data['response'])
@@ -32,7 +45,7 @@ function! lsp#ui#vim#semantic#handle_semantic(server, data) abort
         return
     endif
 
-    let l:uri = a:data['response']['params']['textDocument']['uri']
+    let l:uri = a:data['request']['params']['textDocument']['uri']
     let l:path = lsp#utils#uri_to_path(l:uri)
     let l:bufnr = bufnr(l:path)
 
@@ -41,15 +54,27 @@ function! lsp#ui#vim#semantic#handle_semantic(server, data) abort
     if !bufloaded(l:bufnr) | return | endif
 
     call s:init_highlight(a:server, l:bufnr)
+    call s:clear_highlights(a:server, l:bufnr)
 
-    for l:info in a:data['response']['params']['lines']
-        let l:linenr = l:info['line']
-        let l:tokens = has_key(l:info, 'tokens') ? l:info['tokens'] : ''
-        call s:add_highlight(a:server, l:bufnr, l:linenr, l:tokens)
-    endfor
+    let l:linenr = 0
+    let l:col = 0
+    let l:result_data = a:data['response']['result']['data']
+    while len(l:result_data) > 0
+        let l:linenr = l:linenr + l:result_data[0]
+        if l:result_data[0] > 0
+            let l:col = 0
+        endif
+        let l:col = l:col + l:result_data[1]
+        let l:length = l:result_data[2]
+        let l:token_idx = l:result_data[3]
+        let l:token_modifiers = l:result_data[4]
+
+        call s:add_highlight(a:server, l:bufnr, l:linenr, l:col, l:length, l:token_idx, l:token_modifiers)
+
+        let l:result_data = l:result_data[5:]
+    endwhile
 endfunction
 
-" Highlight helper functions {{{1
 function! s:init_highlight(server, buf) abort
     if !empty(getbufvar(a:buf, 'lsp_did_semantic_setup'))
         return
@@ -65,58 +90,37 @@ function! s:init_highlight(server, buf) abort
         endfor
 
         silent! call prop_type_add(s:textprop_cache, {'bufnr': a:buf, 'priority': lsp#internal#textprop#priority('semantic')})
+        let l:legend = lsp#ui#vim#semantic#get_legend(a:server)
+        for l:token_idx in range(len(l:legend['tokenTypes']))
+            let l:token_name = l:legend['tokenTypes'][l:token_idx]
+            let l:hl = s:get_hl_name(a:server, l:token_name)
+            let l:textprop_name = s:get_textprop_name(a:server, l:token_idx)
+            silent! call prop_type_add(l:textprop_name, {'bufnr': a:buf, 'highlight': l:hl, 'combine': v:true})
+        endfor
     endif
 
     call setbufvar(a:buf, 'lsp_did_semantic_setup', 1)
 endfunction
 
-function! s:hash(str) abort
-    let l:hash = 1
-
-    for l:char in split(a:str, '\zs')
-        let l:hash = (l:hash * 31 + char2nr(l:char)) % 2147483647
-    endfor
-
-    return l:hash
+function! s:clear_highlights(server, buf) abort
+    if s:use_vim_textprops
+        let l:legend = lsp#ui#vim#semantic#get_legend(a:server)
+        for l:token_idx in range(len(l:legend['tokenTypes']))
+            let l:textprop_name = s:get_textprop_name(a:server, l:token_idx)
+            silent! call prop_remove({'bufnr': a:buf, 'type': l:textprop_name, 'all': v:true}, 1, line('$'))
+        endfor
+    endif
 endfunction
 
-function! s:add_highlight(server, buf, line, tokens) abort
-    " Return quickly if the tokens for this line are already set correctly,
-    " according to the cached tokens.
-    " This only works for Vim at the moment, for Neovim, we need extended
-    " marks.
-    if s:use_vim_textprops
-        let l:props = filter(prop_list(a:line + 1, {'bufnr': a:buf}), {idx, prop -> prop['type'] ==# s:textprop_cache})
-        let l:hash = s:hash(a:tokens)
-
-        if !empty(l:props) && l:props[0]['id'] == l:hash
-            " No changes for this line, so just return.
-            return
-        endif
-    endif
-
-    let l:scopes = lsp#ui#vim#semantic#get_scopes(a:server)
-    let l:highlights = s:tokens_to_hl_info(a:tokens)
+function! s:add_highlight(server, buf, line, col, length, token_idx, token_modifiers) abort
+    let l:legend = lsp#ui#vim#semantic#get_legend(a:server)
 
     if s:use_vim_textprops
-        " Clear text properties from the previous run
-        for l:scope_idx in range(len(l:scopes))
-            call prop_remove({'bufnr': a:buf, 'type': s:get_textprop_name(a:server, l:scope_idx), 'all': v:true}, a:line + 1)
-        endfor
-
-        " Clear cache from previous run
-        call prop_remove({'bufnr': a:buf, 'type': s:textprop_cache, 'all': v:true}, a:line + 1)
-
-        " Add textprop for cache
-        call prop_add(a:line + 1, 1, {'bufnr': a:buf, 'type': s:textprop_cache, 'id': l:hash})
-
-        for l:highlight in l:highlights
-            try
-                call prop_add(a:line + 1, l:highlight['char'] + 1, { 'length': l:highlight['length'], 'bufnr': a:buf, 'type': s:get_textprop_name(a:server, l:highlight['scope'])})
-            catch
-                call lsp#log('SemanticHighlight: error while adding prop on line ' . (a:line + 1), v:exception)
-            endtry
-        endfor
+        try
+            call prop_add(a:line + 1, a:col + 1, { 'length': a:length, 'bufnr': a:buf, 'type': s:get_textprop_name(a:server, a:token_idx)})
+        catch
+            call lsp#log('SemanticHighlight: error while adding prop on line ' . (a:line + 1), v:exception)
+        endtry
     elseif s:use_nvim_highlight
         " Clear text properties from the previous run
         call nvim_buf_clear_namespace(a:buf, s:namespace_id, a:line, a:line + 1)
@@ -127,59 +131,18 @@ function! s:add_highlight(server, buf, line, tokens) abort
     endif
 endfunction
 
-function! s:get_hl_name(server, scope) abort
+function! s:get_hl_name(server, token_type) abort
     let l:hl = 'LspUnknownScope'
+    let l:info = lsp#get_server_info(a:server)
+    if has_key(l:info['semantic_highlight'], a:token_type)
+        let l:hl = l:info['semantic_highlight'][a:token_type]
+    endif
 
-    " Iterate over scopes in the order most general to most specific,
-    " returning the last scope encountered. This is accomplished by a try
-    " catch which ensures we always return the last scope even if an error is
-    " encountered midway.
-    try
-        let l:info = lsp#get_server_info(a:server)
-        let l:hl = l:info['semantic_highlight']
-        let l:i = 0
-
-        while (l:i < len(a:scope)) && has_key(l:hl, a:scope[l:i])
-            let l:hl = l:hl[a:scope[l:i]]
-            let l:i += 1
-        endwhile
-    catch
-    endtry
-
-    return type(l:hl) == type('') ? l:hl : 'LspUnknownScope'
+    return l:hl
 endfunction
 
-function! s:get_textprop_name(server, scope_index) abort
-    return 'vim-lsp-semantic-' . a:server . '-' . a:scope_index
-endfunction
-
-" Response parsing functions {{{1
-
-" Converts a list of bytes (MSB first) to a Number.
-function! s:octets_to_number(octets) abort
-    let l:ret = 0
-
-    for l:octet in a:octets
-        let l:ret *= 256
-        let l:ret += l:octet
-    endfor
-
-    return l:ret
-endfunction
-
-function! s:tokens_to_hl_info(token) abort
-    let l:ret = []
-    let l:octets = lsp#utils#base64_decode(a:token)
-
-    for l:i in range(0, len(l:octets) - 1, 8)
-        let l:char = s:octets_to_number(l:octets[l:i : l:i+3])
-        let l:length = s:octets_to_number(l:octets[l:i+4 : l:i+5])
-        let l:scope = s:octets_to_number(l:octets[l:i+6 : l:i+7])
-
-        call add(l:ret, { 'char': l:char, 'length': l:length, 'scope': l:scope })
-    endfor
-
-    return l:ret
+function! s:get_textprop_name(server, token_idx) abort
+    return 'vim-lsp-semantic-' . a:server . '-' . a:token_idx
 endfunction
 
 " Display scope tree {{{1

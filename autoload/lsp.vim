@@ -254,6 +254,7 @@ function! s:on_text_document_did_open(...) abort
 
     for l:server_name in lsp#get_allowed_servers(l:buf)
         call s:ensure_flush(l:buf, l:server_name, function('s:fire_lsp_buffer_enabled', [l:server_name, l:buf]))
+        call lsp#ui#vim#semantic#semantic_full(l:server_name, l:buf)
     endfor
 endfunction
 
@@ -548,8 +549,16 @@ function! lsp#default_get_supported_capabilities(server_info) abort
     \       'references': {
     \           'dynamicRegistration': v:false,
     \       },
-    \       'semanticHighlightingCapabilities': {
-    \           'semanticHighlighting': lsp#ui#vim#semantic#is_enabled()
+    \       'semanticTokens': {
+    \           'dynamicRegistration': v:false,
+    \           'requests': {
+    \               'range': v:false,
+    \               'full': lsp#ui#vim#semantic#is_enabled(),
+    \           },
+    \           'formats': ['relative'],
+    \           'overlappingTokenSupport': v:false,
+    \           'multilineTokenSupport': v:false,
+    \           'serverCancelSupport': v:false
     \       },
     \       'publishDiagnostics': {
     \           'relatedInformation': v:true,
@@ -846,14 +855,7 @@ function! s:on_notification(server_name, id, data, event) abort
     endif
     call lsp#stream(1, l:stream_data) " notify stream before callbacks
 
-    if lsp#client#is_server_instantiated_notification(a:data)
-        if has_key(l:response, 'method')
-            if l:response['method'] ==# 'textDocument/semanticHighlighting'
-                call lsp#ui#vim#semantic#handle_semantic(a:server_name, a:data)
-            endif
-            " NOTE: this is legacy code, use stream instead of handling notifications here
-        endif
-    else
+    if !lsp#client#is_server_instantiated_notification(a:data)
         let l:request = a:data['request']
         let l:method = l:request['method']
         if l:method ==# 'initialize'
@@ -1156,6 +1158,7 @@ function! s:add_didchange_queue(buf) abort
     if g:lsp_use_event_queue == 0
         for l:server_name in lsp#get_allowed_servers(a:buf)
             call s:ensure_flush(a:buf, l:server_name, function('s:Noop'))
+            call lsp#ui#vim#semantic#semantic_full(l:server_name, a:buf)
         endfor
         return
     endif
@@ -1177,6 +1180,7 @@ function! s:send_didchange_queue(...) abort
         endif
         for l:server_name in lsp#get_allowed_servers(l:buf)
             call s:ensure_flush(l:buf, l:server_name, function('s:Noop'))
+            call lsp#ui#vim#semantic#semantic_full(l:server_name, l:buf)
         endfor
     endfor
     let s:didchange_queue = []
