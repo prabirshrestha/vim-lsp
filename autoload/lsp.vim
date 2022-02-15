@@ -559,6 +559,14 @@ function! lsp#default_get_supported_capabilities(server_info) abort
     \               'range': v:false,
     \               'full': lsp#ui#vim#semantic#is_enabled(),
     \           },
+    \           'tokenTypes': [
+    \               'type', 'class', 'enum', 'interface', 'struct',
+    \               'typeParameter', 'parameter', 'variable', 'property',
+    \               'enumMember', 'event', 'function', 'method', 'macro',
+    \               'keyword', 'modifier', 'comment', 'string', 'number',
+    \               'regexp', 'operator'
+    \           ],
+    \           'tokenModifiers': [],
     \           'formats': ['relative'],
     \           'overlappingTokenSupport': v:false,
     \           'multilineTokenSupport': v:false,
