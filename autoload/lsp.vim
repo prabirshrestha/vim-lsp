@@ -258,7 +258,7 @@ function! s:on_text_document_did_open(...) abort
 endfunction
 
 function! s:done_text_document_did_open(server_name, buf, ...) abort
-    call lsp#ui#vim#semantic#semantic_full(a:server_name, a:buf)
+    call lsp#internal#semantic#semantic_full(a:server_name, a:buf)
     call s:fire_lsp_buffer_enabled(a:server_name, a:buf)
 endfunction
 
@@ -557,7 +557,7 @@ function! lsp#default_get_supported_capabilities(server_info) abort
     \           'dynamicRegistration': v:false,
     \           'requests': {
     \               'range': v:false,
-    \               'full': lsp#ui#vim#semantic#is_enabled(),
+    \               'full': lsp#internal#semantic#is_enabled(),
     \           },
     \           'tokenTypes': [
     \               'type', 'class', 'enum', 'interface', 'struct',
@@ -1169,7 +1169,7 @@ let s:didchange_timer = -1
 function! s:add_didchange_queue(buf) abort
     if g:lsp_use_event_queue == 0
         for l:server_name in lsp#get_allowed_servers(a:buf)
-            call s:ensure_flush(a:buf, l:server_name, function('lsp#ui#vim#semantic#semantic_full', [l:server_name, a:buf]))
+            call s:ensure_flush(a:buf, l:server_name, function('lsp#internal#semantic#semantic_full', [l:server_name, a:buf]))
         endfor
         return
     endif
@@ -1190,7 +1190,7 @@ function! s:send_didchange_queue(...) abort
             continue
         endif
         for l:server_name in lsp#get_allowed_servers(l:buf)
-            call s:ensure_flush(l:buf, l:server_name, function('lsp#ui#vim#semantic#semantic_full', [l:server_name, l:buf]))
+            call s:ensure_flush(l:buf, l:server_name, function('lsp#internal#semantic#semantic_full', [l:server_name, l:buf]))
         endfor
     endfor
     let s:didchange_queue = []

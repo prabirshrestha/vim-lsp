@@ -11,11 +11,11 @@ if !hlexists('LspUnknownScope')
 endif
 
 " Global functions {{{1
-function! lsp#ui#vim#semantic#is_enabled() abort
+function! lsp#internal#semantic#is_enabled() abort
     return g:lsp_semantic_enabled && (s:use_vim_textprops || s:use_nvim_highlight) ? v:true : v:false
 endfunction
 
-function! lsp#ui#vim#semantic#get_legend(server) abort
+function! lsp#internal#semantic#get_legend(server) abort
     if !lsp#capabilities#has_semantic_tokens(a:server)
         return {'tokenTypes': [], 'tokenModifiers': []}
     endif
@@ -24,8 +24,8 @@ function! lsp#ui#vim#semantic#get_legend(server) abort
     return l:capabilities['semanticTokensProvider']['legend']
 endfunction
 
-function! lsp#ui#vim#semantic#semantic_full(server, buf, ...) abort
-    if lsp#ui#vim#semantic#is_enabled() && lsp#capabilities#has_semantic_tokens(a:server)
+function! lsp#internal#semantic#semantic_full(server, buf, ...) abort
+    if lsp#internal#semantic#is_enabled() && lsp#capabilities#has_semantic_tokens(a:server)
         call lsp#send_request(a:server, {
           \ 'method': 'textDocument/semanticTokens/full',
           \ 'params': {
@@ -81,28 +81,19 @@ endfunction
 
 function! s:init_highlight(server, buf) abort
     if s:use_vim_textprops
-        let l:scopes = lsp#ui#vim#semantic#get_scopes(a:server)
-        for l:scope_idx in range(len(l:scopes))
-            let l:scope = l:scopes[l:scope_idx]
-            let l:hl = s:get_hl_name(a:server, l:scope)
-
-            silent! call prop_type_add(s:get_textprop_name(a:server, l:scope_idx), {'bufnr': a:buf, 'highlight': l:hl, 'combine': v:true, 'priority': lsp#internal#textprop#priority('semantic')})
-        endfor
-
-        silent! call prop_type_add(s:textprop_cache, {'bufnr': a:buf, 'priority': lsp#internal#textprop#priority('semantic')})
-        let l:legend = lsp#ui#vim#semantic#get_legend(a:server)
+        let l:legend = lsp#internal#semantic#get_legend(a:server)
         for l:token_idx in range(len(l:legend['tokenTypes']))
             let l:token_name = l:legend['tokenTypes'][l:token_idx]
             let l:hl = s:get_hl_name(a:server, l:token_name)
             let l:textprop_name = s:get_textprop_name(a:server, l:token_idx)
-            silent! call prop_type_add(l:textprop_name, {'bufnr': a:buf, 'highlight': l:hl, 'combine': v:true})
+            silent! call prop_type_add(l:textprop_name, {'bufnr': a:buf, 'highlight': l:hl, 'combine': v:true, 'priority': lsp#internal#textprop#priority('semantic')})
         endfor
     endif
 endfunction
 
 function! s:clear_highlights(server, buf) abort
     if s:use_vim_textprops
-        let l:legend = lsp#ui#vim#semantic#get_legend(a:server)
+        let l:legend = lsp#internal#semantic#get_legend(a:server)
         for l:token_idx in range(len(l:legend['tokenTypes']))
             let l:textprop_name = s:get_textprop_name(a:server, l:token_idx)
             silent! call prop_remove({'bufnr': a:buf, 'type': l:textprop_name, 'all': v:true}, 1, line('$'))
@@ -111,7 +102,7 @@ function! s:clear_highlights(server, buf) abort
 endfunction
 
 function! s:add_highlight(server, buf, line, col, length, token_idx, token_modifiers) abort
-    let l:legend = lsp#ui#vim#semantic#get_legend(a:server)
+    let l:legend = lsp#internal#semantic#get_legend(a:server)
 
     if s:use_vim_textprops
         try
@@ -145,7 +136,7 @@ function! s:get_textprop_name(server, token_idx) abort
 endfunction
 
 " Display scope tree {{{1
-function! lsp#ui#vim#semantic#display_scope_tree(...) abort
+function! lsp#internal#semantic#display_scope_tree(...) abort
     let l:servers = filter(lsp#get_allowed_servers(), 'lsp#capabilities#has_semantic_highlight(v:val)')
 
     if len(l:servers) == 0
@@ -156,7 +147,7 @@ function! lsp#ui#vim#semantic#display_scope_tree(...) abort
     let l:server = l:servers[0]
     let l:info = lsp#get_server_info(l:server)
     let l:hl_mapping = get(l:info, 'semantic_highlight', {})
-    let l:scopes = copy(lsp#ui#vim#semantic#get_scopes(l:server))
+    let l:scopes = copy(lsp#internal#semantic#get_scopes(l:server))
 
     " Convert scope array to tree
     let l:tree = {}
