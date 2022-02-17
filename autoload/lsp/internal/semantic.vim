@@ -97,18 +97,17 @@ function! s:decode_tokens(data) abort
 
     let l:i = 0
     let l:line = 0
-    let l:col = 0
+    let l:char = 0
     while l:i < len(a:data)
         call add(l:tokens, {})
 
         let l:line = l:line + a:data[i]
         if a:data[i] > 0
-            let l:col = 0
+            let l:char = 0
         endif
-        let l:col = l:col + a:data[i + 1]
+        let l:char = l:char + a:data[i + 1]
 
-        let l:tokens[-1]['line'] = l:line
-        let l:tokens[-1]['col'] = l:col
+        let l:tokens[-1]['pos'] = {'line': l:line, 'character': l:char}
         let l:tokens[-1]['length'] = a:data[i + 2]
         let l:tokens[-1]['token_idx'] = a:data[i + 3]
         let l:tokens[-1]['token_modifiers'] = a:data[i + 4]
@@ -145,16 +144,21 @@ endfunction
 
 function! s:add_highlight(server, buf, token) abort
     let l:legend = lsp#internal#semantic#get_legend(a:server)
+    let l:startpos = lsp#utils#position#lsp_to_vim(a:buf, a:token['pos'])
+    let l:endpos = a:token['pos']
+    let l:endpos['character'] = l:endpos['character'] + a:token['length']
+    let l:endpos = lsp#utils#position#lsp_to_vim(a:buf, l:endpos)
 
     try
         if s:use_vim_textprops
             let l:textprop_name = s:get_textprop_name(a:server, a:token['token_idx'])
-            call prop_add(a:token['line'] + 1, a:token['col'] + 1,
-                        \ {'length': a:token['length'], 'bufnr': a:buf, 'type': l:textprop_name})
+            call prop_add(l:startpos[0], l:startpos[1],
+                       \ {'length': l:endpos[1] - l:startpos[1], 'bufnr': a:buf, 'type': l:textprop_name})
         elseif s:use_nvim_highlight
+            let l:char = a:token['pos']['character']
             let l:token_name = l:legend['tokenTypes'][a:token['token_idx']]
             call nvim_buf_add_highlight(a:buf, s:namespace_id, s:get_hl_name(a:server, l:token_name),
-                                      \ a:token['line'], a:token['col'], a:token['col'] + a:token['length'])
+                                      \ l:startpos[0] - 1, l:startpos[1] - 1, l:endpos[1] - 1)
         endif
     catch
         call lsp#log('SemanticHighlight: error while adding prop on line ' . (a:token['line'] + 1), v:exception)
