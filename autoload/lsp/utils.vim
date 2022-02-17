@@ -13,7 +13,7 @@ function! lsp#utils#_has_signs() abort
     return s:has_signs
 endfunction
 
-let s:has_nvim_buf_highlight = exists('*nvim_buf_add_highlight')
+let s:has_nvim_buf_highlight = exists('*nvim_buf_add_highlight') && has('nvim')
 function! lsp#utils#_has_nvim_buf_highlight() abort
     return s:has_nvim_buf_highlight
 endfunction

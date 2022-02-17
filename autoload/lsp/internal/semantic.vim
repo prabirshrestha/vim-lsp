@@ -1,5 +1,5 @@
 let s:use_vim_textprops = lsp#utils#_has_textprops() && !has('nvim')
-let s:use_nvim_highlight = exists('*nvim_buf_add_highlight') && has('nvim')
+let s:use_nvim_highlight = lsp#utils#_has_nvim_buf_highlight()
 let s:textprop_cache = 'vim-lsp-semantic-cache'
 
 if s:use_nvim_highlight
@@ -138,27 +138,27 @@ function! s:clear_highlights(server, buf) abort
             let l:textprop_name = s:get_textprop_name(a:server, l:token_idx)
             silent! call prop_remove({'bufnr': a:buf, 'type': l:textprop_name, 'all': v:true}, 1, line('$'))
         endfor
+    elseif s:use_nvim_highlight
+        call nvim_buf_clear_namespace(a:buf, s:namespace_id, 0, line('$'))
     endif
 endfunction
 
 function! s:add_highlight(server, buf, token) abort
     let l:legend = lsp#internal#semantic#get_legend(a:server)
 
-    if s:use_vim_textprops
-        try
+    try
+        if s:use_vim_textprops
             let l:textprop_name = s:get_textprop_name(a:server, a:token['token_idx'])
             call prop_add(a:token['line'] + 1, a:token['col'] + 1,
                         \ {'length': a:token['length'], 'bufnr': a:buf, 'type': l:textprop_name})
-        catch
-            call lsp#log('SemanticHighlight: error while adding prop on line ' . (a:token['line'] + 1), v:exception)
-        endtry
-    elseif s:use_nvim_highlight
-        " Clear text properties from the previous run
-        call nvim_buf_clear_namespace(a:buf, s:namespace_id, a:token['line'], a:token['line'] + 1)
-        let l:token_name = l:legend['tokenTypes'][a:token['token_idx']]
-        call nvim_buf_add_highlight(a:buf, s:namespace_id, s:get_hl_name(a:server, l:token_name),
-                                  \ a:token['line'], a:token['col'], a:token['col'] + a:token['length'])
-    endif
+        elseif s:use_nvim_highlight
+            let l:token_name = l:legend['tokenTypes'][a:token['token_idx']]
+            call nvim_buf_add_highlight(a:buf, s:namespace_id, s:get_hl_name(a:server, l:token_name),
+                                      \ a:token['line'], a:token['col'], a:token['col'] + a:token['length'])
+        endif
+    catch
+        call lsp#log('SemanticHighlight: error while adding prop on line ' . (a:token['line'] + 1), v:exception)
+    endtry
 endfunction
 
 function! s:get_hl_name(server, token_type) abort
