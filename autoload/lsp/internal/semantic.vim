@@ -15,6 +15,35 @@ function! lsp#internal#semantic#is_enabled() abort
     return g:lsp_semantic_enabled && (s:use_vim_textprops || s:use_nvim_highlight) ? v:true : v:false
 endfunction
 
+function! lsp#internal#semantic#_enable() abort
+    if !lsp#internal#semantic#is_enabled() | return | endif
+
+    " request and process full semantic tokens refresh when the filetype changes
+    " or when the text is modified
+    let s:Dispose = lsp#callbag#pipe(
+        \     lsp#callbag#fromEvent(['FileType', 'TextChanged', 'TextChangedI']),
+        \     lsp#callbag#filter({_->lsp#internal#semantic#is_enabled()}),
+        \     lsp#callbag#debounceTime(g:lsp_semantic_delay),
+        \     lsp#callbag#filter({_->getbufvar(bufnr('%'), '&buftype') !~# '^(help\|terminal\|prompt\|popup)$'}),
+        \     lsp#callbag#switchMap({_->
+        \         lsp#callbag#pipe(
+        \             s:send_full_semantic_request(),
+        \             lsp#callbag#materialize(),
+        \             lsp#callbag#filter({x->lsp#callbag#isNextNotification(x)}),
+        \             lsp#callbag#map({x->x['value']})
+        \         )
+        \     }),
+        \     lsp#callbag#subscribe({x->s:handle_semantic_request(x)})
+        \ )
+endfunction
+
+function! lsp#internal#semantic#_disable() abort
+    if exists('s:Dispose')
+        call s:Dispose()
+        unlet s:Dispose
+    endif
+endfunction
+
 function! lsp#internal#semantic#get_legend(server) abort
     if !lsp#capabilities#has_semantic_tokens(a:server)
         return {'tokenTypes': [], 'tokenModifiers': []}
@@ -24,31 +53,30 @@ function! lsp#internal#semantic#get_legend(server) abort
     return l:capabilities['semanticTokensProvider']['legend']
 endfunction
 
-function! lsp#internal#semantic#semantic_full(server, buf, ...) abort
-    if lsp#internal#semantic#is_enabled() && lsp#capabilities#has_semantic_tokens(a:server)
-        call lsp#send_request(a:server, {
-          \ 'method': 'textDocument/semanticTokens/full',
-          \ 'params': {
-          \     'textDocument': lsp#get_text_document_identifier(a:buf)
-          \ },
-          \ 'on_notification': function('s:handle_semantic_full', [a:server]),
-          \ })
-    else
-        if !lsp#capabilities#has_semantic_tokens(a:server)
-            call lsp#log_verbose(a:server..' does not support semantic tokens')
-        endif
+function! s:send_full_semantic_request() abort
+    let l:capability = 'lsp#capabilities#has_semantic_tokens(v:val)'
+    let l:servers = filter(lsp#get_allowed_servers(), l:capability)
+
+    if empty(l:servers)
+        return lsp#callbag#empty()
     endif
+
+    return lsp#request(l:servers[0], {
+        \ 'method': 'textDocument/semanticTokens/full',
+        \ 'params': {
+        \     'textDocument': lsp#get_text_document_identifier()
+        \ }})
 endfunction
 
 " Highlight helper functions {{{1
-function! s:handle_semantic_full(server, data) abort
-    if !g:lsp_semantic_enabled | return | endif
-
+function! s:handle_semantic_request(data) abort
+    call lsp#log('handle_semantic_request', a:data)
     if lsp#client#is_error(a:data['response'])
         call lsp#log('Skipping semantic highlight: response is invalid')
         return
     endif
 
+    let l:server = a:data['server_name']
     let l:uri = a:data['request']['params']['textDocument']['uri']
     let l:path = lsp#utils#uri_to_path(l:uri)
     let l:bufnr = bufnr(l:path)
@@ -57,8 +85,8 @@ function! s:handle_semantic_full(server, data) abort
     " opened and quickly deleted.
     if !bufloaded(l:bufnr) | return | endif
 
-    call s:init_highlight(a:server, l:bufnr)
-    call s:clear_highlights(a:server, l:bufnr)
+    call s:init_highlight(l:server, l:bufnr)
+    call s:clear_highlights(l:server, l:bufnr)
 
     let l:linenr = 0
     let l:col = 0
@@ -73,7 +101,7 @@ function! s:handle_semantic_full(server, data) abort
         let l:token_idx = l:result_data[3]
         let l:token_modifiers = l:result_data[4]
 
-        call s:add_highlight(a:server, l:bufnr, l:linenr, l:col, l:length, l:token_idx, l:token_modifiers)
+        call s:add_highlight(l:server, l:bufnr, l:linenr, l:col, l:length, l:token_idx, l:token_modifiers)
 
         let l:result_data = l:result_data[5:]
     endwhile
@@ -106,7 +134,8 @@ function! s:add_highlight(server, buf, line, col, length, token_idx, token_modif
 
     if s:use_vim_textprops
         try
-            call prop_add(a:line + 1, a:col + 1, { 'length': a:length, 'bufnr': a:buf, 'type': s:get_textprop_name(a:server, a:token_idx)})
+            let l:textprop_name = s:get_textprop_name(a:server, a:token_idx)
+            call prop_add(a:line + 1, a:col + 1, { 'length': a:length, 'bufnr': a:buf, 'type': l:textprop_name})
         catch
             call lsp#log('SemanticHighlight: error while adding prop on line ' . (a:line + 1), v:exception)
         endtry
