@@ -70,7 +70,6 @@ endfunction
 
 " Highlight helper functions {{{1
 function! s:handle_semantic_request(data) abort
-    call lsp#log('handle_semantic_request', a:data)
     if lsp#client#is_error(a:data['response'])
         call lsp#log('Skipping semantic highlight: response is invalid')
         return
@@ -88,23 +87,36 @@ function! s:handle_semantic_request(data) abort
     call s:init_highlight(l:server, l:bufnr)
     call s:clear_highlights(l:server, l:bufnr)
 
-    let l:linenr = 0
+    for l:token in s:decode_tokens(a:data['response']['result']['data'])
+        call s:add_highlight(l:server, l:bufnr, l:token)
+    endfor
+endfunction
+
+function! s:decode_tokens(data) abort
+    let l:tokens = []
+
+    let l:i = 0
+    let l:line = 0
     let l:col = 0
-    let l:result_data = a:data['response']['result']['data']
-    while len(l:result_data) > 0
-        let l:linenr = l:linenr + l:result_data[0]
-        if l:result_data[0] > 0
+    while l:i < len(a:data)
+        call add(l:tokens, {})
+
+        let l:line = l:line + a:data[i]
+        if a:data[i] > 0
             let l:col = 0
         endif
-        let l:col = l:col + l:result_data[1]
-        let l:length = l:result_data[2]
-        let l:token_idx = l:result_data[3]
-        let l:token_modifiers = l:result_data[4]
+        let l:col = l:col + a:data[i + 1]
 
-        call s:add_highlight(l:server, l:bufnr, l:linenr, l:col, l:length, l:token_idx, l:token_modifiers)
+        let l:tokens[-1]['line'] = l:line
+        let l:tokens[-1]['col'] = l:col
+        let l:tokens[-1]['length'] = a:data[i + 2]
+        let l:tokens[-1]['token_idx'] = a:data[i + 3]
+        let l:tokens[-1]['token_modifiers'] = a:data[i + 4]
 
-        let l:result_data = l:result_data[5:]
+        let l:i = l:i + 5
     endwhile
+
+    return l:tokens
 endfunction
 
 function! s:init_highlight(server, buf) abort
@@ -129,24 +141,23 @@ function! s:clear_highlights(server, buf) abort
     endif
 endfunction
 
-function! s:add_highlight(server, buf, line, col, length, token_idx, token_modifiers) abort
+function! s:add_highlight(server, buf, token) abort
     let l:legend = lsp#internal#semantic#get_legend(a:server)
 
     if s:use_vim_textprops
         try
-            let l:textprop_name = s:get_textprop_name(a:server, a:token_idx)
-            call prop_add(a:line + 1, a:col + 1, { 'length': a:length, 'bufnr': a:buf, 'type': l:textprop_name})
+            let l:textprop_name = s:get_textprop_name(a:server, a:token['token_idx'])
+            call prop_add(a:token['line'] + 1, a:token['col'] + 1,
+                        \ {'length': a:token['length'], 'bufnr': a:buf, 'type': l:textprop_name})
         catch
-            call lsp#log('SemanticHighlight: error while adding prop on line ' . (a:line + 1), v:exception)
+            call lsp#log('SemanticHighlight: error while adding prop on line ' . (a:token['line'] + 1), v:exception)
         endtry
     elseif s:use_nvim_highlight
         " Clear text properties from the previous run
-        call nvim_buf_clear_namespace(a:buf, s:namespace_id, a:line, a:line + 1)
-
-        for l:highlight in l:highlights
-            let l:token_name = l:legend['tokenTypes'][token_idx]
-            call nvim_buf_add_highlight(a:buf, s:namespace_id, s:get_hl_name(a:server, l:token_name), a:line, a:col, a:col + a:length)
-        endfor
+        call nvim_buf_clear_namespace(a:buf, s:namespace_id, a:token['line'], a:token['line'] + 1)
+        let l:token_name = l:legend['tokenTypes'][a:token['token_idx']]
+        call nvim_buf_add_highlight(a:buf, s:namespace_id, s:get_hl_name(a:server, l:token_name),
+                                  \ a:token['line'], a:token['col'], a:token['col'] + a:token['length'])
     endif
 endfunction
 
