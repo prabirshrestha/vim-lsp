@@ -18,10 +18,15 @@ endfunction
 function! lsp#internal#semantic#_enable() abort
     if !lsp#internal#semantic#is_enabled() | return | endif
 
+    let l:subscribed_events = ['FileType', 'TextChanged', 'TextChangedI']
+    if has('popupwin')
+        call add(l:subscribed_events, 'TextChangedP')
+    endif
+
     " request and process full semantic tokens refresh when the filetype changes
     " or when the text is modified
     let s:Dispose = lsp#callbag#pipe(
-        \     lsp#callbag#fromEvent(['FileType', 'TextChanged', 'TextChangedI']),
+        \     lsp#callbag#fromEvent(l:subscribed_events),
         \     lsp#callbag#filter({_->lsp#internal#semantic#is_enabled()}),
         \     lsp#callbag#debounceTime(g:lsp_semantic_delay),
         \     lsp#callbag#filter({_->getbufvar(bufnr('%'), '&buftype') !~# '^(help\|terminal\|prompt\|popup)$'}),
