@@ -6,10 +6,6 @@ if s:use_nvim_highlight
     let s:namespace_id = nvim_create_namespace('vim-lsp-semantic')
 endif
 
-if !hlexists('LspUnknownScope')
-    highlight LspUnknownScope gui=NONE cterm=NONE guifg=NONE ctermfg=NONE guibg=NONE ctermbg=NONE
-endif
-
 " Global functions {{{1
 function! lsp#internal#semantic#is_enabled() abort
     return g:lsp_semantic_enabled && (s:use_vim_textprops || s:use_nvim_highlight) ? v:true : v:false
@@ -125,11 +121,51 @@ function! s:decode_tokens(data) abort
 endfunction
 
 function! s:init_highlight(server, buf) abort
+    let l:legend = lsp#internal#semantic#get_legend(a:server)
+    let l:highlight_groups = {
+        \ 'LspType': 'Type',
+        \ 'LspClass': 'Class',
+        \ 'LspEnum': 'Type',
+        \ 'LspInterface': 'TypeDef',
+        \ 'LspStruct': 'Type',
+        \ 'LspTypeParameter': 'Type',
+        \ 'LspParameter': 'Type',
+        \ 'LspVariable': 'Identifier',
+        \ 'LspProperty': 'TypeDef',
+        \ 'LspEnumMember': 'Constant',
+        \ 'LpEvents': 'Identifier',
+        \ 'LspFunction': 'Function',
+        \ 'LspMethod': 'Function',
+        \ 'LspKeyword': 'Keyword',
+        \ 'LspModifier': 'Type',
+        \ 'LspComment': 'Comment',
+        \ 'LspString': 'String',
+        \ 'LspNumber': 'Number',
+        \ 'LspRegexp': 'String',
+        \ 'LspOperator': 'Operator'
+    \ }
+
+    for l:token_name in l:legend['tokenTypes']
+        let l:hl_name = s:get_hl_name(l:token_name)
+        if !index(keys(l:highlight_groups), l:hl_name)
+            let l:highlight_groups[l:hl_name] = ''
+        endif
+    endfor
+
+    for [l:key, l:value] in items(l:highlight_groups)
+        if !hlexists(l:key)
+            if l:key != ''
+                exec "highlight link" l:key l:value
+            else
+                exec "highlight " l:key "gui=NONE cterm=NONE guifg=NONE ctermfg=NONE guibg=NONE ctermbg=NONE"
+            endif
+        endif
+    endfor
+
     if s:use_vim_textprops
-        let l:legend = lsp#internal#semantic#get_legend(a:server)
         for l:token_idx in range(len(l:legend['tokenTypes']))
             let l:token_name = l:legend['tokenTypes'][l:token_idx]
-            let l:hl = s:get_hl_name(a:server, l:token_name)
+            let l:hl = s:get_hl_name(l:token_name)
             let l:textprop_name = s:get_textprop_name(a:server, l:token_idx)
             silent! call prop_type_add(l:textprop_name, {'bufnr': a:buf, 'highlight': l:hl, 'combine': v:true, 'priority': lsp#internal#textprop#priority('semantic')})
         endfor
@@ -171,14 +207,8 @@ function! s:add_highlight(server, buf, token) abort
     endtry
 endfunction
 
-function! s:get_hl_name(server, token_type) abort
-    let l:hl = 'LspUnknownScope'
-    let l:info = lsp#get_server_info(a:server)
-    if has_key(l:info['semantic_highlight'], a:token_type)
-        let l:hl = l:info['semantic_highlight'][a:token_type]
-    endif
-
-    return l:hl
+function! s:get_hl_name(token_name) abort
+    return "Lsp" . toupper(a:token_name[0]) . a:token_name[1:]
 endfunction
 
 function! s:get_textprop_name(server, token_idx) abort
