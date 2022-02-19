@@ -446,6 +446,11 @@ function! lsp#utils#parse_command_options(params) abort
     return l:result
 endfunction
 
+function! lsp#utils#is_large_window(winid) abort
+    let l:buffer_size = line2byte(line('$', a:winid))
+    return l:buffer_size >= g:lsp_large_buffer_threshold
+endfunction
+
 " polyfill for the neovim wait function
 if exists('*wait')
     function! lsp#utils#_wait(timeout, condition, ...) abort

@@ -30,6 +30,7 @@ function! lsp#internal#semantic#_enable() abort
         \     lsp#callbag#filter({_->lsp#internal#semantic#is_enabled()}),
         \     lsp#callbag#debounceTime(g:lsp_semantic_delay),
         \     lsp#callbag#filter({_->getbufvar(bufnr('%'), '&buftype') !~# '^(help\|terminal\|prompt\|popup)$'}),
+        \     lsp#callbag#filter({_->!lsp#utils#is_large_window(win_getid())}),
         \     lsp#callbag#switchMap({_->
         \         lsp#callbag#pipe(
         \             s:send_full_semantic_request(),
