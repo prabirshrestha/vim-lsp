@@ -448,7 +448,7 @@ endfunction
 
 function! lsp#utils#is_large_window(winid) abort
     let l:buffer_size = line2byte(line('$', a:winid))
-    return l:buffer_size >= g:lsp_large_buffer_threshold
+    return g:lsp_max_buffer_size >= 0 && l:buffer_size >= g:lsp_max_buffer_size
 endfunction
 
 " polyfill for the neovim wait function
