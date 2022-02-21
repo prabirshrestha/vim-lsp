@@ -133,7 +133,7 @@ function! s:init_highlight(server, buf) abort
         \ 'LspVariable': 'Identifier',
         \ 'LspProperty': 'TypeDef',
         \ 'LspEnumMember': 'Constant',
-        \ 'LpEvents': 'Identifier',
+        \ 'LspEvents': 'Identifier',
         \ 'LspFunction': 'Function',
         \ 'LspMethod': 'Function',
         \ 'LspKeyword': 'Keyword',
