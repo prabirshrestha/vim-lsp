@@ -127,6 +127,7 @@ CONTENTS                                                  *vim-lsp-contents*
       LspImplementation                     |:LspImplementation|
       LspReferences                         |:LspReferences|
       LspRename                             |:LspRename|
+      LspSemanticHighlightGroups            |:LspSemanticHighlightGroups|
       LspTypeDefinition                     |:LspTypeDefinition|
       LspTypeHierarchy                      |:LspTypeHierarchy|
       LspWorkspaceSymbol                    |:LspWorkspaceSymbol|
@@ -1681,6 +1682,10 @@ LspRename                                                       *:LspRename*
 
 Rename the symbol.
 
+LspSemanticHighlightGroups                     *:LspSemanticHighlightGroups*
+
+List the highlight groups provided by the current semantic tokens server.
+
 LspTypeDefinition                                       *:LspTypeDefinition*
 
 Go to the type definition.
@@ -1980,12 +1985,9 @@ as well as additional highlight groups for any further types supported by the
 server. For example, clangd provides LspNamespace.
 
 The standard set of token types have sensible defaults provided, however
-any other types require manual configuration. The provided types can be found
-by running: >
-    hi
-
-to list available highlight groups, then searching for groups beginning with
-`Lsp`.
+any other types require manual configuration. The types provided by the
+current buffer's semantic tokens server can be found by running
+|:LspSemanticHighlightGroups|.
 
 ==============================================================================
 Popup Formatting                                      *vim-lsp-popup-format*

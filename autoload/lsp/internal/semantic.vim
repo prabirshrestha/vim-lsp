@@ -55,6 +55,22 @@ function! lsp#internal#semantic#get_legend(server) abort
     return l:capabilities['semanticTokensProvider']['legend']
 endfunction
 
+function! lsp#internal#semantic#get_provided_highlights() abort
+    let l:capability = 'lsp#capabilities#has_semantic_tokens(v:val)'
+    let l:servers = filter(lsp#get_allowed_servers(), l:capability)
+
+    if empty(l:servers)
+        return []
+    endif
+
+    let l:highlights = []
+    for l:token_name in lsp#internal#semantic#get_legend(l:servers[0])['tokenTypes']
+        call add(l:highlights, s:get_hl_name(l:token_name))
+    endfor
+    
+    return l:highlights
+endfunction
+
 function! s:send_full_semantic_request() abort
     let l:capability = 'lsp#capabilities#has_semantic_tokens(v:val)'
     let l:servers = filter(lsp#get_allowed_servers(), l:capability)
