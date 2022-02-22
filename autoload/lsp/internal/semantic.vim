@@ -15,7 +15,7 @@ function! lsp#internal#semantic#_enable() abort
     if !lsp#internal#semantic#is_enabled() | return | endif
 
     let l:subscribed_events = ['FileType', 'TextChanged', 'TextChangedI']
-    if has('popupwin')
+    if exists('##TextChangedP')
         call add(l:subscribed_events, 'TextChangedP')
     endif
 
