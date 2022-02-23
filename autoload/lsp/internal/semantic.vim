@@ -170,10 +170,10 @@ function! s:init_highlight(server, buf) abort
 
     for [l:key, l:value] in items(l:highlight_groups)
         if !hlexists(l:key)
-            if l:key != ''
-                exec "highlight link" l:key l:value
+            if l:key !=# ''
+                exec 'highlight link' l:key l:value
             else
-                exec "highlight " l:key "gui=NONE cterm=NONE guifg=NONE ctermfg=NONE guibg=NONE ctermbg=NONE"
+                exec 'highlight ' l:key 'gui=NONE cterm=NONE guifg=NONE ctermfg=NONE guibg=NONE ctermbg=NONE'
             endif
         endif
     endfor
