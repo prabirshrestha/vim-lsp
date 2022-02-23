@@ -157,6 +157,10 @@ function! lsp#print_server_status() abort
         echon l:status
         echohl None
         echo ''
+        if &verbose
+            echo 'workspace_config: '. json_encode(s:servers[l:k].server_info.workspace_config)
+            echo ''
+        endif
     endfor
 endfunction
 

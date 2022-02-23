@@ -1778,7 +1778,8 @@ Servers may choose to return empty results if the search query is empty.
 
 LspStatus                                                       *:LspStatus*
 
-Prints the status of all registered servers.
+Prints the status of all registered servers. Use `:verbose LspStatus` to
+additionally show each server's workspace_config.
 
 LspStopServer                                                *:LspStopServer*
 
