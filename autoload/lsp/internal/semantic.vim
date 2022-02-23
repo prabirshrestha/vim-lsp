@@ -22,7 +22,10 @@ function! lsp#internal#semantic#_enable() abort
     " request and process full semantic tokens refresh when the filetype changes
     " or when the text is modified
     let s:Dispose = lsp#callbag#pipe(
-        \     lsp#callbag#fromEvent(l:subscribed_events),
+        \     lsp#callbag#merge(
+        \         lsp#callbag#lazy({->''}),
+        \         lsp#callbag#fromEvent(l:subscribed_events),
+        \     ),
         \     lsp#callbag#filter({_->lsp#internal#semantic#is_enabled()}),
         \     lsp#callbag#debounceTime(g:lsp_semantic_delay),
         \     lsp#callbag#filter({_->getbufvar(bufnr('%'), '&buftype') !~# '^(help\|terminal\|prompt\|popup)$'}),
