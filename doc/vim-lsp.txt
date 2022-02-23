@@ -11,6 +11,7 @@ CONTENTS                                                  *vim-lsp-contents*
       Configure                             |vim-lsp-configure|
       vim-lsp-settings                      |vim-lsp-settings_plugin|
       Wiki                                  |vim-lsp-configure-wiki|
+      Health Check                          |vim-lsp-healthcheck|
     Options                               |vim-lsp-options|
       g:lsp_auto_enable                     |g:lsp_auto_enable|
       g:lsp_preview_keep_focus              |g:lsp_preview_keep_focus|
@@ -269,6 +270,13 @@ to automatically register various language servers.
 >
 	Plug 'prabirshrestha/vim-lsp'
 	Plug 'mattn/vim-lsp-settings'
+
+HEALTH CHECK						*vim-lsp-healthcheck*
+vim-lsp supports the |:CheckHealth| command which can be useful when debugging
+lsp configuration issues.
+
+This command is included in neovim and implemented in vim with the
+[vim-healthcheck](https://github.com/rhysd/vim-healthcheck) plugin. 
 
 WIKI                                               *vim-lsp-configure-wiki*
 For documentation on how to configure other language servers refer
@@ -1780,6 +1788,7 @@ LspStatus                                                       *:LspStatus*
 
 Prints the status of all registered servers. Use `:verbose LspStatus` to
 additionally show each server's workspace_config.
+See also |vim-lsp-healthcheck|.
 
 LspStopServer                                                *:LspStopServer*
 
