@@ -158,7 +158,12 @@ function! lsp#print_server_status() abort
         echohl None
         echo ''
         if &verbose
-            echo 'workspace_config: '. json_encode(s:servers[l:k].server_info.workspace_config)
+            let l:cfg = { 'workspace_config': s:servers[l:k].server_info.workspace_config }
+            if get(g:, 'loaded_scriptease', 0)
+                call scriptease#pp_command(0, -1, l:cfg)
+            else
+                echo json_encode(l:cfg)
+            endif
             echo ''
         endif
     endfor
