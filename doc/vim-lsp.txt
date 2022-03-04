@@ -310,7 +310,7 @@ g:lsp_preview_float                         *g:lsp_preview_float*
     If set and nvim_win_open() or popup_create is available, hover information
     are shown in a floating window as |preview-window| at the cursor position.
     The |preview-window| is closed automatically on cursor moves, unless it is
-    focused. While focused it may be closed with <esc>.
+    focused. While focused it may be closed with <C-c>.
 
     This feature requires neovim 0.4.0 (current master) or
     Vim8.1 with has('patch-8.1.1517').
@@ -329,10 +329,10 @@ g:lsp_preview_float                         *g:lsp_preview_float*
     of the window.
 
     Example of custom keybindings: >
-	" Close preview window with <esc>
-	autocmd User lsp_float_opened nmap <buffer> <silent> <esc>
+	" Close preview window with <C-c>
+	autocmd User lsp_float_opened nmap <buffer> <silent> <C-c>
 		      \ <Plug>(lsp-preview-close)
-	autocmd User lsp_float_closed nunmap <buffer> <esc>
+	autocmd User lsp_float_closed nunmap <buffer> <C-c>
 <
 
     Example of customising the highlighting: >
@@ -1576,7 +1576,7 @@ Gets the hover information and displays it in the |preview-window|.
    configure |g:lsp_preview_keep_focus|.
  * If using neovim with nvim_win_open() available, |g:lsp_preview_float| can
    be set to enable a floating preview at the cursor which is closed
-   automatically on cursormove if not focused and can be closed with <esc> if
+   automatically on cursormove if not focused and can be closed with <C-c> if
    focused.
 
     Example: >
