@@ -68,6 +68,16 @@ function! s:lsp_location_item_to_vim(loc, cache) abort
         let l:use_link = 0
     endif
 
+    if stridx(l:uri, 'jdt://') == 0
+      let l:zip = 'file://' . substitute(substitute(l:uri, 'jdt://.*?=.*/%5c\(/[^=]\+\)\.jar.*', '\1', 'g'), '%5C', '', 'g') . '-sources.jar'
+      let l:source = substitute(substitute(l:uri, 'jdt://.*.jar/\(.*\)\.class?=.*', '\1', 'g'), '\.', '/', 'g') . '.java'
+      return {
+          \ 'filename': "zip" . l:zip . "::" . l:source,
+          \ 'lnum': a:loc["range"]["start"]["line"] + 1,
+          \ 'col': a:loc["range"]["start"]["character"] + 1,
+          \ }
+    endif
+
     if !lsp#utils#is_file_uri(l:uri)
         return v:null
     endif
