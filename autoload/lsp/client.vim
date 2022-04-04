@@ -187,9 +187,6 @@ function! s:lsp_start(opts) abort
         \ }
 
     if has_key(a:opts, 'cmd')
-        if has_key(a:opts, 'env')
-          let l:opts.env = a:opts.env
-        endif
         let l:client_id = lsp#utils#job#start(a:opts.cmd, l:opts)
     elseif has_key(a:opts, 'tcp')
         let l:client_id = lsp#utils#job#connect(a:opts.tcp, l:opts)
