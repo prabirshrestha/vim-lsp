@@ -452,14 +452,17 @@ function! s:ensure_start(buf, server_name, cb) abort
         endif
 
         call lsp#log('Starting server', a:server_name, l:cmd)
-
-        let l:lsp_id = lsp#client#start({
-            \ 'cmd': l:cmd,
-            \ 'on_stderr': function('s:on_stderr', [a:server_name]),
-            \ 'on_exit': function('s:on_exit', [a:server_name]),
-            \ 'on_notification': function('s:on_notification', [a:server_name]),
-            \ 'on_request': function('s:on_request', [a:server_name]),
-            \ })
+        let l:opts = {
+        \ 'cmd': l:cmd,
+        \ 'on_stderr': function('s:on_stderr', [a:server_name]),
+        \ 'on_exit': function('s:on_exit', [a:server_name]),
+        \ 'on_notification': function('s:on_notification', [a:server_name]),
+        \ 'on_request': function('s:on_request', [a:server_name]),
+        \ }
+        if has_key(l:server_info, 'env')
+          let l:opts.env = l:server_info.env
+        endif
+        let l:lsp_id = lsp#client#start(l:opts)
     endif
 
     if l:lsp_id > 0
