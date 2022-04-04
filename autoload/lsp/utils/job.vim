@@ -142,7 +142,10 @@ function! s:job_start(cmd, opts) abort
     " options shared by both vim and neovim
     let l:jobopt = {}
     if has_key(a:opts, 'cwd')
-      let l:jobopt.cwd = a:opts.cwd 
+      let l:jobopt.cwd = a:opts.cwd
+    endif
+    if has_key(a:opts, 'env')
+      let l:jobopt.env = a:opts.env
     endif
 
     let l:normalize = get(a:opts, 'normalize', 'array') " array/string/raw
