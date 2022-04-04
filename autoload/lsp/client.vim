@@ -179,20 +179,17 @@ function! s:on_exit(id, status, event) abort
 endfunction
 
 function! s:lsp_start(opts) abort
+    let l:opts = {
+        \ 'on_stdout': function('s:on_stdout'),
+        \ 'on_stderr': function('s:on_stderr'),
+        \ 'on_exit': function('s:on_exit'),
+        \ 'normalize': 'string'
+        \ }
+
     if has_key(a:opts, 'cmd')
-        let l:client_id = lsp#utils#job#start(a:opts.cmd, {
-            \ 'on_stdout': function('s:on_stdout'),
-            \ 'on_stderr': function('s:on_stderr'),
-            \ 'on_exit': function('s:on_exit'),
-            \ 'normalize': 'string'
-            \ })
+        let l:client_id = lsp#utils#job#start(a:opts.cmd, l:opts)
     elseif has_key(a:opts, 'tcp')
-        let l:client_id = lsp#utils#job#connect(a:opts.tcp, {
-            \ 'on_stdout': function('s:on_stdout'),
-            \ 'on_stderr': function('s:on_stderr'),
-            \ 'on_exit': function('s:on_exit'),
-            \ 'normalize': 'string'
-            \ })
+        let l:client_id = lsp#utils#job#connect(a:opts.tcp, l:opts)
     else
         return -1
     endif

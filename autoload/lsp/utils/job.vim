@@ -1,4 +1,4 @@
-" https://github.com/prabirshrestha/async.vim#f20569020d65bec3249222606c073c0943045b5e (dirty)
+" https://github.com/prabirshrestha/async.vim#2082d13bb195f3203d41a308b89417426a7deca1 (dirty)
 "    :AsyncEmbed path=./autoload/lsp/utils/job.vim namespace=lsp#utils#job
 
 " Author: Prabir Shrestha <mail at prabir dot me>
@@ -142,7 +142,10 @@ function! s:job_start(cmd, opts) abort
     " options shared by both vim and neovim
     let l:jobopt = {}
     if has_key(a:opts, 'cwd')
-      let l:jobopt.cwd = a:opts.cwd 
+      let l:jobopt.cwd = a:opts.cwd
+    endif
+    if has_key(a:opts, 'env')
+      let l:jobopt.env = a:opts.env
     endif
 
     let l:normalize = get(a:opts, 'normalize', 'array') " array/string/raw
