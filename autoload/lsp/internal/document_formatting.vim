@@ -72,7 +72,7 @@ function! lsp#internal#document_formatting#format(options) abort
 endfunction
 
 function! s:format_next(x) abort
-    call lsp#utils#text_edit#apply_text_edits(a:x['request']['params']['textDocument']['uri'], a:x['response']['result'])
+    call lsp#utils#text_edit#apply_text_edits(a:x['request']['params']['textDocument']['uri'], get(a:x['response'], 'result', ''))
 endfunction
 
 function! s:format_error(e) abort
