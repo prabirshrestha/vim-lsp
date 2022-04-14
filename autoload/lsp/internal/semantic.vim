@@ -17,7 +17,7 @@ function! lsp#internal#semantic#_enable() abort
     " request and process a full semantic update when the filetype changes or
     " on startup
     " or just a delta semantic update when the text changes
-    let l:full_events = ['FileType']
+    let l:full_events = ['FileType', 'BufNewFile', 'BufReadPost']
     let l:delta_events = ['TextChanged', 'TextChangedI']
     if exists('##TextChangedP')
         call add(l:delta_events, 'TextChangedP')
