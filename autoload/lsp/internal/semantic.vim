@@ -14,10 +14,9 @@ endfunction
 function! lsp#internal#semantic#_enable() abort
     if !lsp#internal#semantic#is_enabled() | return | endif
 
-    " request and process a full semantic update when the filetype changes or
-    " on startup
+    " request and process a full semantic update on lsp_buffer_enabled
     " or just a delta semantic update when the text changes
-    let l:full_events = ['FileType', 'BufNewFile', 'BufReadPost']
+    let l:full_events = [['User', 'lsp_buffer_enabled']]
     let l:delta_events = ['TextChanged', 'TextChangedI']
     if exists('##TextChangedP')
         call add(l:delta_events, 'TextChangedP')
@@ -25,10 +24,7 @@ function! lsp#internal#semantic#_enable() abort
     let s:Dispose = lsp#callbag#pipe(
         \     lsp#callbag#merge(
         \         lsp#callbag#pipe(
-        \             lsp#callbag#merge(
-        \                 lsp#callbag#lazy({->''}),
-        \                 lsp#callbag#fromEvent(l:full_events)
-        \             ),
+        \             lsp#callbag#fromEvent(l:full_events),
         \             lsp#callbag#filter({_->lsp#internal#semantic#is_enabled()}),
         \             lsp#callbag#debounceTime(g:lsp_semantic_delay),
         \             lsp#callbag#filter({_->getbufvar(bufnr('%'), '&buftype') !~# '^(help\|terminal\|prompt\|popup)$'}),
