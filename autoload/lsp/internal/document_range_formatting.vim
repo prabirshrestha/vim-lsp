@@ -76,6 +76,7 @@ function! lsp#internal#document_range_formatting#format(options) abort
 endfunction
 
 function! s:format_next(x) abort
+    if lsp#client#is_error(a:x['response']) | return | endif
     call lsp#utils#text_edit#apply_text_edits(a:x['request']['params']['textDocument']['uri'], a:x['response']['result'])
 endfunction
 
