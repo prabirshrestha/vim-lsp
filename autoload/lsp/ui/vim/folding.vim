@@ -28,7 +28,7 @@ function! s:set_textprops(buf) abort
     if !bufloaded(a:buf) | return | endif
 
     " Create text property, if not already defined
-    silent! call prop_type_add(s:textprop_name, {'bufnr': a:buf})
+    silent! call prop_type_add(s:textprop_name, {'bufnr': a:buf, 'priority': lsp#internal#textprop#priority('folding')})
 
     let l:line_count = s:get_line_count_buf(a:buf)
 
