@@ -449,7 +449,7 @@ function! s:ensure_start(buf, server_name, cb) abort
     let l:server_info = l:server['server_info']
     if l:server['lsp_id'] > 0
         let l:msg = s:new_rpc_success('server already started', { 'server_name': a:server_name })
-        call lsp#log(l:msg)
+        call lsp#log_verbose(l:msg)
         call a:cb(l:msg)
         return
     endif
@@ -647,7 +647,7 @@ function! s:ensure_init(buf, server_name, cb) abort
 
     if has_key(l:server, 'init_result')
         let l:msg = s:new_rpc_success('lsp server already initialized', { 'server_name': a:server_name, 'init_result': l:server['init_result'] })
-        call lsp#log(l:msg)
+        call lsp#log_verbose(l:msg)
         call a:cb(l:msg)
         return
     endif
@@ -721,7 +721,7 @@ function! s:ensure_conf(buf, server_name, cb) abort
             \ })
     endif
     let l:msg = s:new_rpc_success('configuration sent', { 'server_name': a:server_name })
-    call lsp#log(l:msg)
+    call lsp#log_verbose(l:msg)
     call a:cb(l:msg)
 endfunction
 
@@ -768,7 +768,7 @@ function! s:ensure_changed(buf, server_name, cb) abort
 
     if l:buffer_info['changed_tick'] == l:changed_tick
         let l:msg = s:new_rpc_success('not dirty', { 'server_name': a:server_name, 'path': l:path })
-        call lsp#log(l:msg)
+        call lsp#log_verbose(l:msg)
         call a:cb(l:msg)
         return
     endif
@@ -805,7 +805,7 @@ function! s:ensure_open(buf, server_name, cb) abort
 
     if has_key(l:buffers, l:path)
         let l:msg = s:new_rpc_success('already opened', { 'server_name': a:server_name, 'path': l:path })
-        call lsp#log(l:msg)
+        call lsp#log_verbose(l:msg)
         call a:cb(l:msg)
         return
     endif

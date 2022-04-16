@@ -283,12 +283,27 @@ function! s:is_server_instantiated_notification(notification) abort
     return !has_key(a:notification, 'request')
 endfunction
 
+function! s:native_notification_callback(cbctx, channel, response) abort
+    if !has_key(a:cbctx, 'ctx') | return | endif
+    let ctx = a:cbctx['ctx']
+    if !has_key(a:response, 'id') && has_key(l:ctx['opts'], 'on_notification')
+        " it is a notification
+        let l:on_notification_data = { 'response': a:response }
+        try
+            call l:ctx['opts']['on_notification'](l:ctx['id'], l:on_notification_data, 'on_notification')
+        catch
+            call lsp#log('s:native_notification_callback on_notification() error', v:exception, v:throwpoint)
+        endtry
+    endif
+endfunction
+
 " public apis {{{
 
 function! lsp#client#start(opts) abort
     if g:lsp_experimental_native_lsp && s:has_native_lsp && has_key(a:opts, 'cmd')
         " TODO: add support for TCP
-        let l:jobopt = { 'in_mode': 'lsp', 'out_mode': 'lsp', 'noblock': 1 }
+        let l:cbctx = {}
+        let l:jobopt = { 'in_mode': 'lsp', 'out_mode': 'lsp', 'noblock': 1, 'callback': function('s:native_notification_callback', [l:cbctx]) }
         if has_key(a:opts, 'cwd') | let l:jobopt['cwd'] = a:opts['cwd'] | endif
         let s:jobidseq += 1
         let l:jobid = s:jobidseq " jobid == clientid
@@ -299,6 +314,7 @@ function! lsp#client#start(opts) abort
         let l:ctx['id'] = l:jobid
         let l:ctx['job'] = l:job
         let l:ctx['channel'] = job_getchannel(l:job)
+        let l:cbctx['ctx'] = l:ctx
         return l:jobid
     else
         return s:lsp_start(a:opts)
