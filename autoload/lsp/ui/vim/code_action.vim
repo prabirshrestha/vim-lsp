@@ -70,7 +70,8 @@ function! s:handle_code_action(ui, ctx, server_name, command_id, sync, query, bu
 
     if lsp#client#is_error(a:data['response']) || !has_key(a:data['response'], 'result')
         call lsp#utils#error('Failed to handle code action for '. a:server . ': ' . lsp#client#error_message(a:data['response']))
-    else
+        return
+    endif
 
     call add(a:ctx['results'], {
     \    'server_name': a:server_name,
