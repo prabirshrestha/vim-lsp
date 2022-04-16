@@ -334,35 +334,28 @@ endfunction
 
 function! lsp#client#send_request(client_id, opts) abort
     if g:lsp_experimental_native_lsp && s:has_native_lsp
-       let l:ctx = get(s:clients, a:client_id, {})
-       if empty(l:ctx) | return -1 | endif
-       let l:request = {}
-       " id shouldn't be passed to request as vim will overwrite it. refer to :h language-server-protocol
-       if has_key(a:opts, 'method') | let l:request['method'] = a:opts['method'] | endif
-       if has_key(a:opts, 'params') | let l:request['params'] = a:opts['params'] | endif
+        let l:ctx = get(s:clients, a:client_id, {})
+        if empty(l:ctx) | return -1 | endif
+        let l:request = {}
+        " id shouldn't be passed to request as vim will overwrite it. refer to :h language-server-protocol
+        if has_key(a:opts, 'method') | let l:request['method'] = a:opts['method'] | endif
+        if has_key(a:opts, 'params') | let l:request['params'] = a:opts['params'] | endif
 
-       call ch_sendexpr(l:ctx['channel'], l:request, { 'callback': function('s:on_response_native', [l:ctx, l:request]) })
-       let l:ctx['requests'][l:request['id']] = l:request
-       if has_key(a:opts, 'on_notification')
-           let l:ctx['on_notifications'][l:request['id']] = a:opts['on_notification']
-       endif
-       let l:ctx['request_sequence'] = l:request['id']
-       return l:request['id']
+        call ch_sendexpr(l:ctx['channel'], l:request, { 'callback': function('s:on_response_native', [l:ctx, l:request]) })
+        let l:ctx['requests'][l:request['id']] = l:request
+        if has_key(a:opts, 'on_notification')
+            let l:ctx['on_notifications'][l:request['id']] = a:opts['on_notification']
+        endif
+        let l:ctx['request_sequence'] = l:request['id']
+        return l:request['id']
     else
         return s:lsp_send(a:client_id, a:opts, s:send_type_request)
     endif
 endfunction
 
 function! s:on_response_native(ctx, request, channel, response) abort
-    let l:on_notification_data = { 'response': a:response }
     " request -> response
-    if !(type(a:response['id']) == type(0) || type(a:response['id']) == type(''))
-        " response['id'] can be number | string | null based on the spec
-        return
-    endif
-    if has_key(a:ctx['requests'], a:response['id'])
-        let l:on_notification_data['request'] = a:request " a:ctx['requests'][a:response['id']]
-    endif
+    let l:on_notification_data = { 'response': a:response, 'request': a:request }
     if has_key(a:ctx['opts'], 'on_notification')
         " call client's on_notification first
         try
@@ -371,12 +364,12 @@ function! s:on_response_native(ctx, request, channel, response) abort
             call lsp#log('s:on_response_native client option on_notification() error', v:exception, v:throwpoint)
         endtry
     endif
-    if has_key(a:ctx['on_notifications'], a:response['id'])
+    if has_key(a:ctx['on_notifications'], a:request['id'])
         " call lsp#client#send({ 'on_notification' }) second
         try
-            call a:ctx['on_notifications'][a:response['id']](a:ctx['id'], l:on_notification_data, 'on_notification')
+            call a:ctx['on_notifications'][a:request['id']](a:ctx['id'], l:on_notification_data, 'on_notification')
         catch
-            call lsp#log('s:on_response_native client request on_notification() error', v:exception, v:throwpoint)
+            call lsp#log('s:on_response_native client request on_notification() error', v:exception, v:throwpoint, a:request, a:response)
         endtry
         unlet a:ctx['on_notifications'][a:response['id']]
         if has_key(a:ctx['requests'], a:response['id'])
@@ -389,13 +382,13 @@ endfunction
 
 function! lsp#client#send_notification(client_id, opts) abort
     if g:lsp_experimental_native_lsp && s:has_native_lsp
-       let l:ctx = get(s:clients, a:client_id, {})
-       if empty(l:ctx) | return -1 | endif
-       let l:request = {}
-       if has_key(a:opts, 'method') | let l:request['method'] = a:opts['method'] | endif
-       if has_key(a:opts, 'params') | let l:request['params'] = a:opts['params'] | endif
-       call ch_sendexpr(l:ctx['channel'], l:request)
-       return 0
+        let l:ctx = get(s:clients, a:client_id, {})
+        if empty(l:ctx) | return -1 | endif
+        let l:request = {}
+        if has_key(a:opts, 'method') | let l:request['method'] = a:opts['method'] | endif
+        if has_key(a:opts, 'params') | let l:request['params'] = a:opts['params'] | endif
+        call ch_sendexpr(l:ctx['channel'], l:request)
+        return 0
     else
         return s:lsp_send(a:client_id, a:opts, s:send_type_notification)
     endif
