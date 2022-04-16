@@ -184,10 +184,10 @@ function! s:handle_semantic_request(data) abort
     " opened and quickly deleted.
     if !bufloaded(l:bufnr) | return | endif
 
-    if a:data['request']['method'] ==# 'textDocument/semanticTokens/full'
-        call s:handle_full_semantic_request(l:server, l:bufnr, a:data['response']['result'])
-    elseif a:data['request']['method'] ==# 'textDocument/semanticTokens/full/delta'
-        call s:handle_delta_semantic_request(l:server, l:bufnr, a:data['response']['result'])
+    if has_key(a:data['response']['result'], 'data')
+        call s:handle_semantic_tokens_response(l:server, l:bufnr, a:data['response']['result'])
+    elseif has_key(a:data['response']['result'], 'edits')
+        call s:handle_semantic_tokens_delta_response(l:server, l:bufnr, a:data['response']['result'])
     else
         " Don't update previous result ID if we could not update local copy
         call lsp#log('SemanticHighlight: unsupported semanticTokens method')
@@ -199,7 +199,7 @@ function! s:handle_semantic_request(data) abort
     endif
 endfunction
 
-function! s:handle_full_semantic_request(server, buf, result)
+function! s:handle_semantic_tokens_response(server, buf, result)
     call s:init_highlight(a:server, a:buf)
 
     call s:clear_highlights(a:server, a:buf)
@@ -210,7 +210,7 @@ function! s:handle_full_semantic_request(server, buf, result)
     call setbufvar(a:buf, 'lsp_semantic_local_data', a:result['data'])
 endfunction
 
-function! s:handle_delta_semantic_request(server, buf, result)
+function! s:handle_semantic_tokens_delta_response(server, buf, result)
     for l:edit in a:result['edits']
         let l:insertdata = []
         if has_key(l:edit, 'data')
@@ -290,7 +290,7 @@ function! s:init_highlight(server, buf) abort
 
     for [l:key, l:value] in items(l:highlight_groups)
         if !hlexists(l:key)
-            if l:key !=# ''
+            if l:value !=# ''
                 exec 'highlight link' l:key l:value
             else
                 exec 'highlight ' l:key 'gui=NONE cterm=NONE guifg=NONE ctermfg=NONE guibg=NONE ctermbg=NONE'
