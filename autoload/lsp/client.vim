@@ -371,7 +371,17 @@ function! s:on_response_native(ctx, request, channel, response) abort
 endfunction
 
 function! lsp#client#send_notification(client_id, opts) abort
-    " return s:lsp_send(a:client_id, a:opts, s:send_type_notification)
+    if g:lsp_experimental_native_lsp && s:has_native_lsp
+       let l:ctx = get(s:clients, a:client_id, {})
+       if empty(l:ctx) | return -1 | endif
+       let l:request = {}
+       if has_key(a:opts, 'method') | let l:request['method'] = a:opts['method'] | endif
+       if has_key(a:opts, 'params') | let l:request['params'] = a:opts['params'] | endif
+       call ch_sendexpr(l:ctx['channel'], l:request)
+       return 0
+    else
+        return s:lsp_send(a:client_id, a:opts, s:send_type_notification)
+    endif
 endfunction
 
 function! lsp#client#send_response(client_id, opts) abort
