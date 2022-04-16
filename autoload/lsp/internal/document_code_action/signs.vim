@@ -84,7 +84,7 @@ function! s:send_request() abort
         \       }
         \   })
         \ }),
-        \ lsp#callbag#filter({x-> has_key(x['response'], 'result') && !empty(x['response']['result'])}),
+        \ lsp#callbag#filter({x-> !lsp#client#is_error(x['response']) && !empty(x['response']['result'])}),
         \ lsp#callbag#take(1),
         \ )
 endfunction
