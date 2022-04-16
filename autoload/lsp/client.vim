@@ -324,6 +324,9 @@ endfunction
 function! lsp#client#stop(client_id) abort
     if g:lsp_experimental_native_lsp && s:has_native_lsp
         echom 'not implemented: lsp#client#stop'
+       let l:ctx = get(s:clients, a:client_id, {})
+       if empty(l:ctx) | return | endif
+       call job_stop(l:ctx['job'])
     else
         return s:lsp_stop(a:client_id)
     endif
