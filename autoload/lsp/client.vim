@@ -216,9 +216,7 @@ let s:send_type_notification = 2
 let s:send_type_response = 3
 function! s:lsp_send(id, opts, type) abort " opts = { id?, method?, result?, params?, on_notification }
     let l:ctx = get(s:clients, a:id, {})
-    if empty(l:ctx)
-        return -1
-    endif
+    if empty(l:ctx) | return -1 | endif
 
     let l:request = { 'jsonrpc': '2.0' }
 
@@ -294,7 +292,7 @@ function! lsp#client#start(opts) abort
         if has_key(a:opts, 'cwd') | let l:jobopt['cwd'] = a:opts['cwd'] | endif
         let s:jobidseq += 1
         let l:jobid = s:jobidseq " jobid == clientid
-        call lsp#log('using native lsp client')
+        call lsp#log_verbose('using native lsp client')
         let l:job = job_start(a:opts['cmd'], l:jobopt)
         if job_status(l:job) !=? 'run' | return -1 | endif
         let l:ctx = s:create_context(l:jobid, a:opts)
@@ -385,7 +383,17 @@ function! lsp#client#send_notification(client_id, opts) abort
 endfunction
 
 function! lsp#client#send_response(client_id, opts) abort
-    " return s:lsp_send(a:client_id, a:opts, s:send_type_response)
+    if g:lsp_experimental_native_lsp && s:has_native_lsp
+        let l:ctx = get(s:clients, a:client_id, {})
+        if empty(l:ctx) | return -1 | endif
+        if has_key(a:opts, 'id') | let l:response['id'] = a:opts['method'] | endif
+        if has_key(a:opts, 'result') | let l:response['result'] = a:opts['result'] | endif
+        if has_key(a:opts, 'error') | let l:response['error'] = a:opts['error'] | endif
+        call ch_sendexpr(l:ctx['channel'], l:request)
+        return 0
+    else
+        return s:lsp_send(a:client_id, a:opts, s:send_type_response)
+    endif
 endfunction
 
 function! lsp#client#get_last_request_id(client_id) abort
