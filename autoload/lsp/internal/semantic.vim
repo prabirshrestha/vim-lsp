@@ -14,51 +14,38 @@ endfunction
 function! lsp#internal#semantic#_enable() abort
     if !lsp#internal#semantic#is_enabled() | return | endif
 
-    " request and process a full semantic update on lsp_buffer_enabled
-    " or just a delta semantic update when the text changes
-    let l:full_events = [['User', 'lsp_buffer_enabled']]
-    let l:delta_events = ['TextChanged', 'TextChangedI']
+    augroup lsp#internal#semantic
+        autocmd!
+        au User lsp_buffer_enabled call s:on_lsp_buffer_enabled()
+    augroup END
+
+    let l:events = [['User', 'lsp_buffer_enabled'], 'TextChanged', 'TextChangedI']
     if exists('##TextChangedP')
-        call add(l:delta_events, 'TextChangedP')
+        call add(l:events, 'TextChangedP')
     endif
     let s:Dispose = lsp#callbag#pipe(
-        \     lsp#callbag#merge(
+        \     lsp#callbag#fromEvent(l:events),
+        \     lsp#callbag#filter({_->lsp#internal#semantic#is_enabled()}),
+        \     lsp#callbag#debounceTime(g:lsp_semantic_delay),
+        \     lsp#callbag#filter({_->getbufvar(bufnr('%'), '&buftype') !~# '^(help\|terminal\|prompt\|popup)$'}),
+        \     lsp#callbag#filter({_->!lsp#utils#is_large_window(win_getid())}),
+        \     lsp#callbag#switchMap({_->
         \         lsp#callbag#pipe(
-        \             lsp#callbag#fromEvent(l:full_events),
-        \             lsp#callbag#filter({_->lsp#internal#semantic#is_enabled()}),
-        \             lsp#callbag#debounceTime(g:lsp_semantic_delay),
-        \             lsp#callbag#filter({_->getbufvar(bufnr('%'), '&buftype') !~# '^(help\|terminal\|prompt\|popup)$'}),
-        \             lsp#callbag#filter({_->!lsp#utils#is_large_window(win_getid())}),
-        \             lsp#callbag#switchMap({_->
-        \                 lsp#callbag#pipe(
-        \                     s:send_full_semantic_request(),
-        \                     lsp#callbag#materialize(),
-        \                     lsp#callbag#filter({x->lsp#callbag#isNextNotification(x)}),
-        \                     lsp#callbag#map({x->x['value']})
-        \                 )
-        \             }),
-        \         ),
-        \         lsp#callbag#pipe(
-        \             lsp#callbag#fromEvent(l:delta_events),
-        \             lsp#callbag#filter({_->lsp#internal#semantic#is_enabled()}),
-        \             lsp#callbag#debounceTime(g:lsp_semantic_delay),
-        \             lsp#callbag#filter({_->getbufvar(bufnr('%'), '&buftype') !~# '^(help\|terminal\|prompt\|popup)$'}),
-        \             lsp#callbag#filter({_->!lsp#utils#is_large_window(win_getid())}),
-        \             lsp#callbag#switchMap({_->
-        \                 lsp#callbag#pipe(
-        \                     s:send_delta_semantic_request(),
-        \                     lsp#callbag#materialize(),
-        \                     lsp#callbag#filter({x->lsp#callbag#isNextNotification(x)}),
-        \                     lsp#callbag#map({x->x['value']})
-        \                 )
-        \             }),
-        \         ),
-        \     ),
+        \             s:semantic_request(),
+        \             lsp#callbag#materialize(),
+        \             lsp#callbag#filter({x->lsp#callbag#isNextNotification(x)}),
+        \             lsp#callbag#map({x->x['value']})
+        \         )
+        \     }),
         \     lsp#callbag#subscribe({x->s:handle_semantic_request(x)})
         \ )
 endfunction
 
 function! lsp#internal#semantic#_disable() abort
+    augroup lsp#internal#semantic
+        autocmd!
+    augroup END
+
     if exists('s:Dispose')
         call s:Dispose()
         unlet s:Dispose
@@ -88,6 +75,14 @@ function! lsp#internal#semantic#get_provided_highlights() abort
     endfor
     
     return l:highlights
+endfunction
+
+function! s:on_lsp_buffer_enabled() abort
+    augroup lsp#internal#semantic
+        if !exists('#BufUnload#<buffer>')
+            execute 'au BufUnload <buffer> call setbufvar(' . bufnr() . ', ''lsp_semantic_previous_result_id'', '''')'
+        endif
+    augroup END
 endfunction
 
 function! s:supports_full_semantic_request(server) abort
@@ -137,30 +132,30 @@ function! s:get_server() abort
     return l:servers[0]
 endfunction
 
-function! s:send_full_semantic_request() abort
+function! s:semantic_request() abort
     let l:server = s:get_server()
     if l:server ==# ''
         return lsp#callbag#empty()
     endif
 
-    return lsp#request(l:server, {
+    if (s:supports_delta_semantic_request(l:server)
+        \ && getbufvar(bufnr(), 'lsp_semantic_previous_result_id') !=# '')
+        return s:delta_semantic_request(l:server)
+    else
+        return s:full_semantic_request(l:server)
+    endif
+endfunction
+
+function! s:full_semantic_request(server) abort
+    return lsp#request(a:server, {
         \ 'method': 'textDocument/semanticTokens/full',
         \ 'params': {
         \     'textDocument': lsp#get_text_document_identifier()
         \ }})
 endfunction
 
-function! s:send_delta_semantic_request() abort
-    let l:server = s:get_server()
-    if l:server ==# ''
-        return lsp#callbag#empty()
-    endif
-    if !s:supports_delta_semantic_request(l:server)
-        " fallback to full semantic request if delta is not supported
-        return s:send_full_semantic_request()
-    endif
-
-    return lsp#request(l:server, {
+function! s:delta_semantic_request(server) abort
+    return lsp#request(a:server, {
         \ 'method': 'textDocument/semanticTokens/full/delta',
         \ 'params': {
         \     'textDocument': lsp#get_text_document_identifier(),
