@@ -878,6 +878,11 @@ function! s:on_request(server_name, id, request) abort
     elseif a:request['method'] ==# 'workspace/configuration'
         let l:response_items = map(a:request['params']['items'], { key, val -> lsp#utils#workspace_config#get_value(a:server_name, val) })
         call s:send_response(a:server_name, { 'id': a:request['id'], 'result': l:response_items })
+    elseif a:request['method'] ==# 'workspace/workspaceFolders'
+        let l:server_info = s:servers[a:server_name]['server_info']
+        if has_key(l:server_info, 'workspaceFolders')
+            call s:send_response(a:server_name, { 'id': a:request['id'], 'result': l:server_info['workspaceFolders']})
+        endif
     elseif a:request['method'] ==# 'window/workDoneProgress/create'
         call s:send_response(a:server_name, { 'id': a:request['id'], 'result': v:null})
     else
