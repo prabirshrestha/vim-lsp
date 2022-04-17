@@ -335,13 +335,14 @@ function! lsp#omni#get_vim_completion_items(options) abort
             \ 'empty': 1,
             \ 'icase': 1,
             \ }
+        let l:cur_line = getline('.')
         if has_key(l:completion_item, 'textEdit') && type(l:completion_item['textEdit']) == s:t_dict && has_key(l:completion_item['textEdit'], 'range') && has_key(l:completion_item['textEdit'], 'newText')
             let l:character = l:completion_item['textEdit']['range']['start']['character']
-            let l:vim_complete_item['word'] = getline('.')[l:start_character:l:character - 1] . l:completion_item['textEdit']['newText']
+            let l:vim_complete_item['word'] = l:cur_line[l:start_character:l:character - 1] . l:completion_item['textEdit']['newText']
         elseif has_key(l:completion_item, 'insertText') && !empty(l:completion_item['insertText'])
-            let l:vim_complete_item['word'] = getline('.')[l:start_character:a:options['position']['character']] . l:completion_item['insertText']
+            let l:vim_complete_item['word'] = l:cur_line[l:start_character:a:options['position']['character']] . l:completion_item['insertText']
         else
-            let l:vim_complete_item['word'] = getline('.')[l:start_character:a:options['position']['character']] . l:completion_item['label']
+            let l:vim_complete_item['word'] = l:cur_line[l:start_character:a:options['position']['character']] . l:completion_item['label']
         endif
 
         if l:expandable
