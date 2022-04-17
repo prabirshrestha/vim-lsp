@@ -319,6 +319,13 @@ function! lsp#omni#get_vim_completion_items(options) abort
     endif
 
     let l:start_character = l:complete_position['character']
+
+    for l:completion_item in l:items
+        if has_key(l:completion_item, 'textEdit') && type(l:completion_item['textEdit']) == s:t_dict && has_key(l:completion_item['textEdit'], 'range') && has_key(l:completion_item['textEdit'], 'newText')
+            let l:start_character = min([l:completion_item['textEdit']['range']['start']['character'], l:start_character])
+        endif
+    endfor
+
     let l:vim_complete_items = []
     for l:completion_item in l:items
         let l:expandable = get(l:completion_item, 'insertTextFormat', 1) == 2
@@ -329,12 +336,12 @@ function! lsp#omni#get_vim_completion_items(options) abort
             \ 'icase': 1,
             \ }
         if has_key(l:completion_item, 'textEdit') && type(l:completion_item['textEdit']) == s:t_dict && has_key(l:completion_item['textEdit'], 'range') && has_key(l:completion_item['textEdit'], 'newText')
-            let l:vim_complete_item['word'] = l:completion_item['textEdit']['newText']
-            let l:start_character = min([l:completion_item['textEdit']['range']['start']['character'], l:start_character])
+            let l:character = l:completion_item['textEdit']['range']['start']['character']
+            let l:vim_complete_item['word'] = getline('.')[l:start_character:l:character - 1] . l:completion_item['textEdit']['newText']
         elseif has_key(l:completion_item, 'insertText') && !empty(l:completion_item['insertText'])
-            let l:vim_complete_item['word'] = l:completion_item['insertText']
+            let l:vim_complete_item['word'] = getline('.')[l:start_character:a:options['position']['character']] . l:completion_item['insertText']
         else
-            let l:vim_complete_item['word'] = l:completion_item['label']
+            let l:vim_complete_item['word'] = getline('.')[l:start_character:a:options['position']['character']] . l:completion_item['label']
         endif
 
         if l:expandable
