@@ -286,7 +286,8 @@ endfunction
 function! s:native_notification_callback(cbctx, channel, response) abort
     if !has_key(a:cbctx, 'ctx') | return | endif
     let ctx = a:cbctx['ctx']
-    if !has_key(a:response, 'id') && has_key(l:ctx['opts'], 'on_notification')
+    " a:response == type('') when stderr
+    if type(a:response) == type({}) && !has_key(a:response, 'id') && has_key(l:ctx['opts'], 'on_notification')
         " it is a notification
         let l:on_notification_data = { 'response': a:response }
         try
