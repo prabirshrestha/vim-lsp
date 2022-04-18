@@ -4,6 +4,7 @@ endif
 let g:lsp_loaded = 1
 
 let g:lsp_use_lua = get(g:, 'lsp_use_lua', has('nvim-0.4.0') || (has('lua') && has('patch-8.2.0775')))
+let g:lsp_use_native_client = get(g:, 'lsp_use_native_client', 1)
 let g:lsp_auto_enable = get(g:, 'lsp_auto_enable', 1)
 let g:lsp_async_completion = get(g:, 'lsp_async_completion', 0)
 let g:lsp_log_file = get(g:, 'lsp_log_file', '')
@@ -76,10 +77,10 @@ let g:lsp_inlay_hints_enabled = get(g:, 'lsp_inlay_hints_enabled', 0)
 let g:lsp_inlay_hints_delay = get(g:, 'lsp_inlay_hints_delay', 350)
 let g:lsp_code_action_ui = get(g:, 'lsp_code_action_ui', 'preview')
 
+
 let g:lsp_get_supported_capabilities = get(g:, 'lsp_get_supported_capabilities', [function('lsp#default_get_supported_capabilities')])
 
 let g:lsp_experimental_workspace_folders = get(g:, 'lsp_experimental_workspace_folders', 0)
-let g:lsp_experimental_native_lsp = get(g:, 'lsp_experimental_native_lsp', 1)
 
 if g:lsp_auto_enable
     augroup lsp_auto_enable

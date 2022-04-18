@@ -313,7 +313,7 @@ endfunction
 " public apis {{{
 
 function! lsp#client#start(opts) abort
-    if g:lsp_experimental_native_lsp && s:has_native_lsp && has_key(a:opts, 'cmd')
+    if g:lsp_use_native_client && s:has_native_lsp && has_key(a:opts, 'cmd')
         " TODO: add support for TCP
         let l:cbctx = {}
         let l:jobopt = { 'in_mode': 'lsp', 'out_mode': 'lsp', 'noblock': 1,
@@ -338,7 +338,7 @@ function! lsp#client#start(opts) abort
 endfunction
 
 function! lsp#client#stop(client_id) abort
-    if g:lsp_experimental_native_lsp && s:has_native_lsp
+    if g:lsp_use_native_client && s:has_native_lsp
         echom 'not implemented: lsp#client#stop'
        let l:ctx = get(s:clients, a:client_id, {})
        if empty(l:ctx) | return | endif
@@ -349,7 +349,7 @@ function! lsp#client#stop(client_id) abort
 endfunction
 
 function! lsp#client#send_request(client_id, opts) abort
-    if g:lsp_experimental_native_lsp && s:has_native_lsp
+    if g:lsp_use_native_client && s:has_native_lsp
         let l:ctx = get(s:clients, a:client_id, {})
         if empty(l:ctx) | return -1 | endif
         let l:request = {}
@@ -397,7 +397,7 @@ function! s:on_response_native(ctx, request, channel, response) abort
 endfunction
 
 function! lsp#client#send_notification(client_id, opts) abort
-    if g:lsp_experimental_native_lsp && s:has_native_lsp
+    if g:lsp_use_native_client && s:has_native_lsp
         let l:ctx = get(s:clients, a:client_id, {})
         if empty(l:ctx) | return -1 | endif
         let l:request = {}
@@ -411,7 +411,7 @@ function! lsp#client#send_notification(client_id, opts) abort
 endfunction
 
 function! lsp#client#send_response(client_id, opts) abort
-    if g:lsp_experimental_native_lsp && s:has_native_lsp
+    if g:lsp_use_native_client && s:has_native_lsp
         let l:ctx = get(s:clients, a:client_id, {})
         if empty(l:ctx) | return -1 | endif
         if has_key(a:opts, 'id') | let l:response['id'] = a:opts['method'] | endif
