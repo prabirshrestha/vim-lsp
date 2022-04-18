@@ -4,7 +4,7 @@ set cpoptions&vim
 let s:clients = {} " { client_id: ctx }
 
 " Vars used by native lsp
-let s:has_native_lsp = !has('nvim') && has("patch-8.2.4648")
+let s:has_native_lsp = !has('nvim') && has("patch-8.2.4780")
 let s:jobidseq = 0
 
 function! s:create_context(client_id, opts) abort
