@@ -283,11 +283,10 @@ function! s:is_server_instantiated_notification(notification) abort
     return !has_key(a:notification, 'request')
 endfunction
 
-function! s:native_notification_callback(cbctx, channel, response) abort
+function! s:native_out_cb(cbctx, channel, response) abort
     if !has_key(a:cbctx, 'ctx') | return | endif
     let ctx = a:cbctx['ctx']
-    " a:response == type('') when stderr
-    if type(a:response) == type({}) && !has_key(a:response, 'id') && has_key(l:ctx['opts'], 'on_notification')
+    if !has_key(a:response, 'id') && has_key(l:ctx['opts'], 'on_notification')
         " it is a notification
         let l:on_notification_data = { 'response': a:response }
         try
@@ -298,13 +297,29 @@ function! s:native_notification_callback(cbctx, channel, response) abort
     endif
 endfunction
 
+function! s:native_err_cb(cbctx, channel, response) abort
+    if !has_key(a:cbctx, 'ctx') | return | endif
+    let ctx = a:cbctx['ctx']
+    if has_key(l:ctx['opts'], 'on_stderr')
+        try
+            call l:ctx['opts']['on_stderr'](a:id, a:data, a:event)
+        catch
+            call lsp#log('s:on_stderr exception', v:exception, v:throwpoint)
+            echom v:exception
+        endtry
+    endif
+endfunction
+
 " public apis {{{
 
 function! lsp#client#start(opts) abort
     if g:lsp_experimental_native_lsp && s:has_native_lsp && has_key(a:opts, 'cmd')
         " TODO: add support for TCP
         let l:cbctx = {}
-        let l:jobopt = { 'in_mode': 'lsp', 'out_mode': 'lsp', 'noblock': 1, 'callback': function('s:native_notification_callback', [l:cbctx]) }
+        let l:jobopt = { 'in_mode': 'lsp', 'out_mode': 'lsp', 'noblock': 1,
+            \ 'out_cb': function('s:native_out_cb', [l:cbctx]),
+            \ 'err_cb': function('s:native_err_cb', [l:cbctx]),
+            \ }
         if has_key(a:opts, 'cwd') | let l:jobopt['cwd'] = a:opts['cwd'] | endif
         let s:jobidseq += 1
         let l:jobid = s:jobidseq " jobid == clientid
