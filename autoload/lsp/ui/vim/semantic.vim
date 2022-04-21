@@ -61,10 +61,10 @@ function! s:init_highlight(server, buf) abort
             let l:scope = l:scopes[l:scope_idx]
             let l:hl = s:get_hl_name(a:server, l:scope)
 
-            silent! call prop_type_add(s:get_textprop_name(a:server, l:scope_idx), {'bufnr': a:buf, 'highlight': l:hl, 'combine': v:true})
+            silent! call prop_type_add(s:get_textprop_name(a:server, l:scope_idx), {'bufnr': a:buf, 'highlight': l:hl, 'combine': v:true, 'priority': lsp#internal#textprop#priority('semantic')})
         endfor
 
-        silent! call prop_type_add(s:textprop_cache, {'bufnr': a:buf})
+        silent! call prop_type_add(s:textprop_cache, {'bufnr': a:buf, 'priority': lsp#internal#textprop#priority('semantic')})
     endif
 
     call setbufvar(a:buf, 'lsp_did_semantic_setup', 1)

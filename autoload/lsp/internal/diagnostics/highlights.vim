@@ -41,7 +41,7 @@ function! lsp#internal#diagnostics#highlights#_enable() abort
             for l:severity in keys(s:severity_sign_names_mapping)
                 let l:hl_group = s:severity_sign_names_mapping[l:severity] . 'Highlight'
                 call prop_type_add(s:get_prop_type_name(l:severity),
-                    \ {'highlight': l:hl_group, 'combine': v:true })
+                    \ {'highlight': l:hl_group, 'combine': v:true, 'priority': lsp#internal#textprop#priority('diagnostics_highlight') })
             endfor
         endif
     endif
