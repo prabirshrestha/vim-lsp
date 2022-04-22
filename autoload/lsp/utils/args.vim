@@ -1,10 +1,12 @@
 function! lsp#utils#args#_parse(args, opt) abort
     let l:result = {}
     for l:item in split(a:args, ' ')
-        let l:parts = split(l:item, '=')
-        let l:key = l:parts[0]
-        let l:value = get(l:parts, 1, '')
-        let l:key = l:key[2:]
+        let l:parts = matchlist(l:item, '--\(\w\+\)=\(.*\)')
+        if empty(l:parts)
+          continue
+        endif
+        let l:key = l:parts[1]
+        let l:value = l:parts[2]
         if has_key(a:opt, l:key)
             if has_key(a:opt[l:key], 'type')
                 let l:type = a:opt[l:key]['type']
