@@ -1,17 +1,17 @@
 function! lsp#utils#args#_parse(args, opt) abort
     let l:result = {}
     for l:item in split(a:args, ' ')
-        let l:parts = matchlist(l:item, '--\(\w\+\)=\(.*\)')
+        let l:parts = matchlist(l:item, '^--\([a-z][a-z0-9-]*\)\(=\S*\)\?$')
         if empty(l:parts)
           continue
         endif
         let l:key = l:parts[1]
-        let l:value = l:parts[2]
+        let l:value = l:parts[2][1:]
         if has_key(a:opt, l:key)
             if has_key(a:opt[l:key], 'type')
                 let l:type = a:opt[l:key]['type']
                 if l:type == type(v:true)
-                    if l:value ==# 'false' || l:value ==# '0' || l:value ==# ''
+                    if l:value ==# 'false' || l:value ==# '0'
                         let l:value = 0
                     else
                         let l:value = 1
