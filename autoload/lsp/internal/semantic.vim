@@ -208,8 +208,17 @@ function! s:handle_semantic_tokens_response(server, buf, result)
 endfunction
 
 function! s:handle_semantic_tokens_delta_response(server, buf, result)
+    " The locations given in the edit are all referenced to the state before
+    " any are applied and sorting is not required from the server,
+    " therefore the edits must be sorted before applying.
+    let l:edits = a:result['edits']
+    function l:startpos_compare(edit1, edit2)
+        return edit1[0] == edit2[0] ? 0 : edit1[0] > edit2[0] ? -1 : 1
+    endfunction
+    call sort(l:edits, l:startpos_compare)
+
     let l:localdata = getbufvar(a:buf, 'lsp_semantic_local_data')
-    for l:edit in a:result['edits']
+    for l:edit in l:edits
         let l:insertdata = get(l:edit, 'data', [])
         let l:localdata = l:localdata[:l:edit['start'] - 1]
                       \ + l:insertdata
