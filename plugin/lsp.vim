@@ -105,11 +105,11 @@ command! LspDocumentSymbolSearch call lsp#internal#document_symbol#search#do({})
 command! -nargs=? LspDocumentDiagnostics call lsp#internal#diagnostics#document_diagnostics_command#do(
             \ extend({}, lsp#utils#args#_parse(<q-args>, {
             \   'buffers': {'type': type('')},
-            \ })))
+            \ }).options))
 command! -nargs=? -complete=customlist,lsp#utils#empty_complete LspHover call lsp#internal#document_hover#under_cursor#do(
             \ extend({}, lsp#utils#args#_parse(<q-args>, {
             \   'ui': { 'type': type('') },
-            \ })))
+            \ }).options))
 command! -nargs=* LspNextError call lsp#internal#diagnostics#movement#_next_error(<f-args>)
 command! -nargs=* LspPreviousError call lsp#internal#diagnostics#movement#_previous_error(<f-args>)
 command! -nargs=* LspNextWarning call lsp#internal#diagnostics#movement#_next_warning(<f-args>)
@@ -128,13 +128,13 @@ command! -range -nargs=? LspDocumentFormatSync call lsp#internal#document_format
             \ extend({'bufnr': bufnr('%'), 'sync': 1 }, lsp#utils#args#_parse(<q-args>, {
             \   'timeout': {'type': type(0)},
             \   'sleep': {'type': type(0)},
-            \ })))
+            \ }).options))
 command! -range LspDocumentRangeFormat call lsp#internal#document_range_formatting#format({ 'bufnr': bufnr('%') })
 command! -range -nargs=? LspDocumentRangeFormatSync call lsp#internal#document_range_formatting#format(
             \ extend({'bufnr': bufnr('%'), 'sync': 1 }, lsp#utils#args#_parse(<q-args>, {
             \   'timeout': {'type': type(0)},
             \   'sleep': {'type': type(0)},
-            \ })))
+            \ }).options))
 command! LspImplementation call lsp#ui#vim#implementation(0, <q-mods>)
 command! LspPeekImplementation call lsp#ui#vim#implementation(1)
 command! -nargs=0 LspStatus call lsp#print_server_status()

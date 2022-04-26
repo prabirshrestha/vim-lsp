@@ -4,15 +4,16 @@ Describe lsp#utils#args
 
         It should return parsed dictionary from string formed with --key=value
             let l:tests = [
-            \  ['--server=foo', {}, {'server': 'foo'}],
-            \  ['--server', {'server': {'type': v:t_bool}}, {'server': 1}],
-            \  ['--server=0', {'server': {'type': v:t_bool}}, {'server': 0}],
-            \  ['--server=false', {'server': {'type': v:t_bool}}, {'server': 0}],
-            \  ['--server=', {'server': {'type': v:t_string}}, {'server': ''}],
-            \  ['--server-name=foo', {'server-name': {'type': v:t_string}}, {'server-name': 'foo'}],
+            \  ['--server=foo bar', {}, ['bar'], {'server': 'foo'}],
+            \  ['--server bar', {'server': {'type': v:t_bool}}, ['bar'], {'server': 1}],
+            \  ['foo --server=0 bar', {'server': {'type': v:t_bool}}, ['foo', 'bar'], {'server': 0}],
+            \  ['--server=false', {'server': {'type': v:t_bool}}, [], {'server': 0}],
+            \  ['--server=', {'server': {'type': v:t_string}}, [], {'server': ''}],
+            \  ['--server-name=foo', {'server-name': {'type': v:t_string}}, [], {'server-name': 'foo'}],
             \]
             for l:test in l:tests
-              Assert Equals(lsp#utils#args#_parse(l:test[0], l:test[1]), l:test[2])
+              Assert Equals(lsp#utils#args#_parse(l:test[0], l:test[1]).args, l:test[2])
+              Assert Equals(lsp#utils#args#_parse(l:test[0], l:test[1]).options, l:test[3])
             endfor
         End
 

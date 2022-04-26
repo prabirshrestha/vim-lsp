@@ -1,8 +1,10 @@
 function! lsp#utils#args#_parse(args, opt) abort
-    let l:result = {}
+    let l:args = []
+    let l:options = {}
     for l:item in split(a:args, ' ')
         let l:parts = matchlist(l:item, '^--\([a-z][a-z0-9-]*\)\(=\S*\)\?$')
         if empty(l:parts)
+          call add(l:args, l:item)
           continue
         endif
         let l:key = l:parts[1]
@@ -21,7 +23,7 @@ function! lsp#utils#args#_parse(args, opt) abort
                 endif
             endif
         endif
-        let l:result[l:key] = l:value
+        let l:options[l:key] = l:value
     endfor
-    return l:result
+    return {'args': l:args, 'options': l:options}
 endfunction
