@@ -198,31 +198,31 @@ function! s:handle_semantic_tokens_response(server, buf, result)
     call s:init_highlight(a:server, a:buf)
 
     call s:clear_highlights(a:server, a:buf)
+    let l:highlights = {}
     for l:token in s:decode_tokens(a:result['data'])
-        call s:add_highlight(a:server, a:buf, l:token)
+        let l:highlights = s:add_highlight(l:highlights, a:server, a:buf, l:token)
     endfor
+    call s:apply_highlights(l:highlights, a:buf)
 
     call setbufvar(a:buf, 'lsp_semantic_local_data', a:result['data'])
 endfunction
 
 function! s:handle_semantic_tokens_delta_response(server, buf, result)
+    let l:localdata = getbufvar(a:buf, 'lsp_semantic_local_data')
     for l:edit in a:result['edits']
-        let l:insertdata = []
-        if has_key(l:edit, 'data')
-            let l:insertdata = l:edit['data']
-        endif
-        let l:localdata = getbufvar(a:buf, 'lsp_semantic_local_data')
+        let l:insertdata = get(l:edit, 'data', [])
         let l:localdata = l:localdata[:l:edit['start'] - 1]
                       \ + l:insertdata
                       \ + l:localdata[l:edit['start'] + l:edit['deleteCount']:]
-
-        call s:clear_highlights(a:server, a:buf)
-        for l:token in s:decode_tokens(l:localdata)
-            call s:add_highlight(a:server, a:buf, l:token)
-        endfor
-
-        call setbufvar(a:buf, 'lsp_semantic_local_data', l:localdata)
     endfor
+    call setbufvar(a:buf, 'lsp_semantic_local_data', l:localdata)
+
+    call s:clear_highlights(a:server, a:buf)
+    let l:highlights = {}
+    for l:token in s:decode_tokens(l:localdata)
+        let l:highlights = s:add_highlight(l:highlights, a:server, a:buf, l:token)
+    endfor
+    call s:apply_highlights(l:highlights, a:buf)
 endfunction
 
 function! s:decode_tokens(data) abort
@@ -315,7 +315,7 @@ function! s:clear_highlights(server, buf) abort
     endif
 endfunction
 
-function! s:add_highlight(server, buf, token) abort
+function! s:add_highlight(highlights, server, buf, token) abort
     let l:legend = lsp#internal#semantic#get_legend(a:server)
     let l:startpos = lsp#utils#position#lsp_to_vim(a:buf, a:token['pos'])
     let l:endpos = a:token['pos']
@@ -325,8 +325,8 @@ function! s:add_highlight(server, buf, token) abort
     try
         if s:use_vim_textprops
             let l:textprop_name = s:get_textprop_name(a:server, a:token['token_idx'])
-            call prop_add(l:startpos[0], l:startpos[1],
-                       \ {'length': l:endpos[1] - l:startpos[1], 'bufnr': a:buf, 'type': l:textprop_name})
+            let a:highlights[l:textprop_name] = get(a:highlights, l:textprop_name, [])
+                                            \ + [[l:startpos[0], l:startpos[1], l:endpos[0], l:endpos[1]]]
         elseif s:use_nvim_highlight
             let l:char = a:token['pos']['character']
             let l:token_name = l:legend['tokenTypes'][a:token['token_idx']]
@@ -334,8 +334,18 @@ function! s:add_highlight(server, buf, token) abort
                                       \ l:startpos[0] - 1, l:startpos[1] - 1, l:endpos[1] - 1)
         endif
     catch
-        call lsp#log('SemanticHighlight: error while adding prop on line ' . (a:token['line'] + 1), v:exception)
+        call lsp#log('SemanticHighlight: error while adding prop on line ' . (l:startpos[0] + 1), v:exception)
     endtry
+
+    return a:highlights
+endfunction
+
+function! s:apply_highlights(highlights, buf) abort
+    if s:use_vim_textprops
+        for [l:type, l:prop_list] in items(a:highlights)
+            call prop_add_list({'type': l:type, 'bufnr': a:buf}, l:prop_list)
+        endfor
+    endif
 endfunction
 
 function! s:get_hl_name(token_name) abort
