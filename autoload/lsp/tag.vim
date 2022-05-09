@@ -141,7 +141,7 @@ function! s:compare_tags(path, a, b) abort
     return str2nr(a:a['cmd']) - str2nr(a:b['cmd'])
 endfunction
 
-function! lsp#tagfunc(pattern, flags, info) abort
+function! lsp#tag#tagfunc(pattern, flags, info) abort
     if stridx(a:flags, 'i') >= 0
         return v:null
     endif
