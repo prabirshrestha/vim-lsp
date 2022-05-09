@@ -1882,7 +1882,7 @@ vim-lsp can integrate with vim's native tag functionality for navigating code
 using the |'tagfunc'| option (requires vim/neovim with patch-8.1.1228).
 
     Example: >
-	autocmd FileType typescript setlocal tagfunc=lsp#tagfunc
+	autocmd FileType typescript setlocal tagfunc=lsp#tag#tagfunc
 
 ==============================================================================
 Snippets                                                  *vim-lsp-snippets*
