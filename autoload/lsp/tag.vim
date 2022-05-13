@@ -21,7 +21,7 @@ function! s:location_to_tag(loc) abort
     let [l:line, l:col] = lsp#utils#position#lsp_to_vim(l:path, l:range['start'])
     return {
         \ 'filename': l:path,
-        \ 'cmd': printf('/\%%%dl\%%%dc/', l:line, l:col)
+        \ 'cmd': printf('/%dL, %dC/', l:line, l:col)
         \ }
 endfunction
 
