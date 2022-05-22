@@ -1164,10 +1164,9 @@ function! s:add_didchange_queue(buf) abort
         endfor
         return
     endif
-    if index(s:didchange_queue, a:buf) != -1
-        return
+    if index(s:didchange_queue, a:buf) == -1
+        call add(s:didchange_queue, a:buf)
     endif
-    call add(s:didchange_queue, a:buf)
     call lsp#log('s:send_didchange_queue() will be triggered')
     call timer_stop(s:didchange_timer)
     let l:lazy = &updatetime > 1000 ? &updatetime : 1000
