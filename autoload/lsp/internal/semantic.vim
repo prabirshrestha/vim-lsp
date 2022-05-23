@@ -265,14 +265,14 @@ function! s:init_highlight(server, buf) abort
     let l:legend = lsp#internal#semantic#get_legend(a:server)
     let l:highlight_groups = {
         \ 'LspType': 'Type',
-        \ 'LspClass': 'Class',
+        \ 'LspClass': 'Type',
         \ 'LspEnum': 'Type',
         \ 'LspInterface': 'TypeDef',
         \ 'LspStruct': 'Type',
         \ 'LspTypeParameter': 'Type',
-        \ 'LspParameter': 'Type',
+        \ 'LspParameter': 'Identifier',
         \ 'LspVariable': 'Identifier',
-        \ 'LspProperty': 'TypeDef',
+        \ 'LspProperty': 'Identifier',
         \ 'LspEnumMember': 'Constant',
         \ 'LspEvents': 'Identifier',
         \ 'LspFunction': 'Function',
