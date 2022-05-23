@@ -194,7 +194,7 @@ function! s:handle_semantic_request(data) abort
     endif
 endfunction
 
-function! s:handle_semantic_tokens_response(server, buf, result)
+function! s:handle_semantic_tokens_response(server, buf, result) abort
     call s:init_highlight(a:server, a:buf)
 
     call s:clear_highlights(a:server, a:buf)
@@ -207,15 +207,16 @@ function! s:handle_semantic_tokens_response(server, buf, result)
     call setbufvar(a:buf, 'lsp_semantic_local_data', a:result['data'])
 endfunction
 
-function! s:handle_semantic_tokens_delta_response(server, buf, result)
+function! s:startpos_compare(edit1, edit2) abort
+    return a:edit1[0] == a:edit2[0] ? 0 : a:edit1[0] > a:edit2[0] ? -1 : 1
+endfunction
+
+function! s:handle_semantic_tokens_delta_response(server, buf, result) abort
     " The locations given in the edit are all referenced to the state before
     " any are applied and sorting is not required from the server,
     " therefore the edits must be sorted before applying.
     let l:edits = a:result['edits']
-    function l:startpos_compare(edit1, edit2)
-        return edit1[0] == edit2[0] ? 0 : edit1[0] > edit2[0] ? -1 : 1
-    endfunction
-    call sort(l:edits, l:startpos_compare)
+    call sort(l:edits, function('s:startpos_compare'))
 
     let l:localdata = getbufvar(a:buf, 'lsp_semantic_local_data')
     for l:edit in l:edits
@@ -358,7 +359,7 @@ function! s:apply_highlights(highlights, buf) abort
 endfunction
 
 function! s:get_hl_name(token_name) abort
-    return "Lsp" . toupper(a:token_name[0]) . a:token_name[1:]
+    return 'Lsp' . toupper(a:token_name[0]) . a:token_name[1:]
 endfunction
 
 function! s:get_textprop_name(server, token_idx) abort
