@@ -411,7 +411,7 @@ endfunction
 function! s:ensure_start(buf, server_name, cb) abort
     let l:path = lsp#utils#get_buffer_path(a:buf)
 
-    if lsp#utils#is_remote_uri(l:path)
+    if lsp#utils#is_remote_uri(l:path) || !has_key(s:servers, a:server_name)
         let l:msg = s:new_rpc_error('ignoring start server due to remote uri', { 'server_name': a:server_name, 'uri': l:path})
         call lsp#log(l:msg)
         call a:cb(l:msg)
