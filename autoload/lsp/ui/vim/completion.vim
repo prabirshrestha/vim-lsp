@@ -236,8 +236,11 @@ endfunction
 function! s:clear_auto_inserted_text(done_line, done_position, complete_position) abort
   let l:before = strcharpart(a:done_line, 0, a:complete_position['character'])
   let l:after = strcharpart(a:done_line, a:done_position['character'], (strchars(a:done_line) - a:done_position['character']))
-  call setline('.', l:before . l:after)
-  call cursor([a:done_position['line'] + 1, strlen(l:before) + 1])
+  try
+    call setline('.', l:before . l:after)
+    call cursor([a:done_position['line'] + 1, strlen(l:before) + 1])
+  catch
+  endtry
 endfunction
 
 "
