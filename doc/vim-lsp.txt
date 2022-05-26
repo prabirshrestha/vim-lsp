@@ -71,6 +71,7 @@ CONTENTS                                                  *vim-lsp-contents*
       g:lsp_log_file                        |g:lsp_log_file|
       g:lsp_log_verbose                     |g:lsp_log_verbose|
       g:lsp_semantic_enabled                |g:lsp_semantic_enabled|
+      g:lsp_semantic_delay                  |g:lsp_semantic_delay|
       g:lsp_text_document_did_save_delay    |g:lsp_text_document_did_save_delay|
       g:lsp_snippet_expand                  |g:lsp_snippet_expand|
       g:lsp_completion_resolve_timeout      |g:lsp_completion_resolve_timeout|
@@ -935,6 +936,14 @@ g:lsp_semantic_enabled                             *g:lsp_semantic_enabled*
 
     Determines whether or not semantic highlighting is enabled globally. Set
     to `1` to enable sending requests.
+
+g:lsp_semantic_delay                                      *g:lsp_semantic_delay*
+    Type: |Number|
+    Default: `500`
+
+    Modifications which occur within |g:lsp_semantic_delay| of one another are
+    lumped into a single `semanticTokens` request. Sets the maximum rate at
+    which the semantic highlighting can update.
 
 g:lsp_text_document_did_save_delay   *g:lsp_text_document_did_save_delay*
     Type: |Number|
