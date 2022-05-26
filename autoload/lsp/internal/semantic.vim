@@ -112,6 +112,10 @@ function! s:supports_delta_semantic_request(server) abort
         return v:false
     endif
 
+    if type(l:capabilities['full']) !=# v:t_dict
+        return v:false
+    endif
+
     if !has_key(l:capabilities['full'], 'delta')
         return v:false
     endif
