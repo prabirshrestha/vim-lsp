@@ -1972,33 +1972,55 @@ by running: >
 vim-lsp provides |highlight| groups for each of the token types supported by
 the current LSP server. This includes highlight groups for each of the
 standard set of token types:
-* LspType
-* LspClass
-* LspEnum
-* LspInterface
-* LspStruct
-* LspTypeParameter
-* LspParameter
-* LspVariable
-* LspProperty
-* LspEnumMember
-* LspEvents
-* LspFunction
-* LspMethod
-* LspKeyword
-* LspModifier
-* LspComment
-* LspString
-* LspNumber
-* LspRegexp
-* LspOperator
+* `LspSemanticType`
+* `LspSemanticClass`
+* `LspSemanticEnum`
+* `LspSemanticInterface`
+* `LspSemanticStruct`
+* `LspSemanticTypeParameter`
+* `LspSemanticParameter`
+* `LspSemanticVariable`
+* `LspSemanticProperty`
+* `LspSemanticEnumMember`
+* `LspSemanticEvents`
+* `LspSemanticFunction`
+* `LspSemanticMethod`
+* `LspSemanticKeyword`
+* `LspSemanticModifier`
+* `LspSemanticComment`
+* `LspSemanticString`
+* `LspSemanticNumber`
+* `LspSemanticRegexp`
+* `LspSemanticOperator`
 as well as additional highlight groups for any further types supported by the
-server. For example, clangd provides LspNamespace.
+server. For example, clangd provides `LspNamespace`.
 
 The standard set of token types have sensible defaults provided, however
 any other types require manual configuration. The types provided by the
 current buffer's semantic tokens server can be found by running
-|:LspSemanticHighlightGroups|.
+|:LspSemanticTokenTypes|.
+
+LSP servers may also provide modifiers for each of the tokens. The standard
+set is:
+* `Declaration`
+* `Definition`
+* `Readonly`
+* `Static`
+* `Deprecated`
+* `Abstract`
+* `Async`
+* `Modification`
+* `Documentation`
+* `DefaultLibrary`
+Servers may also provide their own modifiers. The full set of types provided
+by the current buffer's semantic tokens server can be found by running
+|:LspSemanticTokenModifiers|.
+
+If modifiers are applied to a token, the name of the |highlight| group will
+be prepended with each of the modifier names, for example a static default
+library function will use the highlight group
+`LspSemanticStaticDefaultLibraryFunction`. By default, any modified highlight
+groups are linked to their unmodified equivalent.
 
 ==============================================================================
 Popup Formatting                                      *vim-lsp-popup-format*
