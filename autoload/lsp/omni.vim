@@ -328,9 +328,10 @@ function! lsp#omni#get_vim_completion_items(options) abort
             \ 'empty': 1,
             \ 'icase': 1,
             \ }
-        if has_key(l:completion_item, 'textEdit') && type(l:completion_item['textEdit']) == s:t_dict && has_key(l:completion_item['textEdit'], 'range') && has_key(l:completion_item['textEdit'], 'newText')
+        if has_key(l:completion_item, 'textEdit') && type(l:completion_item['textEdit']) == s:t_dict && has_key(l:completion_item['textEdit'], 'newText')
+            let l:text_edit_range = lsp#utils#text_edit#_get_range_maybe_replace(l:completion_item['textEdit'])
             let l:vim_complete_item['word'] = l:completion_item['textEdit']['newText']
-            let l:start_character = min([l:completion_item['textEdit']['range']['start']['character'], l:start_character])
+            let l:start_character = min([l:text_edit_range['start']['character'], l:start_character])
         elseif has_key(l:completion_item, 'insertText') && !empty(l:completion_item['insertText'])
             let l:vim_complete_item['word'] = l:completion_item['insertText']
         else

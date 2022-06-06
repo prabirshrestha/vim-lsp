@@ -38,6 +38,18 @@ function! lsp#utils#text_edit#_lsp_to_vim_list(uri, text_edit) abort
     return l:result
 endfunction
 
+" @summary Get range from some TextEdit types
+" @note InsertReplaceEdit since Language Server Protocol Specification - 3.16.0
+" @param text_edit = TextEdit | InsertReplaceEdit
+" @returns Range
+function! lsp#utils#text_edit#_get_range_maybe_replace(text_edit) abort
+    if has_key(a:text_edit, 'replace')
+        return a:text_edit['replace']
+    else
+        return a:text_edit['range']
+    endif
+endfunction
+
 " @param uri = DocumentUri
 " @param text_edit = TextEdit
 " @param cache = {} empty dict
