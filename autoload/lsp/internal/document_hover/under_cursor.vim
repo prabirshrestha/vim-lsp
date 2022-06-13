@@ -74,6 +74,13 @@ function! lsp#internal#document_hover#under_cursor#do(options) abort
         \ )
 endfunction
 
+function! lsp#internal#document_hover#under_cursor#getpreviewwinid() abort
+    if exists('s:doc_win')
+        return s:doc_win.get_winid()
+    endif
+    return v:null
+endfunction
+
 function! s:show_hover(ui, server_name, request, response) abort
     if !has_key(a:response, 'result') || empty(a:response['result']) || 
         \ empty(a:response['result']['contents'])

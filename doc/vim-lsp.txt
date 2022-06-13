@@ -324,7 +324,7 @@ g:lsp_preview_float                         *g:lsp_preview_float*
 <
     After opening an autocmd User event lsp_float_opened is issued, as well as
     and lsp_float_closed upon closing. This can be used to alter the preview
-    window (using lsp#ui#vim#output#getpreviewwinid() to get the window id),
+    window (using lsp#internal#document_hover#under_cursor#getpreviewwinid() to get the window id),
     setup custom bindings while a preview is open, or change the highlighting
     of the window.
 
@@ -342,12 +342,12 @@ g:lsp_preview_float                         *g:lsp_preview_float*
 	    autocmd!
 	    if !has('nvim')
 		autocmd User lsp_float_opened
-		    \ call setwinvar(lsp#ui#vim#output#getpreviewwinid(),
+		    \ call setwinvar(lsp#internal#document_hover#under_cursor#getpreviewwinid(),
 		    \		       '&wincolor', 'PopupWindow')
 	    else
 		autocmd User lsp_float_opened
 		    \ call nvim_win_set_option(
-		    \   lsp#ui#vim#output#getpreviewwinid(),
+		    \   lsp#internal#document_hover#under_cursor#getpreviewwinid(),
 		    \   'winhighlight', 'Normal:PopupWindow')
 	    endif
 	augroup end
