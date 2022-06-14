@@ -1216,6 +1216,10 @@ function! lsp#get_progress() abort
     return lsp#internal#work_done_progress#get_progress()
 endfunction
 
+function! lsp#document_hover_preview_winid() abort
+    return lsp#internal#document_hover#under_cursor#getpreviewwinid()
+endfunction
+
 "
 " Scroll vim-lsp related windows.
 "
