@@ -357,17 +357,20 @@ let s:default_highlight_groups = {
 function! s:get_hl_group(server, token_idx, token_modifiers) abort
     " get highlight group name
     let l:legend = lsp#internal#semantic#get_legend(a:server)
-    let l:hl_group = s:hl_group_prefix
     let l:Capitalise = {str -> toupper(str[0]) . str[1:]}
+    let l:token_name = l:Capitalise(l:legend['tokenTypes'][a:token_idx])
+    let l:token_modifiers = []
     for l:modifier_idx in range(len(l:legend['tokenModifiers']))
         " float2nr(pow(2, a)) is 1 << a
         if and(a:token_modifiers, float2nr(pow(2, l:modifier_idx)))
             let l:modifier_name = l:legend['tokenModifiers'][l:modifier_idx]
-            let l:hl_group = l:hl_group . l:Capitalise(l:modifier_name)
+            call add(l:token_modifiers, l:Capitalise(l:modifier_name))
         endif
     endfor
-    let l:token_name = l:legend['tokenTypes'][a:token_idx]
-    let l:hl_group = l:hl_group . l:Capitalise(l:token_name)
+    call sort(l:token_modifiers)
+    let l:hl_group = s:hl_group_prefix
+                 \ . reduce(l:token_modifiers, {acc, val -> acc . val}, '')
+                 \ . l:token_name
 
     " create the highlight group if it does not already exist
     if !hlexists(l:hl_group)
