@@ -554,7 +554,10 @@ function! lsp#default_get_supported_capabilities(server_info) abort
     \           'dynamicRegistration': v:false,
     \           'requests': {
     \               'range': v:false,
-    \               'full': lsp#internal#semantic#is_enabled(),
+    \               'full': lsp#internal#semantic#is_enabled()
+    \                     ? {'delta': v:true}
+    \                     : v:false
+    \
     \           },
     \           'tokenTypes': [
     \               'type', 'class', 'enum', 'interface', 'struct',
