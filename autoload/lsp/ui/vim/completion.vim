@@ -64,6 +64,11 @@ function! s:on_complete_done_after() abort
   " Clear message line. feedkeys above leave garbage on message line.
   echo ''
 
+  " Ignore process if the mode() is not insert-mode after feedkeys.
+  if mode(1)[0] !=# 'i'
+    return ''
+  endif
+
   let l:done_line = s:context['done_line']
   let l:completed_item = s:context['completed_item']
   let l:done_position = s:context['done_position']
