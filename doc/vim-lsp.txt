@@ -760,7 +760,7 @@ g:lsp_document_highlight_enabled      *g:lsp_document_highlight_enabled*
 <
 
     To change the style of the highlighting, you can set or link the
-   `lspReference` highlight group.
+    `lspReference` highlight group.
 
     Example: >
     highlight lspReference ctermfg=red guifg=red ctermbg=green guibg=green
