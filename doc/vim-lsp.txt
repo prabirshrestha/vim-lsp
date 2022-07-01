@@ -56,6 +56,7 @@ CONTENTS                                                  *vim-lsp-contents*
       g:lsp_tree_incoming_prefix            |g:lsp_tree_incoming_prefix|
       g:lsp_format_sync_timeout             |g:lsp_format_sync_timeout|
       g:lsp_use_event_queue                 |g:lsp_use_event_queue|
+      g:lsp_max_buffer_size                 |g:lsp_max_buffer_size|
       g:lsp_document_highlight_enabled      |g:lsp_document_highlight_enabled|
       g:lsp_document_highlight_delay        |g:lsp_document_highlight_delay|
       g:lsp_get_supported_capabilities      |g:lsp_get_supported_capabilities|
@@ -70,6 +71,7 @@ CONTENTS                                                  *vim-lsp-contents*
       g:lsp_log_file                        |g:lsp_log_file|
       g:lsp_log_verbose                     |g:lsp_log_verbose|
       g:lsp_semantic_enabled                |g:lsp_semantic_enabled|
+      g:lsp_semantic_delay                  |g:lsp_semantic_delay|
       g:lsp_text_document_did_save_delay    |g:lsp_text_document_did_save_delay|
       g:lsp_snippet_expand                  |g:lsp_snippet_expand|
       g:lsp_completion_resolve_timeout      |g:lsp_completion_resolve_timeout|
@@ -127,7 +129,7 @@ CONTENTS                                                  *vim-lsp-contents*
       LspImplementation                     |:LspImplementation|
       LspReferences                         |:LspReferences|
       LspRename                             |:LspRename|
-      LspSemanticScopes                     |:LspSemanticScopes|
+      LspSemanticHighlightGroups            |:LspSemanticHighlightGroups|
       LspTypeDefinition                     |:LspTypeDefinition|
       LspTypeHierarchy                      |:LspTypeHierarchy|
       LspWorkspaceSymbol                    |:LspWorkspaceSymbol|
@@ -747,6 +749,22 @@ g:lsp_use_event_queue                               *g:lsp_use_event_queue*
 	let g:lsp_use_event_queue = 1
 	let g:lsp_use_event_queue = 0
 
+g:lsp_max_buffer_size                               *g:lsp_max_buffer_size*
+    Type: |Number|
+    Default: `5000000`
+
+    To improve performance, if a buffer is larger than
+    `g:lsp_max_buffer_size` (measured in bytes), the following features
+    are disabled:
+    * Semantic highlighting
+    
+    This functionality can be disabled by setting `g:lsp_max_buffer_size`
+    to a negative value.
+
+    Example: >
+	let g:max_buffer_size = 10000000
+	let g:max_buffer_size = -1
+
 g:lsp_document_highlight_enabled      *g:lsp_document_highlight_enabled*
     Type: |Number|
     Default: `1` for neovim or vim with patch-8.1.1035
@@ -919,6 +937,14 @@ g:lsp_semantic_enabled                             *g:lsp_semantic_enabled*
 
     Determines whether or not semantic highlighting is enabled globally. Set
     to `1` to enable sending requests.
+
+g:lsp_semantic_delay                                      *g:lsp_semantic_delay*
+    Type: |Number|
+    Default: `500`
+
+    Modifications which occur within |g:lsp_semantic_delay| of one another are
+    lumped into a single `semanticTokens` request. Sets the maximum rate at
+    which the semantic highlighting can update.
 
 g:lsp_text_document_did_save_delay   *g:lsp_text_document_did_save_delay*
     Type: |Number|
@@ -1671,13 +1697,9 @@ LspRename                                                       *:LspRename*
 
 Rename the symbol.
 
-LspSemanticScopes                                       *:LspSemanticScopes*
+LspSemanticHighlightGroups                     *:LspSemanticHighlightGroups*
 
-Prints the scope tree for the current buffer. Each scope is highlighted with
-the highlight group vim-lsp will use for this scope. An optional argument can
-be supplied to limit the maximum depth of the tree that will be printed.
-
-Also see |vim-lsp-semantic|.
+List the highlight groups provided by the current semantic tokens server.
 
 LspTypeDefinition                                       *:LspTypeDefinition*
 
@@ -1948,79 +1970,64 @@ Semantic highlighting                                      *vim-lsp-semantic*
 To use semantic highlighting, you need Neovim highlights, or Vim with the
 |textprop| feature enabled at compile time.
 
-You can check if semantic highlighting is enabled by running: >
+To enable semantic highlighting, |g:lsp_semantic_enabled| should be set to `1`
+(it is `0` by default). You can check if semantic highlighting is enabled
+by running: >
     echo lsp#ui#vim#semantic#is_enabled()
-<
-Before you can use the semantic highlighting feature, you will also need to
-link language server semantic scopes to Vim highlight groups. For example, you
-have to specify that function calls need to be highlighted using the
-|Identifier| Vim group.
 
-To find out the available scopes for your language server, you can open a
-buffer of the correct filetype and run :|LspSemanticScopes|. This will display
-a tree representation of the available scopes, along with their highlight
-group, if any.
+vim-lsp provides |highlight| groups for each of the token types supported by
+the current LSP server. This includes highlight groups for each of the
+standard set of token types:
+* `LspSemanticType`
+* `LspSemanticClass`
+* `LspSemanticEnum`
+* `LspSemanticInterface`
+* `LspSemanticStruct`
+* `LspSemanticTypeParameter`
+* `LspSemanticParameter`
+* `LspSemanticVariable`
+* `LspSemanticProperty`
+* `LspSemanticEnumMember`
+* `LspSemanticEvents`
+* `LspSemanticFunction`
+* `LspSemanticMethod`
+* `LspSemanticKeyword`
+* `LspSemanticModifier`
+* `LspSemanticComment`
+* `LspSemanticString`
+* `LspSemanticNumber`
+* `LspSemanticRegexp`
+* `LspSemanticOperator`
+as well as additional highlight groups for any further types supported by the
+server. For example, clangd provides `LspNamespace`.
 
-For example, consider this excerpt from the Eclipse Java language server: >
-    entity.name.function.java
-        meta.function-call.java
-            meta.method.body.java
-                meta.method.java
-                    meta.class.body.java
-                        meta.class.java
-                            source.java
-        meta.method.identifier.java
-            meta.function-call.java
-                meta.method.java
-                    meta.class.body.java
-                        meta.class.java
-                            source.java
-            meta.method.java
-                meta.class.body.java
-                    meta.class.java
-                        source.java
-    entity.name.type.class.java
-        meta.class.identifier.java
-            meta.class.java
-                source.java
-    ...
-<
-`entity.name.type.class.java` is a top-level scope.
-`entity.name.function.java` is also a top-level scope, which itself contains
-two subscopes `meta.function-call.java` and `meta.method.identifier.java`.
+The standard set of token types have sensible defaults provided, however
+any other types require manual configuration. The types provided by the
+current buffer's semantic tokens server can be found by running
+|:LspSemanticTokenTypes|.
 
-The mapping from scopes to highlight groups is done in the server
-configuration options.
+LSP servers may also provide modifiers for each of the tokens. The standard
+set is:
+* `Declaration`
+* `Definition`
+* `Readonly`
+* `Static`
+* `Deprecated`
+* `Abstract`
+* `Async`
+* `Modification`
+* `Documentation`
+* `DefaultLibrary`
+Servers may also provide their own modifiers. The full set of types provided
+by the current buffer's semantic tokens server can be found by running
+|:LspSemanticTokenModifiers|.
 
-Suppose we want to highlight classes using |Identifier| and functions using
-|Label|. The language server registration for Eclipse LS will look like: >
-    autocmd User lsp_setup call lsp#register_server({
-        \ 'name': 'eclipse.jdt.ls',
-        \ 'cmd': {server_info->[...]},
-        \ 'allowlist': ['java'],
-        \ 'semantic_highlight': {
-        \       'entity.name.type.class.java': 'Identifier',
-        \       'entity.name.function.java': 'Label'
-        \ }
-        \ })
-<
-You can also be more specific by replacing the highlight group string with
-another |Dict|, containing subkeys for the subscopes. For example, suppose we
-want function calls to still use the |Label| group, but use |Identifier| for
-`meta.method.identifier.java`. This can be accomplished as follows: >
-    autocmd User lsp_setup call lsp#register_server({
-        \ 'name': 'eclipse.jdt.ls',
-        \ 'cmd': {server_info->[...]},
-        \ 'allowlist': ['java'],
-        \ 'semantic_highlight': {
-        \       'entity.name.type.class.java': 'Identifier',
-        \       'entity.name.function.java': {
-        \           'meta.function-call.java': 'Label',
-        \           'meta.method.identifier.java': 'Identifier'
-        \       }
-        \ }
-        \ })
-<
+If modifiers are applied to a token, the name of the |highlight| group will
+be prepended with each of the modifier names, for example a static default
+library function will use the highlight group
+`LspSemanticStaticDefaultLibraryFunction`. By default, any modified highlight
+groups are linked to their unmodified equivalent.
+
 ==============================================================================
 Popup Formatting                                      *vim-lsp-popup-format*
 
