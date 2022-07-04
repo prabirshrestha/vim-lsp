@@ -137,6 +137,25 @@ let s:pair = {
 \  '[':  ']',
 \}
 
+function! lsp#omni#filter(filter, items, typed) abort
+    let l:items = a:items
+    if a:filter ==? 'prefix'
+        let l:items = filter(l:items, {_, item -> s:prefix_filter(item, a:typed)})
+        if has_key(s:pair, a:typed[0])
+            let [l:lhs, l:rhs] = [a:typed[0], s:pair[a:typed[0]]]
+            for l:item in l:items
+                let l:str = l:item['word']
+                if len(l:str) > 1 && l:str[0] ==# l:lhs && l:str[-1:] ==# l:rhs
+                    let l:item['word'] = l:str[:-2]
+                endif
+            endfor
+        endif
+    elseif a:filter ==? 'contains'
+        let l:items = filter(l:items, {_, item -> s:contains_filter(item, a:typed)})
+    endif
+    return l:items
+endfunction
+
 function! s:display_completions(timer, info) abort
     " TODO: Allow multiple servers
     let l:server_name = a:info['server_names'][0]
@@ -146,20 +165,7 @@ function! s:display_completions(timer, info) abort
     let l:last_typed_word = strpart(l:current_line, s:completion['startcol'] - 1)
 
     let l:filter = has_key(l:server_info, 'config') && has_key(l:server_info['config'], 'filter') ? l:server_info['config']['filter'] : { 'name': 'prefix' }
-    if l:filter['name'] ==? 'prefix'
-        let s:completion['matches'] = filter(s:completion['matches'], {_, item -> s:prefix_filter(item, l:last_typed_word)})
-        if has_key(s:pair, l:last_typed_word[0])
-            let [l:lhs, l:rhs] = [l:last_typed_word[0], s:pair[l:last_typed_word[0]]]
-            for l:item in s:completion['matches']
-                let l:str = l:item['word']
-                if len(l:str) > 1 && l:str[0] ==# l:lhs && l:str[-1:] ==# l:rhs
-                    let l:item['word'] = l:str[:-2]
-                endif
-            endfor
-        endif
-    elseif l:filter['name'] ==? 'contains'
-        let s:completion['matches'] = filter(s:completion['matches'], {_, item -> s:contains_filter(item, l:last_typed_word)})
-    endif
+    let s:completion['matches'] = lsp#omni#filter(l:filter['name'], s:completion['matches'], l:last_typed_word)
 
     let s:completion['status'] = ''
 

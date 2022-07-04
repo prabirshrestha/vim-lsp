@@ -493,5 +493,30 @@ Describe lsp#omni
                 Assert Equals(lsp#omni#get_vim_completion_items(options).items, want)
             End
         End
+
+        It should filter by prefix/contains
+            let items = [
+            \{ 'word': 'my1-label3' },
+            \{ 'word': 'my2-label1' },
+            \{ 'word': 'my3-label2' },
+            \]
+
+            let want = [
+            \{ 'word': 'my1-label3' },
+            \]
+            Assert Equals(lsp#omni#filter('prefix', copy(items), 'my1'), want)
+
+            let want = [
+            \]
+            Assert Equals(lsp#omni#filter('prefix', copy(items), 'label'), want)
+
+            let want = [
+            \{ 'word': 'my1-label3' },
+            \{ 'word': 'my2-label1' },
+            \{ 'word': 'my3-label2' },
+            \]
+            Assert Equals(lsp#omni#filter('contains', copy(items), 'label'), want)
+        End
+
     End
 End
