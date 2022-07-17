@@ -643,9 +643,10 @@ function! s:ensure_init(buf, server_name, cb) abort
     \     'rootUri': l:root_uri,
     \     'rootPath': lsp#utils#uri_to_path(l:root_uri),
     \     'trace': 'off',
+    \     'workDoneToken': '__initialize_token',
     \   },
     \ }
-    
+
     let l:workspace_capabilities = get(l:capabilities, 'workspace', {})
     if get(l:workspace_capabilities, 'workspaceFolders', v:false)
         " TODO: extract folder name for l:root_uri
