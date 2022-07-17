@@ -275,11 +275,12 @@ endfunction
 
 function! s:clear_highlights(server, buf) abort
     if s:use_vim_textprops
-        let l:IsSemanticTextprop = {textprop -> textprop['type'] =~ '^' . s:textprop_type_prefix . '.*'}
-        let l:textprop_types = prop_list(1, {'bufnr': a:buf, 'end_lnum': -1})
+        let l:BeginsWith = {str, prefix -> str[0:len(prefix) - 1] ==# prefix}
+        let l:IsSemanticTextprop = {_, textprop -> l:BeginsWith(textprop, s:textprop_type_prefix)}
+        let l:textprop_types = prop_type_list()
         call filter(l:textprop_types, l:IsSemanticTextprop)
         for l:textprop_type in l:textprop_types
-            silent! call prop_remove({'type': l:textprop_type, 'bufnr': a:buf, 'all': v:true}, 1, line('$'))
+            silent! call prop_remove({'type': l:textprop_type, 'bufnr': a:buf, 'all': v:true})
         endfor
     elseif s:use_nvim_highlight
         call nvim_buf_clear_namespace(a:buf, s:namespace_id, 0, line('$'))
