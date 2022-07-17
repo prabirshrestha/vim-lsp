@@ -109,8 +109,15 @@ function! s:show_floating_window(event, managed_user_data) abort
     call setbufline(l:doc_win.get_bufnr(), 1, lsp#utils#_split_by_eol(join(l:contents, "\n\n")))
 
     " Calculate layout.
+    if g:lsp_float_max_width >= 1
+        let l:maxwidth = g:lsp_float_max_width
+    elseif g:lsp_float_max_width == 0
+        let l:maxwidth = &columns
+    else
+        let l:maxwidth = float2nr(&columns * 0.4)
+    endif
     let l:size = l:doc_win.get_size({
-    \     'maxwidth': float2nr(&columns * 0.4),
+    \     'maxwidth': l:maxwidth,
     \     'maxheight': float2nr(&lines * 0.4),
     \ })
     let l:margin_right = &columns - 1 - (float2nr(a:event.col) + float2nr(a:event.width) + 1 + (a:event.scrollbar ? 1 : 0))
