@@ -53,6 +53,12 @@ function! s:handle_work_done_progress(server, response) abort
     doautocmd <nomodeline> User lsp_progress_updated
 endfunction
 
+function! lsp#internal#work_done_progress#generate_token() abort
+    let l:random_id = rand(srand()) % 100000
+    let l:work_done_token = '__work_done_token_' . getpid() . '_' . l:random_id
+    return l:work_done_token
+endfunction
+
 function! lsp#internal#work_done_progress#_disable() abort
     if !s:enabled | return | endif
 

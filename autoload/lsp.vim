@@ -643,7 +643,7 @@ function! s:ensure_init(buf, server_name, cb) abort
     \     'rootUri': l:root_uri,
     \     'rootPath': lsp#utils#uri_to_path(l:root_uri),
     \     'trace': 'off',
-    \     'workDoneToken': '__initialize_token',
+    \     'workDoneToken': lsp#internal#work_done_progress#generate_token(),
     \   },
     \ }
 
