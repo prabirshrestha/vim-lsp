@@ -27,7 +27,7 @@ function! lsp#internal#semantic#_enable() abort
         \     lsp#callbag#fromEvent(l:events),
         \     lsp#callbag#filter({_->lsp#internal#semantic#is_enabled()}),
         \     lsp#callbag#debounceTime(g:lsp_semantic_delay),
-        \     lsp#callbag#filter({_->getbufvar(bufnr('%'), '&buftype') !~# '^(help\|terminal\|prompt\|popup)$'}),
+        \     lsp#callbag#filter({_->index(['help', 'terminal', 'prompt', 'popup'], getbufvar(bufnr('%'), '&buftype')) ==# -1}),
         \     lsp#callbag#filter({_->!lsp#utils#is_large_window(win_getid())}),
         \     lsp#callbag#switchMap({_->
         \         lsp#callbag#pipe(
