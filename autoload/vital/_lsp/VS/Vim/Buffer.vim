@@ -47,13 +47,16 @@ endfunction
 " ensure
 "
 function! s:ensure(expr) abort
-  if !bufexists(a:expr)
+  if !exists('g:__VS_Vim_Buffers')
+    let g:__VS_Vim_Buffers = {}
+  endif
+  if !has_key(g:__VS_Vim_Buffers, a:expr)
     if type(a:expr) == type(0)
       throw printf('VS.Vim.Buffer: `%s` is not valid expr.', a:expr)
     endif
-    badd `=a:expr`
+    call extend(g:__VS_Vim_Buffers, {a:expr : bufadd('')})
   endif
-  return bufnr(a:expr)
+  return g:__VS_Vim_Buffers[a:expr]
 endfunction
 
 "
