@@ -325,7 +325,10 @@ function! lsp#omni#get_vim_completion_items(options) abort
             let l:item_start_character = l:completion_item['textEdit']['range']['start']['character']
             if l:item_start_character < l:default_start_character
                 " Add already typed word. The typescript-language-server returns `[Symbol]` item for the line of `Hoo.|`. So we should add `.` (`.[Symbol]`) .
-                let l:vim_complete_item['word'] = strcharpart(l:current_line, l:item_start_character, l:default_start_character - l:item_start_character) . l:vim_complete_item['word']
+                let l:overlap_text = strcharpart(l:current_line, l:item_start_character, l:default_start_character - l:item_start_character)
+                if stridx(l:vim_complete_item['word'], l:overlap_text) != 0
+                    let l:vim_complete_item['word'] = l:overlap_text . l:vim_complete_item['word']
+                endif
             endif
             let l:start_character = min([l:item_start_character, l:start_character])
             let l:start_characters += [l:item_start_character]
