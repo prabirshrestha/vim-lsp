@@ -277,6 +277,7 @@ function! lsp#omni#get_vim_completion_items(options) abort
     let l:current_line = getline('.')
     let l:default_startcol = s:get_startcol(strcharpart(l:current_line, 0, l:complete_position['character']), [l:server_name])
     let l:default_start_character = strchars(strpart(l:current_line, 0, l:default_startcol - 1))
+    let l:refresh_pattern = s:get_refresh_pattern([l:server_name])
 
     let l:result = a:options['response']['result']
     if type(l:result) == type([])
@@ -311,17 +312,25 @@ function! lsp#omni#get_vim_completion_items(options) abort
             \ }
         let l:range = lsp#utils#text_edit#get_range(get(l:completion_item, 'textEdit', {}))
         if has_key(l:completion_item, 'textEdit') && type(l:completion_item['textEdit']) == s:t_dict && !empty(l:range) && has_key(l:completion_item['textEdit'], 'newText')
-            let l:vim_complete_item['word'] = l:completion_item['textEdit']['newText']
-            let l:item_start_character = l:range['start']['character']
-            if l:item_start_character < l:default_start_character
-                " Add already typed word. The typescript-language-server returns `[Symbol]` item for the line of `Hoo.|`. So we should add `.` (`.[Symbol]`) .
-                let l:overlap_text = strcharpart(l:current_line, l:item_start_character, l:default_start_character - l:item_start_character)
-                if stridx(l:vim_complete_item['word'], l:overlap_text) != 0
-                    let l:vim_complete_item['word'] = l:overlap_text . l:vim_complete_item['word']
+            let l:text_edit_new_text = l:completion_item['textEdit']['newText']
+            if has_key(l:completion_item, 'filterText') && !empty(l:completion_item['filterText']) && matchstr(l:text_edit_new_text, '^' . l:refresh_pattern) ==# ''
+                " Use filterText as word.
+                let l:vim_complete_item['word'] = l:completion_item['filterText']
+                let l:start_characters += [l:default_start_character]
+            else
+                " Use textEdit.newText as word.
+                let l:item_start_character = l:range['start']['character']
+                let l:vim_complete_item['word'] = l:text_edit_new_text
+                if l:item_start_character < l:default_start_character
+                    " Add already typed word. The typescript-language-server returns `[Symbol]` item for the line of `Hoo.|`. So we should add `.` (`.[Symbol]`) .
+                    let l:overlap_text = strcharpart(l:current_line, l:item_start_character, l:default_start_character - l:item_start_character)
+                    if stridx(l:vim_complete_item['word'], l:overlap_text) != 0
+                        let l:vim_complete_item['word'] = l:overlap_text . l:vim_complete_item['word']
+                    endif
                 endif
+                let l:start_character = min([l:item_start_character, l:start_character])
+                let l:start_characters += [l:item_start_character]
             endif
-            let l:start_character = min([l:item_start_character, l:start_character])
-            let l:start_characters += [l:item_start_character]
         elseif has_key(l:completion_item, 'insertText') && !empty(l:completion_item['insertText'])
             let l:vim_complete_item['word'] = l:completion_item['insertText']
             let l:start_characters += [l:default_start_character]
@@ -425,19 +434,19 @@ function! s:create_user_data_key(base) abort
 endfunction
 
 function! s:get_startcol(left, server_names) abort
-    " Find first item which has refresh_pattern
-    let l:refresh_pattern = '\(\k\+$\)'
+    " Initialize the default startcol. It will be updated if the completion items has textEdit.
+    let l:startcol = 1 + matchstrpos(a:left, s:get_refresh_pattern(a:server_names))[1]
+    return l:startcol == 0 ? strlen(a:left) + 1 : l:startcol
+endfunction
+
+function! s:get_refresh_pattern(server_names) abort
     for l:server_name in a:server_names
         let l:server_info = lsp#get_server_info(l:server_name)
         if has_key(l:server_info, 'config') && has_key(l:server_info['config'], 'refresh_pattern')
-            let l:refresh_pattern = l:server_info['config']['refresh_pattern']
-            break
+            return l:server_info['config']['refresh_pattern']
         endif
     endfor
-
-    " Initialize the default startcol. It will be updated if the completion items has textEdit.
-    let l:startcol = 1 + matchstrpos(a:left, l:refresh_pattern)[1]
-    return l:startcol == 0 ? strlen(a:left) + 1 : l:startcol
+    return '\(\k\+$\)'
 endfunction
 
 " }}}
