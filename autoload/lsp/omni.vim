@@ -325,7 +325,7 @@ function! lsp#omni#get_vim_completion_items(options) abort
             let l:item_start_character = l:completion_item['textEdit']['range']['start']['character']
             if l:item_start_character < l:default_start_character
                 " Add already typed word. The typescript-language-server returns `[Symbol]` item for the line of `Hoo.|`. So we should add `.` (`.[Symbol]`) .
-                let l:vim_complete_item['word'] = strcharpart(l:current_line, l:item_start_character, l:default_start_character - l:item_start_character) .. l:vim_complete_item['word']
+                let l:vim_complete_item['word'] = strcharpart(l:current_line, l:item_start_character, l:default_start_character - l:item_start_character) . l:vim_complete_item['word']
             endif
             let l:start_character = min([l:item_start_character, l:start_character])
             let l:start_characters += [l:item_start_character]
@@ -357,7 +357,7 @@ function! lsp#omni#get_vim_completion_items(options) abort
             let l:item_start_character = l:start_characters[l:i]
             if l:start_character < l:item_start_character
                 let l:item = l:vim_complete_items[l:i]
-                let l:item['word'] = strcharpart(l:current_line, l:start_character, l:item_start_character - l:start_character) .. l:item['word']
+                let l:item['word'] = strcharpart(l:current_line, l:start_character, l:item_start_character - l:start_character) . l:item['word']
             endif
         endfor
     endif
