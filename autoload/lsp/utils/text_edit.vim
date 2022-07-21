@@ -1,3 +1,11 @@
+function! lsp#utils#text_edit#get_range(text_edit) abort
+  let l:insert = get(a:text_edit, 'insert', v:null)
+  if type(l:insert) == v:t_dict
+    return l:insert
+  endif
+  return get(a:text_edit, 'range', v:null)
+endfunction
+
 function! lsp#utils#text_edit#apply_text_edits(uri, text_edits) abort
     let l:current_bufname = bufname('%')
     let l:target_bufname = lsp#utils#uri_to_path(a:uri)
