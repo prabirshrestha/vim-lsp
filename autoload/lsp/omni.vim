@@ -358,7 +358,6 @@ function! lsp#omni#get_vim_completion_items(options) abort
             if l:start_character < l:item_start_character
                 let l:item = l:vim_complete_items[l:i]
                 let l:item['word'] = strcharpart(l:current_line, l:start_character, l:item_start_character - l:start_character) .. l:item['word']
-                let l:item['abbr'] = l:item['word']
             endif
         endfor
     endif
