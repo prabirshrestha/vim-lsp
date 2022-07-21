@@ -59,23 +59,10 @@ function! lsp#omni#complete(findstart, base) abort
             let s:completion['status'] = s:completion_status_pending
         endif
 
-        " Find first item which has refresh_pattern
-        let l:refresh_pattern = '\(\k\+$\)'
-        for l:server_name in l:info['server_names']
-            let l:server_info = lsp#get_server_info(l:server_name)
-            if has_key(l:server_info, 'config') && has_key(l:server_info['config'], 'refresh_pattern')
-                let l:refresh_pattern = l:server_info['config']['refresh_pattern']
-                break
-            endif
-        endfor
-        let l:curpos = getcurpos()
-        let l:left = strpart(getline(l:curpos[1]), 0, l:curpos[2]-1)
+        let l:left = strpart(getline('.'), 0, col('.')-1)
 
         " Initialize the default startcol. It will be updated if the completion items has textEdit.
-        let s:completion['startcol'] = 1 + matchstrpos(l:left, l:refresh_pattern)[1]
-        if s:completion['startcol'] == 0
-            let s:completion['startcol'] = strlen(l:left) + 1
-        endif
+        let s:completion['startcol'] = s:get_startcol(l:left, l:info['server_names'])
 
         " The `l:info` variable will be filled with completion results after request was finished.
         call s:send_completion_request(l:info)
@@ -298,6 +285,9 @@ function! lsp#omni#get_vim_completion_items(options) abort
     let l:server_name = l:server['name']
     let l:kind_text_mappings = s:get_kind_text_mappings(l:server)
     let l:complete_position = a:options['position']
+    let l:current_line = getline('.')
+    let l:default_startcol = s:get_startcol(strcharpart(l:current_line, 0, l:complete_position['character']), [l:server_name])
+    let l:default_start_character = strchars(strpart(l:current_line, 0, l:default_startcol - 1))
 
     let l:result = a:options['response']['result']
     if type(l:result) == type([])
@@ -319,6 +309,8 @@ function! lsp#omni#get_vim_completion_items(options) abort
     endif
 
     let l:start_character = l:complete_position['character']
+
+    let l:start_characters = [] " The mapping of item specific start_character.
     let l:vim_complete_items = []
     for l:completion_item in l:items
         let l:expandable = get(l:completion_item, 'insertTextFormat', 1) == 2
@@ -330,11 +322,19 @@ function! lsp#omni#get_vim_completion_items(options) abort
             \ }
         if has_key(l:completion_item, 'textEdit') && type(l:completion_item['textEdit']) == s:t_dict && has_key(l:completion_item['textEdit'], 'range') && has_key(l:completion_item['textEdit'], 'newText')
             let l:vim_complete_item['word'] = l:completion_item['textEdit']['newText']
-            let l:start_character = min([l:completion_item['textEdit']['range']['start']['character'], l:start_character])
+            let l:item_start_character = l:completion_item['textEdit']['range']['start']['character']
+            if l:item_start_character < l:default_start_character
+                " Add already typed word. The typescript-language-server returns `[Symbol]` item for the line of `Hoo.|`. So we should add `.` (`.[Symbol]`) .
+                let l:vim_complete_item['word'] = strcharpart(l:current_line, l:item_start_character, l:default_start_character - l:item_start_character) .. l:vim_complete_item['word']
+            endif
+            let l:start_character = min([l:item_start_character, l:start_character])
+            let l:start_characters += [l:item_start_character]
         elseif has_key(l:completion_item, 'insertText') && !empty(l:completion_item['insertText'])
             let l:vim_complete_item['word'] = l:completion_item['insertText']
+            let l:start_characters += [l:default_start_character]
         else
             let l:vim_complete_item['word'] = l:completion_item['label']
+            let l:start_characters += [l:default_start_character]
         endif
 
         if l:expandable
@@ -351,6 +351,17 @@ function! lsp#omni#get_vim_completion_items(options) abort
         let l:vim_complete_items += [l:vim_complete_item]
     endfor
 
+    " Add the additional text for startcol correction.
+    if l:start_character != l:default_start_character
+        for l:i in range(len(l:start_characters))
+            let l:item_start_character = l:start_characters[l:i]
+            if l:start_character < l:item_start_character
+                let l:item = l:vim_complete_items[l:i]
+                let l:item['word'] = strcharpart(l:current_line, l:start_character, l:item_start_character - l:start_character) .. l:item['word']
+                let l:item['abbr'] = l:item['word']
+            endif
+        endfor
+    endif
     let l:startcol = lsp#utils#position#lsp_character_to_vim('%', { 'line': l:complete_position['line'], 'character': l:start_character })
 
     return { 'items': l:vim_complete_items, 'incomplete': l:incomplete, 'startcol': l:startcol }
@@ -419,4 +430,21 @@ endfunction
 function! s:create_user_data_key(base) abort
     return '{"vim-lsp/key":"' . a:base . '"}'
 endfunction
+
+function! s:get_startcol(left, server_names) abort
+    " Find first item which has refresh_pattern
+    let l:refresh_pattern = '\(\k\+$\)'
+    for l:server_name in a:server_names
+        let l:server_info = lsp#get_server_info(l:server_name)
+        if has_key(l:server_info, 'config') && has_key(l:server_info['config'], 'refresh_pattern')
+            let l:refresh_pattern = l:server_info['config']['refresh_pattern']
+            break
+        endif
+    endfor
+
+    " Initialize the default startcol. It will be updated if the completion items has textEdit.
+    let l:startcol = 1 + matchstrpos(a:left, l:refresh_pattern)[1]
+    return l:startcol == 0 ? strlen(a:left) + 1 : l:startcol
+endfunction
+
 " }}}
