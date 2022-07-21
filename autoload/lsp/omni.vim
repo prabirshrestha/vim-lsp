@@ -348,7 +348,7 @@ function! lsp#omni#get_vim_completion_items(options) abort
         endif
 
         if s:is_user_data_support
-            let l:vim_complete_item['user_data'] = s:create_user_data(l:completion_item, l:server_name, l:complete_position)
+            let l:vim_complete_item['user_data'] = s:create_user_data(l:completion_item, l:server_name, l:complete_position, l:start_characters[len(l:start_characters) - 1])
         endif
 
         let l:vim_complete_items += [l:vim_complete_item]
@@ -382,12 +382,13 @@ endfunction
 "
 " create item's user_data.
 "
-function! s:create_user_data(completion_item, server_name, complete_position) abort
+function! s:create_user_data(completion_item, server_name, complete_position, start_character) abort
     let l:user_data_key = s:create_user_data_key(s:managed_user_data_key_base)
     let s:managed_user_data_map[l:user_data_key] = {
     \   'complete_position': a:complete_position,
     \   'server_name': a:server_name,
-    \   'completion_item': a:completion_item
+    \   'completion_item': a:completion_item,
+    \   'start_character': a:start_character,
     \ }
     let s:managed_user_data_key_base += 1
     return l:user_data_key
