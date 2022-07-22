@@ -82,7 +82,8 @@ Describe lsp#omni
             Assert Equals(lsp#omni#get_managed_user_data_from_completed_item(got['items'][0]), {
                         \   'server_name': 'dummy-server',
                         \   'completion_item': item,
-                        \   'complete_position': { 'line': 1, 'character': 1 }
+                        \   'complete_position': { 'line': 1, 'character': 1 },
+                        \   'start_character': 0,
                         \ })
         End
 
@@ -184,7 +185,8 @@ Describe lsp#omni
             Assert Equals(lsp#omni#get_managed_user_data_from_completed_item(got['items'][0]), {
                         \   'server_name': 'dummy-server',
                         \   'completion_item': item,
-                        \   'complete_position': { 'line': 1, 'character': 1 }
+                        \   'complete_position': { 'line': 1, 'character': 1 },
+                        \   'start_character': 0,
                         \ })
         End
 

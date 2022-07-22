@@ -13,7 +13,7 @@ function! lsp#utils#_has_signs() abort
     return s:has_signs
 endfunction
 
-let s:has_nvim_buf_highlight = exists('*nvim_buf_add_highlight')
+let s:has_nvim_buf_highlight = exists('*nvim_buf_add_highlight') && has('nvim')
 function! lsp#utils#_has_nvim_buf_highlight() abort
     return s:has_nvim_buf_highlight
 endfunction
@@ -444,6 +444,11 @@ function! lsp#utils#parse_command_options(params) abort
         let l:result[l:match[1]] = l:match[3]
     endfor
     return l:result
+endfunction
+
+function! lsp#utils#is_large_window(winid) abort
+    let l:buffer_size = line2byte(line('$', a:winid))
+    return g:lsp_max_buffer_size >= 0 && l:buffer_size >= g:lsp_max_buffer_size
 endfunction
 
 " polyfill for the neovim wait function

@@ -109,6 +109,15 @@ function! s:show_floating_window(event, managed_user_data) abort
     \     'maxwidth': float2nr(&columns * 0.4),
     \     'maxheight': float2nr(&lines * 0.4),
     \ })
+    let l:margin_right = &columns - 1 - (a:event.col + a:event.width + 1 + (a:event.scrollbar ? 1 : 0))
+    let l:margin_left = a:event.col - 3
+    if l:size.width < l:margin_right
+      " do nothing
+    elseif l:margin_left <= l:margin_right
+      let l:size.width = l:margin_right
+    else
+      let l:size.width = l:margin_left
+    endif
     let l:pos = s:compute_position(a:event, l:size)
     if empty(l:pos)
         call s:close_floating_window(v:true)
