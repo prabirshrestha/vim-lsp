@@ -95,7 +95,7 @@ function! lsp#get_server_names() abort
 endfunction
 
 function! lsp#get_server_info(server_name) abort
-    return s:servers[a:server_name]['server_info']
+    return get(get(s:servers, a:server_name, {}), 'server_info', {})
 endfunction
 
 function! lsp#get_server_root_uri(server_name) abort

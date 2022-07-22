@@ -54,6 +54,7 @@ function! s:on_complete_done() abort
   let s:context['complete_position'] = l:managed_user_data['complete_position']
   let s:context['server_name'] = l:managed_user_data['server_name']
   let s:context['completion_item'] = l:managed_user_data['completion_item']
+  let s:context['start_character'] = l:managed_user_data['start_character']
   call feedkeys(printf("\<C-r>=<SNR>%d_on_complete_done_after()\<CR>", s:SID()), 'n')
 endfunction
 
@@ -75,7 +76,7 @@ function! s:on_complete_done_after() abort
   let l:complete_position = s:context['complete_position']
   let l:server_name = s:context['server_name']
   let l:completion_item = s:context['completion_item']
-  let l:complete_start_character = l:done_position['character'] - strchars(l:completed_item['word'])
+  let l:start_character = s:context['start_character']
 
   " check the commit characters are <BS> or <C-w>.
   if strlen(getline('.')) < strlen(l:done_line)
@@ -106,8 +107,9 @@ function! s:on_complete_done_after() abort
   if l:is_expandable
     " At this timing, the cursor may have been moved by additionalTextEdit, so we use overflow information instead of textEdit itself.
     if type(get(l:completion_item, 'textEdit', v:null)) == type({})
-      let l:overflow_before = max([0, l:complete_start_character - l:completion_item['textEdit']['range']['start']['character']])
-      let l:overflow_after = max([0, l:completion_item['textEdit']['range']['end']['character'] - l:complete_position['character']])
+      let l:range = lsp#utils#text_edit#get_range(l:completion_item['textEdit'])
+      let l:overflow_before = max([0, l:start_character - l:range['start']['character']])
+      let l:overflow_after = max([0, l:range['end']['character'] - l:complete_position['character']])
       let l:text = l:completion_item['textEdit']['newText']
     else
       let l:overflow_before = 0
@@ -120,7 +122,7 @@ function! s:on_complete_done_after() abort
     let l:range = {
     \   'start': {
     \     'line': l:position['line'],
-    \     'character': l:position['character'] - (l:complete_position['character'] - l:complete_start_character) - l:overflow_before,
+    \     'character': l:position['character'] - (l:complete_position['character'] - l:start_character) - l:overflow_before,
     \   },
     \   'end': {
     \     'line': l:position['line'],
@@ -160,7 +162,8 @@ endfunction
 "
 function! s:is_expandable(done_line, done_position, complete_position, completion_item, completed_item) abort
   if get(a:completion_item, 'textEdit', v:null) isnot# v:null
-    if a:completion_item['textEdit']['range']['start']['line'] != a:completion_item['textEdit']['range']['end']['line']
+    let l:range = lsp#utils#text_edit#get_range(a:completion_item['textEdit'])
+    if l:range['start']['line'] != l:range['end']['line']
       return v:true
     endif
 
@@ -168,8 +171,8 @@ function! s:is_expandable(done_line, done_position, complete_position, completio
     let l:completed_before = strcharpart(a:done_line, 0, a:complete_position['character'])
     let l:completed_after = strcharpart(a:done_line, a:done_position['character'], strchars(a:done_line) - a:done_position['character'])
     let l:completed_line = l:completed_before . l:completed_after
-    let l:text_edit_before = strcharpart(l:completed_line, 0, a:completion_item['textEdit']['range']['start']['character'])
-    let l:text_edit_after = strcharpart(l:completed_line, a:completion_item['textEdit']['range']['end']['character'], strchars(l:completed_line) - a:completion_item['textEdit']['range']['end']['character'])
+    let l:text_edit_before = strcharpart(l:completed_line, 0, l:range['start']['character'])
+    let l:text_edit_after = strcharpart(l:completed_line, l:range['end']['character'], strchars(l:completed_line) - l:range['end']['character'])
     return a:done_line !=# l:text_edit_before . s:trim_unmeaning_tabstop(a:completion_item['textEdit']['newText']) . l:text_edit_after
   endif
   return s:get_completion_text(a:completion_item) !=# s:trim_unmeaning_tabstop(a:completed_item['word'])
