@@ -316,21 +316,22 @@ function! lsp#omni#get_vim_completion_items(options) abort
             if has_key(l:completion_item, 'filterText') && !empty(l:completion_item['filterText']) && matchstr(l:text_edit_new_text, '^' . l:refresh_pattern) ==# ''
                 " Use filterText as word.
                 let l:vim_complete_item['word'] = l:completion_item['filterText']
-                let l:start_characters += [l:default_start_character]
             else
                 " Use textEdit.newText as word.
-                let l:item_start_character = l:range['start']['character']
                 let l:vim_complete_item['word'] = l:text_edit_new_text
-                if l:item_start_character < l:default_start_character
-                    " Add already typed word. The typescript-language-server returns `[Symbol]` item for the line of `Hoo.|`. So we should add `.` (`.[Symbol]`) .
-                    let l:overlap_text = strcharpart(l:current_line, l:item_start_character, l:default_start_character - l:item_start_character)
-                    if stridx(l:vim_complete_item['word'], l:overlap_text) != 0
-                        let l:vim_complete_item['word'] = l:overlap_text . l:vim_complete_item['word']
-                    endif
-                endif
-                let l:start_character = min([l:item_start_character, l:start_character])
-                let l:start_characters += [l:item_start_character]
             endif
+
+            " Fix overlapped text if needed.
+            let l:item_start_character = l:range['start']['character']
+            if l:item_start_character < l:default_start_character
+                " Add already typed word. The typescript-language-server returns `[Symbol]` item for the line of `Hoo.|`. So we should add `.` (`.[Symbol]`) .
+                let l:overlap_text = strcharpart(l:current_line, l:item_start_character, l:default_start_character - l:item_start_character)
+                if stridx(l:vim_complete_item['word'], l:overlap_text) != 0
+                    let l:vim_complete_item['word'] = l:overlap_text . l:vim_complete_item['word']
+                endif
+            endif
+            let l:start_character = min([l:item_start_character, l:start_character])
+            let l:start_characters += [l:item_start_character]
         elseif has_key(l:completion_item, 'insertText') && !empty(l:completion_item['insertText'])
             let l:vim_complete_item['word'] = l:completion_item['insertText']
             let l:start_characters += [l:default_start_character]
