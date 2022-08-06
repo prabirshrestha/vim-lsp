@@ -481,7 +481,7 @@ function! s:handle_inlay_hint(server, type, bufnr, data) abort
         call lsp#utils#error('Failed to retrieve '. a:type . ' for ' . a:server . ': ' . lsp#client#error_message(a:data['response']))
     elseif !empty(a:data.response.result)
         for l:hint in a:data.response.result
-            let l:text = (get(l:hint, 'paddingLeft', v:false) ? ' ' : '') .. l:hint.label[0].value .. (get(l:hint, 'paddingRight', v:false) ? ' ' : '')
+            let l:text = (get(l:hint, 'paddingLeft', v:false) ? ' ' : '') . l:hint.label[0].value . (get(l:hint, 'paddingRight', v:false) ? ' ' : '')
             call prop_add(l:hint.position.line+1, l:hint.position.character+1, {'type': 'vim_lsp_inlay_hint', 'text': l:text, 'bufnr': a:bufnr})
         endfor
     endif
