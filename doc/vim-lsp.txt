@@ -1491,14 +1491,6 @@ lsp#scroll(count)                                             *lsp#scroll()*
 	nnoremap <buffer> <expr><c-f> lsp#scroll(+4)
 	nnoremap <buffer> <expr><c-d> lsp#scroll(-4)
 
-lsp#ui#vim#update_inlay_hints()            *lsp#ui#vim#update_inlay_hints()*
-
-    Update inlay hints in current buffer.
-
-lsp#ui#vim#clelar_inlay_hints()             *lsp#ui#vim#clear_inlay_hints()*
-
-    Clear inlay hints in current buffer.
-
 ==============================================================================
 Commands                                                  *vim-lsp-commands*
 
