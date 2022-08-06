@@ -69,6 +69,7 @@ function! lsp#enable() abort
     call lsp#internal#show_message#_enable()
     call lsp#internal#work_done_progress#_enable()
     call lsp#internal#completion#documentation#_enable()
+    call lsp#internal#inlay_hints#_enable()
     call s:register_events()
 endfunction
 

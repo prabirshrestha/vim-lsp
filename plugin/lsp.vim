@@ -72,6 +72,8 @@ let g:lsp_show_message_request_enabled = get(g:, 'lsp_show_message_request_enabl
 let g:lsp_show_message_log_level = get(g:, 'lsp_show_message_log_level', 'warning')
 let g:lsp_work_done_progress_enabled = get(g:, 'lsp_work_done_progress_enabled', 0)
 let g:lsp_untitled_buffer_enabled = get(g:, 'lsp_untitled_buffer_enabled', 1)
+let g:lsp_inlay_hints_enabled = get(g:, 'lsp_inlay_hints_enabled', 1)
+let g:lsp_inlay_hints_delay = get(g:, 'lsp_inlay_hints_delay', 350)
 
 let g:lsp_get_supported_capabilities = get(g:, 'lsp_get_supported_capabilities', [function('lsp#default_get_supported_capabilities')])
 
