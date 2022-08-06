@@ -1478,7 +1478,7 @@ lsp#get_progress()                       *lsp#get_progress()*
 	Type: |Number|
 	0 - 100 or not exist
 
-lsp#document_hover_preview_winid()		    *lsp#document_hover_preview_winid()*
+lsp#document_hover_preview_winid()      *lsp#document_hover_preview_winid()*
 
     Returns |windowid| of the current hover preview window or |v:null| if it does not
     exist.
@@ -1490,6 +1490,14 @@ lsp#scroll(count)                                             *lsp#scroll()*
     Example: >
 	nnoremap <buffer> <expr><c-f> lsp#scroll(+4)
 	nnoremap <buffer> <expr><c-d> lsp#scroll(-4)
+
+lsp#ui#vim#enable_inlay_hints()            *lsp#ui#vim#enable_inlay_hints()*
+
+    Enable inlay hints in current buffer.
+
+lsp#ui#vim#disable_inlay_hints()           *lsp#ui#vim#enable_inlay_hints()*
+
+    Disable inlay hints in current buffer.
 
 ==============================================================================
 Commands                                                  *vim-lsp-commands*
