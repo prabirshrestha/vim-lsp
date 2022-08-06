@@ -498,7 +498,7 @@ function! lsp#ui#vim#disable_inlay_hints() abort
 
     let l:bufnr = bufnr('%')
     for l:prop in prop_list(1, {'end_lnum': line('$'), 'types': ['vim_lsp_inlay_hint'], 'bufnr': l:bufnr})
-        call prop_remove({'id': prop.id})
+        call prop_remove({'id': l:prop.id})
     endfor
 endfunction
 
