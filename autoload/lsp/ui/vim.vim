@@ -482,14 +482,19 @@ function! s:handle_inlay_hint(server, type, bufnr, data) abort
     elseif !empty(a:data.response.result)
         for l:hint in a:data.response.result
             let l:text = (get(l:hint, 'paddingLeft', v:false) ? ' ' : '') . l:hint.label[0].value . (get(l:hint, 'paddingRight', v:false) ? ' ' : '')
-            call prop_add(l:hint.position.line+1, l:hint.position.character+1, {'type': 'vim_lsp_inlay_hint', 'text': l:text, 'bufnr': a:bufnr})
+            if l:hint.kind ==# 1
+                call prop_add(l:hint.position.line+1, l:hint.position.character+1, {'type': 'vim_lsp_inlay_hint_type', 'text': l:text, 'bufnr': a:bufnr})
+            elseif l:hint.kind ==# 2
+                call prop_add(l:hint.position.line+1, l:hint.position.character+1, {'type': 'vim_lsp_inlay_hint_parameter', 'text': l:text, 'bufnr': a:bufnr})
+            endif
         endfor
     endif
 endfunction
 
 function! s:ensure_inlay_hints() abort
     if index(prop_type_list(), 'vim_lsp_inlay_hint') == -1
-        call prop_type_add('vim_lsp_inlay_hint', { 'highlight': 'Error' })
+        call prop_type_add('vim_lsp_inlay_hint_type', { 'highlight': 'Label' })
+        call prop_type_add('vim_lsp_inlay_hint_parameter', { 'highlight': 'Todo' })
     endif
 endfunction
 
@@ -497,7 +502,10 @@ function! lsp#ui#vim#disable_inlay_hints() abort
     call s:ensure_inlay_hints()
 
     let l:bufnr = bufnr('%')
-    for l:prop in prop_list(1, {'end_lnum': line('$'), 'types': ['vim_lsp_inlay_hint'], 'bufnr': l:bufnr})
+    for l:prop in prop_list(1, {'end_lnum': line('$'), 'types': ['vim_lsp_inlay_hint_type'], 'bufnr': l:bufnr})
+        call prop_remove({'id': l:prop.id})
+    endfor
+    for l:prop in prop_list(1, {'end_lnum': line('$'), 'types': ['vim_lsp_inlay_hint_parameter'], 'bufnr': l:bufnr})
         call prop_remove({'id': l:prop.id})
     endfor
 endfunction
