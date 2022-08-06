@@ -498,7 +498,7 @@ function! s:ensure_inlay_hints() abort
     endif
 endfunction
 
-function! lsp#ui#vim#disable_inlay_hints() abort
+function! lsp#ui#vim#clear_inlay_hints() abort
     call s:ensure_inlay_hints()
 
     let l:bufnr = bufnr('%')
@@ -510,8 +510,8 @@ function! lsp#ui#vim#disable_inlay_hints() abort
     endfor
 endfunction
 
-function! lsp#ui#vim#enable_inlay_hints() abort
-    call lsp#ui#vim#disable_inlay_hints()
+function! lsp#ui#vim#update_inlay_hints() abort
+    call lsp#ui#vim#clear_inlay_hints()
 
     let l:bufnr = bufnr('%')
     let l:servers = filter(lsp#get_allowed_servers(), 'lsp#capabilities#has_inlay_hint_provider(v:val)')
