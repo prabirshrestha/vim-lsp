@@ -193,6 +193,6 @@ function! lsp#capabilities#has_completion_resolve_provider(server_name) abort
     return s:has_provider(a:server_name, 'completionProvider', 'resolveProvider')
 endfunction
 
-function! lsp#capabilities#has_inlay_hint(server_name) abort
+function! lsp#capabilities#has_inlay_hint_provider(server_name) abort
     return s:has_provider(a:server_name, 'inlayHintProvider')
 endfunction

@@ -540,6 +540,9 @@ function! lsp#default_get_supported_capabilities(server_info) abort
     \           'dynamicRegistration': v:false,
     \           'contentFormat': ['markdown', 'plaintext'],
     \       },
+    \       'inlayHint': {
+    \           'dynamicRegistration': v:false,
+    \       },
     \       'implementation': {
     \           'dynamicRegistration': v:false,
     \           'linkSupport' : v:true

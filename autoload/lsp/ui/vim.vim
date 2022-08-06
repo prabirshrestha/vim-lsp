@@ -471,3 +471,33 @@ function! s:hierarchy_item_to_vim(item, server) abort
         \ 'text': l:text,
         \ }
 endfunction
+
+function! s:handle_inlay_hint(server, data) abort
+    let g:hoge = a:data
+    echomsg string(a:data)
+    "call prop_add(prop.lnum, prop.col, #{ type: 'vim_lsp_inlay_hint', text: s:face[s:i % len(s:face)] })
+endfunction
+
+function! lsp#ui#vim#toggle_inlay_hints() abort
+    let l:enable = !get(b:, 'lsp_inlay_hints', 0)
+
+    if index(prop_type_list(), 'vim_lsp_inlay_hint') == -1
+        call prop_type_add('vim_lsp_inlay_hint', { 'highlight': 'Error' })
+    endif
+
+    for prop in prop_list(1, {'end_lnum': line('$'), 'types': ['vim_lsp_inlay_hint']})
+        call prop_remove({'id': prop.id})
+    endfor
+
+    let l:servers = filter(lsp#get_allowed_servers(), 'lsp#capabilities#has_inlay_hint_provider(v:val)')
+    for l:server in l:servers
+        call lsp#send_request(l:server, {
+            \ 'method': 'textDocument/inlayHint',
+            \ 'params': {
+            \   'textDocument': lsp#get_text_document_identifier(),
+            \   'range': {'start': {'line': 0, 'character': 0}, 'end': {'line': line('$')-1, 'character': len(getline(line('$')))}}
+            \ },
+            \ 'on_notification': function('s:handle_inlay_hint', [l:server]),
+            \ })
+    endfor
+endfunction
