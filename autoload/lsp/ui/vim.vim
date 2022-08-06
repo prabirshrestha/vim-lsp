@@ -472,23 +472,40 @@ function! s:hierarchy_item_to_vim(item, server) abort
         \ }
 endfunction
 
-function! s:handle_inlay_hint(server, data) abort
-    let g:hoge = a:data
-    echomsg string(a:data)
-    "call prop_add(prop.lnum, prop.col, #{ type: 'vim_lsp_inlay_hint', text: s:face[s:i % len(s:face)] })
+function! s:handle_inlay_hint(server, type, bufnr, data) abort
+    if lsp#client#is_error(a:data['response'])
+        call lsp#utils#error('Failed to retrieve '. a:type . ' for ' . a:server . ': ' . lsp#client#error_message(a:data['response']))
+        return
+    endif
+    if lsp#client#is_error(a:data['response']) || !has_key(a:data['response'], 'result')
+        call lsp#utils#error('Failed to retrieve '. a:type . ' for ' . a:server . ': ' . lsp#client#error_message(a:data['response']))
+    elseif !empty(a:data.response.result)
+        for l:hint in a:data.response.result
+            let l:text = (get(l:hint, 'paddingLeft', v:false) ? ' ' : '') .. l:hint.label[0].value .. (get(l:hint, 'paddingRight', v:false) ? ' ' : '')
+            call prop_add(l:hint.position.line+1, l:hint.position.character+1, {'type': 'vim_lsp_inlay_hint', 'text': l:text, 'bufnr': a:bufnr})
+        endfor
+    endif
 endfunction
 
-function! lsp#ui#vim#toggle_inlay_hints() abort
-    let l:enable = !get(b:, 'lsp_inlay_hints', 0)
-
+function! s:ensure_inlay_hints() abort
     if index(prop_type_list(), 'vim_lsp_inlay_hint') == -1
         call prop_type_add('vim_lsp_inlay_hint', { 'highlight': 'Error' })
     endif
+endfunction
 
-    for prop in prop_list(1, {'end_lnum': line('$'), 'types': ['vim_lsp_inlay_hint']})
+function! lsp#ui#vim#disable_inlay_hints() abort
+    call s:ensure_inlay_hints()
+
+    let l:bufnr = bufnr('%')
+    for l:prop in prop_list(1, {'end_lnum': line('$'), 'types': ['vim_lsp_inlay_hint'], 'bufnr': l:bufnr})
         call prop_remove({'id': prop.id})
     endfor
+endfunction
 
+function! lsp#ui#vim#enable_inlay_hints() abort
+    call lsp#ui#vim#disable_inlay_hints()
+
+    let l:bufnr = bufnr('%')
     let l:servers = filter(lsp#get_allowed_servers(), 'lsp#capabilities#has_inlay_hint_provider(v:val)')
     for l:server in l:servers
         call lsp#send_request(l:server, {
@@ -497,7 +514,7 @@ function! lsp#ui#vim#toggle_inlay_hints() abort
             \   'textDocument': lsp#get_text_document_identifier(),
             \   'range': {'start': {'line': 0, 'character': 0}, 'end': {'line': line('$')-1, 'character': len(getline(line('$')))}}
             \ },
-            \ 'on_notification': function('s:handle_inlay_hint', [l:server]),
+            \ 'on_notification': function('s:handle_inlay_hint', [l:server, 'inlayHints', l:bufnr]),
             \ })
     endfor
 endfunction
