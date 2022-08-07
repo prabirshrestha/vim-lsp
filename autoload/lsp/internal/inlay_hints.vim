@@ -1,4 +1,4 @@
-let s:use_vim_textprops = lsp#utils#_has_textprops() && !has('nvim')
+let s:use_vim_textprops = lsp#utils#_has_vim9textprops() && !has('nvim')
 
 function! s:set_inlay_hints(data) abort
     let l:bufnr = bufnr('%')
@@ -16,8 +16,14 @@ function! s:set_inlay_hints(data) abort
     endif
 
     for l:hint in l:hints
-        let l:text = (get(l:hint, 'paddingLeft', v:false) ? ' ' : '') . l:hint.label[0].value . (get(l:hint, 'paddingRight', v:false) ? ' ' : '')
-        if l:hint.kind ==# 1
+        let l:label = ''
+        if type(l:hint.label) == v:t_list
+            let l:label = join(map(copy(l:hint.label), {_,v -> v.value}), ' ')
+        else
+            let l:label = l:hint.label
+        endif
+        let l:text = (get(l:hint, 'paddingLeft', v:false) ? ' ' : '') . l:label . (get(l:hint, 'paddingRight', v:false) ? ' ' : '')
+        if !has_key(l:hint, 'kind') || l:hint.kind ==# 1
             call prop_add(l:hint.position.line+1, l:hint.position.character+1, {'type': 'vim_lsp_inlay_hint_type', 'text': l:text, 'bufnr': l:bufnr})
         elseif l:hint.kind ==# 2
             call prop_add(l:hint.position.line+1, l:hint.position.character+1, {'type': 'vim_lsp_inlay_hint_parameter', 'text': l:text, 'bufnr': l:bufnr})
