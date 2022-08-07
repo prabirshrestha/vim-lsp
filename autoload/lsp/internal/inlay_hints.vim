@@ -47,12 +47,8 @@ endfunction
 
 function! s:clear_inlay_hints() abort
     let l:bufnr = bufnr('%')
-    for l:prop in prop_list(1, {'end_lnum': line('$'), 'types': ['vim_lsp_inlay_hint_type'], 'bufnr': l:bufnr})
-        call prop_remove({'id': l:prop.id})
-    endfor
-    for l:prop in prop_list(1, {'end_lnum': line('$'), 'types': ['vim_lsp_inlay_hint_parameter'], 'bufnr': l:bufnr})
-        call prop_remove({'id': l:prop.id})
-    endfor
+    call prop_remove({'type': 'vim_lsp_inlay_hint_type', 'bufnr': l:bufnr})
+    call prop_remove({'type': 'vim_lsp_inlay_hint_parameter', 'bufnr': l:bufnr})
 endfunction
 
 function! s:send_inlay_hints_request() abort
