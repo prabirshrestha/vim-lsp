@@ -24,6 +24,11 @@ function! lsp#utils#_has_textprops() abort
     return s:has_textprops
 endfunction
 
+let s:has_vim9textprops = exists('*prop_add') && has('patch-9.0.0167')
+function! lsp#utils#_has_vim9textprops() abort
+    return s:has_vim9textprops
+endfunction
+
 let s:has_higlights = has('nvim') ? lsp#utils#_has_nvim_buf_highlight() : lsp#utils#_has_textprops()
 function! lsp#utils#_has_highlights() abort
     return s:has_higlights
