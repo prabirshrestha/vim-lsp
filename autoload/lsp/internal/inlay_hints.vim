@@ -15,9 +15,13 @@ function! s:set_inlay_hints(data) abort
         return
     endif
 
+    let l:not_curline = s:has_inlay_hints_mode('!curline')
     for l:hint in l:hints
+        if l:not_curline && l:hint.position.line+1 ==# line('.')
+            continue
+        endif
         let l:label = ''
-        if type(l:hint.label) == v:t_list
+        if type(l:hint.label) ==# v:t_list
             let l:label = join(map(copy(l:hint.label), {_,v -> v.value}), ', ')
         else
             let l:label = l:hint.label
@@ -32,7 +36,7 @@ function! s:set_inlay_hints(data) abort
 endfunction
 
 function! s:init_inlay_hints() abort
-    if index(prop_type_list(), 'vim_lsp_inlay_hint') == -1
+    if index(prop_type_list(), 'vim_lsp_inlay_hint') ==# -1
         call prop_type_add('vim_lsp_inlay_hint_type', { 'highlight': 'Label' })
         call prop_type_add('vim_lsp_inlay_hint_parameter', { 'highlight': 'Todo' })
     endif
@@ -51,6 +55,20 @@ function! s:clear_inlay_hints() abort
     call prop_remove({'type': 'vim_lsp_inlay_hint_parameter', 'bufnr': l:bufnr})
 endfunction
 
+function! s:has_inlay_hints_mode(value) abort
+    let l:m = get(g:, 'lsp_inlay_hints_mode', {})
+    if type(l:m) != v:t_dict | return v:false | endif
+    if mode() ==# 'i'
+        let l:a = get(l:m, 'insert', [])
+    elseif mode() ==# 'n'
+        let l:a = get(l:m, 'normal', [])
+    else
+        return v:false
+    endif
+    if type(l:a) != v:t_list | return v:false | endif
+    return index(l:a, a:value) != -1 ? v:true : v:false
+endfunction
+
 function! s:send_inlay_hints_request() abort
     let l:capability = 'lsp#capabilities#has_inlay_hint_provider(v:val)'
     let l:servers = filter(lsp#get_allowed_servers(), l:capability)
@@ -59,11 +77,16 @@ function! s:send_inlay_hints_request() abort
         return lsp#callbag#empty()
     endif
 
+    if s:has_inlay_hints_mode('curline')
+        let l:range = lsp#utils#range#get_range_curline()
+    else
+        let l:range = lsp#utils#range#get_range()
+    endif
     return lsp#request(l:servers[0], {
         \ 'method': 'textDocument/inlayHint',
         \ 'params': {
         \   'textDocument': lsp#get_text_document_identifier(),
-        \   'range': lsp#utils#range#get_range(),
+        \   'range': l:range,
         \  },
         \ })
 endfunction
