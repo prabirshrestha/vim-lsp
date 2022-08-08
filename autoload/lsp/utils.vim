@@ -4,7 +4,7 @@ function! lsp#utils#has_lua() abort
 endfunction
 
 let s:has_virtual_text = exists('*nvim_buf_set_virtual_text') && exists('*nvim_create_namespace')
-function! lsp#utils#_has_virtual_text() abort
+function! lsp#utils#_has_nvim_virtual_text() abort
     return s:has_virtual_text
 endfunction
 
@@ -25,7 +25,7 @@ function! lsp#utils#_has_textprops() abort
 endfunction
 
 let s:has_vim9textprops = exists('*prop_add') && has('patch-9.0.0167')
-function! lsp#utils#_has_vim9textprops() abort
+function! lsp#utils#_has_vim_virtual_text() abort
     return s:has_vim9textprops
 endfunction
 

@@ -1,4 +1,4 @@
-let s:use_vim_textprops = lsp#utils#_has_vim9textprops() && !has('nvim')
+let s:use_vim_textprops = lsp#utils#_has_vim_virtual_text() && !has('nvim')
 
 function! s:set_inlay_hints(data) abort
     let l:bufnr = bufnr('%')
