@@ -63,7 +63,7 @@ function! s:send_inlay_hints_request() abort
         \ 'method': 'textDocument/inlayHint',
         \ 'params': {
         \   'textDocument': lsp#get_text_document_identifier(),
-        \   'range': {'start': {'line': 0, 'character': 0}, 'end': {'line': line('$')-1, 'character': len(getline(line('$')))}}
+        \   'range': lsp#utils#range#get_range(),
         \  },
         \ })
 endfunction
