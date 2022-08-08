@@ -97,6 +97,8 @@ function! lsp#internal#inlay_hints#_enable() abort
 
     if !hlexists('lspInlayHintsType')
         highlight link lspInlayHintsType Label
+    endif
+    if !hlexists('lspInlayHintsParameter')
         highlight link lspInlayHintsParameter Todo
     endif
 
