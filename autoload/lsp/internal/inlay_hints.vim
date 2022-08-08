@@ -18,7 +18,7 @@ function! s:set_inlay_hints(data) abort
     for l:hint in l:hints
         let l:label = ''
         if type(l:hint.label) == v:t_list
-            let l:label = join(map(copy(l:hint.label), {_,v -> v.value}), ' ')
+            let l:label = join(map(copy(l:hint.label), {_,v -> v.value}), ', ')
         else
             let l:label = l:hint.label
         endif
