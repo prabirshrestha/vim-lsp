@@ -36,9 +36,9 @@ function! s:set_inlay_hints(data) abort
 endfunction
 
 function! s:init_inlay_hints() abort
-    if index(prop_type_list(), 'vim_lsp_inlay_hint') ==# -1
-        call prop_type_add('vim_lsp_inlay_hint_type', { 'highlight': 'Label' })
-        call prop_type_add('vim_lsp_inlay_hint_parameter', { 'highlight': 'Todo' })
+    if index(prop_type_list(), 'vim_lsp_inlay_hint_type') ==# -1
+        call prop_type_add('vim_lsp_inlay_hint_type', { 'highlight': 'lspInlayHintsType' })
+        call prop_type_add('vim_lsp_inlay_hint_parameter', { 'highlight': 'lspInlayHintsParameter' })
     endif
 endfunction
 
@@ -94,6 +94,11 @@ endfunction
 function! lsp#internal#inlay_hints#_enable() abort
     if !s:use_vim_textprops | return | endif
     if !g:lsp_inlay_hints_enabled | return | endif
+
+    if !hlexists('lspInlayHintsType')
+        highlight link lspInlayHintsType Label
+        highlight link lspInlayHintsParameter Todo
+    endif
 
     call s:init_inlay_hints()
     let s:Dispose = lsp#callbag#pipe(
