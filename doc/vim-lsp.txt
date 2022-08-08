@@ -743,6 +743,15 @@ g:lsp_inlay_hints_enabled
     Example: >
 	let g:lsp_inlay_hints_enabled = 1
 	let g:lsp_inlay_hints_enabled = 0
+<
+    To change the style of the inlay-hints, you can set or link the
+    `lspInlayHintsType` and `lspInlayHintsParameter` highlight group.
+
+    Example: >
+    highlight lspInlayHintsType ctermfg=red guifg=red
+    \ ctermbg=green guibg=green
+    highlight lspInlayHintsParameter ctermfg=red guifg=red
+    \ ctermbg=green guibg=green
 
 g:lsp_inlay_hints_delay
 					*g:lsp_inlay_hints_delay*
