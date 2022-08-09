@@ -342,16 +342,18 @@ let s:default_highlight_groups = {
     \ s:hl_group_prefix . 'Variable': 'Identifier',
     \ s:hl_group_prefix . 'Property': 'Identifier',
     \ s:hl_group_prefix . 'EnumMember': 'Constant',
-    \ s:hl_group_prefix . 'Events': 'Identifier',
+    \ s:hl_group_prefix . 'Event': 'Identifier',
     \ s:hl_group_prefix . 'Function': 'Function',
     \ s:hl_group_prefix . 'Method': 'Function',
+    \ s:hl_group_prefix . 'Macro': 'Macro',
     \ s:hl_group_prefix . 'Keyword': 'Keyword',
     \ s:hl_group_prefix . 'Modifier': 'Type',
     \ s:hl_group_prefix . 'Comment': 'Comment',
     \ s:hl_group_prefix . 'String': 'String',
     \ s:hl_group_prefix . 'Number': 'Number',
     \ s:hl_group_prefix . 'Regexp': 'String',
-    \ s:hl_group_prefix . 'Operator': 'Operator'
+    \ s:hl_group_prefix . 'Operator': 'Operator',
+    \ s:hl_group_prefix . 'Decorator': 'Macro'
 \ }
 
 function! s:get_hl_group(server, legend, token_idx, token_modifiers) abort
