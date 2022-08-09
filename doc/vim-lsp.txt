@@ -57,6 +57,8 @@ CONTENTS                                                  *vim-lsp-contents*
 			     |g:lsp_inlay_hints_enabled|
       g:lsp_inlay_hints_delay
 			     |g:lsp_inlay_hints_delay|
+      g:lsp_inlay_hints_mode
+			     |g:lsp_inlay_hints_mode|
       g:lsp_tree_incoming_prefix            |g:lsp_tree_incoming_prefix|
       g:lsp_format_sync_timeout             |g:lsp_format_sync_timeout|
       g:lsp_use_event_queue                 |g:lsp_use_event_queue|
@@ -764,6 +766,21 @@ g:lsp_inlay_hints_delay
     Example: >
 	let g:lsp_inlay_hints_delay = 200
 	let g:lsp_inlay_hints_delay = 1000
+>
+g:lsp_inlay_hints_mode
+					*g:lsp_inlay_hints_mode*
+    Type: |Dict|
+    Default: `{}`
+
+    This mode currently only include "curline" and "!curline".
+
+    Example: >
+	let g:lsp_inlay_hints_mode = {
+	\  'normal': ['curline'],
+	\}
+<
+    "curline" show hint only for current line. "!curline" show hints except
+    current line. Default show all hints.
 >
 g:lsp_tree_incoming_prefix                          *g:lsp_tree_incoming_prefix*
     Type: |String|
