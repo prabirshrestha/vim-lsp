@@ -214,7 +214,8 @@ function! s:handle_semantic_tokens_response(server, buf, result) abort
     let l:highlights = {}
     let l:legend = lsp#internal#semantic#get_legend(a:server)
     for l:token in s:decode_tokens(a:result['data'])
-        let l:highlights = s:add_highlight(l:highlights, a:server, l:legend, a:buf, l:token)
+        let [l:key, l:value] = s:add_highlight(a:server, l:legend, a:buf, l:token)
+        let l:highlights[l:key] = get(l:highlights, l:key, []) + l:value
     endfor
     call s:apply_highlights(a:server, a:buf, l:highlights)
 
@@ -244,7 +245,8 @@ function! s:handle_semantic_tokens_delta_response(server, buf, result) abort
     let l:highlights = {}
     let l:legend = lsp#internal#semantic#get_legend(a:server)
     for l:token in s:decode_tokens(l:localdata)
-        let l:highlights = s:add_highlight(l:highlights, a:server, l:legend, a:buf, l:token)
+        let [l:key, l:value] = s:add_highlight(a:server, l:legend, a:buf, l:token)
+        let l:highlights[l:key] = get(l:highlights, l:key, []) + l:value
     endfor
     call s:apply_highlights(a:server, a:buf, l:highlights)
 endfunction
@@ -289,7 +291,7 @@ function! s:clear_highlights(server, buf) abort
     endif
 endfunction
 
-function! s:add_highlight(highlights, server, legend, buf, token) abort
+function! s:add_highlight(server, legend, buf, token) abort
     let l:startpos = lsp#utils#position#lsp_to_vim(a:buf, a:token['pos'])
     let l:endpos = a:token['pos']
     let l:endpos['character'] = l:endpos['character'] + a:token['length']
@@ -297,16 +299,12 @@ function! s:add_highlight(highlights, server, legend, buf, token) abort
 
     if s:use_vim_textprops
         let l:textprop_name = s:get_textprop_type(a:server, a:legend, a:token['token_idx'], a:token['token_modifiers'])
-        let a:highlights[l:textprop_name] = get(a:highlights, l:textprop_name, [])
-                                        \ + [[l:startpos[0], l:startpos[1], l:endpos[0], l:endpos[1]]]
+         return [l:textprop_name, [[l:startpos[0], l:startpos[1], l:endpos[0], l:endpos[1]]]]
     elseif s:use_nvim_highlight
         let l:char = a:token['pos']['character']
         let l:hl_name = s:get_hl_group(a:server, a:legend, a:token['token_idx'], a:token['token_modifiers'])
-        let a:highlights[l:hl_name] = get(a:highlights, l:hl_name, [])
-                                      \ + [[l:startpos[0] - 1, l:startpos[1] - 1, l:endpos[1] - 1]]
+        return [l:hl_name, [[l:startpos[0] - 1, l:startpos[1] - 1, l:endpos[1] - 1]]]
     endif
-
-    return a:highlights
 endfunction
 
 function! s:apply_highlights(server, buf, highlights) abort
