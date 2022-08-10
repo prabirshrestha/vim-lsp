@@ -51,8 +51,8 @@ endfunction
 
 function! s:clear_inlay_hints() abort
     let l:bufnr = bufnr('%')
-    call prop_remove({'type': 'vim_lsp_inlay_hint_type', 'bufnr': l:bufnr})
-    call prop_remove({'type': 'vim_lsp_inlay_hint_parameter', 'bufnr': l:bufnr})
+    call prop_remove({'type': 'vim_lsp_inlay_hint_type', 'bufnr': l:bufnr, 'all': v:true})
+    call prop_remove({'type': 'vim_lsp_inlay_hint_parameter', 'bufnr': l:bufnr, 'all': v:true})
 endfunction
 
 function! s:has_inlay_hints_mode(value) abort
