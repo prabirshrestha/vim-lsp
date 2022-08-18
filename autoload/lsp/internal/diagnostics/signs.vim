@@ -135,8 +135,11 @@ function! s:place_signs(server, diagnostics_response, bufnr) abort
             let l:sign_priority = get(g:lsp_diagnostics_signs_priority_map,
                 \ a:server . '_' . l:sign_name, l:sign_priority)
             " pass 0 and let vim generate sign id
-            let l:sign_id = sign_place(0, s:sign_group, l:sign_name, a:bufnr,
-                \{ 'lnum': l:line, 'priority': l:sign_priority })
+            try
+                let l:sign_id = sign_place(0, s:sign_group, l:sign_name, a:bufnr,
+                    \{ 'lnum': l:line, 'priority': l:sign_priority })
+            catch
+            endtry
         endif
     endfor
 endfunction
