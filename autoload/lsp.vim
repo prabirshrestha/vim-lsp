@@ -581,7 +581,9 @@ function! lsp#default_get_supported_capabilities(server_info) abort
     \           'willSave': v:false,
     \           'willSaveWaitUntil': v:false,
     \       },
-    \       'typeHierarchy': v:false,
+    \       'typeHierarchy': {
+    \           'dynamicRegistration': v:false
+    \       },
     \       'typeDefinition': {
     \           'dynamicRegistration': v:false,
     \           'linkSupport' : v:true
