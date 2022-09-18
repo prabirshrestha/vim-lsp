@@ -748,7 +748,7 @@ g:lsp_inlay_hints_enabled
     Type: |Number|
     Default: `0`
 
-    Enables inlay-hints. Requires Vim9 with |virtualtext|.
+    Enables inlay-hints. Requires Vim9 with |virtual-text|.
     patch 9.0.0167 or newer.
 
     Example: >
