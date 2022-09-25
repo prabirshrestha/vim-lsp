@@ -34,6 +34,11 @@ function! lsp#utils#_has_highlights() abort
     return s:has_higlights
 endfunction
 
+let s:has_popup_menu = exists('*popup_menu')
+function! lsp#utils#_has_popup_menu() abort
+    return s:has_popup_menu
+endfunction
+
 function! lsp#utils#is_file_uri(uri) abort
     return stridx(a:uri, 'file:///') == 0
 endfunction

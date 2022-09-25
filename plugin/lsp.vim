@@ -74,6 +74,7 @@ let g:lsp_work_done_progress_enabled = get(g:, 'lsp_work_done_progress_enabled',
 let g:lsp_untitled_buffer_enabled = get(g:, 'lsp_untitled_buffer_enabled', 1)
 let g:lsp_inlay_hints_enabled = get(g:, 'lsp_inlay_hints_enabled', 0)
 let g:lsp_inlay_hints_delay = get(g:, 'lsp_inlay_hints_delay', 350)
+let g:lsp_code_action_ui = get(g:, 'lsp_code_action_ui', 'preview')
 
 let g:lsp_get_supported_capabilities = get(g:, 'lsp_get_supported_capabilities', [function('lsp#default_get_supported_capabilities')])
 
@@ -89,16 +90,14 @@ endif
 command! LspAddTreeCallHierarchyIncoming call lsp#ui#vim#add_tree_call_hierarchy_incoming()
 command! LspCallHierarchyIncoming call lsp#ui#vim#call_hierarchy_incoming({})
 command! LspCallHierarchyOutgoing call lsp#ui#vim#call_hierarchy_outgoing()
-command! -range -nargs=* -complete=customlist,lsp#ui#vim#code_action#complete LspCodeAction call lsp#ui#vim#code_action#do({
-      \   'sync': v:false,
-      \   'selection': <range> != 0,
-      \   'query': '<args>'
-      \ })
-command! -range -nargs=* -complete=customlist,lsp#ui#vim#code_action#complete LspCodeActionSync call lsp#ui#vim#code_action#do({
-      \   'sync': v:true,
-      \   'selection': <range> != 0,
-      \   'query': '<args>'
-      \ })
+command! -range -nargs=* -complete=customlist,lsp#ui#vim#code_action#complete LspCodeAction call lsp#ui#vim#code_action#do(
+            \ extend({ 'sync': v:false, 'selection': <range> != 0 }, lsp#utils#args#_parse(<q-args>, {
+            \   'ui': { 'type': type('') },
+            \ }, 'query')))
+command! -range -nargs=* -complete=customlist,lsp#ui#vim#code_action#complete LspCodeActionSync call lsp#ui#vim#code_action#do(
+            \ extend({ 'sync': v:true, 'selection': <range> != 0 }, lsp#utils#args#_parse(<q-args>, {
+            \   'ui': { 'type': type('') },
+            \ }, 'query')))
 command! LspCodeLens call lsp#ui#vim#code_lens#do({})
 command! LspDeclaration call lsp#ui#vim#declaration(0, <q-mods>)
 command! LspPeekDeclaration call lsp#ui#vim#declaration(1)
@@ -109,11 +108,11 @@ command! LspDocumentSymbolSearch call lsp#internal#document_symbol#search#do({})
 command! -nargs=? LspDocumentDiagnostics call lsp#internal#diagnostics#document_diagnostics_command#do(
             \ extend({}, lsp#utils#args#_parse(<q-args>, {
             \   'buffers': {'type': type('')},
-            \ })))
+            \ }, v:null)))
 command! -nargs=? -complete=customlist,lsp#utils#empty_complete LspHover call lsp#internal#document_hover#under_cursor#do(
             \ extend({}, lsp#utils#args#_parse(<q-args>, {
             \   'ui': { 'type': type('') },
-            \ })))
+            \ }, v:null)))
 command! -nargs=* LspNextError call lsp#internal#diagnostics#movement#_next_error(<f-args>)
 command! -nargs=* LspPreviousError call lsp#internal#diagnostics#movement#_previous_error(<f-args>)
 command! -nargs=* LspNextWarning call lsp#internal#diagnostics#movement#_next_warning(<f-args>)
@@ -132,13 +131,13 @@ command! -range -nargs=? LspDocumentFormatSync call lsp#internal#document_format
             \ extend({'bufnr': bufnr('%'), 'sync': 1 }, lsp#utils#args#_parse(<q-args>, {
             \   'timeout': {'type': type(0)},
             \   'sleep': {'type': type(0)},
-            \ })))
+            \ }, v:null)))
 command! -range LspDocumentRangeFormat call lsp#internal#document_range_formatting#format({ 'bufnr': bufnr('%') })
 command! -range -nargs=? LspDocumentRangeFormatSync call lsp#internal#document_range_formatting#format(
             \ extend({'bufnr': bufnr('%'), 'sync': 1 }, lsp#utils#args#_parse(<q-args>, {
             \   'timeout': {'type': type(0)},
             \   'sleep': {'type': type(0)},
-            \ })))
+            \ }, v:null)))
 command! LspImplementation call lsp#ui#vim#implementation(0, <q-mods>)
 command! LspPeekImplementation call lsp#ui#vim#implementation(1)
 command! -nargs=0 LspStatus call lsp#print_server_status()
@@ -153,7 +152,9 @@ command! -nargs=0 LspSemanticTokenModifiers echo lsp#internal#semantic#get_token
 
 nnoremap <silent> <plug>(lsp-call-hierarchy-incoming) :<c-u>call lsp#ui#vim#call_hierarchy_incoming({})<cr>
 nnoremap <silent> <plug>(lsp-call-hierarchy-outgoing) :<c-u>call lsp#ui#vim#call_hierarchy_outgoing()<cr>
-nnoremap <silent> <plug>(lsp-code-action) :<c-u>call lsp#ui#vim#code_action()<cr>
+nnoremap <silent> <plug>(lsp-code-action) :<c-u>call lsp#ui#vim#code_action({})<cr>
+nnoremap <silent> <plug>(lsp-code-action-float) :<c-u>call lsp#ui#vim#code_action({ 'ui': 'float' })<cr>
+nnoremap <silent> <plug>(lsp-code-action-preview) :<c-u>call lsp#ui#vim#code_action({ 'ui': 'preview' })<cr>
 nnoremap <silent> <plug>(lsp-code-lens) :<c-u>call lsp#ui#vim#code_lens()<cr>
 nnoremap <silent> <plug>(lsp-declaration) :<c-u>call lsp#ui#vim#declaration(0)<cr>
 nnoremap <silent> <plug>(lsp-peek-declaration) :<c-u>call lsp#ui#vim#declaration(1)<cr>
