@@ -30,11 +30,11 @@ function! health#lsp#check() abort
         call health#report_warn('no servers connected')
     endif
 
-    call health#report_start("server configuration")
     for l:k in sort(keys(l:server_status))
+        call health#report_start(printf('server configuration: %s', l:k))
         let l:report = l:server_status[l:k]
 
-        let l:msg = printf("**%s** configuration:\n", l:k)
+        let l:msg = "\t\n"
         let l:msg .= s:BuildConfigBlock('allowlist', l:report.info)
         let l:msg .= s:BuildConfigBlock('blocklist', l:report.info)
         let l:cfg = get(l:report.info, 'workspace_config', '')
@@ -51,9 +51,6 @@ function! health#lsp#check() abort
             endif
             let l:msg .= printf("### workspace_config\n```json\n%s\n```", l:cfg)
         endif
-        " Give some whitespace separation for readability. Unfortunately
-        " causes trailing whitespace.
-        let l:msg .= "\n"
         call health#report_info(l:msg)
     endfor
 endf
