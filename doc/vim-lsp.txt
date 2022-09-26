@@ -737,7 +737,7 @@ g:lsp_document_code_action_signs_delay
 g:lsp_inlay_hints_enabled
 				      *g:lsp_inlay_hints_enabled*
     Type: |Number|
-    Default: `1`
+    Default: `0`
 
     Enables inlay-hints. Requires Vim9 with |virtualtext|.
     patch 9.0.0167 or newer.
