@@ -42,7 +42,7 @@ endif
 
 function! lsp#internal#diagnostics#virtual_text#_enable() abort
     " don't even bother registering if the feature is disabled
-    if !lsp#utils#_has_virtual_text() | return | endif
+    if !lsp#utils#_has_nvim_virtual_text() | return | endif
     if !g:lsp_diagnostics_virtual_text_enabled | return | endif 
 
     if s:enabled | return | endif

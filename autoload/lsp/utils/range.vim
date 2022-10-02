@@ -70,3 +70,13 @@ function! lsp#utils#range#lsp_to_vim(bufnr, range) abort
 
     return l:position
 endfunction
+
+function! lsp#utils#range#get_range() abort
+    let l:char = lsp#utils#to_char('%', line('$'), col('$'))
+    return {'start': {'line': 0, 'character': 0}, 'end': {'line': line('$')-1, 'character': l:char}}
+endfunction
+
+function! lsp#utils#range#get_range_curline() abort
+    let l:char = lsp#utils#to_char('%', line('.'), col('$'))
+    return {'start': {'line': line('.')-1, 'character': 0}, 'end': {'line': line('.')-1, 'character': l:char}}
+endfunction
