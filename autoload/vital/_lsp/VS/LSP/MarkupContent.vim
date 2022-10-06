@@ -39,8 +39,9 @@ function! s:normalize(markup_content, ...) abort
       let l:normalized = '```' . a:markup_content.language . ' ' . l:normalized . ' ```'
     endif
   endif
+  let l:normalized = s:Text.normalize_eol(l:normalized)
   if l:option.compact
-    return s:_compact(l:normalized)
+    let l:normalized = s:_compact(l:normalized)
   endif
   return l:normalized
 endfunction
@@ -49,14 +50,11 @@ endfunction
 " _compact
 "
 function! s:_compact(string) abort
-  " normalize eol.
-  let l:string = s:Text.normalize_eol(a:string)
-
+  let l:string = a:string
   let l:string = substitute(l:string, "\\%(\\s\\|\n\\)*```\\s*\\(\\w\\+\\)\\%(\\s\\|\n\\)\\+", "\n\n```\\1 ", 'g')
   let l:string = substitute(l:string, "\\%(\\s\\|\n\\)\\+```\\%(\\s*\\%(\\%$\\|\n\\)\\)\\+", " ```\n\n", 'g')
   let l:string = substitute(l:string, "\\%^\\%(\\s\\|\n\\)*", '', 'g')
   let l:string = substitute(l:string, "\\%(\\s\\|\n\\)*\\%$", '', 'g')
-
   return l:string
 endfunction
 

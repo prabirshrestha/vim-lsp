@@ -69,6 +69,7 @@ CONTENTS                                                  *vim-lsp-contents*
       g:lsp_peek_alignment                  |g:lsp_peek_alignment|
       g:lsp_preview_max_width               |g:lsp_preview_max_width|
       g:lsp_preview_max_height              |g:lsp_preview_max_height|
+      g:lsp_preview_fixup_conceal           |g:lsp_preview_fixup_conceal|
       g:lsp_signature_help_enabled          |g:lsp_signature_help_enabled|
       g:lsp_fold_enabled                    |g:lsp_fold_enabled|
       g:lsp_hover_conceal                   |g:lsp_hover_conceal|
@@ -885,6 +886,14 @@ g:lsp_preview_max_height                         *g:lsp_preview_max_height*
 
     If positive, determines the maximum height of the preview window in
     characters. Use a value of `-1` to disable setting a maximum height.
+
+g:lsp_preview_fixup_conceal                   *g:lsp_preview_fixup_conceal*
+    Type: |Number|
+    Default: `0`
+
+    If negative, all markdown documents are not converted as compact format.
+    That's useful in vim. vim's popup doesn't shrink correctly if the
+    buffer content uses conceals.
 
 g:lsp_signature_help_enabled                *g:lsp_signature_help_enabled*
     Type: |Number|

@@ -53,6 +53,7 @@ let g:lsp_document_highlight_delay = get(g:, 'lsp_document_highlight_delay', 350
 let g:lsp_preview_float = get(g:, 'lsp_preview_float', 1)
 let g:lsp_preview_autoclose = get(g:, 'lsp_preview_autoclose', 1)
 let g:lsp_preview_doubletap = get(g:, 'lsp_preview_doubletap', [function('lsp#ui#vim#output#focuspreview')])
+let g:lsp_preview_fixup_conceal = get(g:, 'lsp_preview_fixup_conceal', 0)
 let g:lsp_peek_alignment = get(g:, 'lsp_peek_alignment', 'center')
 let g:lsp_preview_max_width = get(g:, 'lsp_preview_max_width', -1)
 let g:lsp_preview_max_height = get(g:, 'lsp_preview_max_height', -1)
