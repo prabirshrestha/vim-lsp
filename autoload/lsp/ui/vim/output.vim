@@ -435,7 +435,7 @@ function! lsp#ui#vim#output#append(data, lines, syntax_lines) abort
         if a:data.kind ==? 'markdown'
             call s:import_modules()
             let l:detail = s:MarkupContent.normalize(a:data.value, {
-            \     'compact': g:lsp_preview_fixup_conceal
+            \     'compact': !g:lsp_preview_fixup_conceal
             \ })
             call extend(a:lines, s:Text.split_by_eol(l:detail))
         else

@@ -190,7 +190,7 @@ function! s:get_contents(contents) abort
             if has_key(a:contents, 'kind')
                 if a:contents['kind'] ==? 'markdown'
                     let l:detail = s:MarkupContent.normalize(a:contents['value'], {
-                    \   'compact': g:lsp_preview_fixup_conceal
+                    \   'compact': !g:lsp_preview_fixup_conceal
                     \ })
                     return [l:detail]
                 else
@@ -198,7 +198,7 @@ function! s:get_contents(contents) abort
                 endif
             elseif has_key(a:contents, 'language')
                 let l:detail = s:MarkupContent.normalize(a:contents, {
-                \     'compact': g:lsp_preview_fixup_conceal
+                \     'compact': !g:lsp_preview_fixup_conceal
                 \ })
                 return [l:detail]
             else
