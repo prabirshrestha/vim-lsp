@@ -131,8 +131,11 @@ function! s:place_signs(server, diagnostics_response, bufnr) abort
         let l:line = lsp#utils#position#lsp_line_to_vim(a:bufnr, l:item['range']['start'])
 
         " Some language servers report an unexpected EOF one line past the end
-        if l:line == getbufinfo(a:bufnr)[0].linecount + 1
-            let l:line = l:line - 1
+        " key 'linecount' may be missing.
+        if has_key(getbufinfo(a:bufnr)[0], 'linecount')
+            if l:line == getbufinfo(a:bufnr)[0].linecount + 1
+                let l:line = l:line - 1
+            endif
         endif
 
         if has_key(l:item, 'severity') && !empty(l:item['severity'])
