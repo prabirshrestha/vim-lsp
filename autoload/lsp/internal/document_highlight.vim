@@ -183,20 +183,16 @@ function! s:in_reference(reference_list) abort
 endfunction
 
 function! s:init_reference_highlight(buf) abort
-    if !empty(getbufvar(a:buf, 'lsp_did_reference_setup'))
-        return
-    endif
-
     if s:use_vim_textprops
-        call prop_type_add('vim-lsp-reference-highlight', {
+        let l:props = {
             \   'bufnr': a:buf,
             \   'highlight': 'lspReference',
             \   'combine': v:true,
             \   'priority': lsp#internal#textprop#priority('document_highlight')
-            \ })
+            \ }
+        call prop_type_delete('vim-lsp-reference-highlight', l:props)
+        call prop_type_add('vim-lsp-reference-highlight', l:props)
     endif
-
-    call setbufvar(a:buf, 'lsp_did_reference_setup', 1)
 endfunction
 
 " Cyclically move between references by `offset` occurrences.

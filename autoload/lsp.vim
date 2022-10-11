@@ -69,6 +69,7 @@ function! lsp#enable() abort
     call lsp#internal#show_message#_enable()
     call lsp#internal#work_done_progress#_enable()
     call lsp#internal#completion#documentation#_enable()
+    call lsp#internal#inlay_hints#_enable()
     call s:register_events()
 endfunction
 
@@ -540,6 +541,9 @@ function! lsp#default_get_supported_capabilities(server_info) abort
     \           'dynamicRegistration': v:false,
     \           'contentFormat': ['markdown', 'plaintext'],
     \       },
+    \       'inlayHint': {
+    \           'dynamicRegistration': v:false,
+    \       },
     \       'implementation': {
     \           'dynamicRegistration': v:false,
     \           'linkSupport' : v:true
@@ -581,7 +585,9 @@ function! lsp#default_get_supported_capabilities(server_info) abort
     \           'willSave': v:false,
     \           'willSaveWaitUntil': v:false,
     \       },
-    \       'typeHierarchy': v:false,
+    \       'typeHierarchy': {
+    \           'dynamicRegistration': v:false
+    \       },
     \       'typeDefinition': {
     \           'dynamicRegistration': v:false,
     \           'linkSupport' : v:true

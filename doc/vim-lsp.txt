@@ -53,6 +53,12 @@ CONTENTS                                                  *vim-lsp-contents*
 			     |g:lsp_document_code_actions_signs_enabled|
       g:lsp_document_code_action_signs_delay
 			     |g:lsp_document_code_actions_signs_delay|
+      g:lsp_inlay_hints_enabled
+			     |g:lsp_inlay_hints_enabled|
+      g:lsp_inlay_hints_delay
+			     |g:lsp_inlay_hints_delay|
+      g:lsp_inlay_hints_mode
+			     |g:lsp_inlay_hints_mode|
       g:lsp_tree_incoming_prefix            |g:lsp_tree_incoming_prefix|
       g:lsp_format_sync_timeout             |g:lsp_format_sync_timeout|
       g:lsp_use_event_queue                 |g:lsp_use_event_queue|
@@ -727,6 +733,54 @@ g:lsp_document_code_action_signs_delay
     Example: >
 	let g:lsp_document_code_action_signs_delay = 200
 	let g:lsp_document_code_action_signs_delay = 1000
+>
+g:lsp_inlay_hints_enabled
+				      *g:lsp_inlay_hints_enabled*
+    Type: |Number|
+    Default: `0`
+
+    Enables inlay-hints. Requires Vim9 with |virtualtext|.
+    patch 9.0.0167 or newer.
+
+    Example: >
+	let g:lsp_inlay_hints_enabled = 1
+	let g:lsp_inlay_hints_enabled = 0
+<
+    To change the style of the inlay-hints, you can set or link the
+    `lspInlayHintsType` and `lspInlayHintsParameter` highlight group.
+
+    Example: >
+    highlight lspInlayHintsType ctermfg=red guifg=red
+    \ ctermbg=green guibg=green
+    highlight lspInlayHintsParameter ctermfg=red guifg=red
+    \ ctermbg=green guibg=green
+
+g:lsp_inlay_hints_delay
+					*g:lsp_inlay_hints_delay*
+    Type: |Number|
+    Default: `350`
+
+    Delay milliseconds to update inlay-hints. Requires
+    |g:lsp_inlay_hints_enabled|.
+
+    Example: >
+	let g:lsp_inlay_hints_delay = 200
+	let g:lsp_inlay_hints_delay = 1000
+>
+g:lsp_inlay_hints_mode
+					*g:lsp_inlay_hints_mode*
+    Type: |Dict|
+    Default: `{}`
+
+    This mode currently only include "curline" and "!curline".
+
+    Example: >
+	let g:lsp_inlay_hints_mode = {
+	\  'normal': ['curline'],
+	\}
+<
+    "curline" show hint only for current line. "!curline" show hints except
+    current line. Default show all hints.
 >
 g:lsp_tree_incoming_prefix                          *g:lsp_tree_incoming_prefix*
     Type: |String|
@@ -1478,7 +1532,7 @@ lsp#get_progress()                       *lsp#get_progress()*
 	Type: |Number|
 	0 - 100 or not exist
 
-lsp#document_hover_preview_winid()		    *lsp#document_hover_preview_winid()*
+lsp#document_hover_preview_winid()      *lsp#document_hover_preview_winid()*
 
     Returns |windowid| of the current hover preview window or |v:null| if it does not
     exist.

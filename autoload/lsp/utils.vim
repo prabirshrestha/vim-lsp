@@ -4,7 +4,7 @@ function! lsp#utils#has_lua() abort
 endfunction
 
 let s:has_virtual_text = exists('*nvim_buf_set_virtual_text') && exists('*nvim_create_namespace')
-function! lsp#utils#_has_virtual_text() abort
+function! lsp#utils#_has_nvim_virtual_text() abort
     return s:has_virtual_text
 endfunction
 
@@ -22,6 +22,11 @@ endfunction
 let s:has_textprops = exists('*prop_add') && has('patch-8.1.1035')
 function! lsp#utils#_has_textprops() abort
     return s:has_textprops
+endfunction
+
+let s:has_vim9textprops = exists('*prop_add') && has('patch-9.0.0178')
+function! lsp#utils#_has_vim_virtual_text() abort
+    return s:has_vim9textprops
 endfunction
 
 let s:has_higlights = has('nvim') ? lsp#utils#_has_nvim_buf_highlight() : lsp#utils#_has_textprops()
