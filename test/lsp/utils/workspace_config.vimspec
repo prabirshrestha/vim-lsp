@@ -1,0 +1,183 @@
+Describe lsp#utils#workspace_config
+
+    Describe lsp#utils#workspace_config#get
+        It should return the workspace config, when it is a dict
+            let l:name = 'Unit Test Server'
+
+            call lsp#register_server({
+                \     'name': l:name,
+                \     'workspace_config': {
+                \         'a': {
+                \             'a1': v:true,
+                \             'a2': {
+                \                 'a21': 'disabled',
+                \             },
+                \         },
+                \         'b': 'path/to/file',
+                \     }
+                \ })
+
+            let l:config = lsp#utils#workspace_config#get(l:name)
+
+            Assert Equals(l:config['a']['a1'], v:true)
+            Assert Equals(l:config['a']['a2']['a21'], 'disabled')
+            Assert Equals(l:config['b'], 'path/to/file')
+        end
+
+        It should return the workspace config, produced by a callback
+            let l:name = 'Unit Test Server'
+
+            let l:callResult = {}
+
+            call lsp#register_server({
+                \     'name': l:name,
+                \     'workspace_config': {server_info->l:callResult},
+                \ })
+
+            let l:config = lsp#utils#workspace_config#get(l:name)
+            Assert Equals(l:config, {})
+
+            let l:callResult = {
+                \     'a': {
+                \         'a1': v:true,
+                \         'a2': {
+                \             'a21': 'disabled',
+                \         },
+                \     },
+                \     'b': 'path/to/file'
+                \ }
+
+            let l:config = lsp#utils#workspace_config#get(l:name)
+            Assert Equals(l:config['a']['a1'], v:true)
+            Assert Equals(l:config['a']['a2']['a21'], 'disabled')
+            Assert Equals(l:config['b'], 'path/to/file')
+        end
+    End
+
+    Describe lsp#utils#workspace_config#project
+        It should return a projection of a dictionary
+            let l:config = {
+                \     'a': {
+                \         'a1': v:true,
+                \         'a2': {
+                \             'a21': 'disabled',
+                \         },
+                \     },
+                \     'b': 'path/to/file',
+                \ }
+
+            let l:config_a_a1 = lsp#utils#workspace_config#projection(
+                \     l:config,
+                \     { 'section': 'a.a1' },
+                \ )
+            let l:config_a_a2_a21 = lsp#utils#workspace_config#projection(
+                \     l:config,
+                \     { 'section': 'a.a2.a21' },
+                \ )
+            let l:config_b = lsp#utils#workspace_config#projection(
+                \     l:config,
+                \     { 'section': 'b' },
+                \ )
+            let l:config_c = lsp#utils#workspace_config#projection(
+                \     l:config,
+                \     { 'section': 'c' },
+                \ )
+
+            Assert Equals(l:config_a_a1, v:true)
+            Assert Equals(l:config_a_a2_a21, 'disabled')
+            Assert Equals(l:config_b, 'path/to/file')
+            Assert Equals(l:config_c, v:null)
+        end
+    End
+
+    Describe lsp#utils#workspace_config#get_value
+        It should return a projection of the workspace config, when it is a dict
+            let l:name = 'Unit Test Server'
+
+            call lsp#register_server({
+                \     'name': l:name,
+                \     'workspace_config': {
+                \         'a': {
+                \             'a1': v:true,
+                \             'a2': {
+                \                 'a21': 'disabled',
+                \             },
+                \          },
+                \          'b': "path/to/file",
+                \     }
+                \ })
+
+            let l:config_a_a1 = lsp#utils#workspace_config#get_value(
+                \     l:name,
+                \     { 'section': 'a.a1' },
+                \ )
+            let l:config_a_a2_a21 = lsp#utils#workspace_config#get_value(
+                \     l:name,
+                \     { 'section': 'a.a2.a21' },
+                \ )
+            let l:config_b = lsp#utils#workspace_config#get_value(
+                \     l:name,
+                \     { 'section': 'b' },
+                \ )
+            let l:config_c = lsp#utils#workspace_config#get_value(
+                \     l:name,
+                \     { 'section': 'c' },
+                \ )
+
+            Assert Equals(l:config_a_a1, v:true)
+            Assert Equals(l:config_a_a2_a21, 'disabled')
+            Assert Equals(l:config_b, 'path/to/file')
+            Assert Equals(l:config_c, v:null)
+        end
+
+        It should return a projection of the workspace config, produced by a callback
+            let l:name = 'Unit Test Server'
+
+            let l:callResult = {}
+
+            call lsp#register_server({
+                \     'name': l:name,
+                \     'workspace_config': {server_info->l:callResult},
+                \ })
+
+            let l:config = lsp#utils#workspace_config#get_value(
+                \     l:name,
+                \     { 'section': '' },
+                \ )
+            Assert Equals(l:config, {})
+
+            let l:callResult = {
+                \     'a': {
+                \         'a1': v:true,
+                \         'a2': {
+                \             'a21': 'disabled',
+                \         },
+                \      },
+                \      'b': "path/to/file",
+                \ }
+
+            let l:config_a_a1 = lsp#utils#workspace_config#get_value(
+                \     l:name,
+                \     { 'section': 'a.a1' },
+                \ )
+            let l:config_a_a2_a21 = lsp#utils#workspace_config#get_value(
+                \     l:name,
+                \     { 'section': 'a.a2.a21' },
+                \ )
+            let l:config_b = lsp#utils#workspace_config#get_value(
+                \     l:name,
+                \     { 'section': 'b' },
+                \ )
+            let l:config_c = lsp#utils#workspace_config#get_value(
+                \     l:name,
+                \     { 'section': 'c' },
+                \ )
+
+            Assert Equals(l:config_a_a1, v:true)
+            Assert Equals(l:config_a_a2_a21, 'disabled')
+            Assert Equals(l:config_b, 'path/to/file')
+            Assert Equals(l:config_c, v:null)
+        end
+    End
+End
+
