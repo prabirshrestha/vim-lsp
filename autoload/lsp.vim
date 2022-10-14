@@ -984,6 +984,24 @@ function! lsp#get_allowed_servers(...) abort
             endfor
         endif
 
+        if !l:blocked && !empty(@%)
+            let l:curpath = fnamemodify(@%, ':p')
+            for l:pattern in get(l:server_info, 'blockpaths', [])
+                if match(l:curpath, l:pattern) != -1
+                    let l:blocked = 1
+                    break
+                endif
+            endfor
+            let l:allowed = !has_key(l:server_info, 'allowpaths')
+            for l:pattern in get(l:server_info, 'allowpaths', [])
+                if match(l:curpath, l:pattern) != -1
+                    let l:allowed = 1
+                    break
+                endif
+            endfor
+            let l:blocked = l:blocked || !l:allowed
+        endif
+
         if l:blocked
             continue
         endif
