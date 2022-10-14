@@ -1,0 +1,26 @@
+Describe lsp#utils#workspace_config
+
+    Describe lsp#utils#workspace_config#get
+        It should return the registered workspace config
+            lsp#register_server({
+                \ 'name': 'Unit Test Server',
+                \ 'workspace_config': {
+                \     'a': {
+                \         'a1': v:true,
+                \         'a2': {
+                \             'a21': 'disabled'
+                \         },
+                \      },
+                \      'b': "path/to/file"
+                \ }
+                \ })
+
+            let l:config = lsp#utils#workspace_config#get('Unit Test Server')
+
+            Assert Equals(l:config['a']['a1'], v:true)
+            Assert Equals(l:config['a']['a2']['a21'], 'disabled')
+            Assert Equals(l:config['b'], 'path/to/file')
+        end
+    End
+End
+
