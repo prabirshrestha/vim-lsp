@@ -213,6 +213,7 @@ function! s:register_events() abort
         autocmd BufReadPost * call s:on_text_document_did_open()
         autocmd BufWritePost * call s:on_text_document_did_save()
         autocmd BufWinLeave * call s:on_text_document_did_close()
+        autocmd BufUnload * call s:on_buf_unload(bufnr(expand('<afile>')))
         autocmd BufWipeout * call s:on_buf_wipeout(expand('<afile>'))
         autocmd InsertLeave * call s:on_text_document_did_change()
         autocmd TextChanged * call s:on_text_document_did_change()
@@ -344,6 +345,23 @@ function! s:update_file_content(buf, server_name, new) abort
     endif
     call lsp#log('s:update_file_content()', a:buf)
     let s:file_content[a:buf][a:server_name] = a:new
+endfunction
+
+function! s:on_buf_unload(buf) abort
+    let l:path = lsp#utils#get_buffer_uri(a:buf)
+    for l:server_name in lsp#get_allowed_servers(a:buf)
+        if has_key(s:servers[l:server_name]['buffers'], l:path)
+            call s:send_notification(l:server_name, {
+                \   'method': 'textDocument/didClose',
+                \   'params': {
+                \       'textDocument': {
+                \           'uri': l:path
+                \       },
+                \   },
+                \ })
+            call remove(s:servers[l:server_name]['buffers'], l:path)
+        endif
+    endfor
 endfunction
 
 function! s:on_buf_wipeout(buf) abort
