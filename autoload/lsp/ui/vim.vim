@@ -331,12 +331,12 @@ function! s:handle_text_edit(server, last_command_id, type, data) abort
     redraw | echo 'Document formatted'
 endfunction
 
-function! lsp#ui#vim#code_action() abort
-    call lsp#ui#vim#code_action#do({
+function! lsp#ui#vim#code_action(opts) abort
+    call lsp#ui#vim#code_action#do(extend({
         \   'sync': v:false,
         \   'selection': v:false,
         \   'query': '',
-        \ })
+        \ }, a:opts))
 endfunction
 
 function! lsp#ui#vim#code_lens() abort
