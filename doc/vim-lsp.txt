@@ -1873,6 +1873,8 @@ Available plug mappings are following:
   nnoremap <plug>(lsp-call-hierarchy-incoming)
   nnoremap <plug>(lsp-call-hierarchy-outgoing)
   nnoremap <plug>(lsp-code-action)
+  nnoremap <plug>(lsp-code-action-float)
+  nnoremap <plug>(lsp-code-action-preview)
   nnoremap <plug>(lsp-code-lens)
   nnoremap <plug>(lsp-declaration)
   nnoremap <plug>(lsp-peek-declaration)
