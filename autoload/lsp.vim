@@ -551,6 +551,9 @@ function! lsp#default_get_supported_capabilities(server_info) abort
     \           'dynamicRegistration': v:false,
     \           'linkSupport' : v:true
     \       },
+    \       'publishDiagnostics': {
+    \           'relatedInformation': v:true,
+    \       },
     \       'rangeFormatting': {
     \           'dynamicRegistration': v:false,
     \       },
@@ -586,9 +589,6 @@ function! lsp#default_get_supported_capabilities(server_info) abort
     \       'signatureHelp': {
     \           'relatedInformation': v:true,
     \       },
-    \       'publishDiagnostics': {
-    \           'relatedInformation': v:true,
-    \       },
     \       'symbol': {
     \           'relatedInformation': v:true,
     \       },
@@ -598,12 +598,12 @@ function! lsp#default_get_supported_capabilities(server_info) abort
     \           'willSave': v:false,
     \           'willSaveWaitUntil': v:false,
     \       },
-    \       'typeHierarchy': {
-    \           'dynamicRegistration': v:false
-    \       },
     \       'typeDefinition': {
     \           'dynamicRegistration': v:false,
     \           'linkSupport' : v:true
+    \       },
+    \       'typeHierarchy': {
+    \           'dynamicRegistration': v:false
     \       },
     \   },
     \   'window': {
