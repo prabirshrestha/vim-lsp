@@ -484,6 +484,9 @@ function! lsp#default_get_supported_capabilities(server_info) abort
     " Sorted alphabetically
     return {
     \   'textDocument': {
+    \       'callHierarchy': {
+    \           'dynamicRegistration': v:true,
+    \       },
     \       'codeAction': {
     \         'dynamicRegistration': v:false,
     \         'codeActionLiteralSupport': {
@@ -554,6 +557,10 @@ function! lsp#default_get_supported_capabilities(server_info) abort
     \       'references': {
     \           'dynamicRegistration': v:false,
     \       },
+    \       'rename': {
+    \           'dynamicRegistration': v:true,
+    \           'prepareSupport': v:true
+    \       },
     \       'semanticTokens': {
     \           'dynamicRegistration': v:false,
     \           'requests': {
@@ -576,7 +583,13 @@ function! lsp#default_get_supported_capabilities(server_info) abort
     \           'multilineTokenSupport': v:false,
     \           'serverCancelSupport': v:false
     \       },
+    \       'signatureHelp': {
+    \           'relatedInformation': v:true,
+    \       },
     \       'publishDiagnostics': {
+    \           'relatedInformation': v:true,
+    \       },
+    \       'symbol': {
     \           'relatedInformation': v:true,
     \       },
     \       'synchronization': {
