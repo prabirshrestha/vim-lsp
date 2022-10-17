@@ -217,19 +217,19 @@ vim-lsp doesn't ship with any language servers. The user is responsible for
 configuring the language servers correctly.
 
 Here is an example of configuring the python language server protocol based
-on pyls (https://github.com/palantir/python-language-server)
+on pylsp (https://github.com/python-lsp/python-lsp-server)
 
 1. Make sure the language server is available locally in the machine.
    For python, pip package manager can be used to install the language server.
 >
-	pip install python-language-server
+	pip install python-lsp-server
 
 2. Register the language server in your .vimrc
 >
-	if (executable('pyls'))
+	if (executable('pylsp'))
 	    au User lsp_setup call lsp#register_server({
-		\ 'name': 'pyls',
-		\ 'cmd': {server_info->['pyls']},
+		\ 'name': 'pylsp',
+		\ 'cmd': {server_info->['pylsp']},
 		\ 'allowlist': ['python']
 		\ })
 	endif
@@ -1085,7 +1085,7 @@ Used to register the language server with vim-lsp. This method takes
 one parameter which is a vim |dict| and is referred to as |vim-lsp-server_info|
 
     Example: >
-	if (executable('pyls'))
+	if (executable('pylsp'))
 	    au User lsp_setup call lsp#register_server({
 		\ 'name': 'name-of-server',
 		\ 'cmd': {server_info->['server-exectuable']},
@@ -1137,7 +1137,7 @@ The vim |dict| containing information about the server.
     can be determined statically and |vim-lsp-server_info| is not necessary.
 
     Example: >
-	'cmd': ['pyls']
+	'cmd': ['pylsp']
 <
     Function can be complex based on custom requirements.
     For example:
@@ -1190,7 +1190,7 @@ The vim |dict| containing information about the server.
     initialization. Configuration settings are language-server specific.
 
     Example: >
-	'workspace_config': {'pyls': {'plugins': \
+	'workspace_config': {'pylsp': {'plugins': \
 		{'pydocstyle': {'enabled': v:true}}}}
 <
   * languageId:

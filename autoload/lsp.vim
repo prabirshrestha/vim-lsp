@@ -14,7 +14,7 @@ let s:notification_callbacks = [] " { name, callback }
 "        "bingo": [ "first-line", "next-line", ... ]
 "      },
 "      2: {
-"        "pyls": [ "first-line", "next-line", ... ]
+"        "pylsp": [ "first-line", "next-line", ... ]
 "      }
 "    }
 let s:file_content = {}
