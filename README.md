@@ -18,11 +18,11 @@ use vim compiled with lua or neovim v0.4.0+
 ## Registering servers
 
 ```viml
-if executable('pyls')
-    " pip install python-language-server
+if executable('pylsp')
+    " pip install python-lsp-server
     au User lsp_setup call lsp#register_server({
-        \ 'name': 'pyls',
-        \ 'cmd': {server_info->['pyls']},
+        \ 'name': 'pylsp',
+        \ 'cmd': {server_info->['pylsp']},
         \ 'allowlist': ['python'],
         \ })
 endif
