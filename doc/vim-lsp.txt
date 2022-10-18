@@ -1091,6 +1091,8 @@ one parameter which is a vim |dict| and is referred to as |vim-lsp-server_info|
 		\ 'cmd': {server_info->['server-exectuable']},
 		\ 'allowlist': ['filetype to allowlist'],
 		\ 'blocklist': ['filetype to blocklist'],
+		\ 'allowpaths': ['regexp for allowed files'],
+		\ 'blockpaths': ['regexp for blocked files'],
 		\ 'config': {},
 		\ 'workspace_config': {'param': {'enabled': v:true}},
 		\ 'languageId': {server_info->'python'},
@@ -1112,6 +1114,8 @@ The vim |dict| containing information about the server.
 	'cmd': {server_info->['server_executable']},
 	'allowlist': ['filetype'],
 	'blocklist': ['filetype'],
+	'allowpaths': ['regexp'],
+	'blockpaths': ['regexp'],
 	'config': {},
 	'workspace_config': {},
 	'languageId': {server_info->'filetype'},
@@ -1184,6 +1188,28 @@ The vim |dict| containing information about the server.
 	'allowlist': ['*']
 	'blocklist': ['javascript', 'typescript']
 <
+ * allowpaths:
+    optional
+    String array of |regexp| patterns for absolute file paths that should have
+    the language server enabled.  allowpaths are consulted only when file
+    is enabled by the allowlist and blocklist rules for its filetype.
+
+    Example: >
+	'allowpaths': ['^/home/user/Code/']
+<
+    '*' is treated as matching every file.
+
+ * blockpaths:
+    optional
+    String array of |regexp| patterns for absolute file paths that should not
+    run the language server.  The blockpaths rule has priority when both
+    allowpaths and blockpaths match active file.
+
+    Example: >
+	'blockpaths': ['^/home/user/Code/project1/']
+<
+    '*' is treated as matching every file.
+
   * workspace_config:
     optional vim |dict|
     Used to pass workspace configuration to the server after
