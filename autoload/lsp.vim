@@ -562,7 +562,8 @@ function! lsp#default_get_supported_capabilities(server_info) abort
     \       },
     \       'rename': {
     \           'dynamicRegistration': v:false,
-    \           'prepareSupport': v:true
+    \           'prepareSupport': v:true,
+    \           'prepareSupportDefaultBehavior': 1
     \       },
     \       'semanticTokens': {
     \           'dynamicRegistration': v:false,
