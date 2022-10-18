@@ -485,7 +485,7 @@ function! lsp#default_get_supported_capabilities(server_info) abort
     return {
     \   'textDocument': {
     \       'callHierarchy': {
-    \           'dynamicRegistration': v:true,
+    \           'dynamicRegistration': v:false,
     \       },
     \       'codeAction': {
     \         'dynamicRegistration': v:false,
@@ -561,7 +561,7 @@ function! lsp#default_get_supported_capabilities(server_info) abort
     \           'dynamicRegistration': v:false,
     \       },
     \       'rename': {
-    \           'dynamicRegistration': v:true,
+    \           'dynamicRegistration': v:false,
     \           'prepareSupport': v:true
     \       },
     \       'semanticTokens': {
@@ -587,10 +587,10 @@ function! lsp#default_get_supported_capabilities(server_info) abort
     \           'serverCancelSupport': v:false
     \       },
     \       'signatureHelp': {
-    \           'relatedInformation': v:true,
+    \           'dynamicRegistration': v:false,
     \       },
     \       'symbol': {
-    \           'relatedInformation': v:true,
+    \           'dynamicRegistration': v:false,
     \       },
     \       'synchronization': {
     \           'didSave': v:true,
