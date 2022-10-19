@@ -484,6 +484,9 @@ function! lsp#default_get_supported_capabilities(server_info) abort
     " Sorted alphabetically
     return {
     \   'textDocument': {
+    \       'callHierarchy': {
+    \           'dynamicRegistration': v:false,
+    \       },
     \       'codeAction': {
     \         'dynamicRegistration': v:false,
     \         'codeActionLiteralSupport': {
@@ -548,11 +551,19 @@ function! lsp#default_get_supported_capabilities(server_info) abort
     \           'dynamicRegistration': v:false,
     \           'linkSupport' : v:true
     \       },
+    \       'publishDiagnostics': {
+    \           'relatedInformation': v:true,
+    \       },
     \       'rangeFormatting': {
     \           'dynamicRegistration': v:false,
     \       },
     \       'references': {
     \           'dynamicRegistration': v:false,
+    \       },
+    \       'rename': {
+    \           'dynamicRegistration': v:false,
+    \           'prepareSupport': v:true,
+    \           'prepareSupportDefaultBehavior': 1
     \       },
     \       'semanticTokens': {
     \           'dynamicRegistration': v:false,
@@ -576,8 +587,11 @@ function! lsp#default_get_supported_capabilities(server_info) abort
     \           'multilineTokenSupport': v:false,
     \           'serverCancelSupport': v:false
     \       },
-    \       'publishDiagnostics': {
-    \           'relatedInformation': v:true,
+    \       'signatureHelp': {
+    \           'dynamicRegistration': v:false,
+    \       },
+    \       'symbol': {
+    \           'dynamicRegistration': v:false,
     \       },
     \       'synchronization': {
     \           'didSave': v:true,
@@ -585,12 +599,12 @@ function! lsp#default_get_supported_capabilities(server_info) abort
     \           'willSave': v:false,
     \           'willSaveWaitUntil': v:false,
     \       },
-    \       'typeHierarchy': {
-    \           'dynamicRegistration': v:false
-    \       },
     \       'typeDefinition': {
     \           'dynamicRegistration': v:false,
     \           'linkSupport' : v:true
+    \       },
+    \       'typeHierarchy': {
+    \           'dynamicRegistration': v:false
     \       },
     \   },
     \   'window': {
