@@ -4,7 +4,6 @@ set cpoptions&vim
 let s:clients = {} " { client_id: ctx }
 
 " Vars used by native lsp
-let s:has_native_lsp = !has('nvim') && has("patch-8.2.4780")
 let s:jobidseq = 0
 
 function! s:create_context(client_id, opts) abort
@@ -313,7 +312,7 @@ endfunction
 " public apis {{{
 
 function! lsp#client#start(opts) abort
-    if g:lsp_use_native_client && s:has_native_lsp
+    if g:lsp_use_native_client && lsp#utils#has_native_lsp_client()
         if has_key(a:opts, 'cmd')
             let l:cbctx = {}
             let l:jobopt = { 'in_mode': 'lsp', 'out_mode': 'lsp', 'noblock': 1,
@@ -335,13 +334,15 @@ function! lsp#client#start(opts) abort
             return l:jobid
         elseif has_key(a:opts, 'tcp')
             " add support for tcp
+            call lsp#log('tcp not supported when using native lsp client')
+            return -1
         endif
     endif
     return s:lsp_start(a:opts)
 endfunction
 
 function! lsp#client#stop(client_id) abort
-    if g:lsp_use_native_client && s:has_native_lsp
+    if g:lsp_use_native_client && lsp#utils#has_native_lsp_client()
         echom 'not implemented: lsp#client#stop'
        let l:ctx = get(s:clients, a:client_id, {})
        if empty(l:ctx) | return | endif
@@ -352,7 +353,7 @@ function! lsp#client#stop(client_id) abort
 endfunction
 
 function! lsp#client#send_request(client_id, opts) abort
-    if g:lsp_use_native_client && s:has_native_lsp
+    if g:lsp_use_native_client && lsp#utils#has_native_lsp_client()
         let l:ctx = get(s:clients, a:client_id, {})
         if empty(l:ctx) | return -1 | endif
         let l:request = {}
@@ -400,7 +401,7 @@ function! s:on_response_native(ctx, request, channel, response) abort
 endfunction
 
 function! lsp#client#send_notification(client_id, opts) abort
-    if g:lsp_use_native_client && s:has_native_lsp
+    if g:lsp_use_native_client && lsp#utils#has_native_lsp_client()
         let l:ctx = get(s:clients, a:client_id, {})
         if empty(l:ctx) | return -1 | endif
         let l:request = {}
@@ -414,7 +415,7 @@ function! lsp#client#send_notification(client_id, opts) abort
 endfunction
 
 function! lsp#client#send_response(client_id, opts) abort
-    if g:lsp_use_native_client && s:has_native_lsp
+    if g:lsp_use_native_client && lsp#utils#has_native_lsp_client()
         let l:ctx = get(s:clients, a:client_id, {})
         if empty(l:ctx) | return -1 | endif
         if has_key(a:opts, 'id') | let l:response['id'] = a:opts['method'] | endif
