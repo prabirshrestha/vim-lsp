@@ -77,7 +77,6 @@ let g:lsp_inlay_hints_enabled = get(g:, 'lsp_inlay_hints_enabled', 0)
 let g:lsp_inlay_hints_delay = get(g:, 'lsp_inlay_hints_delay', 350)
 let g:lsp_code_action_ui = get(g:, 'lsp_code_action_ui', 'preview')
 
-
 let g:lsp_get_supported_capabilities = get(g:, 'lsp_get_supported_capabilities', [function('lsp#default_get_supported_capabilities')])
 
 let g:lsp_experimental_workspace_folders = get(g:, 'lsp_experimental_workspace_folders', 0)

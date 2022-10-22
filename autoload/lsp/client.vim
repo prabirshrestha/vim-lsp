@@ -299,10 +299,10 @@ endfunction
 
 function! s:native_err_cb(cbctx, channel, response) abort
     if !has_key(a:cbctx, 'ctx') | return | endif
-    let ctx = a:cbctx['ctx']
+    let l:ctx = a:cbctx['ctx']
     if has_key(l:ctx['opts'], 'on_stderr')
         try
-            call l:ctx['opts']['on_stderr'](a:id, a:data, a:event)
+            call l:ctx['opts']['on_stderr'](l:ctx['id'], a:response, 'stderr')
         catch
             call lsp#log('s:on_stderr exception', v:exception, v:throwpoint)
             echom v:exception
