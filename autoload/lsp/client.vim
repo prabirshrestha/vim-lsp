@@ -313,28 +313,31 @@ endfunction
 " public apis {{{
 
 function! lsp#client#start(opts) abort
-    if g:lsp_use_native_client && s:has_native_lsp && has_key(a:opts, 'cmd')
-        " TODO: add support for TCP
-        let l:cbctx = {}
-        let l:jobopt = { 'in_mode': 'lsp', 'out_mode': 'lsp', 'noblock': 1,
-            \ 'out_cb': function('s:native_out_cb', [l:cbctx]),
-            \ 'err_cb': function('s:native_err_cb', [l:cbctx]),
-            \ }
-        if has_key(a:opts, 'cwd') | let l:jobopt['cwd'] = a:opts['cwd'] | endif
-        let s:jobidseq += 1
-        let l:jobid = s:jobidseq " jobid == clientid
-        call lsp#log_verbose('using native lsp client')
-        let l:job = job_start(a:opts['cmd'], l:jobopt)
-        if job_status(l:job) !=? 'run' | return -1 | endif
-        let l:ctx = s:create_context(l:jobid, a:opts)
-        let l:ctx['id'] = l:jobid
-        let l:ctx['job'] = l:job
-        let l:ctx['channel'] = job_getchannel(l:job)
-        let l:cbctx['ctx'] = l:ctx
-        return l:jobid
-    else
-        return s:lsp_start(a:opts)
+    if g:lsp_use_native_client && s:has_native_lsp
+        if has_key(a:opts, 'cmd')
+            let l:cbctx = {}
+            let l:jobopt = { 'in_mode': 'lsp', 'out_mode': 'lsp', 'noblock': 1,
+                \ 'out_cb': function('s:native_out_cb', [l:cbctx]),
+                \ 'err_cb': function('s:native_err_cb', [l:cbctx]),
+                \ }
+            if has_key(a:opts, 'cwd') | let l:jobopt['cwd'] = a:opts['cwd'] | endif
+            if has_key(a:opts, 'env') | let l:jobopt['env'] = a:opts['env'] | endif
+            let s:jobidseq += 1
+            let l:jobid = s:jobidseq " jobid == clientid
+            call lsp#log_verbose('using native lsp client')
+            let l:job = job_start(a:opts['cmd'], l:jobopt)
+            if job_status(l:job) !=? 'run' | return -1 | endif
+            let l:ctx = s:create_context(l:jobid, a:opts)
+            let l:ctx['id'] = l:jobid
+            let l:ctx['job'] = l:job
+            let l:ctx['channel'] = job_getchannel(l:job)
+            let l:cbctx['ctx'] = l:ctx
+            return l:jobid
+        elseif has_key(a:opts, 'tcp')
+            " add support for tcp
+        endif
     endif
+    return s:lsp_start(a:opts)
 endfunction
 
 function! lsp#client#stop(client_id) abort
