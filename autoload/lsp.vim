@@ -590,9 +590,6 @@ function! lsp#default_get_supported_capabilities(server_info) abort
     \       'signatureHelp': {
     \           'dynamicRegistration': v:false,
     \       },
-    \       'symbol': {
-    \           'dynamicRegistration': v:false,
-    \       },
     \       'synchronization': {
     \           'didSave': v:true,
     \           'dynamicRegistration': v:false,
@@ -613,6 +610,9 @@ function! lsp#default_get_supported_capabilities(server_info) abort
     \   'workspace': {
     \       'applyEdit': v:true,
     \       'configuration': v:true,
+    \       'symbol': {
+    \           'dynamicRegistration': v:false,
+    \       },
     \       'workspaceFolders': g:lsp_experimental_workspace_folders ? v:true : v:false,
     \   },
     \ }
