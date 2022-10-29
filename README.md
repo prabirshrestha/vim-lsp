@@ -183,6 +183,13 @@ let g:lsp_log_file = expand('~/vim-lsp.log')
 let g:asyncomplete_log_file = expand('~/asyncomplete.log')
 ```
 
+You can get detailed status on your servers using `:CheckHealth` -- built into neovim or in a plugin on vim:
+
+```vim
+if !has('nvim') | Plug 'rhysd/vim-healthcheck' | endif
+CheckHealth
+```
+
 ## Tests
 
 [vim-themis](https://github.com/thinca/vim-themis) is used for testing. To run

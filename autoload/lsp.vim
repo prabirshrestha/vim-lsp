@@ -148,7 +148,22 @@ let s:color_map = {
 \ 'not running': 'Comment'
 \}
 
-" Print the current status of all servers (if called with no arguments)
+" Collect the current status of all servers
+function! lsp#collect_server_status() abort
+    let l:results = {}
+    for l:k in keys(s:servers)
+        let l:status = s:server_status(l:k)
+        " Copy to prevent callers from corrupting our config.
+        let l:info = deepcopy(s:servers[l:k].server_info)
+        let l:results[l:k] = {
+            \ 'status': l:status,
+            \ 'info': l:info,
+            \ }
+    endfor
+    return l:results
+endfunction
+
+" Print the current status of all servers
 function! lsp#print_server_status() abort
     for l:k in sort(keys(s:servers))
         let l:status = s:server_status(l:k)
@@ -157,6 +172,15 @@ function! lsp#print_server_status() abort
         echon l:status
         echohl None
         echo ''
+        if &verbose
+            let l:cfg = { 'workspace_config': s:servers[l:k].server_info.workspace_config }
+            if get(g:, 'loaded_scriptease', 0)
+                call scriptease#pp_command(0, -1, l:cfg)
+            else
+                echo json_encode(l:cfg)
+            endif
+            echo ''
+        endif
     endfor
 endfunction
 
