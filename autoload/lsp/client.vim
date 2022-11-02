@@ -284,8 +284,14 @@ endfunction
 
 function! s:native_out_cb(cbctx, channel, response) abort
     if !has_key(a:cbctx, 'ctx') | return | endif
-    let ctx = a:cbctx['ctx']
-    if !has_key(a:response, 'id') && has_key(l:ctx['opts'], 'on_notification')
+    let l:ctx = a:cbctx['ctx']
+    if has_key(a:response, 'method') && has_key(a:response, 'id')
+        " it is a request from a server
+        let l:request = a:response
+        if has_key(l:ctx['opts'], 'on_request')
+            call l:ctx['opts']['on_request'](l:ctx['id'], l:request)
+        endif
+    elseif !has_key(a:response, 'id') && has_key(l:ctx['opts'], 'on_notification')
         " it is a notification
         let l:on_notification_data = { 'response': a:response }
         try
@@ -417,9 +423,10 @@ function! lsp#client#send_response(client_id, opts) abort
     if g:lsp_use_native_client && lsp#utils#has_native_lsp_client()
         let l:ctx = get(s:clients, a:client_id, {})
         if empty(l:ctx) | return -1 | endif
-        if has_key(a:opts, 'id') | let l:response['id'] = a:opts['method'] | endif
-        if has_key(a:opts, 'result') | let l:response['result'] = a:opts['result'] | endif
-        if has_key(a:opts, 'error') | let l:response['error'] = a:opts['error'] | endif
+        let l:request = {}
+        if has_key(a:opts, 'id') | let l:request['id'] = a:opts['id'] | endif
+        if has_key(a:opts, 'result') | let l:request['result'] = a:opts['result'] | endif
+        if has_key(a:opts, 'error') | let l:request['error'] = a:opts['error'] | endif
         call ch_sendexpr(l:ctx['channel'], l:request)
         return 0
     else
