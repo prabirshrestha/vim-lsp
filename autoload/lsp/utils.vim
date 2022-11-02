@@ -3,7 +3,7 @@ function! lsp#utils#has_lua() abort
     return s:has_lua
 endfunction
 
-let s:has_native_lsp_client = !has('nvim') && has("patch-8.2.4780")
+let s:has_native_lsp_client = !has('nvim') && has('patch-8.2.4780')
 function! lsp#utils#has_native_lsp_client() abort
     return s:has_native_lsp_client
 endfunction
