@@ -53,5 +53,13 @@ function! health#lsp#check() abort
         endif
         call health#report_info(l:msg)
     endfor
+
+    call health#report_start('Performance')
+    if lsp#utils#has_lua() && g:lsp_use_lua
+        call health#report_ok('Using lua for faster performance.')
+    else
+        call health#report_warn('Missing requirements to enable lua for faster performance.')
+    endif
+
 endf
 
