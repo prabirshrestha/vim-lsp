@@ -280,7 +280,7 @@ function! s:handle_rename_prepare(server, last_command_id, type, data) abort
         return
     endif
 
-    let l:range = a:data['response']['result']
+    let l:range = a:data['response']['result']['range']
     let l:lines = getline(1, '$')
     let [l:start_line, l:start_col] = lsp#utils#position#lsp_to_vim('%', l:range['start'])
     let [l:end_line, l:end_col] = lsp#utils#position#lsp_to_vim('%', l:range['end'])
