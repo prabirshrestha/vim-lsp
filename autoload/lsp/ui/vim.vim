@@ -413,6 +413,10 @@ function! s:handle_prepare_call_hierarchy(ctx, server, type, data) abort
         call lsp#utils#error('Failed to '. a:type . ' for ' . a:server . ': ' . lsp#client#error_message(a:data['response']))
         return
     endif
+    if empty(a:data['response']['result'])
+        call lsp#utils#warning('Failed to '. a:type . ' for ' . a:server . ': ' . lsp#client#error_message(a:data['response']))
+        return
+    endif
 
     for l:item in a:data['response']['result']
         call s:call_hierarchy(a:ctx, a:server, l:item)
