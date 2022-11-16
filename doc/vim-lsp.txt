@@ -2202,6 +2202,14 @@ call `root_uri` function to detect the workspace folder. If the folder is not
 part of workspace folder, it will automatically notify the server to add the
 workspace folder.
 
+==============================================================================
+Show Document                                         *vim-lsp-show-document*
+
+Show Document is an experimental feature of vim-lsp. To enable this, set
+folders set `let g:lsp_experimental_show_document = 1`.
+
+When the client and the server supports Show Document, the client open a file
+requested from the server.
 =============================================================================
 License                                                    *vim-lsp-license*
 

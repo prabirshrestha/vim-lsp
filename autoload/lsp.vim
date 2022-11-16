@@ -630,6 +630,9 @@ function! lsp#default_get_supported_capabilities(server_info) abort
     \   },
     \   'window': {
     \       'workDoneProgress': g:lsp_work_done_progress_enabled ? v:true : v:false,
+    \       'showDocument': {
+    \           'support': g:lsp_experimental_show_document ? v:true : v:false,
+    \       },
     \   },
     \   'workspace': {
     \       'applyEdit': v:true,
@@ -943,6 +946,15 @@ function! s:on_request(server_name, id, request) abort
         endif
     elseif a:request['method'] ==# 'window/workDoneProgress/create'
         call s:send_response(a:server_name, { 'id': a:request['id'], 'result': v:null})
+    elseif a:request['method'] ==# 'window/showDocument'
+        if !g:lsp_experimental_show_document | return | endif
+        let l:cmd = g:lsp_show_document_command
+        if has_key(a:request['params'], 'selection')
+            let l:cmd .= " +" . a:request['params']['selection']['start']['line']
+        endif
+        let l:cmd .= " " . lsp#utils#uri_to_path(a:request['params']['uri'])
+        execute l:cmd
+        call s:send_response(a:server_name, { 'id': a:request['id'], 'result': {'success': v:true}})
     else
         " TODO: for now comment this out until we figure out a better solution.
         " We need to comment this out so that others outside of vim-lsp can
