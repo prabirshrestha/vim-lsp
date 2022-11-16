@@ -2206,7 +2206,7 @@ workspace folder.
 Show Document                                         *vim-lsp-show-document*
 
 Show Document is an experimental feature of vim-lsp. To enable this, set
-folders set `let g:lsp_experimental_show_document = 1`.
+`let g:lsp_experimental_show_document = 1`.
 
 When the client and the server supports Show Document, the client open a file
 requested from the server.
