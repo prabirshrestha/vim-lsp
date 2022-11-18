@@ -950,9 +950,9 @@ function! s:on_request(server_name, id, request) abort
         if !g:lsp_experimental_show_document | return | endif
         let l:cmd = g:lsp_show_document_command
         if has_key(a:request['params'], 'selection')
-            let l:cmd .= " +" . a:request['params']['selection']['start']['line']
+            let l:cmd .= ' +' . a:request['params']['selection']['start']['line']
         endif
-        let l:cmd .= " " . lsp#utils#uri_to_path(a:request['params']['uri'])
+        let l:cmd .= ' ' . lsp#utils#uri_to_path(a:request['params']['uri'])
         execute l:cmd
         call s:send_response(a:server_name, { 'id': a:request['id'], 'result': {'success': v:true}})
     else
