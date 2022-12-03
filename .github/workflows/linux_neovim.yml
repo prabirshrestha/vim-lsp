@@ -40,7 +40,7 @@ jobs:
       - name: Install dependencies
         shell: bash
         run: |
-          apt install libfuse
+          sudo apt install libfuse
       - name: Download neovim
         shell: bash
         run: |
