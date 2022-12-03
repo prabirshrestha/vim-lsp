@@ -36,6 +36,11 @@ jobs:
     runs-on: ${{matrix.os}}
     continue-on-error: ${{matrix.allow_failure}}
     steps:
+      - name: Install dependencies
+        shell: bash
+        run: |
+          # https://github.com/Zettlr/Zettlr/issues/3517
+          sudo apt-get install libfuse2
       - uses: actions/checkout@v2
       - name: Download neovim
         shell: bash
