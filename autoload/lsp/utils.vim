@@ -283,6 +283,13 @@ function! lsp#utils#error(msg) abort
     echohl NONE
 endfunction
 
+function! lsp#utils#warning(msg) abort
+    echohl WarningMsg
+    echom a:msg
+    echohl NONE
+endfunction
+
+
 function! lsp#utils#echo_with_truncation(msg) abort
     let l:msg = a:msg
 
