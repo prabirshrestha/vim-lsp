@@ -14,7 +14,7 @@ let s:notification_callbacks = [] " { name, callback }
 "        "bingo": [ "first-line", "next-line", ... ]
 "      },
 "      2: {
-"        "pyls": [ "first-line", "next-line", ... ]
+"        "pylsp": [ "first-line", "next-line", ... ]
 "      }
 "    }
 let s:file_content = {}
@@ -148,7 +148,22 @@ let s:color_map = {
 \ 'not running': 'Comment'
 \}
 
-" Print the current status of all servers (if called with no arguments)
+" Collect the current status of all servers
+function! lsp#collect_server_status() abort
+    let l:results = {}
+    for l:k in keys(s:servers)
+        let l:status = s:server_status(l:k)
+        " Copy to prevent callers from corrupting our config.
+        let l:info = deepcopy(s:servers[l:k].server_info)
+        let l:results[l:k] = {
+            \ 'status': l:status,
+            \ 'info': l:info,
+            \ }
+    endfor
+    return l:results
+endfunction
+
+" Print the current status of all servers
 function! lsp#print_server_status() abort
     for l:k in sort(keys(s:servers))
         let l:status = s:server_status(l:k)
@@ -157,6 +172,15 @@ function! lsp#print_server_status() abort
         echon l:status
         echohl None
         echo ''
+        if &verbose
+            let l:cfg = { 'workspace_config': s:servers[l:k].server_info.workspace_config }
+            if get(g:, 'loaded_scriptease', 0)
+                call scriptease#pp_command(0, -1, l:cfg)
+            else
+                echo json_encode(l:cfg)
+            endif
+            echo ''
+        endif
     endfor
 endfunction
 
@@ -484,6 +508,9 @@ function! lsp#default_get_supported_capabilities(server_info) abort
     " Sorted alphabetically
     return {
     \   'textDocument': {
+    \       'callHierarchy': {
+    \           'dynamicRegistration': v:false,
+    \       },
     \       'codeAction': {
     \         'dynamicRegistration': v:false,
     \         'codeActionLiteralSupport': {
@@ -548,11 +575,19 @@ function! lsp#default_get_supported_capabilities(server_info) abort
     \           'dynamicRegistration': v:false,
     \           'linkSupport' : v:true
     \       },
+    \       'publishDiagnostics': {
+    \           'relatedInformation': v:true,
+    \       },
     \       'rangeFormatting': {
     \           'dynamicRegistration': v:false,
     \       },
     \       'references': {
     \           'dynamicRegistration': v:false,
+    \       },
+    \       'rename': {
+    \           'dynamicRegistration': v:false,
+    \           'prepareSupport': v:true,
+    \           'prepareSupportDefaultBehavior': 1
     \       },
     \       'semanticTokens': {
     \           'dynamicRegistration': v:false,
@@ -576,8 +611,8 @@ function! lsp#default_get_supported_capabilities(server_info) abort
     \           'multilineTokenSupport': v:false,
     \           'serverCancelSupport': v:false
     \       },
-    \       'publishDiagnostics': {
-    \           'relatedInformation': v:true,
+    \       'signatureHelp': {
+    \           'dynamicRegistration': v:false,
     \       },
     \       'synchronization': {
     \           'didSave': v:true,
@@ -585,12 +620,12 @@ function! lsp#default_get_supported_capabilities(server_info) abort
     \           'willSave': v:false,
     \           'willSaveWaitUntil': v:false,
     \       },
-    \       'typeHierarchy': {
-    \           'dynamicRegistration': v:false
-    \       },
     \       'typeDefinition': {
     \           'dynamicRegistration': v:false,
     \           'linkSupport' : v:true
+    \       },
+    \       'typeHierarchy': {
+    \           'dynamicRegistration': v:false
     \       },
     \   },
     \   'window': {
@@ -599,6 +634,9 @@ function! lsp#default_get_supported_capabilities(server_info) abort
     \   'workspace': {
     \       'applyEdit': v:true,
     \       'configuration': v:true,
+    \       'symbol': {
+    \           'dynamicRegistration': v:false,
+    \       },
     \       'workspaceFolders': g:lsp_experimental_workspace_folders ? v:true : v:false,
     \   },
     \ }

@@ -11,6 +11,7 @@ CONTENTS                                                  *vim-lsp-contents*
       Configure                             |vim-lsp-configure|
       vim-lsp-settings                      |vim-lsp-settings_plugin|
       Wiki                                  |vim-lsp-configure-wiki|
+      Health Check                          |vim-lsp-healthcheck|
     Options                               |vim-lsp-options|
       g:lsp_auto_enable                     |g:lsp_auto_enable|
       g:lsp_preview_keep_focus              |g:lsp_preview_keep_focus|
@@ -218,19 +219,19 @@ vim-lsp doesn't ship with any language servers. The user is responsible for
 configuring the language servers correctly.
 
 Here is an example of configuring the python language server protocol based
-on pyls (https://github.com/palantir/python-language-server)
+on pylsp (https://github.com/python-lsp/python-lsp-server)
 
 1. Make sure the language server is available locally in the machine.
    For python, pip package manager can be used to install the language server.
 >
-	pip install python-language-server
+	pip install python-lsp-server
 
 2. Register the language server in your .vimrc
 >
-	if (executable('pyls'))
+	if (executable('pylsp'))
 	    au User lsp_setup call lsp#register_server({
-		\ 'name': 'pyls',
-		\ 'cmd': {server_info->['pyls']},
+		\ 'name': 'pylsp',
+		\ 'cmd': {server_info->['pylsp']},
 		\ 'allowlist': ['python']
 		\ })
 	endif
@@ -270,6 +271,13 @@ to automatically register various language servers.
 >
 	Plug 'prabirshrestha/vim-lsp'
 	Plug 'mattn/vim-lsp-settings'
+
+HEALTH CHECK						*vim-lsp-healthcheck*
+vim-lsp supports the |:CheckHealth| command which can be useful when debugging
+lsp configuration issues.
+
+This command is included in neovim and implemented in vim with the
+[vim-healthcheck](https://github.com/rhysd/vim-healthcheck) plugin. 
 
 WIKI                                               *vim-lsp-configure-wiki*
 For documentation on how to configure other language servers refer
@@ -1094,7 +1102,7 @@ Used to register the language server with vim-lsp. This method takes
 one parameter which is a vim |dict| and is referred to as |vim-lsp-server_info|
 
     Example: >
-	if (executable('pyls'))
+	if (executable('pylsp'))
 	    au User lsp_setup call lsp#register_server({
 		\ 'name': 'name-of-server',
 		\ 'cmd': {server_info->['server-exectuable']},
@@ -1146,7 +1154,7 @@ The vim |dict| containing information about the server.
     can be determined statically and |vim-lsp-server_info| is not necessary.
 
     Example: >
-	'cmd': ['pyls']
+	'cmd': ['pylsp']
 <
     Function can be complex based on custom requirements.
     For example:
@@ -1199,7 +1207,7 @@ The vim |dict| containing information about the server.
     initialization. Configuration settings are language-server specific.
 
     Example: >
-	'workspace_config': {'pyls': {'plugins': \
+	'workspace_config': {'pylsp': {'plugins': \
 		{'pydocstyle': {'enabled': v:true}}}}
 <
   * languageId:
@@ -1570,7 +1578,7 @@ LspCallHierarchyOutgoing                         *:LspCallHierarchyOutgoing*
 
 Find outgoing call hierarchy for the symbol under cursor.
 
-LspCodeAction [{CodeActionKind}]                            *:LspCodeAction*
+LspCodeAction [--ui=float|preview] [{CodeActionKind}]       *:LspCodeAction*
 
 Gets a list of possible commands that can be applied to a file so it can be
 fixed (quick fix).
@@ -1578,7 +1586,7 @@ fixed (quick fix).
 If the optional {CodeActionKind} specified, will invoke code action
 immediately when matched code action is one only.
 
-LspCodeActionSync [{CodeActionKind}]                    *:LspCodeActionSync*
+LspCodeActionSync [--ui=float|preview] [{CodeActionKind}] *:LspCodeActionSync*
 
 Same as |:LspCodeAction| but synchronous. Useful when running |:autocmd|
 commands such as organize imports before save.
@@ -1787,7 +1795,9 @@ Servers may choose to return empty results if the search query is empty.
 
 LspStatus                                                       *:LspStatus*
 
-Prints the status of all registered servers.
+Prints the status of all registered servers. Use `:verbose LspStatus` to
+additionally show each server's workspace_config.
+See also |vim-lsp-healthcheck|.
 
 LspStopServer                                                *:LspStopServer*
 
@@ -1882,6 +1892,8 @@ Available plug mappings are following:
   nnoremap <plug>(lsp-call-hierarchy-incoming)
   nnoremap <plug>(lsp-call-hierarchy-outgoing)
   nnoremap <plug>(lsp-code-action)
+  nnoremap <plug>(lsp-code-action-float)
+  nnoremap <plug>(lsp-code-action-preview)
   nnoremap <plug>(lsp-code-lens)
   nnoremap <plug>(lsp-declaration)
   nnoremap <plug>(lsp-peek-declaration)

@@ -119,7 +119,7 @@ function! lsp#ui#vim#rename() abort
             \   'textDocument': lsp#get_text_document_identifier(),
             \   'position': lsp#get_position(),
             \ },
-            \ 'on_notification': function('s:handle_rename_prepare', [l:server, l:command_id, 'rename_prepare']),
+            \ 'on_notification': function('s:handle_rename_prepare', [l:server, l:command_id, 'rename_prepare', expand('<cword>'), lsp#get_position()]),
             \ })
         return
     endif
@@ -270,7 +270,7 @@ function! s:handle_location(ctx, server, type, data) abort "ctx = {counter, list
     endif
 endfunction
 
-function! s:handle_rename_prepare(server, last_command_id, type, data) abort
+function! s:handle_rename_prepare(server, last_command_id, type, cword, position, data) abort
     if a:last_command_id != lsp#_last_command()
         return
     endif
@@ -279,8 +279,28 @@ function! s:handle_rename_prepare(server, last_command_id, type, data) abort
         call lsp#utils#error('Failed to retrieve '. a:type . ' for ' . a:server . ': ' . lsp#client#error_message(a:data['response']))
         return
     endif
+    let l:result = a:data['response']['result']
 
-    let l:range = a:data['response']['result']
+    " Check response: null.
+    if empty(l:result)
+        echo 'The ' . a:server . ' returns for ' . a:type . ' (The rename request may be invalid at the given position).'
+        return
+    endif
+
+    " Check response: { defaultBehavior: boolean }.
+    if has_key(l:result, 'defaultBehavior')
+        call timer_start(1, {x->s:rename(a:server, input('new name: ', a:cword), a:position)})
+        return
+    endif
+
+    " Check response: { placeholder: string }
+    if has_key(l:result, 'placeholder') && !empty(l:result['placeholder'])
+        call timer_start(1, {x->s:rename(a:server, input('new name: ', a:cword), a:position)})
+        return
+    endif
+
+    " Check response: { range: Range } | Range
+    let l:range = get(l:result, 'range', l:result)
     let l:lines = getline(1, '$')
     let [l:start_line, l:start_col] = lsp#utils#position#lsp_to_vim('%', l:range['start'])
     let [l:end_line, l:end_col] = lsp#utils#position#lsp_to_vim('%', l:range['end'])
@@ -331,12 +351,12 @@ function! s:handle_text_edit(server, last_command_id, type, data) abort
     redraw | echo 'Document formatted'
 endfunction
 
-function! lsp#ui#vim#code_action() abort
-    call lsp#ui#vim#code_action#do({
+function! lsp#ui#vim#code_action(opts) abort
+    call lsp#ui#vim#code_action#do(extend({
         \   'sync': v:false,
         \   'selection': v:false,
         \   'query': '',
-        \ })
+        \ }, a:opts))
 endfunction
 
 function! lsp#ui#vim#code_lens() abort
