@@ -198,7 +198,8 @@ endfunction
 " @param {number} args.col 0-based indexing
 " @param {number} args.width
 " @param {number} args.height
-" @param {boolean?} args.border
+" @param {boolean|[string]?} args.border - boolean, or list of characters
+"        clockwise from top-left (same as nvim_open_win() in neovim)
 " @param {number?} args.topline
 " @param {string?} args.origin - topleft/topright/botleft/botright
 "
@@ -450,11 +451,14 @@ endfunction
 
 if has('nvim')
   function! s:_resolve_border(style) abort
-    if !empty(get(a:style, 'border', v:null))
-      if &ambiwidth ==# 'single'
-        let a:style.border = ['┌', '─', '┐', '│', '┘', '─', '└', '│']
-      else
-        let a:style.border = ['+', '-', '+', '|', '+', '-', '+', '|']
+    let l:border = get(a:style, 'border', v:null)
+    if !empty(l:border)
+      if type(l:border) != type([])
+        if &ambiwidth ==# 'single'
+          let a:style.border = ['┌', '─', '┐', '│', '┘', '─', '└', '│']
+        else
+          let a:style.border = ['+', '-', '+', '|', '+', '-', '+', '|']
+        endif
       endif
     elseif has_key(a:style, 'border')
       unlet a:style.border
@@ -463,11 +467,28 @@ if has('nvim')
   endfunction
 else
   function! s:_resolve_border(style) abort
+    let l:border = get(a:style, 'border', v:null)
     if !empty(get(a:style, 'border', v:null))
-      if &ambiwidth ==# 'single'
-        let a:style.border = ['─', '│', '─', '│', '┌', '┐', '┘', '└']
+      if type(l:border) != type([])
+        if &ambiwidth ==# 'single'
+          let a:style.border = ['─', '│', '─', '│', '┌', '┐', '┘', '└']
+        else
+          let a:style.border = ['-', '|', '-', '|', '+', '+', '+', '+']
+        endif
       else
-        let a:style.border = ['-', '|', '-', '|', '+', '+', '+', '+']
+        " Emulate nvim behavior for lists of 1/2/4 elements
+        let l:topleft     = l:border[0]
+        let l:top         = get(l:border, 1, l:topleft)
+        let l:topright    = get(l:border, 2, l:topleft)
+        let l:right       = get(l:border, 3, l:top)
+        let l:bottomright = get(l:border, 4, l:topleft)
+        let l:bottom      = get(l:border, 5, l:top)
+        let l:bottomleft  = get(l:border, 6, l:topright)
+        let l:left        = get(l:border, 7, l:right)
+        let a:style.border = [
+        \   l:top, l:right, l:bottom, l:left,
+        \   l:topleft, l:topright, l:bottomright, l:bottomleft,
+        \ ]
       endif
     elseif has_key(a:style, 'border')
       unlet a:style.border

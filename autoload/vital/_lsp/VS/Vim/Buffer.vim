@@ -4,7 +4,7 @@
 function! s:_SID() abort
   return matchstr(expand('<sfile>'), '<SNR>\zs\d\+\ze__SID$')
 endfunction
-execute join(['function! vital#_lsp#VS#Vim#Buffer#import() abort', printf("return map({'get_line_count': '', 'do': '', 'create': '', 'pseudo': '', 'ensure': '', 'load': ''}, \"vital#_lsp#function('<SNR>%s_' . v:key)\")", s:_SID()), 'endfunction'], "\n")
+execute join(['function! vital#_lsp#VS#Vim#Buffer#import() abort', printf("return map({'add': '', 'do': '', 'create': '', 'get_line_count': '', 'pseudo': '', 'ensure': '', 'load': ''}, \"vital#_lsp#function('<SNR>%s_' . v:key)\")", s:_SID()), 'endfunction'], "\n")
 delfunction s:_SID
 " ___vital___
 let s:Do = { -> {} }
@@ -51,10 +51,24 @@ function! s:ensure(expr) abort
     if type(a:expr) == type(0)
       throw printf('VS.Vim.Buffer: `%s` is not valid expr.', a:expr)
     endif
-    badd `=a:expr`
+    call s:add(a:expr)
   endif
   return bufnr(a:expr)
 endfunction
+
+"
+" add
+"
+if exists('*bufadd')
+  function! s:add(name) abort
+    let l:bufnr = bufadd(a:name)
+    call setbufvar(l:bufnr, '&buflisted', 1)
+  endfunction
+else
+  function! s:add(name) abort
+    badd `=a:name`
+  endfunction
+endif
 
 "
 " load
