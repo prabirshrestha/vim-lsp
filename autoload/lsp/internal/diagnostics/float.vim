@@ -96,8 +96,7 @@ endfunction
 function! s:compute_position(size) abort
     let l:pos = screenpos(0, line('.'), col('.'))
     if l:pos.row == 0 && l:pos.col == 0
-        " When the specified position is not visible
-        return []
+        let l:pos = {'curscol': screencol(), 'row': screenrow()}
     endif
     let l:pos = [l:pos.row + 1, l:pos.curscol + 1]
     if l:pos[0] + a:size.height > &lines
