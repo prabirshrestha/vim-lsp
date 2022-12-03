@@ -31,6 +31,11 @@ jobs:
             glibc_version: 2.15
     runs-on: ${{matrix.os}}
     steps:
+      - name: Install dependencies
+        shell: bash
+        run: |
+          # https://github.com/Zettlr/Zettlr/issues/3517
+          sudo apt-get install libfuse2
       - uses: actions/checkout@v2
       - name: Download vim
         shell: bash
@@ -72,5 +77,8 @@ jobs:
           export PATH=./vim-themis/bin:$PATH
           export PATH=./bin:$PATH
           export THEMIS_VIM=vim
-          vim --version
-          themis
+          # https://github.com/project-slippi/Ishiiruka/issues/323
+          # It was needed to detect the actual path of `libgmodule` via `ldconfig -p | grep libg`.
+          LD_PRELOAD=/lib/x86_64-linux-gnu/libgmodule-2.0.so vim --version
+          LD_PRELOAD=/lib/x86_64-linux-gnu/libgmodule-2.0.so themis
+

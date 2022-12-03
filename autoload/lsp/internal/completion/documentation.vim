@@ -83,13 +83,17 @@ function! s:show_floating_window(event, managed_user_data) abort
             let l:detail = s:MarkupContent.normalize({
             \     'language': &filetype,
             \     'value': l:completion_item['detail'],
+            \ }, {
+            \     'compact': !g:lsp_preview_fixup_conceal
             \ })
             let l:contents += [l:detail]
         endif
     endif
 
     " Add documentation filed if provided.
-    let l:documentation = s:MarkupContent.normalize(get(l:completion_item, 'documentation', ''))
+    let l:documentation = s:MarkupContent.normalize(get(l:completion_item, 'documentation', ''), {
+    \     'compact': !g:lsp_preview_fixup_conceal
+    \ })
     if !empty(l:documentation)
         let l:contents += [l:documentation]
     endif
