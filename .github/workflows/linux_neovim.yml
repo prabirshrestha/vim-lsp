@@ -37,6 +37,10 @@ jobs:
     continue-on-error: ${{matrix.allow_failure}}
     steps:
       - uses: actions/checkout@v2
+      - name: Install dependencies
+        shell: bash
+        run: |
+          apt install libfuse
       - name: Download neovim
         shell: bash
         run: |
