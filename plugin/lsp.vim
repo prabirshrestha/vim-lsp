@@ -86,8 +86,7 @@ let g:lsp_code_action_ui = get(g:, 'lsp_code_action_ui', 'preview')
 let g:lsp_get_supported_capabilities = get(g:, 'lsp_get_supported_capabilities', [function('lsp#default_get_supported_capabilities')])
 
 let g:lsp_experimental_workspace_folders = get(g:, 'lsp_experimental_workspace_folders', 0)
-let g:lsp_experimental_show_document = get(g:, 'lsp_experimental_show_document', 0)
-let g:lsp_show_document_command = get(g:, 'lsp_show_document_command', 'edit')
+let g:lsp_show_document = get(g:, 'lsp_show_document', 0)
 
 if g:lsp_auto_enable
     augroup lsp_auto_enable

@@ -631,7 +631,7 @@ function! lsp#default_get_supported_capabilities(server_info) abort
     \   'window': {
     \       'workDoneProgress': g:lsp_work_done_progress_enabled ? v:true : v:false,
     \       'showDocument': {
-    \           'support': g:lsp_experimental_show_document ? v:true : v:false,
+    \           'support': g:lsp_show_document ? v:true : v:false,
     \       },
     \   },
     \   'workspace': {
@@ -947,13 +947,36 @@ function! s:on_request(server_name, id, request) abort
     elseif a:request['method'] ==# 'window/workDoneProgress/create'
         call s:send_response(a:server_name, { 'id': a:request['id'], 'result': v:null})
     elseif a:request['method'] ==# 'window/showDocument'
-        if !g:lsp_experimental_show_document | return | endif
-        let l:cmd = g:lsp_show_document_command
-        if has_key(a:request['params'], 'selection')
-            let l:cmd .= ' +' . a:request['params']['selection']['start']['line']
+        if !g:lsp_show_document | return | endif
+        let l:uri = a:request['params']['uri']
+        if !lsp#utils#is_file_uri(l:uri)
+            call s:send_response(a:server_name, { 'id': a:request['id'], 'result': {'success': v:false}})
+            return
         endif
-        let l:cmd .= ' ' . lsp#utils#uri_to_path(a:request['params']['uri'])
-        execute l:cmd
+        let l:path = lsp#utils#uri_to_path(l:uri)
+        let l:loc = {
+            \ 'filename': l:path,
+            \ 'lnum': 1,
+            \ 'col': 1,
+            \ }
+        if has_key(a:request['params'], 'selection')
+            let [l:line, l:col] = lsp#utils#position#lsp_to_vim(l:path, a:request['selection']['start'])
+            let l:loc['lnum'] = l:line
+            let l:loc['col'] = l:col
+        endif
+
+        let l:takefocus = v:true
+        if has_key(a:request['params'], 'takeFocus') && (!a:request['params']['takeFocus'])
+            let l:takefocus = v:false
+        endif
+        let l:lastbuf = bufnr('%')
+        let l:lastlnum = line('.')
+        let l:lastcol = col('.')
+
+        call lsp#utils#location#_open_vim_list_item(l:loc, '')
+        if !l:takefocus
+            execute 'buffer ' . l:lastbuf . ' | call cursor('.l:lastlnum.','.l:lastcol.')'
+        endif
         call s:send_response(a:server_name, { 'id': a:request['id'], 'result': {'success': v:true}})
     else
         " TODO: for now comment this out until we figure out a better solution.
