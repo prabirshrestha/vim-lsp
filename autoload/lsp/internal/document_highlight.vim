@@ -183,15 +183,42 @@ function! s:in_reference(reference_list) abort
 endfunction
 
 function! s:init_reference_highlight(buf) abort
-    if s:use_vim_textprops
-        let l:props = {
-            \   'bufnr': a:buf,
-            \   'highlight': 'lspReference',
-            \   'combine': v:true,
-            \   'priority': lsp#internal#textprop#priority('document_highlight')
-            \ }
-        call prop_type_delete('vim-lsp-reference-highlight', l:props)
-        call prop_type_add('vim-lsp-reference-highlight', l:props)
+    if !s:use_vim_textprops
+        return
+    endif
+
+    let l:prop_name = 'vim-lsp-reference-highlight'
+
+    let l:existing = prop_type_get(l:prop_name, { 'bufnr': a:buf })
+    let l:desired = {
+        \   'bufnr': a:buf,
+        \   'highlight': 'lspReference',
+        \   'combine': v:true,
+        \   'priority': lsp#internal#textprop#priority('document_highlight')
+        \ }
+
+    " Only recreate the property if it either does not exist, or is different
+    " from what we expect.  Since patch 9.0.0993 Vim will do a whole screen
+    " redraw when a property is deleted. See
+    "
+    "      https://github.com/vim/vim/issues/11666
+    "
+    " for a discussion.
+    let l:matches = 1
+    " Dictionary returned by "prop_type_get()" may contain "start_incl" and
+    " "end_incl", in addition to the properties we specified in "l:desired", so
+    " we only check subset, rather than strict equality here.
+    for l:key in keys(l:desired)
+        if !has_key(l:existing, l:key) || l:existing[l:key] != l:desired[l:key]
+            let l:matches = 0
+            break
+        endif
+    endfor
+    if !l:matches
+        if l:existing != {}
+            call prop_type_delete(l:prop_name, { 'bufnr': a:buf })
+        endif
+        call prop_type_add(l:prop_name, l:desired)
     endif
 endfunction
 
