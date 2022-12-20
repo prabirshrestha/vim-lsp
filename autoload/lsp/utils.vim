@@ -3,6 +3,11 @@ function! lsp#utils#has_lua() abort
     return s:has_lua
 endfunction
 
+let s:has_native_lsp_client = !has('nvim') && has('patch-8.2.4780')
+function! lsp#utils#has_native_lsp_client() abort
+    return s:has_native_lsp_client
+endfunction
+
 let s:has_virtual_text = exists('*nvim_buf_set_virtual_text') && exists('*nvim_create_namespace')
 function! lsp#utils#_has_nvim_virtual_text() abort
     return s:has_virtual_text
