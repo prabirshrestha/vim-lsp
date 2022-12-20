@@ -657,7 +657,8 @@ g:lsp_diagnostics_virtual_text_enabled
     Default: `1` for neovim 0.3+
 
     Enables virtual text to be shown next to diagnostic errors. Requires
-    NeoVim with version 0.3 or newer and |g:lsp_diagnostics_enabled| set to `1`.
+    NeoVim with version 0.3 or newer or Vim with |virtual-text| and
+    patch 9.0.0178, and |g:lsp_diagnostics_enabled| set to `1`.
     Virtual text uses the same highlight groups used for signs (eg LspErrorText),
     but can be uniquely defined if you want to have different highlight groups
     for signs and virtual text. To set unique virtual text highlighting, you
@@ -748,7 +749,7 @@ g:lsp_inlay_hints_enabled
     Type: |Number|
     Default: `0`
 
-    Enables inlay-hints. Requires Vim9 with |virtualtext|.
+    Enables inlay-hints. Requires Vim9 with |virtual-text|.
     patch 9.0.0167 or newer.
 
     Example: >

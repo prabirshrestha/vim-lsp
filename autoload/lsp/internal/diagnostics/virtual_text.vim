@@ -42,14 +42,23 @@ endif
 
 function! lsp#internal#diagnostics#virtual_text#_enable() abort
     " don't even bother registering if the feature is disabled
-    if !lsp#utils#_has_nvim_virtual_text() | return | endif
+    if !lsp#utils#_has_nvim_virtual_text() && !lsp#utils#_has_vim_virtual_text() | return | endif
     if !g:lsp_diagnostics_virtual_text_enabled | return | endif 
 
     if s:enabled | return | endif
     let s:enabled = 1
 
-    if empty(s:namespace_id)
-        let s:namespace_id = nvim_create_namespace('vim_lsp_diagnostic_virtual_text')
+    if has('nvim')
+        if empty(s:namespace_id)
+            let s:namespace_id = nvim_create_namespace('vim_lsp_diagnostic_virtual_text')
+        endif
+    else
+        if index(prop_type_list(), 'vim_lsp_LspError_virtual_text') ==# -1
+            call prop_type_add('vim_lsp_LspError_virtual_text', { 'highlight': 'LspErrorVirtualText' })
+            call prop_type_add('vim_lsp_LspWarning_virtual_text', { 'highlight': 'LspWarningVirtualText' })
+            call prop_type_add('vim_lsp_LspInformation_virtual_text', { 'highlight': 'LspInformationVirtualText' })
+            call prop_type_add('vim_lsp_LspHint_virtual_text', { 'highlight': 'LspHintVirtualText' })
+        endif
     endif
 
     let s:Dispose = lsp#callbag#pipe(
@@ -86,11 +95,24 @@ function! lsp#internal#diagnostics#virtual_text#_disable() abort
 endfunction
 
 function! s:clear_all_virtual_text() abort
-    for l:bufnr in nvim_list_bufs()
-        if bufexists(l:bufnr) && bufloaded(l:bufnr)
-            call nvim_buf_clear_namespace(l:bufnr, s:namespace_id, 0, -1)
-        endif
-    endfor
+    if has('nvim')
+        for l:bufnr in nvim_list_bufs()
+            if bufexists(l:bufnr) && bufloaded(l:bufnr)
+                call nvim_buf_clear_namespace(l:bufnr, s:namespace_id, 0, -1)
+            endif
+        endfor
+    else
+        let l:types = ['vim_lsp_LspError_virtual_text', 'vim_lsp_LspWarning_virtual_text', 'vim_lsp_LspInformation_virtual_text', 'vim_lsp_LspHint_virtual_text']
+        for l:bufnr in map(copy(getbufinfo()), 'v:val.bufnr')
+            if lsp#utils#_has_prop_remove_types()
+                call prop_remove({'types': l:types, 'bufnr': l:bufnr, 'all': v:true})
+            else
+                for l:type in l:types
+                    call prop_remove({'type': l:type, 'bufnr': l:bufnr, 'all': v:true})
+                endfor
+            endif
+        endfor
+    endif
 endfunction
 
 " params => {
@@ -112,23 +134,50 @@ function! s:set_virtual_text(params) abort
         if mode()[0] ==# 'i' | return | endif
     endif
 
-    for l:bufnr in nvim_list_bufs()
-        if lsp#internal#diagnostics#state#_is_enabled_for_buffer(l:bufnr) && bufexists(l:bufnr) && bufloaded(l:bufnr)
-            let l:uri = lsp#utils#get_buffer_uri(l:bufnr)
-            for [l:server, l:diagnostics_response] in items(lsp#internal#diagnostics#state#_get_all_diagnostics_grouped_by_server_for_uri(l:uri))
-                call s:place_virtual_text(l:server, l:diagnostics_response, l:bufnr)
-            endfor
-        endif
-    endfor
+    if has('nvim')
+        for l:bufnr in nvim_list_bufs()
+            if lsp#internal#diagnostics#state#_is_enabled_for_buffer(l:bufnr) && bufexists(l:bufnr) && bufloaded(l:bufnr)
+                let l:uri = lsp#utils#get_buffer_uri(l:bufnr)
+                for [l:server, l:diagnostics_response] in items(lsp#internal#diagnostics#state#_get_all_diagnostics_grouped_by_server_for_uri(l:uri))
+                    call s:place_virtual_text(l:server, l:diagnostics_response, l:bufnr)
+                endfor
+            endif
+        endfor
+    else
+        for l:bufnr in map(copy(getbufinfo()), 'v:val.bufnr')
+            if lsp#internal#diagnostics#state#_is_enabled_for_buffer(l:bufnr) && bufexists(l:bufnr) && bufloaded(l:bufnr)
+                let l:uri = lsp#utils#get_buffer_uri(l:bufnr)
+                for [l:server, l:diagnostics_response] in items(lsp#internal#diagnostics#state#_get_all_diagnostics_grouped_by_server_for_uri(l:uri))
+                    call s:place_virtual_text(l:server, l:diagnostics_response, l:bufnr)
+                endfor
+            endif
+        endfor
+    endif
 endfunction
 
 function! s:place_virtual_text(server, diagnostics_response, bufnr) abort
     for l:item in lsp#utils#iteratable(a:diagnostics_response['params']['diagnostics'])
-        " need to do -1 for virtual text
-        let l:line = lsp#utils#position#lsp_line_to_vim(a:bufnr, l:item['range']['start']) - 1
+        let l:line = lsp#utils#position#lsp_line_to_vim(a:bufnr, l:item['range']['start'])
         let l:name = get(s:severity_sign_names_mapping, get(l:item, 'severity', 3), 'LspError')
-        let l:hl_name = l:name . 'VirtualText'
-        call nvim_buf_set_virtual_text(a:bufnr, s:namespace_id, l:line,
-            \ [[g:lsp_diagnostics_virtual_text_prefix . l:item['message'], l:hl_name]], {})
+        let l:text = g:lsp_diagnostics_virtual_text_prefix . l:item['message']
+
+        " Some language servers report an unexpected EOF one line past the end
+        if l:line == getbufinfo(a:bufnr)[0].linecount + 1
+            let l:line = l:line - 1
+        endif
+
+        if has('nvim')
+            let l:hl_name = l:name . 'VirtualText'
+            " need to do -1 for virtual text
+            call nvim_buf_set_virtual_text(a:bufnr, s:namespace_id, l:line - 1,
+                \ [[l:text, l:hl_name]], {})
+        else
+            " it's an error to add virtual text on lines that don't exist
+            " anymore due to async processing, just skip such diagnostics
+            if l:line <= getbufinfo(a:bufnr)[0].linecount
+                let l:type = 'vim_lsp_' . l:name . '_virtual_text'
+                call prop_add(l:line, 0, {'type': l:type, 'text': l:text, 'text_padding_left': 1, 'bufnr': a:bufnr})
+            endif
+        endif
     endfor
 endfunction
