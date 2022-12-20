@@ -842,8 +842,8 @@ g:lsp_max_buffer_size                               *g:lsp_max_buffer_size*
     to a negative value.
 
     Example: >
-	let g:max_buffer_size = 10000000
-	let g:max_buffer_size = -1
+	let g:lsp_max_buffer_size = 10000000
+	let g:lsp_max_buffer_size = -1
 
 g:lsp_document_highlight_enabled      *g:lsp_document_highlight_enabled*
     Type: |Number|
