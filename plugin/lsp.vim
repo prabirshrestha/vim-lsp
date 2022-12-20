@@ -219,7 +219,7 @@ if has('gui_running')
   anoremenu <silent> L&sp.Diagnostics.Next :LspNextDiagnostic<CR>
   anoremenu <silent> L&sp.Diagnostics.Prev :LspPrevDiagnostic<CR>
 
-  if &mousemodel =~ 'popup'
+  if &mousemodel =~? 'popup'
     anoremenu <silent> PopUp.L&sp.Go\ to\ Definition
 	  \ :LspDefinition<CR>
     anoremenu <silent> PopUp.L&sp.Go\ to\ Declaration
