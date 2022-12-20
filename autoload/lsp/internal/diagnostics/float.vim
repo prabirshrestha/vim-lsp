@@ -46,8 +46,15 @@ function! s:show_float(diagnostic) abort
         call setbufline(l:doc_win.get_bufnr(), 1, lsp#utils#_split_by_eol(a:diagnostic['message']))
 
         " Compute size. 
+        if g:lsp_float_max_width >= 1
+            let l:maxwidth = g:lsp_float_max_width
+        elseif g:lsp_float_max_width == 0
+            let l:maxwidth = &columns
+        else
+            let l:maxwidth = float2nr(&columns * 0.4)
+        endif
         let l:size = l:doc_win.get_size({
-        \   'maxwidth': float2nr(&columns * 0.4),
+        \   'maxwidth': l:maxwidth,
         \   'maxheight': float2nr(&lines * 0.4),
         \ })
 
