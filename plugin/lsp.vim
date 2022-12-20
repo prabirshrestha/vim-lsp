@@ -4,6 +4,7 @@ endif
 let g:lsp_loaded = 1
 
 let g:lsp_use_lua = get(g:, 'lsp_use_lua', has('nvim-0.4.0') || (has('lua') && has('patch-8.2.0775')))
+let g:lsp_use_native_client = get(g:, 'lsp_use_native_client', 0)
 let g:lsp_auto_enable = get(g:, 'lsp_auto_enable', 1)
 let g:lsp_async_completion = get(g:, 'lsp_async_completion', 0)
 let g:lsp_log_file = get(g:, 'lsp_log_file', '')
@@ -32,7 +33,7 @@ let g:lsp_diagnostics_signs_information = get(g:, 'lsp_diagnostics_signs_informa
 let g:lsp_diagnostics_signs_hint = get(g:, 'lsp_diagnostics_signs_hint', {})
 let g:lsp_diagnostics_signs_priority = get(g:, 'lsp_diagnostics_signs_priority', 10)
 let g:lsp_diagnostics_signs_priority_map = get(g:, 'lsp_diagnostics_signs_priority_map', {})
-let g:lsp_diagnostics_virtual_text_enabled = get(g:, 'lsp_diagnostics_virtual_text_enabled', lsp#utils#_has_nvim_virtual_text())
+let g:lsp_diagnostics_virtual_text_enabled = get(g:, 'lsp_diagnostics_virtual_text_enabled', lsp#utils#_has_nvim_virtual_text() || lsp#utils#_has_vim_virtual_text())
 let g:lsp_diagnostics_virtual_text_insert_mode_enabled = get(g:, 'lsp_diagnostics_virtual_text_insert_mode_enabled', 0)
 let g:lsp_diagnostics_virtual_text_delay = get(g:, 'lsp_diagnostics_virtual_text_delay', 500)
 let g:lsp_diagnostics_virtual_text_prefix = get(g:, 'lsp_diagnostics_virtual_text_prefix', '')

@@ -3,6 +3,11 @@ function! lsp#utils#has_lua() abort
     return s:has_lua
 endfunction
 
+let s:has_native_lsp_client = !has('nvim') && has('patch-8.2.4780')
+function! lsp#utils#has_native_lsp_client() abort
+    return s:has_native_lsp_client
+endfunction
+
 let s:has_virtual_text = exists('*nvim_buf_set_virtual_text') && exists('*nvim_create_namespace')
 function! lsp#utils#_has_nvim_virtual_text() abort
     return s:has_virtual_text
@@ -27,6 +32,11 @@ endfunction
 let s:has_vim9textprops = exists('*prop_add') && has('patch-9.0.0178')
 function! lsp#utils#_has_vim_virtual_text() abort
     return s:has_vim9textprops
+endfunction
+
+let s:has_prop_remove_types = exists('*prop_remove') && has('patch-9.0.0233')
+function! lsp#utils#_has_prop_remove_types() abort
+    return s:has_prop_remove_types
 endfunction
 
 let s:has_higlights = has('nvim') ? lsp#utils#_has_nvim_buf_highlight() : lsp#utils#_has_textprops()
