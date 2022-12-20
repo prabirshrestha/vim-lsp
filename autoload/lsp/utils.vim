@@ -81,7 +81,7 @@ function! s:encode_uri(path, start_pos_encode, default_prefix) abort
 
     for l:i in range(a:start_pos_encode, len(l:path) - 1)
         " Don't encode '/' here, `path` is expected to be a valid path.
-        if l:path[l:i] =~# '^[a-zA-Z0-9_.~/-]$'
+        if l:path[l:i] =~# '^[a-zA-Z0-9_.~/@-]$'
             let l:result .= l:path[l:i]
         else
             let l:result .= s:urlencode_char(l:path[l:i])
