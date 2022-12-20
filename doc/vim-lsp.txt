@@ -14,6 +14,7 @@ CONTENTS                                                  *vim-lsp-contents*
       Health Check                          |vim-lsp-healthcheck|
     Options                               |vim-lsp-options|
       g:lsp_auto_enable                     |g:lsp_auto_enable|
+      g:lsp_use_native_client               |g:lsp_use_native_client|
       g:lsp_preview_keep_focus              |g:lsp_preview_keep_focus|
       g:lsp_preview_float                   |g:lsp_preview_float|
       g:lsp_preview_autoclose               |g:lsp_preview_autoclose|
@@ -206,6 +207,9 @@ http://downloads.sourceforge.net/luabinaries/lua-5.3.2_Win32_dllw4_lib.zip
 64bit:
 http://downloads.sourceforge.net/luabinaries/lua-5.3.2_Win64_dllw4_lib.zip
 
+If you are using vim set `let g:lsp_use_native_client = 1` and make sure you
+are running vim 8.2.4780+.
+
 Set |g:lsp_semantic_enabled| to 0.
 
 Set |g:lsp_format_sync_timeout| to a reasonable value such as `1000`.
@@ -295,6 +299,18 @@ g:lsp_auto_enable                                       *g:lsp_auto_enable*
     Example: >
 	let g:lsp_auto_enable = 1
 	let g:lsp_auto_enable = 0
+
+g:lsp_use_native_client                             *g:lsp_use_native_client*
+    Type: |Number|
+    Default: `0`
+
+    Enable native lsp client support for vim 8.2.4780+. No impact for neovim.
+    TCP language servers are not supported and should be set to 0 if one is
+    used.
+
+    Example: >
+	let g:lsp_use_native_client = 1
+	let g:lsp_use_native_client = 0
 
 g:lsp_preview_keep_focus                         *g:lsp_preview_keep_focus*
     Type: |Number|
