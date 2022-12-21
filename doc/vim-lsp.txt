@@ -72,7 +72,7 @@ CONTENTS                                                  *vim-lsp-contents*
       g:lsp_preview_max_width               |g:lsp_preview_max_width|
       g:lsp_preview_max_height              |g:lsp_preview_max_height|
       g:lsp_preview_fixup_conceal           |g:lsp_preview_fixup_conceal|
-      g:lsp_float_max_width                 |g:lsp_preview_max_width|
+      g:lsp_float_max_width                 |g:lsp_float_max_width|
       g:lsp_signature_help_enabled          |g:lsp_signature_help_enabled|
       g:lsp_fold_enabled                    |g:lsp_fold_enabled|
       g:lsp_hover_conceal                   |g:lsp_hover_conceal|
@@ -921,7 +921,7 @@ g:lsp_preview_fixup_conceal                   *g:lsp_preview_fixup_conceal*
     That's useful in vim. vim's popup doesn't shrink correctly if the
     buffer content uses conceals.
 
-g:lsp_float_max_width                           *g:lsp_preview_max_width*
+g:lsp_float_max_width                           *g:lsp_float_max_width*
     Type: |Number|
     Default: `-1`
 
