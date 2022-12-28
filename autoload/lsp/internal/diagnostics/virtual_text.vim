@@ -176,7 +176,8 @@ function! s:place_virtual_text(server, diagnostics_response, bufnr) abort
             " anymore due to async processing, just skip such diagnostics
             if l:line <= getbufinfo(a:bufnr)[0].linecount
                 let l:type = 'vim_lsp_' . l:name . '_virtual_text'
-                call prop_add(l:line, 0, {'type': l:type, 'text': l:text, 'text_padding_left': 1, 'bufnr': a:bufnr})
+                call prop_remove({'all': v:true, 'type': l:type, 'bufnr': a:bufnr}, l:line)
+                call prop_add(l:line, 0, {'type': l:type, 'text': l:text, 'text_padding_left': 1, 'bufnr': a:bufnr, 'text_align': 'below', 'text_wrap': 'wrap'})
             endif
         endif
     endfor
