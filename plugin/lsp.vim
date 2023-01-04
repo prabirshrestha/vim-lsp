@@ -37,6 +37,9 @@ let g:lsp_diagnostics_virtual_text_enabled = get(g:, 'lsp_diagnostics_virtual_te
 let g:lsp_diagnostics_virtual_text_insert_mode_enabled = get(g:, 'lsp_diagnostics_virtual_text_insert_mode_enabled', 0)
 let g:lsp_diagnostics_virtual_text_delay = get(g:, 'lsp_diagnostics_virtual_text_delay', 500)
 let g:lsp_diagnostics_virtual_text_prefix = get(g:, 'lsp_diagnostics_virtual_text_prefix', '')
+let g:lsp_diagnostics_virtual_text_align = get(g:, 'lsp_diagnostics_virtual_text_align', 'below')
+let g:lsp_diagnostics_virtual_text_wrap = get(g:, 'lsp_diagnostics_virtual_text_wrap', 'wrap')
+let g:lsp_diagnostics_virtual_text_padding_left = get(g:, 'lsp_diagnostics_virtual_text_padding_left', 1)
 
 let g:lsp_document_code_action_signs_enabled = get(g:, 'lsp_document_code_action_signs_enabled', 1)
 let g:lsp_document_code_action_signs_delay = get(g:, 'lsp_document_code_action_signs_delay', 500)

@@ -177,7 +177,14 @@ function! s:place_virtual_text(server, diagnostics_response, bufnr) abort
             if l:line <= getbufinfo(a:bufnr)[0].linecount
                 let l:type = 'vim_lsp_' . l:name . '_virtual_text'
                 call prop_remove({'all': v:true, 'type': l:type, 'bufnr': a:bufnr}, l:line)
-                call prop_add(l:line, 0, {'type': l:type, 'text': l:text, 'text_padding_left': 1, 'bufnr': a:bufnr, 'text_align': 'below', 'text_wrap': 'wrap'})
+                call prop_add(
+                \ l:line, 0,
+                \ {
+                \   'type': l:type, 'text': l:text, 'bufnr': a:bufnr,
+                \   'text_align': g:lsp_diagnostics_virtual_text_align,
+                \   'text_padding_left': g:lsp_diagnostics_virtual_text_padding_left,
+                \   'text_wrap': g:lsp_diagnostics_virtual_text_wrap,
+                \ })
             endif
         endif
     endfor

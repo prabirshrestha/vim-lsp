@@ -49,8 +49,12 @@ CONTENTS                                                  *vim-lsp-contents*
 			     |g:lsp_diagnostics_virtual_text_insert_mode_enabled|
       g:lsp_diagnostics_virtual_text_delay
 			     |g:lsp_diagnostics_virtual_text_delay|
-      g:lsp_diagnostics_virtual_text_prefix
-			     |g:lsp_diagnostics_virtual_text_prefix|
+      g:lsp_diagnostics_virtual_text_align
+			     |g:lsp_diagnostics_virtual_text_align|
+      g:lsp_diagnostics_virtual_text_padding_left
+			     |g:lsp_diagnostics_virtual_text_padding_left|
+      g:lsp_diagnostics_virtual_text_wrap
+			     |g:lsp_diagnostics_virtual_text_wrap|
       g:lsp_document_code_action_signs_enabled
 			     |g:lsp_document_code_actions_signs_enabled|
       g:lsp_document_code_action_signs_delay
@@ -719,6 +723,38 @@ g:lsp_diagnostics_virtual_text_prefix   *g:lsp_diagnostics_virtual_text_prefix*
     Example: >
 	let g:lsp_diagnostics_virtual_text_prefix = "> "
 	let g:lsp_diagnostics_virtual_text_prefix = " ‣ "
+
+g:lsp_diagnostics_virtual_text_align    *g:lsp_diagnostics_virtual_text_align*
+    Type: |String|
+    Default: `"below"`
+
+    Determines the align of the diagnostics virtual text. Requires
+    |g:lsp_diagnostics_virtual_text_enabled|.
+
+    Example: >
+	let g:lsp_diagnostics_virtual_text_align = "right"
+
+g:lsp_diagnostics_virtual_text_padding_left
+                                  *g:lsp_diagnostics_virtual_text_padding_left*
+    Type: |Number|
+    Default: `1`
+
+    Determines the left padding of the diagnostics virtual text. Requires
+    |g:lsp_diagnostics_virtual_text_enabled|.
+
+    Example: >
+	let g:lsp_diagnostics_virtual_text_padding_left = 2
+
+g:lsp_diagnostics_virtual_text_wrap       *g:lsp_diagnostics_virtual_text_wrap*
+    Type: |String|
+    Default: `"wrap"`
+
+    Determines whether or not to wrap the diagnostics virtual text. Possible
+    values are one of `'wrap'`, `'truncate'`. Requires
+    |g:lsp_diagnostics_virtual_text_enabled|.
+
+    Example: >
+	let g:lsp_diagnostics_virtual_text_wrap = "truncate"
 
 g:lsp_document_code_action_signs_enabled
 				      *g:lsp_document_code_action_signs_enabled*
