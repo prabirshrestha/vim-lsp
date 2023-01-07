@@ -190,8 +190,9 @@ function! s:init_reference_highlight(buf) abort
             \   'combine': v:true,
             \   'priority': lsp#internal#textprop#priority('document_highlight')
             \ }
-        call prop_type_delete('vim-lsp-reference-highlight', l:props)
-        call prop_type_add('vim-lsp-reference-highlight', l:props)
+        if prop_type_get('vim-lsp-reference-highlight', { 'bufnr': a:buf }) == {}
+            call prop_type_add('vim-lsp-reference-highlight', l:props)
+        endif
     endif
 endfunction
 
