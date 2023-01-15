@@ -16,7 +16,14 @@ function! lsp#internal#diagnostics#float#_enable() abort
     let s:enabled = 1
 
     let s:Dispose = lsp#callbag#pipe(
-        \ lsp#callbag#fromEvent('CursorMoved'),
+        \ lsp#callbag#merge(
+        \   lsp#callbag#fromEvent(['CursorMoved', 'CursorHold']),
+        \   lsp#callbag#pipe(
+        \       lsp#callbag#fromEvent(['InsertEnter']),
+        \       lsp#callbag#filter({_->!g:lsp_diagnostics_float_insert_mode_enabled}),
+        \       lsp#callbag#tap({_->s:hide_float()}),
+        \   )
+        \ ),
         \ lsp#callbag#filter({_->g:lsp_diagnostics_float_cursor}),
         \ lsp#callbag#tap({_->s:hide_float()}),
         \ lsp#callbag#debounceTime(g:lsp_diagnostics_float_delay),
