@@ -89,3 +89,15 @@ function! lsp#utils#position#vim_to_lsp(expr, pos) abort
          \ }
 endfunction
 
+function! lsp#utils#position#is_valid_for_buffer(bufnr, line, col) abort
+    if a:col < 0
+        return 0
+    endif
+
+    let l:line_str = get(getbufline(a:bufnr, a:line, '$'), 0, '')
+    if a:col > strlen(l:line_str)
+        return 0
+    endif
+
+    return 1
+endfunction

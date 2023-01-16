@@ -163,18 +163,19 @@ function! s:place_highlights(server, diagnostics_response, bufnr) abort
                    \ l:line - 1, l:highlight_start_col - 1, l:highlight_end_col == -1 ? -1 : l:highlight_end_col)
             endfor
         else
-            try
-                " TODO: need to check for valid range before calling prop_add
-                " See https://github.com/prabirshrestha/vim-lsp/pull/721
-                silent! call prop_add(l:start_line, l:start_col, {
-                    \ 'end_lnum': l:end_line,
-                    \ 'end_col': l:end_col,
-                    \ 'bufnr': a:bufnr,
-                    \ 'type': s:get_prop_type_name(l:severity),
-                    \ })
-            catch
-                call lsp#log('diagnostics', 'place_highlights', 'prop_add', v:exception, v:throwpoint)
-            endtry
+            if lsp#utils#position#is_valid_for_buffer(a:bufnr, l:start_line, l:start_col) &&
+             \ lsp#utils#position#is_valid_for_buffer(a:bufnr, l:end_line, l:end_col)
+                try
+                    silent! call prop_add(l:start_line, l:start_col, {
+                        \ 'end_lnum': l:end_line,
+                        \ 'end_col': l:end_col,
+                        \ 'bufnr': a:bufnr,
+                        \ 'type': s:get_prop_type_name(l:severity),
+                        \ })
+                catch
+                    call lsp#log('diagnostics', 'place_highlights', 'prop_add', v:exception, v:throwpoint)
+                endtry
+            endif
         endif
     endfor
 endfunction
