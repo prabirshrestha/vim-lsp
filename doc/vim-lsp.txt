@@ -57,6 +57,8 @@ CONTENTS                                                  *vim-lsp-contents*
 			     |g:lsp_diagnostics_virtual_text_padding_left|
       g:lsp_diagnostics_virtual_text_wrap
 			     |g:lsp_diagnostics_virtual_text_wrap|
+      g:lsp_diagnostics_virtual_text_only_highest_severity_enabled
+			     |g:lsp_diagnostics_virtual_text_only_highest_severity_enabled|
       g:lsp_document_code_action_signs_enabled
 			     |g:lsp_document_code_actions_signs_enabled|
       g:lsp_document_code_action_signs_delay
@@ -769,6 +771,17 @@ g:lsp_diagnostics_virtual_text_wrap       *g:lsp_diagnostics_virtual_text_wrap*
 
     Example: >
 	let g:lsp_diagnostics_virtual_text_wrap = "truncate"
+
+g:lsp_diagnostics_virtual_text_only_highest_severity_enabled
+		  *g:lsp_diagnostics_virtual_text_only_highest_severity_enabled*
+    Type: |Boolean|
+    Default: `0`
+
+    Determines whether or not to show only diagnostic virtual text of the
+    highest severity. Requires |g:lsp_diagnostics_virtual_text_enabled|.
+
+    Example: >
+	let g:lsp_diagnostics_virtual_text_only_highest_severity_enabled = 0
 
 g:lsp_document_code_action_signs_enabled
 				      *g:lsp_document_code_action_signs_enabled*

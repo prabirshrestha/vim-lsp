@@ -156,9 +156,12 @@ function! s:set_virtual_text(params) abort
 endfunction
 
 function! s:place_virtual_text(server, diagnostics_response, bufnr) abort
+    let l:line_props = {}
+
     for l:item in lsp#utils#iteratable(a:diagnostics_response['params']['diagnostics'])
         let l:line = lsp#utils#position#lsp_line_to_vim(a:bufnr, l:item['range']['start'])
-        let l:name = get(s:severity_sign_names_mapping, get(l:item, 'severity', 3), 'LspError')
+        let l:severity = get(l:item, 'severity', 3)
+        let l:name = get(s:severity_sign_names_mapping, l:severity, 'LspError')
         let l:text = g:lsp_diagnostics_virtual_text_prefix . l:item['message']
 
         " Some language servers report an unexpected EOF one line past the end
@@ -175,9 +178,18 @@ function! s:place_virtual_text(server, diagnostics_response, bufnr) abort
             " it's an error to add virtual text on lines that don't exist
             " anymore due to async processing, just skip such diagnostics
             if l:line <= getbufinfo(a:bufnr)[0].linecount
+                if g:lsp_diagnostics_virtual_text_only_highest_severity_enabled && has_key(l:line_props, l:line)
+                  " Replace with virtual text of higher severity
+                  if l:severity < l:line_props[l:line]['severity']
+                    call prop_remove({'id': l:line_props[l:line]['prop_id']}, l:line)
+                  else
+                    continue
+                  endif
+                endif
+
                 let l:type = 'vim_lsp_' . l:name . '_virtual_text'
                 call prop_remove({'all': v:true, 'type': l:type, 'bufnr': a:bufnr}, l:line)
-                call prop_add(
+                let l:prop_id = prop_add(
                 \ l:line, 0,
                 \ {
                 \   'type': l:type, 'text': l:text, 'bufnr': a:bufnr,
@@ -185,6 +197,11 @@ function! s:place_virtual_text(server, diagnostics_response, bufnr) abort
                 \   'text_padding_left': g:lsp_diagnostics_virtual_text_padding_left,
                 \   'text_wrap': g:lsp_diagnostics_virtual_text_wrap,
                 \ })
+
+                let l:line_props[l:line] = {
+                \ 'prop_id': l:prop_id,
+                \ 'severity': l:severity,
+                \ }
             endif
         endif
     endfor
