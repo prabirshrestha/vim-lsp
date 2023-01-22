@@ -186,7 +186,7 @@ function! s:place_highlights(server, diagnostics_response, bufnr) abort
                     if l:line == l:end_line
                         let l:highlight_end_col = l:end_col
                     else
-                        let l:highlight_end_col = strlen(getbufoneline(a:bufnr, l:line)) + 1
+                        let l:highlight_end_col = strlen(getbufline(a:bufnr, l:line, l:line)[0]) + 1
                     endif
 
                     try
