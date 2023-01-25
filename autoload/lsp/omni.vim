@@ -41,6 +41,10 @@ let s:is_user_data_support = has('patch-8.0.1493')
 let s:managed_user_data_key_base = 0
 let s:managed_user_data_map = {}
 
+let s:is_lua_vim_call_support = (!has('nvim') && has('patch-8.2.0775')) 
+    \ || (has('nvim') && has('nvim-0.5'))
+let s:use_lua = lsp#utils#has_lua() && g:lsp_use_lua && s:is_lua_vim_call_support
+let s:vim_eval = has('nvim') ? 'vim.api.nvim_eval' : 'vim.eval'
 " }}}
 
 " completion state
@@ -299,60 +303,33 @@ function! lsp#omni#get_vim_completion_items(options) abort
     endif
 
     let l:start_character = l:complete_position['character']
+    if s:use_lua
+        let l:res = luaeval(
+          \ 'vimlsp_convert_vim_completion_items('
+          \ . s:vim_eval . '("l:items"), '
+          \ . s:vim_eval . '("l:kind_text_mappings"), '
+          \ . s:vim_eval . '("l:default_start_character"), '
+          \ . s:vim_eval . '("l:start_character"), '
+          \ . s:vim_eval . '("s:is_user_data_support"), '
+          \ . s:vim_eval . '("l:server_name"), '
+          \ . s:vim_eval . '("l:complete_position"), '
+          \ . s:vim_eval . '("l:refresh_pattern"), '
+          \ . s:vim_eval . '("l:current_line"), '
+          \ . s:vim_eval . '("has(\"nvim\")"))')
 
-    let l:start_characters = [] " The mapping of item specific start_character.
-    let l:vim_complete_items = []
-    for l:completion_item in l:items
-        let l:expandable = get(l:completion_item, 'insertTextFormat', 1) == 2
-        let l:vim_complete_item = {
-            \ 'kind': get(l:kind_text_mappings, get(l:completion_item, 'kind', '') , ''),
-            \ 'dup': 1,
-            \ 'empty': 1,
-            \ 'icase': 1,
-            \ }
-        let l:range = lsp#utils#text_edit#get_range(get(l:completion_item, 'textEdit', {}))
-        if has_key(l:completion_item, 'textEdit') && type(l:completion_item['textEdit']) == s:t_dict && !empty(l:range) && has_key(l:completion_item['textEdit'], 'newText')
-            let l:text_edit_new_text = l:completion_item['textEdit']['newText']
-            if has_key(l:completion_item, 'filterText') && !empty(l:completion_item['filterText']) && matchstr(l:text_edit_new_text, '^' . l:refresh_pattern) ==# ''
-                " Use filterText as word.
-                let l:vim_complete_item['word'] = l:completion_item['filterText']
-            else
-                " Use textEdit.newText as word.
-                let l:vim_complete_item['word'] = l:text_edit_new_text
-            endif
-
-            " Fix overlapped text if needed.
-            let l:item_start_character = l:range['start']['character']
-            if l:item_start_character < l:default_start_character
-                " Add already typed word. The typescript-language-server returns `[Symbol]` item for the line of `Hoo.|`. So we should add `.` (`.[Symbol]`) .
-                let l:overlap_text = strcharpart(l:current_line, l:item_start_character, l:default_start_character - l:item_start_character)
-                if stridx(l:vim_complete_item['word'], l:overlap_text) != 0
-                    let l:vim_complete_item['word'] = l:overlap_text . l:vim_complete_item['word']
-                endif
-            endif
-            let l:start_character = min([l:item_start_character, l:start_character])
-            let l:start_characters += [l:item_start_character]
-        elseif has_key(l:completion_item, 'insertText') && !empty(l:completion_item['insertText'])
-            let l:vim_complete_item['word'] = l:completion_item['insertText']
-            let l:start_characters += [l:default_start_character]
-        else
-            let l:vim_complete_item['word'] = l:completion_item['label']
-            let l:start_characters += [l:default_start_character]
-        endif
-
-        if l:expandable
-            let l:vim_complete_item['word'] = lsp#utils#make_valid_word(substitute(l:vim_complete_item['word'], '\$[0-9]\+\|\${\%(\\.\|[^}]\)\+}', '', 'g'))
-            let l:vim_complete_item['abbr'] = l:completion_item['label'] . '~'
-        else
-            let l:vim_complete_item['abbr'] = l:completion_item['label']
-        endif
-
-        if s:is_user_data_support
-            let l:vim_complete_item['user_data'] = s:create_user_data(l:completion_item, l:server_name, l:complete_position, l:start_characters[len(l:start_characters) - 1])
-        endif
-
-        let l:vim_complete_items += [l:vim_complete_item]
-    endfor
+        let l:start_characters = l:res['start_characters'] " The mapping of item specific start_character.
+        let l:vim_complete_items = l:res['vim_complete_items']
+        let l:start_character = l:res['start_character']
+        let s:managed_user_data_key_base += l:res['managed_user_data_key_base']
+        call extend(s:managed_user_data_map, l:res['managed_user_data_map'])
+    else
+        let l:res = s:convert_vim_completion_items(
+            \ l:items, l:kind_text_mappings, l:default_start_character,
+            \ l:start_character, l:server_name, l:complete_position, l:refresh_pattern, l:current_line)
+        let l:start_characters = l:res['start_characters'] " The mapping of item specific start_character.
+        let l:vim_complete_items = l:res['vim_complete_items']
+        let l:start_character = l:res['start_character']
+    endif
 
     " Add the additional text for startcol correction.
     if l:start_character != l:default_start_character
@@ -375,8 +352,12 @@ endfunction
 " This function should call at `CompleteDone` only if not empty `v:completed_item`.
 "
 function! lsp#omni#_clear_managed_user_data_map() abort
-    let s:managed_user_data_key_base = 0
-    let s:managed_user_data_map = {}
+    if s:use_lua
+        let l:res = luaeval('vimlsp_clear_managed_user_data_map()')
+    else
+        let s:managed_user_data_key_base = 0
+        let s:managed_user_data_map = {}
+    endif
 endfunction
 
 "
@@ -450,4 +431,216 @@ function! s:get_refresh_pattern(server_names) abort
     return '\(\k\+$\)'
 endfunction
 
+" }}}
+
+" {{{
+if s:use_lua
+    if !exists('s:lua_loaded')
+        lua <<EOF
+        --
+        managed_user_data_key_base = 0
+        managed_user_data_map = {}
+
+        function vimlsp_convert_vim_completion_items(
+            items, kind_text_mappings, default_start_character, start_character,
+            is_user_data_support, server_name, complete_position, refresh_pattern,
+            current_line, has_nvim)
+          local has_nvim = has_nvim > 0
+          local to_dict = function(dict)
+              return has_nvim and dict or vim.dict(dict)
+          end
+          local to_list = function(list)
+              return has_nvim and list or vim.list(list)
+          end
+
+          local start_characters = {} -- The mapping of item specific start_character.
+          local vim_complete_items = {}
+
+          function iter(items)
+              if has_nvim then
+                  return ipairs(items)
+              else
+                  local it = items()
+                  local count = 0
+                  return function()
+                    local item = it()
+                    if item == nil then
+                      return nil
+                    end
+                    count = count + 1
+                    return count, item
+                  end
+              end
+          end
+
+          for _, completion_item in iter(items) do
+              local expandable = completion_item['insertTextFormat'] == 2
+
+              local kind = completion_item['kind']
+              local vim_complete_item = {
+                  kind = kind and kind_text_mappings[has_nvim and tostring(kind) or kind] or '',
+                  dup = 1,
+                  empty = 1,
+                  icase = 1,
+              }
+              local range = get_range(completion_item['textEdit'], has_nvim)
+
+              if completion_item['textEdit'] and completion_item['textEdit']['newText'] and
+                 range and range['start'] and range['start']['character'] then
+                  local text_edit_new_text = completion_item['textEdit']['newText']
+                  if completion_item['filterText'] and
+                     string.sub(text_edit_new_text, 1, #refresh_pattern) ~= refresh_pattern then
+                      -- Use filterText as word.
+                      vim_complete_item['word'] = completion_item['filterText']
+                  else
+                      -- Use textEdit.newText as word.
+                      vim_complete_item['word'] = text_edit_new_text
+                  end
+
+                  -- Fix overlapped text if needed.
+                  local item_start_character = range['start']['character']
+                  if item_start_character < default_start_character then
+                      -- Add already typed word. The typescript-language-server returns `[Symbol]` item for the line of `Hoo.|`. So we should add `.` (`.[Symbol]`) .
+                      local overlap_text = string.substring(current_line, item_start_character + 1, default_start_character - item_start_character + 1)
+                      if string.find(vim_complete_item['word'], overlap_text, 1, true) ~= nil then
+                          vim_complete_item['word'] = overlap_text . vim_complete_item['word']
+                      end
+                  end
+
+                  start_character = math.min(item_start_character, start_character)
+                  table.insert(start_characters, item_start_character)
+              elseif completion_item['insertText'] then
+                  vim_complete_item['word'] = completion_item['insertText']
+                  table.insert(start_characters, default_start_character)
+              else
+                  vim_complete_item['word'] = completion_item['label']
+                  table.insert(start_characters, default_start_character)
+              end
+
+              if expandable then
+                  vim_complete_item['word'] = vim.call('lsp#utils#make_valid_word', vim_complete_item['word'])
+                  vim_complete_item['abbr'] = completion_item['label'] .. '~'
+              else
+                  vim_complete_item['abbr'] = completion_item['label']
+              end
+
+              if is_user_data_support then
+                  vim_complete_item['user_data'] = create_user_data(completion_item, server_name, complete_position, start_characters[#start_characters], to_dict)
+                  managed_user_data_key_base = managed_user_data_key_base + 1
+              end
+
+              table.insert(vim_complete_items, to_dict(vim_complete_item))
+          end
+
+          return to_dict({
+              start_characters = to_list(start_characters),
+              vim_complete_items = to_list(vim_complete_items),
+              start_character = start_character,
+              managed_user_data_key_base = managed_user_data_key_base,
+              managed_user_data_map = to_dict(managed_user_data_map),
+          })
+        end
+
+        function get_range(text_edit, has_nvim)
+            local table_type = has_nvim and 'table' or 'userdata'
+            if type(text_edit) ~= table_type then
+                return nil
+            end
+            local insert = text_edit['insert']
+            if type(insert) == table_type then
+                return insert
+            end
+            return text_edit['range']
+        end
+
+        function create_user_data_key(base)
+            return '{"vim-lsp/key":"' .. base .. '"}'
+        end
+
+        function create_user_data(completion_item, server_name, complete_position, start_character, to_dict)
+            local user_data_key = create_user_data_key(managed_user_data_key_base)
+            managed_user_data_map[user_data_key] = to_dict({
+              complete_position = complete_position,
+              server_name = server_name,
+              completion_item = completion_item,
+              start_character = start_character,
+            })
+            return user_data_key
+        end
+
+        function vimlsp_clear_managed_user_data_map()
+            managed_user_data_key_base = 0
+            managed_user_data_map = {}
+        end
+EOF
+    let s:lua_loaded = 1
+    endif
+else
+    function! s:convert_vim_completion_items(
+        \ items, kind_text_mappings, default_start_character,
+        \ start_character, server_name, complete_position,
+        \ refresh_pattern, current_line,
+        \ ) abort
+        let l:start_characters = []
+        let l:vim_complete_items = []
+        let l:start_character = a:start_character
+        for l:completion_item in a:items
+            let l:expandable = get(l:completion_item, 'insertTextFormat', 1) == 2
+            let l:vim_complete_item = {
+                \ 'kind': get(a:kind_text_mappings, get(l:completion_item, 'kind', '') , ''),
+                \ 'dup': 1,
+                \ 'empty': 1,
+                \ 'icase': 1,
+                \ }
+            let l:range = lsp#utils#text_edit#get_range(get(l:completion_item, 'textEdit', {}))
+            if has_key(l:completion_item, 'textEdit') && type(l:completion_item['textEdit']) == s:t_dict && !empty(l:range) && has_key(l:completion_item['textEdit'], 'newText')
+                let l:text_edit_new_text = l:completion_item['textEdit']['newText']
+                if has_key(l:completion_item, 'filterText') && !empty(l:completion_item['filterText']) && matchstr(l:text_edit_new_text, '^' . a:refresh_pattern) ==# ''
+                    " Use filterText as word.
+                    let l:vim_complete_item['word'] = l:completion_item['filterText']
+                else
+                    " Use textEdit.newText as word.
+                    let l:vim_complete_item['word'] = l:text_edit_new_text
+                endif
+
+                " Fix overlapped text if needed.
+                let l:item_start_character = l:range['start']['character']
+                if l:item_start_character < a:default_start_character
+                    " Add already typed word. The typescript-language-server returns `[Symbol]` item for the line of `Hoo.|`. So we should add `.` (`.[Symbol]`) .
+                    let l:overlap_text = strcharpart(a:current_line, l:item_start_character, a:default_start_character - l:item_start_character)
+                    if stridx(l:vim_complete_item['word'], l:overlap_text) != 0
+                        let l:vim_complete_item['word'] = l:overlap_text . l:vim_complete_item['word']
+                    endif
+                endif
+                let l:start_character = min([l:item_start_character, l:start_character])
+                let l:start_characters += [l:item_start_character]
+            elseif has_key(l:completion_item, 'insertText') && !empty(l:completion_item['insertText'])
+                let l:vim_complete_item['word'] = l:completion_item['insertText']
+                let l:start_characters += [a:default_start_character]
+            else
+                let l:vim_complete_item['word'] = l:completion_item['label']
+                let l:start_characters += [a:default_start_character]
+            endif
+
+            if l:expandable
+                let l:vim_complete_item['word'] = lsp#utils#make_valid_word(l:vim_complete_item['word'])
+                let l:vim_complete_item['abbr'] = l:completion_item['label'] . '~'
+            else
+                let l:vim_complete_item['abbr'] = l:completion_item['label']
+            endif
+
+            if s:is_user_data_support
+                let l:vim_complete_item['user_data'] = s:create_user_data(l:completion_item, a:server_name, a:complete_position, l:start_characters[len(l:start_characters) - 1])
+            endif
+
+            let l:vim_complete_items += [l:vim_complete_item]
+        endfor
+
+        return {
+        \   'start_characters': l:start_characters,
+        \   'vim_complete_items': l:vim_complete_items,
+        \   'start_character': l:start_character,
+        \   }
+    endfunction
+endif
 " }}}
