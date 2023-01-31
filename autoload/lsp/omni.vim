@@ -270,6 +270,14 @@ endfunction
 " @return { 'items': v:completed_item[], 'incomplete': v:t_bool, 'startcol': number }
 "
 function! lsp#omni#get_vim_completion_items(options) abort
+    if lsp#utils#has_vim9script() && g:lsp_use_vim9script
+        return s:GetVimCompletionItems(a:options)
+    else
+        return s:get_vim_completion_items(a:options)
+    endif
+endfunction
+
+function! s:get_vim_completion_items(options) abort
     let l:server = a:options['server']
     let l:server_name = l:server['name']
     let l:kind_text_mappings = s:get_kind_text_mappings(l:server)
@@ -303,7 +311,6 @@ function! lsp#omni#get_vim_completion_items(options) abort
     let l:start_characters = [] " The mapping of item specific start_character.
     let l:vim_complete_items = []
     for l:completion_item in l:items
-        let l:expandable = get(l:completion_item, 'insertTextFormat', 1) == 2
         let l:vim_complete_item = {
             \ 'kind': get(l:kind_text_mappings, get(l:completion_item, 'kind', '') , ''),
             \ 'dup': 1,
@@ -340,8 +347,9 @@ function! lsp#omni#get_vim_completion_items(options) abort
             let l:start_characters += [l:default_start_character]
         endif
 
+        let l:expandable = get(l:completion_item, 'insertTextFormat', 1) == 2
         if l:expandable
-            let l:vim_complete_item['word'] = lsp#utils#make_valid_word(substitute(l:vim_complete_item['word'], '\$[0-9]\+\|\${\%(\\.\|[^}]\)\+}', '', 'g'))
+            let l:vim_complete_item['word'] = lsp#utils#make_valid_word(l:vim_complete_item['word'])
             let l:vim_complete_item['abbr'] = l:completion_item['label'] . '~'
         else
             let l:vim_complete_item['abbr'] = l:completion_item['label']
@@ -450,4 +458,157 @@ function! s:get_refresh_pattern(server_names) abort
     return '\(\k\+$\)'
 endfunction
 
+" }}}
+
+" Vim9script {{{
+function! s:init_vim9() abort
+    def s:GetVimCompletionItems(options: dict<any>): dict<any>
+        const server = options['server']
+        const server_name = server['name']
+        const kind_text_mappings = s:get_kind_text_mappings(server)
+        const complete_position = options['position']
+        const current_line = getline('.')
+        const default_startcol = s:get_startcol(strcharpart(current_line, 0, complete_position['character']), [server_name])
+        const default_start_character = strchars(strpart(current_line, 0, default_startcol - 1))
+        const refresh_pattern = s:get_refresh_pattern([server_name])
+
+        var items: list<dict<any>>
+        var incomplete: bool
+        const result = options['response']['result']
+        if type(result) == type([])
+            items = result
+            incomplete = v:false
+        elseif type(result) == type({})
+            items = result['items']
+            incomplete = result['isIncomplete']
+        else
+            items = []
+            incomplete = v:false
+        endif
+
+        const sort = has_key(server, 'config') && has_key(server['config'], 'sort') ? server['config']['sort'] : v:null
+
+        if len(items) > 0 && type(sort) == s:t_dict && len(items) <= sort['max']
+          # If first item contains sortText, maybe we can use sortText
+          sort(items, function('s:sort_by_sorttext'))
+        endif
+
+        var start_character = complete_position['character']
+
+        var start_characters = [] # The mapping of item specific start_character.
+        var vim_complete_items = []
+        for completion_item in items
+            var vim_complete_item = {
+                \ 'kind': get(kind_text_mappings, get(completion_item, 'kind', ''), ''),
+                \ 'dup': 1,
+                \ 'empty': 1,
+                \ 'icase': 1,
+                \ }
+            const range = s:LspUtilsTextEditGetRange(get(completion_item, 'textEdit', {}))
+            if has_key(completion_item, 'textEdit') && type(completion_item['textEdit']) == s:t_dict && !empty(range) && has_key(completion_item['textEdit'], 'newText')
+                const text_edit_new_text = completion_item['textEdit']['newText']
+                if has_key(completion_item, 'filterText') && !empty(completion_item['filterText']) && matchstr(text_edit_new_text, '^' .. refresh_pattern) ==# ''
+                    # Use filterText as word.
+                    vim_complete_item['word'] = completion_item['filterText']
+                else
+                    # Use textEdit.newText as word.
+                    vim_complete_item['word'] = text_edit_new_text
+                endif
+
+                # Fix overlapped text if needed.
+                const item_start_character = range['start']['character']
+                if item_start_character < default_start_character
+                    # Add already typed word. The typescript-language-server returns `[Symbol]` item for the line of `Hoo.|`. So we should add `.` (`.[Symbol]`) .
+                    const overlap_text = strcharpart(current_line, item_start_character, default_start_character - item_start_character)
+                    if stridx(vim_complete_item['word'], overlap_text) != 0
+                        vim_complete_item['word'] = overlap_text .. vim_complete_item['word']
+                    endif
+                endif
+                start_character = min([item_start_character, start_character])
+                start_characters += [item_start_character]
+            elseif has_key(completion_item, 'insertText') && !empty(completion_item['insertText'])
+                vim_complete_item['word'] = completion_item['insertText']
+                start_characters += [default_start_character]
+            else
+                vim_complete_item['word'] = completion_item['label']
+                start_characters += [default_start_character]
+            endif
+
+            const expandable = get(completion_item, 'insertTextFormat', 1) == 2
+            if expandable
+                vim_complete_item['word'] = LspUtilsMakeValidWord(vim_complete_item['word'])
+                vim_complete_item['abbr'] = completion_item['label'] .. '~'
+            else
+                vim_complete_item['abbr'] = completion_item['label']
+            endif
+
+            if s:is_user_data_support
+                vim_complete_item['user_data'] = s:CreateUserData(completion_item, server_name, complete_position, start_characters[len(start_characters) - 1])
+            endif
+
+            vim_complete_items += [vim_complete_item]
+        endfor
+
+        # Add the additional text for startcol correction.
+        if start_character != default_start_character
+            for i in range(len(start_characters))
+                const item_start_character = start_characters[i]
+                if start_character < item_start_character
+                    const item = vim_complete_items[i]
+                    item['word'] = strcharpart(current_line, start_character, item_start_character - start_character) .. item['word']
+                endif
+            endfor
+        endif
+        var startcol = lsp#utils#position#lsp_character_to_vim('%', { 'line': complete_position['line'], 'character': start_character })
+
+        return { 'items': vim_complete_items, 'incomplete': incomplete ? 1 : 0, 'startcol': startcol }
+    enddef
+
+    def s:CreateUserData(completion_item: dict<any>, server_name: string, complete_position: dict<number>, start_character: number): string
+        const user_data_key = s:CreateUserDataKey(s:managed_user_data_key_base)
+        s:managed_user_data_map[user_data_key] = {
+        \   'complete_position': complete_position,
+        \   'server_name': server_name,
+        \   'completion_item': completion_item,
+        \   'start_character': start_character,
+        \ }
+        s:managed_user_data_key_base += 1
+        return user_data_key
+    enddef
+
+    def s:CreateUserDataKey(base: number): string
+        return '{"vim-lsp/key":"' .. base .. '"}'
+    enddef
+
+    " Replaced from lsp#utils#text_edit#get_range()
+    def s:LspUtilsTextEditGetRange(text_edit: any): any
+      if type(text_edit) != v:t_dict
+        return v:null
+      endif
+      const insert = get(text_edit, 'insert', v:null)
+      if type(insert) == v:t_dict
+        return insert
+      endif
+      return get(text_edit, 'range', v:null)
+    enddef
+
+    " Replaced from lsp#utils#make_valid_word().
+    def s:LspUtilsMakeValidWord(str: string): string
+       var s = substitute(str, '\$[0-9]\+\|\${\%(\\.\|[^}]\)\+}', '', 'g')
+       s = substitute(str, '\\\(.\)', '\1', 'g')
+       const valid = matchstr(str, '^[^"'' (<{\[\t\r\n]\+')
+       if empty(valid)
+           return s
+       endif
+       if valid =~# ':$'
+           return valid[ : -2]
+       endif
+       return valid
+    enddef
+
+endfunction
+
+if lsp#utils#has_vim9script()
+    call s:init_vim9()
+endif
 " }}}
