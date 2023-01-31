@@ -19,8 +19,12 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
-        name: [vim-v82-x64, vim-v81-x64]
+        name: [vim-v90-x64, vim-v82-x64, vim-v81-x64]
         include:
+          - name: vim-v90-x64
+            os: ubuntu-latest
+            vim_version: 9.0.0250
+            glibc_version: 2.15
           - name: vim-v82-x64
             os: ubuntu-latest
             vim_version: 8.2.0813
