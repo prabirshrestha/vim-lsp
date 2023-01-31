@@ -303,50 +303,64 @@ function! lsp#omni#get_vim_completion_items(options) abort
     let l:start_characters = [] " The mapping of item specific start_character.
     let l:vim_complete_items = []
     for l:completion_item in l:items
-        let l:expandable = get(l:completion_item, 'insertTextFormat', 1) == 2
         let l:vim_complete_item = {
             \ 'kind': get(l:kind_text_mappings, get(l:completion_item, 'kind', '') , ''),
             \ 'dup': 1,
             \ 'empty': 1,
             \ 'icase': 1,
             \ }
-        let l:range = lsp#utils#text_edit#get_range(get(l:completion_item, 'textEdit', {}))
-        if has_key(l:completion_item, 'textEdit') && type(l:completion_item['textEdit']) == s:t_dict && !empty(l:range) && has_key(l:completion_item['textEdit'], 'newText')
-            let l:text_edit_new_text = l:completion_item['textEdit']['newText']
-            if has_key(l:completion_item, 'filterText') && !empty(l:completion_item['filterText']) && matchstr(l:text_edit_new_text, '^' . l:refresh_pattern) ==# ''
-                " Use filterText as word.
-                let l:vim_complete_item['word'] = l:completion_item['filterText']
-            else
-                " Use textEdit.newText as word.
-                let l:vim_complete_item['word'] = l:text_edit_new_text
-            endif
 
-            " Fix overlapped text if needed.
-            let l:item_start_character = l:range['start']['character']
-            if l:item_start_character < l:default_start_character
-                " Add already typed word. The typescript-language-server returns `[Symbol]` item for the line of `Hoo.|`. So we should add `.` (`.[Symbol]`) .
-                let l:overlap_text = strcharpart(l:current_line, l:item_start_character, l:default_start_character - l:item_start_character)
-                if stridx(l:vim_complete_item['word'], l:overlap_text) != 0
-                    let l:vim_complete_item['word'] = l:overlap_text . l:vim_complete_item['word']
+        " Use textEdit.newText or filterText
+        if has_key(l:completion_item, 'textEdit')
+            let l:text_edit = l:completion_item['textEdit']
+            let l:range = lsp#utils#text_edit#get_range(l:text_edit)
+            if type(l:text_edit) == v:t_dict && has_key(l:text_edit, 'newText') && !empty(l:range)
+                let l:text_edit_new_text = l:text_edit['newText']
+                let l:text_edit_filter_text = get(l:completion_item, 'filterText', v:null)
+                if !empty(l:text_edit_filter_text) && matchstr(l:text_edit_new_text, '^' . l:refresh_pattern) ==# ''
+                    " Use filterText as word.
+                    let l:vim_complete_item['word'] = l:text_edit_filter_text
+                else
+                    " Use textEdit.newText as word.
+                    let l:vim_complete_item['word'] = l:text_edit_new_text
                 endif
+
+                " Fix overlapped text if needed.
+                let l:item_start_character = l:range['start']['character']
+                if l:item_start_character < l:default_start_character
+                    " Add already typed word. The typescript-language-server returns `[Symbol]` item for the line of `Hoo.|`. So we should add `.` (`.[Symbol]`) .
+                    let l:overlap_text = strcharpart(l:current_line, l:item_start_character, l:default_start_character - l:item_start_character)
+                    if stridx(l:vim_complete_item['word'], l:overlap_text) != 0
+                        let l:vim_complete_item['word'] = l:overlap_text . l:vim_complete_item['word']
+                    endif
+                endif
+                let l:start_character = min([l:item_start_character, l:start_character])
+                let l:start_characters += [l:item_start_character]
             endif
-            let l:start_character = min([l:item_start_character, l:start_character])
-            let l:start_characters += [l:item_start_character]
-        elseif has_key(l:completion_item, 'insertText') && !empty(l:completion_item['insertText'])
-            let l:vim_complete_item['word'] = l:completion_item['insertText']
-            let l:start_characters += [l:default_start_character]
-        else
-            let l:vim_complete_item['word'] = l:completion_item['label']
-            let l:start_characters += [l:default_start_character]
         endif
 
-        if l:expandable
-            let l:vim_complete_item['word'] = lsp#utils#make_valid_word(substitute(l:vim_complete_item['word'], '\$[0-9]\+\|\${\%(\\.\|[^}]\)\+}', '', 'g'))
+        if !has_key(l:vim_complete_item, 'word')
+            " Use insertText
+            if !empty(get(l:completion_item, 'insertText'))
+                let l:vim_complete_item['word'] = l:completion_item['insertText']
+                let l:start_characters += [l:default_start_character]
+
+            " Use label
+            else
+                let l:vim_complete_item['word'] = l:completion_item['label']
+                let l:start_characters += [l:default_start_character]
+            endif
+        endif
+
+        if get(l:completion_item, 'insertTextFormat', 1) == 2
+            " for snippet
+            let l:vim_complete_item['word'] = lsp#utils#make_valid_word(l:vim_complete_item['word'])
             let l:vim_complete_item['abbr'] = l:completion_item['label'] . '~'
         else
             let l:vim_complete_item['abbr'] = l:completion_item['label']
         endif
 
+        " Add user data
         if s:is_user_data_support
             let l:vim_complete_item['user_data'] = s:create_user_data(l:completion_item, l:server_name, l:complete_position, l:start_characters[len(l:start_characters) - 1])
         endif
