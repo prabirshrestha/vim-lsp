@@ -95,12 +95,8 @@ function! lsp#internal#inlay_hints#_enable() abort
     if !s:use_vim_textprops | return | endif
     if !g:lsp_inlay_hints_enabled | return | endif
 
-    if !hlexists('lspInlayHintsType')
-        highlight link lspInlayHintsType Label
-    endif
-    if !hlexists('lspInlayHintsParameter')
-        highlight link lspInlayHintsParameter Todo
-    endif
+    highlight default link lspInlayHintsType Label
+    highlight default link lspInlayHintsParameter Todo
 
     call s:init_inlay_hints()
     let s:Dispose = lsp#callbag#pipe(
