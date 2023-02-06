@@ -44,6 +44,10 @@ function! lsp#utils#_has_highlights() abort
     return s:has_higlights
 endfunction
 
+function! lsp#utils#has_vim9script() abort
+    return has('vim9script') && has('patch-9.0.0250')
+endfunction
+
 let s:has_popup_menu = exists('*popup_menu')
 function! lsp#utils#_has_popup_menu() abort
     return s:has_popup_menu

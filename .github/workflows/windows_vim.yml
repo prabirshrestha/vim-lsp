@@ -23,7 +23,7 @@ jobs:
         include:
           - name: vim-v90-x64
             os: windows-latest
-            vim_version: 9.0.0000
+            vim_version: 9.0.0250
             vim_arch: x64
             vim_ver_path: vim90
           - name: vim-v82-x64
