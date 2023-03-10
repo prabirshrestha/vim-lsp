@@ -745,6 +745,19 @@ g:lsp_diagnostics_virtual_text_align    *g:lsp_diagnostics_virtual_text_align*
     Determines the align of the diagnostics virtual text. Requires
     |g:lsp_diagnostics_virtual_text_enabled|.
 
+    Possible values are:
+
+       after   after the end of the line
+       right   right aligned in the window (unless the text wraps to the next
+               screen line)
+       below   in the next screen line
+       above   just above the line
+
+    Only one "right" property can fit in each line, if there are two or more
+    these will go in a separate line (still right aligned).
+
+    This value is passed as the "text_align" property in a |prop_add()| call.
+
     Example: >
 	let g:lsp_diagnostics_virtual_text_align = "right"
 
