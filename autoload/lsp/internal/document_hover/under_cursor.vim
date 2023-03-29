@@ -36,6 +36,13 @@ function! lsp#internal#document_hover#under_cursor#do(options) abort
         endif
     endif
 
+    if l:ui ==# 'balloon'
+      let l:bufnr = v:beval_bufnr
+      let l:position = { 'line': v:beval_lnum - 1, 'character': v:beval_col }
+    else
+      let l:position = lsp#get_position()
+    endif
+
     if has_key(a:options, 'server')
         let l:servers = [a:options['server']]
     else
@@ -57,7 +64,7 @@ function! lsp#internal#document_hover#under_cursor#do(options) abort
         \ 'method': 'textDocument/hover',
         \ 'params': {
         \   'textDocument': lsp#get_text_document_identifier(),
-        \   'position': lsp#get_position(),
+        \   'position': l:position,
         \ },
         \ }
     call lsp#callbag#pipe(
@@ -90,10 +97,15 @@ function! s:show_hover(ui, server_name, request, response) abort
 
     echo ''
 
-    if s:FloatingWindow.is_available() && a:ui ==? 'float'
-        call s:show_floating_window(a:server_name, a:request, a:response)
+    if a:ui ==? 'balloon'
+        let l:contents = s:get_contents(a:response['result']['contents'])
+        call balloon_show(join(l:contents, "\n\n"))
     else
-        call s:show_preview_window(a:server_name, a:request, a:response)
+        if s:FloatingWindow.is_available() && a:ui ==? 'float'
+            call s:show_floating_window(a:server_name, a:request, a:response)
+        else
+            call s:show_preview_window(a:server_name, a:request, a:response)
+        endif
     endif
 endfunction
 
