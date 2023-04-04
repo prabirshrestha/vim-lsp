@@ -1294,7 +1294,8 @@ The vim |dict| containing information about the server.
 	'blocklist': ['javascript', 'typescript']
 <
   * workspace_config:
-    optional vim |dict|
+    optional
+    vim |dict| or a function returning a vim |dict|
     Used to pass workspace configuration to the server after
     initialization. Configuration settings are language-server specific.
 
