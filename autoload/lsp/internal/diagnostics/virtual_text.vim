@@ -40,6 +40,9 @@ if !hlexists('LspHintVirtualText')
   endif
 endif
 
+" imports
+let s:Buffer = vital#lsp#import('VS.Vim.Buffer')
+
 function! lsp#internal#diagnostics#virtual_text#_enable() abort
     " don't even bother registering if the feature is disabled
     if !lsp#utils#_has_nvim_virtual_text() && !lsp#utils#_has_vim_virtual_text() | return | endif
@@ -156,13 +159,14 @@ function! s:set_virtual_text(params) abort
 endfunction
 
 function! s:place_virtual_text(server, diagnostics_response, bufnr) abort
+    let l:linecount = s:Buffer.get_line_count(a:bufnr)
     for l:item in lsp#utils#iteratable(a:diagnostics_response['params']['diagnostics'])
         let l:line = lsp#utils#position#lsp_line_to_vim(a:bufnr, l:item['range']['start'])
         let l:name = get(s:severity_sign_names_mapping, get(l:item, 'severity', 3), 'LspError')
         let l:text = g:lsp_diagnostics_virtual_text_prefix . l:item['message']
 
         " Some language servers report an unexpected EOF one line past the end
-        if l:line == getbufinfo(a:bufnr)[0].linecount + 1
+        if l:line == l:linecount + 1
             let l:line = l:line - 1
         endif
 
@@ -174,7 +178,7 @@ function! s:place_virtual_text(server, diagnostics_response, bufnr) abort
         else
             " it's an error to add virtual text on lines that don't exist
             " anymore due to async processing, just skip such diagnostics
-            if l:line <= getbufinfo(a:bufnr)[0].linecount
+            if l:line <= l:linecount
                 let l:type = 'vim_lsp_' . l:name . '_virtual_text'
                 call prop_remove({'all': v:true, 'type': l:type, 'bufnr': a:bufnr}, l:line)
                 call prop_add(
