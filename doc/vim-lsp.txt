@@ -948,7 +948,7 @@ g:lsp_get_supported_capabilities         *g:lsp_get_supported_capabilities*
     capabilities vim-lsp sends to a language server.
 
     Note: You can obtain the default supported capabilities of vim-lsp by
-    calling `lsp#omni#default_get_supported_capabilities` from within your
+    calling `lsp#default_get_supported_capabilities` from within your
     function.
 
 g:lsp_peek_alignment                                 *g:lsp_peek_alignment*
