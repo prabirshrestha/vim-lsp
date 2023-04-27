@@ -84,6 +84,7 @@ Describe lsp#omni
                         \   'completion_item': item,
                         \   'complete_position': { 'line': 1, 'character': 1 },
                         \   'start_character': 0,
+                        \   'complete_word': 'yyy',
                         \ })
         End
 
@@ -187,6 +188,7 @@ Describe lsp#omni
                         \   'completion_item': item,
                         \   'complete_position': { 'line': 1, 'character': 1 },
                         \   'start_character': 0,
+                        \   'complete_word': 'System.out.println(${0});',
                         \ })
         End
 
