@@ -315,6 +315,20 @@ function! s:native_err_cb(cbctx, channel, response) abort
     endif
 endfunction
 
+function! s:native_exit_cb(cbctx, channel, response) abort
+    if !has_key(a:cbctx, 'ctx') | return | endif
+    let l:ctx = a:cbctx['ctx']
+    if has_key(l:ctx['opts'], 'on_exit')
+        try
+            call l:ctx['opts']['on_exit'](l:ctx['id'], a:response, 'exit')
+        catch
+            call lsp#log('s:on_exit exception', v:exception, v:throwpoint)
+            echom v:exception
+        endtry
+    endif
+    call s:dispose_context(l:ctx['id'])
+endfunction
+
 " public apis {{{
 
 function! lsp#client#start(opts) abort
@@ -324,6 +338,7 @@ function! lsp#client#start(opts) abort
             let l:jobopt = { 'in_mode': 'lsp', 'out_mode': 'lsp', 'noblock': 1,
                 \ 'out_cb': function('s:native_out_cb', [l:cbctx]),
                 \ 'err_cb': function('s:native_err_cb', [l:cbctx]),
+                \ 'exit_cb': function('s:native_exit_cb', [l:cbctx]),
                 \ }
             if has_key(a:opts, 'cwd') | let l:jobopt['cwd'] = a:opts['cwd'] | endif
             if has_key(a:opts, 'env') | let l:jobopt['env'] = a:opts['env'] | endif
