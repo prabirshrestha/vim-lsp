@@ -197,7 +197,7 @@ endfunction
 
 " Find a nearest to a `path` parent directory `directoryname` by traversing the filesystem upwards
 function! lsp#utils#find_nearest_parent_directory(path, directoryname) abort
-    let l:relative_path = finddir(a:directoryname, a:path . ';')
+    let l:relative_path = finddir(a:directoryname, fnameescape(a:path) . ';')
 
     if !empty(l:relative_path)
         return fnamemodify(l:relative_path, ':p')
@@ -208,7 +208,7 @@ endfunction
 
 " Find a nearest to a `path` parent filename `filename` by traversing the filesystem upwards
 function! lsp#utils#find_nearest_parent_file(path, filename) abort
-    let l:relative_path = findfile(a:filename, a:path . ';')
+    let l:relative_path = findfile(a:filename, fnameescape(a:path) . ';')
 
     if !empty(l:relative_path)
         return fnamemodify(l:relative_path, ':p')

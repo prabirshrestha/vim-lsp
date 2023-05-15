@@ -43,7 +43,7 @@ jobs:
             vim_ver_path: vim80
     runs-on: ${{matrix.os}}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Download vim
         shell: PowerShell
         run: Invoke-WebRequest -Uri https://github.com/vim/vim-win32-installer/releases/download/v${{matrix.vim_version}}/gvim_${{matrix.vim_version}}_${{matrix.vim_arch}}.zip -OutFile vim.zip
@@ -52,13 +52,13 @@ jobs:
         run: Expand-Archive -Path vim.zip -DestinationPath $env:USERPROFILE
       - name: Cache gopls
         id: cache-gopls
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: bin/gopls
           key: ${{ runner.os }}-${{ env.VIM_LSP_GO_VERSION }}-${{ env.VIM_LSP_GOPLS_VERSION }}-${{ env.VIM_LSP_GOPLS_CACHE_VER }}-gopls
       - name: Install Go for gopls
         if: steps.cache-gopls.outputs.cache-hit != 'true'
-        uses: actions/setup-go@v2
+        uses: actions/setup-go@v4
         with:
           go-version: ${{ env.VIM_LSP_GO_VERSION }}
       - name: Install gopls
@@ -72,7 +72,7 @@ jobs:
         env:
           GO111MODULE: 'on'
       - name: Download test runner
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           repository: thinca/vim-themis
           path: ./vim-themis

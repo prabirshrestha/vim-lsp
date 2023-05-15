@@ -401,7 +401,7 @@ else
     \   'pos': 'topleft',
     \   'wrap': v:false,
     \   'moved': [0, 0, 0],
-    \   'scrollbar': 0,
+    \   'scrollbar': 1,
     \   'maxwidth': l:style.width,
     \   'maxheight': l:style.height,
     \   'minwidth': l:style.width,

@@ -371,6 +371,12 @@ function! lsp#client#send_request(client_id, opts) abort
         if has_key(a:opts, 'on_notification')
             let l:ctx['on_notifications'][l:request['id']] = a:opts['on_notification']
         endif
+        if get(a:opts, 'sync', 0) !=# 0
+            let l:timeout = get(a:opts, 'sync_timeout', -1)
+            if lsp#utils#_wait(l:timeout, {-> !has_key(l:ctx['requests'], l:request['id'])}, 1) == -1
+                throw 'lsp#client#send_request: timeout'
+            endif
+        endif
         let l:ctx['request_sequence'] = l:request['id']
         return l:request['id']
     else

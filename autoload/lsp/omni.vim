@@ -311,44 +311,43 @@ function! lsp#omni#get_vim_completion_items(options) abort
             \ 'icase': 1,
             \ }
         let l:range = lsp#utils#text_edit#get_range(get(l:completion_item, 'textEdit', {}))
+        let l:complete_word = ''
         if has_key(l:completion_item, 'textEdit') && type(l:completion_item['textEdit']) == s:t_dict && !empty(l:range) && has_key(l:completion_item['textEdit'], 'newText')
             let l:text_edit_new_text = l:completion_item['textEdit']['newText']
             if has_key(l:completion_item, 'filterText') && !empty(l:completion_item['filterText']) && matchstr(l:text_edit_new_text, '^' . l:refresh_pattern) ==# ''
                 " Use filterText as word.
-                let l:vim_complete_item['word'] = l:completion_item['filterText']
+                let l:complete_word = l:completion_item['filterText']
             else
                 " Use textEdit.newText as word.
-                let l:vim_complete_item['word'] = l:text_edit_new_text
+                let l:complete_word = l:text_edit_new_text
             endif
 
-            " Fix overlapped text if needed.
             let l:item_start_character = l:range['start']['character']
-            if l:item_start_character < l:default_start_character
-                " Add already typed word. The typescript-language-server returns `[Symbol]` item for the line of `Hoo.|`. So we should add `.` (`.[Symbol]`) .
-                let l:overlap_text = strcharpart(l:current_line, l:item_start_character, l:default_start_character - l:item_start_character)
-                if stridx(l:vim_complete_item['word'], l:overlap_text) != 0
-                    let l:vim_complete_item['word'] = l:overlap_text . l:vim_complete_item['word']
-                endif
-            endif
             let l:start_character = min([l:item_start_character, l:start_character])
             let l:start_characters += [l:item_start_character]
         elseif has_key(l:completion_item, 'insertText') && !empty(l:completion_item['insertText'])
-            let l:vim_complete_item['word'] = l:completion_item['insertText']
+            let l:complete_word = l:completion_item['insertText']
             let l:start_characters += [l:default_start_character]
         else
-            let l:vim_complete_item['word'] = l:completion_item['label']
+            let l:complete_word = l:completion_item['label']
             let l:start_characters += [l:default_start_character]
         endif
 
         if l:expandable
-            let l:vim_complete_item['word'] = lsp#utils#make_valid_word(substitute(l:vim_complete_item['word'], '\$[0-9]\+\|\${\%(\\.\|[^}]\)\+}', '', 'g'))
+            let l:vim_complete_item['word'] = lsp#utils#make_valid_word(substitute(l:complete_word, '\$[0-9]\+\|\${\%(\\.\|[^}]\)\+}', '', 'g'))
             let l:vim_complete_item['abbr'] = l:completion_item['label'] . '~'
         else
+            let l:vim_complete_item['word'] = l:complete_word
             let l:vim_complete_item['abbr'] = l:completion_item['label']
         endif
 
         if s:is_user_data_support
-            let l:vim_complete_item['user_data'] = s:create_user_data(l:completion_item, l:server_name, l:complete_position, l:start_characters[len(l:start_characters) - 1])
+            let l:vim_complete_item['user_data'] = s:create_user_data(
+                \ l:completion_item,
+                \ l:server_name,
+                \ l:complete_position,
+                \ l:start_characters[-1],
+                \ l:complete_word)
         endif
 
         let l:vim_complete_items += [l:vim_complete_item]
@@ -382,13 +381,14 @@ endfunction
 "
 " create item's user_data.
 "
-function! s:create_user_data(completion_item, server_name, complete_position, start_character) abort
+function! s:create_user_data(completion_item, server_name, complete_position, start_character, complete_word) abort
     let l:user_data_key = s:create_user_data_key(s:managed_user_data_key_base)
     let s:managed_user_data_map[l:user_data_key] = {
     \   'complete_position': a:complete_position,
     \   'server_name': a:server_name,
     \   'completion_item': a:completion_item,
     \   'start_character': a:start_character,
+    \   'complete_word': a:complete_word,
     \ }
     let s:managed_user_data_key_base += 1
     return l:user_data_key

@@ -50,12 +50,12 @@ function! s:on_complete_done() abort
 
   let s:context['done_line'] = getline('.')
   let s:context['done_line_nr'] = line('.')
-  let s:context['completed_item'] = copy(v:completed_item)
   let s:context['done_position'] = lsp#utils#position#vim_to_lsp('%', getpos('.')[1 : 2])
   let s:context['complete_position'] = l:managed_user_data['complete_position']
   let s:context['server_name'] = l:managed_user_data['server_name']
   let s:context['completion_item'] = l:managed_user_data['completion_item']
   let s:context['start_character'] = l:managed_user_data['start_character']
+  let s:context['complete_word'] = l:managed_user_data['complete_word']
   call feedkeys(printf("\<C-r>=<SNR>%d_on_complete_done_after()\<CR>", s:SID()), 'n')
 endfunction
 
@@ -73,12 +73,12 @@ function! s:on_complete_done_after() abort
 
   let l:done_line = s:context['done_line']
   let l:done_line_nr = s:context['done_line_nr']
-  let l:completed_item = s:context['completed_item']
   let l:done_position = s:context['done_position']
   let l:complete_position = s:context['complete_position']
   let l:server_name = s:context['server_name']
   let l:completion_item = s:context['completion_item']
   let l:start_character = s:context['start_character']
+  let l:complete_word = s:context['complete_word']
 
   " check the commit characters are <BS> or <C-w>.
   if line('.') ==# l:done_line_nr && strlen(getline('.')) < strlen(l:done_line)
@@ -95,7 +95,7 @@ function! s:on_complete_done_after() abort
   let l:completion_item = s:resolve_completion_item(l:completion_item, l:server_name)
 
   " clear completed string if need.
-  let l:is_expandable = s:is_expandable(l:done_line, l:done_position, l:complete_position, l:completion_item, l:completed_item)
+  let l:is_expandable = s:is_expandable(l:done_line, l:done_position, l:complete_position, l:completion_item, l:complete_word)
   if l:is_expandable
     call s:clear_auto_inserted_text(l:done_line, l:done_position, l:complete_position)
   endif
@@ -162,7 +162,7 @@ endfunction
 "
 " is_expandable
 "
-function! s:is_expandable(done_line, done_position, complete_position, completion_item, completed_item) abort
+function! s:is_expandable(done_line, done_position, complete_position, completion_item, complete_word) abort
   if get(a:completion_item, 'textEdit', v:null) isnot# v:null
     let l:range = lsp#utils#text_edit#get_range(a:completion_item['textEdit'])
     if l:range['start']['line'] != l:range['end']['line']
@@ -177,7 +177,7 @@ function! s:is_expandable(done_line, done_position, complete_position, completio
     let l:text_edit_after = strcharpart(l:completed_line, l:range['end']['character'], strchars(l:completed_line) - l:range['end']['character'])
     return a:done_line !=# l:text_edit_before . s:trim_unmeaning_tabstop(a:completion_item['textEdit']['newText']) . l:text_edit_after
   endif
-  return s:get_completion_text(a:completion_item) !=# s:trim_unmeaning_tabstop(a:completed_item['word'])
+  return s:get_completion_text(a:completion_item) !=# s:trim_unmeaning_tabstop(a:complete_word)
 endfunction
 
 "
@@ -246,7 +246,7 @@ endfunction
 function! s:clear_auto_inserted_text(done_line, done_position, complete_position) abort
   let l:before = strcharpart(a:done_line, 0, a:complete_position['character'])
   let l:after = strcharpart(a:done_line, a:done_position['character'], (strchars(a:done_line) - a:done_position['character']))
-  call setline('.', l:before . l:after)
+  call setline(a:done_position['line'] + 1, l:before . l:after)
   call cursor([a:done_position['line'] + 1, strlen(l:before) + 1])
 endfunction
 

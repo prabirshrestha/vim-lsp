@@ -40,7 +40,7 @@ jobs:
         run: |
           # https://github.com/Zettlr/Zettlr/issues/3517
           sudo apt-get install libfuse2
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Download vim
         shell: bash
         run: |
@@ -49,13 +49,13 @@ jobs:
           chmod u+x ~/vim/bin/vim
       - name: Cache gopls
         id: cache-gopls
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: bin/gopls
           key: ${{ runner.os }}-${{ env.VIM_LSP_GO_VERSION }}-${{ env.VIM_LSP_GOPLS_VERSION }}-${{ env.VIM_LSP_GOPLS_CACHE_VER }}-gopls
       - name: Install Go for gopls
         if: steps.cache-gopls.outputs.cache-hit != 'true'
-        uses: actions/setup-go@v2
+        uses: actions/setup-go@v4
         with:
           go-version: ${{ env.VIM_LSP_GO_VERSION }}
       - name: Install gopls
@@ -69,7 +69,7 @@ jobs:
         env:
           GO111MODULE: 'on'
       - name: Download test runner
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           repository: thinca/vim-themis
           path: ./vim-themis

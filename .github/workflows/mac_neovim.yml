@@ -36,7 +36,7 @@ jobs:
     runs-on: ${{matrix.os}}
     continue-on-error: ${{matrix.allow_failure}}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Download neovim
         shell: bash
         run: curl -L https://github.com/neovim/neovim/releases/download/${{matrix.neovim_version}}/nvim-macos.tar.gz -o ~/nvim.tar.gz
@@ -46,20 +46,20 @@ jobs:
         run: tar xzf ~/nvim.tar.gz -C ~/
         continue-on-error: ${{matrix.allow_failure}}
       - name: Download test runner
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           repository: thinca/vim-themis
           path: ./vim-themis
           ref: v1.5.5
       - name: Cache gopls
         id: cache-gopls
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: bin/gopls
           key: ${{ runner.os }}-${{ env.VIM_LSP_GO_VERSION }}-${{ env.VIM_LSP_GOPLS_VERSION }}-${{ env.VIM_LSP_GOPLS_CACHE_VER }}-gopls
       - name: Install Go for gopls
         if: steps.cache-gopls.outputs.cache-hit != 'true'
-        uses: actions/setup-go@v2
+        uses: actions/setup-go@v4
         with:
           go-version: ${{ env.VIM_LSP_GO_VERSION }}
       - name: Install gopls

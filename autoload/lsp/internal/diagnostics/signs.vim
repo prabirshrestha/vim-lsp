@@ -25,6 +25,9 @@ if !hlexists('LspHintText')
     highlight link LspHintText Normal
 endif
 
+" imports
+let s:Buffer = vital#lsp#import('VS.Vim.Buffer')
+
 function! lsp#internal#diagnostics#signs#_enable() abort
     " don't even bother registering if the feature is disabled
     if !lsp#utils#_has_signs() | return | endif
@@ -127,15 +130,13 @@ function! s:set_signs(params) abort
 endfunction
 
 function! s:place_signs(server, diagnostics_response, bufnr) abort
+    let l:linecount = s:Buffer.get_line_count(a:bufnr)
     for l:item in lsp#utils#iteratable(a:diagnostics_response['params']['diagnostics'])
         let l:line = lsp#utils#position#lsp_line_to_vim(a:bufnr, l:item['range']['start'])
 
         " Some language servers report an unexpected EOF one line past the end
-        " key 'linecount' may be missing.
-        if has_key(getbufinfo(a:bufnr)[0], 'linecount')
-            if l:line == getbufinfo(a:bufnr)[0].linecount + 1
-                let l:line = l:line - 1
-            endif
+        if  l:line == l:linecount + 1
+            let l:line = l:line - 1
         endif
 
         if has_key(l:item, 'severity') && !empty(l:item['severity'])
