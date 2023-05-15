@@ -160,8 +160,11 @@ function! s:show_floating_window(server_name, request, response) abort
     endif
 
     execute printf('augroup vim_lsp_hover_close_on_move_%d', bufnr('%'))
+        " vint: -ProhibitAutocmdWithNoGroup
         autocmd!
-        execute printf('autocmd InsertEnter,BufLeave,CursorMoved <buffer> call s:close_floating_window_on_move(%s)', getcurpos())
+        autocmd InsertEnter,BufLeave <buffer> call s:close_floating_window()
+        execute printf('autocmd CursorMoved <buffer> call s:close_floating_window_on_move(%s)', getcurpos())
+        " vint: +ProhibitAutocmdWithNoGroup
     augroup END
 
    " Show popupmenu and apply markdown syntax.
