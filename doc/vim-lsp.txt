@@ -1794,7 +1794,7 @@ LspNextReference                                         *:LspNextReference*
 
 Jump to the next reference of the symbol under cursor.
 
-LspNextWarning [-wrap=0]                              :LspNextWarning*
+LspNextWarning [-wrap=0]                              *:LspNextWarning*
 
 Jump to Next warning diagnostics
 With '-wrap=0', stop wrapping around the end of file.
