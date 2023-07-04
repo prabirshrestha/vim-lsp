@@ -28,7 +28,7 @@ endif
 function! lsp#internal#diagnostics#highlights#_enable() abort
     " don't even bother registering if the feature is disabled
     if !lsp#utils#_has_highlights() | return | endif
-    if !g:lsp_diagnostics_highlights_enabled | return | endif 
+    if !g:lsp_diagnostics_highlights_enabled | return | endif
 
     if s:enabled | return | endif
     let s:enabled = 1
@@ -186,7 +186,7 @@ function! s:place_highlights(server, diagnostics_response, bufnr) abort
                     if l:line == l:end_line
                         let l:highlight_end_col = l:end_col
                     else
-                        let l:highlight_end_col = strlen(getbufline(a:bufnr, l:line, l:line)[0]) + 1
+                        let l:highlight_end_col = strlen(getbufoneline(a:bufnr, l:line)) + 1
                     endif
 
                     try
