@@ -74,6 +74,7 @@ CONTENTS                                                  *vim-lsp-contents*
       g:lsp_document_highlight_enabled      |g:lsp_document_highlight_enabled|
       g:lsp_document_highlight_delay        |g:lsp_document_highlight_delay|
       g:lsp_get_supported_capabilities      |g:lsp_get_supported_capabilities|
+      g:lsp_document_symbol_detail          |g:lsp_document_symbol_detail|
       g:lsp_peek_alignment                  |g:lsp_peek_alignment|
       g:lsp_preview_max_width               |g:lsp_preview_max_width|
       g:lsp_preview_max_height              |g:lsp_preview_max_height|
@@ -950,6 +951,22 @@ g:lsp_get_supported_capabilities         *g:lsp_get_supported_capabilities*
     Note: You can obtain the default supported capabilities of vim-lsp by
     calling `lsp#default_get_supported_capabilities` from within your
     function.
+
+g:lsp_document_symbol_detail                 *g:lsp_document_symbol_detail*
+    Type: |Number|
+    Default: `0`
+
+    Determines whether document symbol shows details or not. Set to `1` to
+    show details.
+
+    Note: showing details needs to turn on setting below: >
+      \ 'capabilities': {
+      \     'textDocument': {
+      \         'documentSymbol': {
+      \             'hierarchicalDocumentSymbolSupport': v:true,
+      \         },
+      \     },
+      \ },
 
 g:lsp_peek_alignment                                 *g:lsp_peek_alignment*
     Type: |String|
