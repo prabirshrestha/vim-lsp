@@ -128,7 +128,8 @@ command! -nargs=* LspNextWarning call lsp#internal#diagnostics#movement#_next_wa
 command! -nargs=* LspPreviousWarning call lsp#internal#diagnostics#movement#_previous_warning(<f-args>)
 command! -nargs=* LspNextDiagnostic call lsp#internal#diagnostics#movement#_next_diagnostics(<f-args>)
 command! -nargs=* LspPreviousDiagnostic call lsp#internal#diagnostics#movement#_previous_diagnostics(<f-args>)
-command! LspReferences call lsp#ui#vim#references()
+command! LspReferences call lsp#ui#vim#references({})
+command! LspAddTreeReferences call lsp#ui#vim#add_tree_references()
 command! LspRename call lsp#ui#vim#rename()
 command! LspTypeDefinition call lsp#ui#vim#type_definition(0, <q-mods>)
 command! LspTypeHierarchy call lsp#internal#type_hierarchy#show()
@@ -189,7 +190,7 @@ nnoremap <silent> <plug>(lsp-next-diagnostic) :<c-u>call lsp#internal#diagnostic
 nnoremap <silent> <plug>(lsp-next-diagnostic-nowrap) :<c-u>call lsp#internal#diagnostics#movement#_next_diagnostics("-wrap=0")<cr>
 nnoremap <silent> <plug>(lsp-previous-diagnostic) :<c-u>call lsp#internal#diagnostics#movement#_previous_diagnostics()<cr>
 nnoremap <silent> <plug>(lsp-previous-diagnostic-nowrap) :<c-u>call lsp#internal#diagnostics#movement#_previous_diagnostics("-wrap=0")<cr>
-nnoremap <silent> <plug>(lsp-references) :<c-u>call lsp#ui#vim#references()<cr>
+nnoremap <silent> <plug>(lsp-references) :<c-u>call lsp#ui#vim#references({})<cr>
 nnoremap <silent> <plug>(lsp-rename) :<c-u>call lsp#ui#vim#rename()<cr>
 nnoremap <silent> <plug>(lsp-type-definition) :<c-u>call lsp#ui#vim#type_definition(0)<cr>
 nnoremap <silent> <plug>(lsp-type-hierarchy) :<c-u>call lsp#internal#type_hierarchy#show()<cr>

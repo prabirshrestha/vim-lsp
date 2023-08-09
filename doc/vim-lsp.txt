@@ -114,6 +114,7 @@ CONTENTS                                                  *vim-lsp-contents*
       lsp#document_hover_preview_winid()  |lsp#document_hover_preview_winid()|
     Commands                              |vim-lsp-commands|
       LspAddTreeCallHierarchyIncoming       |:LspAddTreeCallHierarchyIncoming|
+      LspAddTreeReferences                  |:LspAddTreeReferences|
       LspCallHierarchyIncoming              |:LspCallHierarchyIncoming|
       LspCallHierarchyOutgoing              |:LspCallHierarchyOutgoing|
       LspCodeAction                         |:LspCodeAction|
@@ -877,7 +878,9 @@ g:lsp_tree_incoming_prefix                          *g:lsp_tree_incoming_prefix*
     Type: |String|
     Default: `"<= "`
 
-    Specifies the prefix of items added by |LspAddTreeCallHierarchyIncoming|.
+    Specifies the prefix of items added by following commands.
+	* |LspAddTreeCallHierarchyIncoming|
+	* |LspAddTreeReferences|
 
     Example: >
 	let g:lsp_tree_incoming_prefix = "← "
@@ -1679,6 +1682,11 @@ LspAddTreeCallHierarchyIncoming           *:LspAddTreeCallHierarchyIncoming*
 
 Just like |LspCallHierarchyIncoming| , but instead of making a new list the
 result is appended to the current list.
+
+LspAddTreeReferences                                 *:LspAddTreeReferences*
+
+Just like |LspReferences| , but instead of making a new list the result is
+appended to the current list.
 
 LspCallHierarchyIncoming                         *:LspCallHierarchyIncoming*
 
