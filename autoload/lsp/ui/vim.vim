@@ -127,15 +127,76 @@ function! lsp#ui#vim#rename() abort
     call s:rename(l:server, input('new name: ', expand('<cword>')), lsp#get_position())
 endfunction
 
-function! lsp#ui#vim#stop_server(...) abort
-    let l:name = get(a:000, 0, '')
-    for l:server in lsp#get_allowed_servers()
-        if !empty(l:name) && l:server != l:name
+function! s:stop_all_servers() abort
+    for l:server in lsp#get_server_names()
+        if !lsp#is_server_running(l:server)
             continue
         endif
+
         echo 'Stopping' l:server 'server ...'
         call lsp#stop_server(l:server)
     endfor
+endfunction
+
+function! s:stop_named_server(name) abort
+    if !lsp#is_valid_server_name(a:name)
+        call lsp#utils#warning('No LSP servers named "' . a:name . '"')
+        return
+    endif
+
+    if lsp#is_server_running(a:name)
+        echo 'Stopping "' . a:name . '" server...'
+        call lsp#stop_server(a:name)
+    else
+        call lsp#utils#warning(
+            \ 'Server "' . a:name . '" is not running: '
+            \ . lsp#get_server_status(a:name)
+            \ )
+    endif
+endfunction
+
+function! s:stop_buffer_servers() abort
+    let l:servers = lsp#get_allowed_servers()
+    let l:servers =
+        \ filter(l:servers, {idx, name -> lsp#is_server_running(name)})
+
+    if empty(l:servers)
+        call lsp#utils#warning('No active LSP servers for the current buffer')
+        return
+    endif
+
+    for l:server in l:servers
+        echo 'Stopping "' . l:server . '" server ...'
+        call lsp#stop_server(l:server)
+    endfor
+endfunction
+
+function! lsp#ui#vim#stop_server(stop_all, ...) abort
+    if a:0 != 0 && a:0 != 1
+        call lsp#utils#error(
+            \ 'lsp#ui#vim#stop_server(): expected 1 optional "name" argument.'
+            \ . ' Got: "' . join(a:000, '", "') . '".')
+        return
+    endif
+    let l:stop_all = a:stop_all ==# '!'
+    let l:name = get(a:000, 0, '')
+
+    if l:stop_all
+        if !empty(l:name)
+            call lsp#utils#error(
+                \ '"!" stops all servers: name is ignored: "' . l:name . '"')
+        endif
+
+        call s:stop_all_servers()
+        return
+    endif
+
+    if !empty(l:name)
+        call s:stop_named_server(l:name)
+        return
+    endif
+
+    call s:stop_buffer_servers()
 endfunction
 
 function! lsp#ui#vim#workspace_symbol(query) abort
