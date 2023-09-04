@@ -39,7 +39,7 @@ jobs:
     runs-on: ${{matrix.os}}
     continue-on-error: ${{matrix.allow_failure}}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Download neovim
         shell: PowerShell
         run: Invoke-WebRequest -Uri https://github.com/neovim/neovim/releases/download/${{matrix.neovim_version}}/nvim-${{matrix.neovim_arch}}.zip -OutFile neovim.zip
@@ -70,7 +70,7 @@ jobs:
         env:
           GO111MODULE: 'on'
       - name: Download test runner
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: thinca/vim-themis
           path: ./vim-themis
