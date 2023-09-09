@@ -95,6 +95,10 @@ function! lsp#get_server_names() abort
     return keys(s:servers)
 endfunction
 
+function! lsp#is_valid_server_name(name) abort
+    return has_key(s:servers, a:name)
+endfunction
+
 function! lsp#get_server_info(server_name) abort
     return get(get(s:servers, a:server_name, {}), 'server_info', {})
 endfunction
@@ -126,6 +130,19 @@ function! s:server_status(server_name) abort
         return 'running'
     endif
     return 'not running'
+endfunction
+
+function! lsp#is_server_running(name) abort
+    if !has_key(s:servers, a:name)
+      return 0
+    endif
+
+    let l:server = s:servers[a:name]
+
+    return has_key(l:server, 'init_result')
+        \ && !has_key(l:server, 'exited')
+        \ && !has_key(l:server, 'init_callbacks')
+        \ && !has_key(l:server, 'failed')
 endfunction
 
 " Returns the current status of all servers (if called with no arguments) or
@@ -1327,6 +1344,13 @@ endfunction
 
 function! lsp#server_complete(lead, line, pos) abort
     return filter(sort(keys(s:servers)), 'stridx(v:val, a:lead)==0 && has_key(s:servers[v:val], "init_result")')
+endfunction
+
+function! lsp#server_complete_running(lead, line, pos) abort
+    let l:all_servers = sort(keys(s:servers))
+    return filter(l:all_servers, {idx, name ->
+        \ stridx(name, a:lead) == 0 && lsp#is_server_running(name)
+        \ })
 endfunction
 
 function! lsp#_new_command() abort
