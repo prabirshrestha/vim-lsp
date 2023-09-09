@@ -40,7 +40,7 @@ jobs:
         run: |
           # https://github.com/Zettlr/Zettlr/issues/3517
           sudo apt-get install libfuse2
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Download vim
         shell: bash
         run: |
@@ -69,7 +69,7 @@ jobs:
         env:
           GO111MODULE: 'on'
       - name: Download test runner
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: thinca/vim-themis
           path: ./vim-themis
