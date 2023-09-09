@@ -35,10 +35,15 @@ function! lsp#ui#vim#definition(in_preview, ...) abort
     call s:list_location('definition', l:ctx)
 endfunction
 
-function! lsp#ui#vim#references() abort
-    let l:ctx = { 'jump_if_one': 0 }
+function! lsp#ui#vim#references(ctx) abort
+    let l:ctx = extend({ 'jump_if_one': 0 }, a:ctx)
     let l:request_params = { 'context': { 'includeDeclaration': v:false } }
     call s:list_location('references', l:ctx, l:request_params)
+endfunction
+
+function! lsp#ui#vim#add_tree_references() abort
+    let l:ctx = { 'add_tree': v:true }
+    call lsp#ui#vim#references(l:ctx)
 endfunction
 
 function! s:list_location(method, ctx, ...) abort
@@ -307,10 +312,21 @@ function! s:handle_location(ctx, server, type, data) abort "ctx = {counter, list
                 echo 'Retrieved ' . a:type
                 redraw
             elseif !a:ctx['in_preview']
+                if get(a:ctx, 'add_tree', v:false)
+                    let l:qf = getqflist({'idx' : 0, 'items': []})
+                    let l:pos = l:qf.idx
+                    let l:parent = l:qf.items
+                    let l:level = count(l:parent[l:pos-1].text, g:lsp_tree_incoming_prefix)
+                    let a:ctx['list'] = extend(l:parent, map(a:ctx['list'], 'extend(v:val, {"text": repeat("' . g:lsp_tree_incoming_prefix . '", l:level+1) . v:val.text})'), l:pos)
+                endif
                 call setqflist([])
                 call setqflist(a:ctx['list'])
                 echo 'Retrieved ' . a:type
                 botright copen
+                if get(a:ctx, 'add_tree', v:false)
+                    " move the cursor to the newly added item
+                    execute l:pos + 1
+                endif
             else
                 let l:lines = readfile(l:loc['filename'])
                 if has_key(l:loc,'viewstart') " showing a locationLink
