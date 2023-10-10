@@ -32,10 +32,10 @@ endfunction
 
 function! s:echo(diagnostic) abort
     if !empty(a:diagnostic) && has_key(a:diagnostic, 'message')
-        call lsp#utils#echo_with_truncation('LSP: '. substitute(a:diagnostic['message'], '\n\+', ' ', 'g'))
+        call lsp#utils#echo('LSP: '. substitute(a:diagnostic['message'], '\n\+', ' ', 'g'))
         let s:displaying_message = 1
     elseif get(s:, 'displaying_message', 0)
-        call lsp#utils#echo_with_truncation('')
+        call lsp#utils#echo('')
         let s:displaying_message = 0
     endif
 endfunction
