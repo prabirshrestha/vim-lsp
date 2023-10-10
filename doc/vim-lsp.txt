@@ -74,6 +74,7 @@ CONTENTS                                                  *vim-lsp-contents*
       g:lsp_document_highlight_enabled      |g:lsp_document_highlight_enabled|
       g:lsp_document_highlight_delay        |g:lsp_document_highlight_delay|
       g:lsp_get_supported_capabilities      |g:lsp_get_supported_capabilities|
+      g:lsp_document_symbol_detail          |g:lsp_document_symbol_detail|
       g:lsp_peek_alignment                  |g:lsp_peek_alignment|
       g:lsp_preview_max_width               |g:lsp_preview_max_width|
       g:lsp_preview_max_height              |g:lsp_preview_max_height|
@@ -113,6 +114,7 @@ CONTENTS                                                  *vim-lsp-contents*
       lsp#document_hover_preview_winid()  |lsp#document_hover_preview_winid()|
     Commands                              |vim-lsp-commands|
       LspAddTreeCallHierarchyIncoming       |:LspAddTreeCallHierarchyIncoming|
+      LspAddTreeReferences                  |:LspAddTreeReferences|
       LspCallHierarchyIncoming              |:LspCallHierarchyIncoming|
       LspCallHierarchyOutgoing              |:LspCallHierarchyOutgoing|
       LspCodeAction                         |:LspCodeAction|
@@ -876,7 +878,9 @@ g:lsp_tree_incoming_prefix                          *g:lsp_tree_incoming_prefix*
     Type: |String|
     Default: `"<= "`
 
-    Specifies the prefix of items added by |LspAddTreeCallHierarchyIncoming|.
+    Specifies the prefix of items added by following commands.
+	* |LspAddTreeCallHierarchyIncoming|
+	* |LspAddTreeReferences|
 
     Example: >
 	let g:lsp_tree_incoming_prefix = "← "
@@ -950,6 +954,22 @@ g:lsp_get_supported_capabilities         *g:lsp_get_supported_capabilities*
     Note: You can obtain the default supported capabilities of vim-lsp by
     calling `lsp#default_get_supported_capabilities` from within your
     function.
+
+g:lsp_document_symbol_detail                 *g:lsp_document_symbol_detail*
+    Type: |Number|
+    Default: `0`
+
+    Determines whether document symbol shows details or not. Set to `1` to
+    show details.
+
+    Note: showing details needs to turn on setting below: >
+      \ 'capabilities': {
+      \     'textDocument': {
+      \         'documentSymbol': {
+      \             'hierarchicalDocumentSymbolSupport': v:true,
+      \         },
+      \     },
+      \ },
 
 g:lsp_peek_alignment                                 *g:lsp_peek_alignment*
     Type: |String|
@@ -1663,6 +1683,11 @@ LspAddTreeCallHierarchyIncoming           *:LspAddTreeCallHierarchyIncoming*
 Just like |LspCallHierarchyIncoming| , but instead of making a new list the
 result is appended to the current list.
 
+LspAddTreeReferences                                 *:LspAddTreeReferences*
+
+Just like |LspReferences| , but instead of making a new list the result is
+appended to the current list.
+
 LspCallHierarchyIncoming                         *:LspCallHierarchyIncoming*
 
 Find incoming call hierarchy for the symbol under cursor.
@@ -1892,9 +1917,28 @@ Prints the status of all registered servers. Use `:verbose LspStatus` to
 additionally show each server's workspace_config.
 See also |vim-lsp-healthcheck|.
 
-LspStopServer                                                *:LspStopServer*
+LspStopServer[!] [name]                                      *:LspStopServer*
 
-Stop all active servers.
+:LspStopServer
+
+Stops all active servers that handle files matching the current buffer type
+are stopped.  This is often what you want.  For example, if you have multiple
+files of different types open, `LspStopServer` will only stop the server for
+the current buffer.  Shows an error if there are no active LSP servers for the
+current buffer.
+
+:LspStopServer!
+
+Stops all active servers, regardless of the current buffer.  Shows a message
+for every stopped server.
+
+:LspStopServer name
+
+Stops a server named 'name', comparing the provided ID with the value of the
+the 'name' property in the |lsp#register_server()| call.  Shows an error if
+'name' does not match a defined and currently running server.
+
+Completion should list only currently running servers for the 'name' argument.
 
 ==============================================================================
 Autocommands                                          *vim-lsp-autocommands*

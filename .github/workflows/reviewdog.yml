@@ -13,7 +13,7 @@ jobs:
     name: runner / vint
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: vint
         uses: reviewdog/action-vint@v1
         with:

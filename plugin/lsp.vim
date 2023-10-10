@@ -85,6 +85,8 @@ let g:lsp_code_action_ui = get(g:, 'lsp_code_action_ui', 'preview')
 
 let g:lsp_get_supported_capabilities = get(g:, 'lsp_get_supported_capabilities', [function('lsp#default_get_supported_capabilities')])
 
+let g:lsp_document_symbol_detail = get(g:, 'lsp_document_symbol_detail', 0)
+
 let g:lsp_experimental_workspace_folders = get(g:, 'lsp_experimental_workspace_folders', 0)
 
 if g:lsp_auto_enable
@@ -126,7 +128,8 @@ command! -nargs=* LspNextWarning call lsp#internal#diagnostics#movement#_next_wa
 command! -nargs=* LspPreviousWarning call lsp#internal#diagnostics#movement#_previous_warning(<f-args>)
 command! -nargs=* LspNextDiagnostic call lsp#internal#diagnostics#movement#_next_diagnostics(<f-args>)
 command! -nargs=* LspPreviousDiagnostic call lsp#internal#diagnostics#movement#_previous_diagnostics(<f-args>)
-command! LspReferences call lsp#ui#vim#references()
+command! LspReferences call lsp#ui#vim#references({})
+command! LspAddTreeReferences call lsp#ui#vim#add_tree_references()
 command! LspRename call lsp#ui#vim#rename()
 command! LspTypeDefinition call lsp#ui#vim#type_definition(0, <q-mods>)
 command! LspTypeHierarchy call lsp#internal#type_hierarchy#show()
@@ -150,7 +153,7 @@ command! LspPeekImplementation call lsp#ui#vim#implementation(1)
 command! -nargs=0 LspStatus call lsp#print_server_status()
 command! LspNextReference call lsp#internal#document_highlight#jump(+1)
 command! LspPreviousReference call lsp#internal#document_highlight#jump(-1)
-command! -nargs=? -complete=customlist,lsp#server_complete LspStopServer call lsp#ui#vim#stop_server(<f-args>)
+command! -nargs=? -bang -complete=customlist,lsp#server_complete_running LspStopServer call lsp#ui#vim#stop_server("<bang>", <f-args>)
 command! -nargs=? -complete=customlist,lsp#utils#empty_complete LspSignatureHelp call lsp#ui#vim#signature_help#get_signature_help_under_cursor()
 command! LspDocumentFold call lsp#ui#vim#folding#fold(0)
 command! LspDocumentFoldSync call lsp#ui#vim#folding#fold(1)
@@ -187,7 +190,7 @@ nnoremap <silent> <plug>(lsp-next-diagnostic) :<c-u>call lsp#internal#diagnostic
 nnoremap <silent> <plug>(lsp-next-diagnostic-nowrap) :<c-u>call lsp#internal#diagnostics#movement#_next_diagnostics("-wrap=0")<cr>
 nnoremap <silent> <plug>(lsp-previous-diagnostic) :<c-u>call lsp#internal#diagnostics#movement#_previous_diagnostics()<cr>
 nnoremap <silent> <plug>(lsp-previous-diagnostic-nowrap) :<c-u>call lsp#internal#diagnostics#movement#_previous_diagnostics("-wrap=0")<cr>
-nnoremap <silent> <plug>(lsp-references) :<c-u>call lsp#ui#vim#references()<cr>
+nnoremap <silent> <plug>(lsp-references) :<c-u>call lsp#ui#vim#references({})<cr>
 nnoremap <silent> <plug>(lsp-rename) :<c-u>call lsp#ui#vim#rename()<cr>
 nnoremap <silent> <plug>(lsp-type-definition) :<c-u>call lsp#ui#vim#type_definition(0)<cr>
 nnoremap <silent> <plug>(lsp-type-hierarchy) :<c-u>call lsp#internal#type_hierarchy#show()<cr>

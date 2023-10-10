@@ -36,7 +36,7 @@ jobs:
     runs-on: ${{matrix.os}}
     continue-on-error: ${{matrix.allow_failure}}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Download neovim
         shell: bash
         run: curl -L https://github.com/neovim/neovim/releases/download/${{matrix.neovim_version}}/nvim-macos.tar.gz -o ~/nvim.tar.gz
@@ -46,7 +46,7 @@ jobs:
         run: tar xzf ~/nvim.tar.gz -C ~/
         continue-on-error: ${{matrix.allow_failure}}
       - name: Download test runner
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: thinca/vim-themis
           path: ./vim-themis
