@@ -56,7 +56,7 @@ function! s:on_complete_done() abort
   let s:context['completion_item'] = l:managed_user_data['completion_item']
   let s:context['start_character'] = l:managed_user_data['start_character']
   let s:context['complete_word'] = l:managed_user_data['complete_word']
-  call feedkeys(printf("\<C-r>=<SNR>%d_on_complete_done_after()\<CR>", s:SID()), 'n')
+  call feedkeys(printf("\<C-r>=<SNR>%d_on_complete_done_after()\<CR>", s:SID()), 'ni')
 endfunction
 
 "
