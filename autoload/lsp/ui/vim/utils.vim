@@ -40,11 +40,14 @@ function! s:symbols_to_loc_list_children(server, path, list, symbols, depth) abo
     for l:symbol in a:symbols
         let [l:line, l:col] = lsp#utils#position#lsp_to_vim(a:path, l:symbol['range']['start'])
 
+        if g:lsp_document_symbol_detail && !has_key(l:symbol, 'detail')
+          let l:symbol['detail'] = ''
+        endif
         call add(a:list, {
             \ 'filename': a:path,
             \ 'lnum': l:line,
             \ 'col': l:col,
-            \ 'text': lsp#ui#vim#utils#_get_symbol_text_from_kind(a:server, l:symbol['kind']) . ' : ' . printf('%' . a:depth. 's', '  ') . l:symbol['name'],
+            \ 'text': lsp#ui#vim#utils#_get_symbol_text_from_kind(a:server, l:symbol['kind']) . ' : ' . printf('%' . a:depth. 's', '  ') . (g:lsp_document_symbol_detail ? l:symbol['name'] . "	" . l:symbol['detail'] : l:symbol['name']),
             \ })
         if has_key(l:symbol, 'children') && !empty(l:symbol['children'])
             call s:symbols_to_loc_list_children(a:server, a:path, a:list, l:symbol['children'], a:depth + 1)
@@ -63,6 +66,9 @@ function! lsp#ui#vim#utils#symbols_to_loc_list(server, result) abort
 
     if !empty(l:locations) " some servers also return null so check to make sure it isn't empty
         for l:symbol in a:result['response']['result']
+            if g:lsp_document_symbol_detail && !has_key(l:symbol, 'detail')
+              let l:symbol['detail'] = ''
+            endif
             if has_key(l:symbol, 'location')
                 let l:location = l:symbol['location']
                 if lsp#utils#is_file_uri(l:location['uri'])
@@ -72,7 +78,7 @@ function! lsp#ui#vim#utils#symbols_to_loc_list(server, result) abort
                         \ 'filename': l:path,
                         \ 'lnum': l:line,
                         \ 'col': l:col,
-                        \ 'text': lsp#ui#vim#utils#_get_symbol_text_from_kind(a:server, l:symbol['kind']) . ' : ' . (g:lsp_document_symbol_detail ? l:symbol['detail'] : l:symbol['name']),
+                        \ 'text': lsp#ui#vim#utils#_get_symbol_text_from_kind(a:server, l:symbol['kind']) . ' : ' . (g:lsp_document_symbol_detail ? l:symbol['name'] . "	" . l:symbol['detail'] : l:symbol['name']),
                         \ })
                 endif
             else
@@ -84,7 +90,7 @@ function! lsp#ui#vim#utils#symbols_to_loc_list(server, result) abort
                         \ 'filename': l:path,
                         \ 'lnum': l:line,
                         \ 'col': l:col,
-                        \ 'text': lsp#ui#vim#utils#_get_symbol_text_from_kind(a:server, l:symbol['kind']) . ' : ' . (g:lsp_document_symbol_detail ? l:symbol['detail'] : l:symbol['name']),
+                        \ 'text': lsp#ui#vim#utils#_get_symbol_text_from_kind(a:server, l:symbol['kind']) . ' : ' . (g:lsp_document_symbol_detail ? l:symbol['name'] . "	" . l:symbol['detail'] : l:symbol['name']),
                         \ })
                     if has_key(l:symbol, 'children') && !empty(l:symbol['children'])
                         call s:symbols_to_loc_list_children(a:server, l:path, l:list, l:symbol['children'], 1)
