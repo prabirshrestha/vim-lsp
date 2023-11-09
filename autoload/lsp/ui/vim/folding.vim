@@ -1,6 +1,9 @@
 let s:folding_ranges = {}
 let s:textprop_name = 'vim-lsp-folding-linenr'
 
+" imports
+let s:Buffer = vital#lsp#import('VS.Vim.Buffer')
+
 function! s:find_servers() abort
     return filter(lsp#get_allowed_servers(), 'lsp#capabilities#has_folding_range_provider(v:val)')
 endfunction
@@ -30,7 +33,7 @@ function! s:set_textprops(buf) abort
     " Create text property, if not already defined
     silent! call prop_type_add(s:textprop_name, {'bufnr': a:buf, 'priority': lsp#internal#textprop#priority('folding')})
 
-    let l:line_count = s:get_line_count_buf(a:buf)
+    let l:line_count = s:Buffer.get_line_count(a:buf)
 
     " First, clear all markers from the previous run
     call prop_remove({'type': s:textprop_name, 'bufnr': a:buf}, 1, l:line_count)
@@ -41,14 +44,6 @@ function! s:set_textprops(buf) abort
         call prop_add(l:i, 1, {'bufnr': a:buf, 'type': s:textprop_name, 'id': l:i})
         let l:i += 1
     endwhile
-endfunction
-
-function! s:get_line_count_buf(buf) abort
-    if !has('patch-8.1.1967')
-        return line('$')
-    endif
-    let l:winids = win_findbuf(a:buf)
-    return empty(l:winids) ? line('$') : line('$', l:winids[0])
 endfunction
 
 function! lsp#ui#vim#folding#send_request(server_name, buf, sync) abort
