@@ -270,13 +270,7 @@ function! s:handle_symbol(server, last_command_id, type, data) abort
 
     let l:list = lsp#ui#vim#utils#symbols_to_loc_list(a:server, a:data)
 
-    if has('patch-8.2.2147')
-      call setqflist(l:list)
-      call setqflist([], 'a', {'title': a:type})
-    else
-      call setqflist([])
-      call setqflist(l:list)
-    endif
+    call lsp#ui#vim#utils#setqflist(l:list, a:type)
 
     if empty(l:list)
         call lsp#utils#error('No ' . a:type .' found')
@@ -319,8 +313,7 @@ function! s:handle_location(ctx, server, type, data) abort "ctx = {counter, list
                     let l:level = count(l:parent[l:pos-1].text, g:lsp_tree_incoming_prefix)
                     let a:ctx['list'] = extend(l:parent, map(a:ctx['list'], 'extend(v:val, {"text": repeat("' . g:lsp_tree_incoming_prefix . '", l:level+1) . v:val.text})'), l:pos)
                 endif
-                call setqflist([])
-                call setqflist(a:ctx['list'])
+                call lsp#ui#vim#utils#setqflist(a:ctx['list'], a:type)
                 echo 'Retrieved ' . a:type
                 botright copen
                 if get(a:ctx, 'add_tree', v:false)
@@ -540,8 +533,7 @@ function! s:handle_call_hierarchy(ctx, server, type, data) abort
                 let l:level = count(l:parent[l:pos-1].text, g:lsp_tree_incoming_prefix)
                 let a:ctx['list'] = extend(l:parent, map(a:ctx['list'], 'extend(v:val, {"text": repeat("' . g:lsp_tree_incoming_prefix . '", l:level+1) . v:val.text})'), l:pos)
             endif
-            call setqflist([])
-            call setqflist(a:ctx['list'])
+            call lsp#ui#vim#utils#setqflist(a:ctx['list'], a:type)
             echo 'Retrieved ' . a:type
             botright copen
             if get(a:ctx, 'add_tree', v:false)
