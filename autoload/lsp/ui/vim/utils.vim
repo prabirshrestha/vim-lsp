@@ -162,3 +162,13 @@ endfunction
 function! s:get_diagnostic_severity_text(severity) abort
     return s:diagnostic_severity[a:severity]
 endfunction
+
+function! lsp#ui#vim#utils#setqflist(list, type) abort
+  if has('patch-8.2.2147')
+    call setqflist(a:list)
+    call setqflist([], 'a', {'title': a:type})
+  else
+    call setqflist([])
+    call setqflist(a:list)
+  endif
+endfunction
