@@ -186,7 +186,11 @@ function! s:place_highlights(server, diagnostics_response, bufnr) abort
                     if l:line == l:end_line
                         let l:highlight_end_col = l:end_col
                     else
-                        let l:highlight_end_col = strlen(getbufoneline(a:bufnr, l:line)) + 1
+                        if has('patch-9.0.0916')
+                            let l:highlight_end_col = strlen(getbufoneline(a:bufnr, l:line)) + 1
+                        else
+                            let l:highlight_end_col = strlen(getbufline(a:bufnr, l:line)[0]) + 1
+                        endif
                     endif
 
                     try
