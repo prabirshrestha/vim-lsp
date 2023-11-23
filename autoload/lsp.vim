@@ -210,10 +210,6 @@ endfunction
 function! lsp#register_server(server_info) abort
     let l:server_name = a:server_info['name']
     if has_key(s:servers, l:server_name)
-        if s:servers[l:server_name]['server_info'] ==# a:server_info
-            call lsp#log('lsp#register_server', 'server already registered and server_info matches', l:server_name)
-            return
-        endif
         call lsp#log('lsp#register_server', 'server already registered', l:server_name)
     endif
     " NOTE: workspace_folders is dict for faster lookup instead of array
