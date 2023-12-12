@@ -1921,16 +1921,16 @@ LspStopServer[!] [name]                                      *:LspStopServer*
 
 :LspStopServer
 
-Stops all active servers that handle files matching the current buffer type
-are stopped.  This is often what you want.  For example, if you have multiple
-files of different types open, `LspStopServer` will only stop the server for
-the current buffer.  Shows an error if there are no active LSP servers for the
+Stops all active servers that handle files matching the current buffer type.
+This is often what you want.  For example, if you have multiple files of
+different types open, `LspStopServer` will only stop the server for the
+current buffer.  Shows an error if there are no active LSP servers for the
 current buffer.
 
 :LspStopServer!
 
-Stops all active servers, regardless of the current buffer.  Shows a message
-for every stopped server.
+Stops all active servers, regardless of the current buffer type.  Shows a
+message for every stopped server.
 
 :LspStopServer name
 
