@@ -37,7 +37,7 @@ endfunction
 
 function! lsp#ui#vim#references(ctx) abort
     let l:ctx = extend({ 'jump_if_one': 0 }, a:ctx)
-    let l:request_params = { 'context': { 'includeDeclaration': v:false } }
+    let l:request_params = { 'context': { 'includeDeclaration': v:true } }
     call s:list_location('references', l:ctx, l:request_params)
 endfunction
 
