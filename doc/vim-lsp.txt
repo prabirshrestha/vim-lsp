@@ -289,7 +289,7 @@ HEALTH CHECK						*vim-lsp-healthcheck*
 vim-lsp supports the |:CheckHealth| command which can be useful when debugging
 lsp configuration issues.
 
-This command is included in neovim and implemented in vim with the
+This command is implemented in vim with the
 [vim-healthcheck](https://github.com/rhysd/vim-healthcheck) plugin. 
 
 WIKI                                               *vim-lsp-configure-wiki*
