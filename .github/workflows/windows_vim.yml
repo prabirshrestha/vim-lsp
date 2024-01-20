@@ -52,7 +52,7 @@ jobs:
         run: Expand-Archive -Path vim.zip -DestinationPath $env:USERPROFILE
       - name: Cache gopls
         id: cache-gopls
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: bin/gopls
           key: ${{ runner.os }}-${{ env.VIM_LSP_GO_VERSION }}-${{ env.VIM_LSP_GOPLS_VERSION }}-${{ env.VIM_LSP_GOPLS_CACHE_VER }}-gopls
