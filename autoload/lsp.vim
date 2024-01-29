@@ -1118,7 +1118,7 @@ endfunction
 " call lsp#stream(1, { 'command': 'DocumentFormat' })
 function! lsp#stream(...) abort
     if a:0 == 0
-        return lsp#callbag#share(s:Stream)
+        return lsp#callbag#share()(s:Stream)
     else
         if a:1 == 1
             call s:Stream.next(a:2)
