@@ -9,7 +9,7 @@ function! lsp#internal#show_message_request#_enable() abort
             \ }),
             \ lsp#callbag#map({x->s:show_message_request(x['server'], x['request'])}),
             \ lsp#callbag#map({x->s:send_message_response(x['server'], x['request'], x['action'])}),
-            \ lsp#callbag#flatten(),
+            \ lsp#callbag#flatMap({x->x}),
             \ lsp#callbag#materialize(),
             \ lsp#callbag#subscribe({ 'error': function('s:on_error') }),
             \ )
