@@ -1,6 +1,6 @@
 let s:enabled = 0
 let s:already_setup = 0
-let s:Stream = lsp#callbag#createSubject()
+let s:stream = lsp#callbag#createSubject()
 " workspace_folders = { 'uri': { uri, name } }
 let s:servers = {} " { lsp_id, server_info, workspace_folders, init_callbacks, init_result, buffers: { path: { changed_tick } }
 let s:last_command_id = 0
@@ -1118,10 +1118,10 @@ endfunction
 " call lsp#stream(1, { 'command': 'DocumentFormat' })
 function! lsp#stream(...) abort
     if a:0 == 0
-        return lsp#callbag#share()(s:Stream)
+        return s:stream.asObservable()
     else
         if a:1 == 1
-            call s:Stream.next(a:2)
+            call s:stream.next(a:2)
         endif
     endif
 endfunction
