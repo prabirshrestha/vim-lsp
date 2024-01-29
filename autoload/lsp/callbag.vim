@@ -1,4 +1,4 @@
-" https://github.com/prabirshrestha/callbag.vim#7cbe772d80dbf3294a0add8f2789b28a5990caee
+" https://github.com/prabirshrestha/callbag.vim#d31ae8e9c0f261284fd1eb2d5c2d6207f6740db9
 "    :CallbagEmbed path=autoload/lsp/callbag.vim namespace=lsp#callbag
 
 function! s:noop(...) abort
@@ -369,7 +369,7 @@ function! s:fromEventCreateSourceFn(ctx, o) abort
 endfunction
 
 function! s:fromEventCreateSourceHandlerFn(ctxCreateSource) abort
-    let a:ctxCreateSource['o']['next'](lsp#callbag#undefined())
+    call a:ctxCreateSource['o']['next'](lsp#callbag#undefined())
 endfunction
 
 function! s:fromEventDisposeFn(ctxCreateSource) abort
