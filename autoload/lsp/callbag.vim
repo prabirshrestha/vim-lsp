@@ -1,4 +1,4 @@
-" https://github.com/prabirshrestha/callbag.vim#e8636a89c7e26887afdc8059acf11f1d6f97baba
+" https://github.com/prabirshrestha/callbag.vim#7cbe772d80dbf3294a0add8f2789b28a5990caee
 "    :CallbagEmbed path=autoload/lsp/callbag.vim namespace=lsp#callbag
 
 function! s:noop(...) abort
@@ -557,7 +557,7 @@ endfunction
 " }}}
 
 " distinctUntilChanged() {{{
-function! lsp#callbag#distinctUntilChanged() abort
+function! lsp#callbag#distinctUntilChanged(...) abort
     let l:ctx = { 'comparator': a:0 == 0 ? function('s:distinctUntilChangedDefaultComparator') : a:1 }
     return function('s:distinctUntilChangedFn', [l:ctx])
 endfunction
