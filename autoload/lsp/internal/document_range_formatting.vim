@@ -52,7 +52,7 @@ function! lsp#internal#document_range_formatting#format(options) abort
                 \   lsp#stream(),
                 \   lsp#callbag#filter({x->has_key(x, 'command')}),
                 \ )),
-                \ lsp#callbag#toList(),
+                \ lsp#callbag#toBlockingList(),
                 \ ).wait({ 'sleep': get(a:options, 'sleep', 1), 'timeout': get(a:options, 'timeout', g:lsp_format_sync_timeout) })
             call s:format_next(l:x[0])
             call s:format_complete()
