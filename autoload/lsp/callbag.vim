@@ -1,4 +1,4 @@
-" https://github.com/prabirshrestha/callbag.vim#9ec3b3e3de8b38c63d2aae03082cbd8e48990db8
+" https://github.com/prabirshrestha/callbag.vim#18e481c94f49a90b9484ca378ffafca33834ff2c
 "    :CallbagEmbed path=autoload/lsp/callbag.vim namespace=lsp#callbag
 
 function! s:noop(...) abort
@@ -1378,6 +1378,255 @@ function! s:toBlockingListTimeoutCallback(opt, ...) abort
 endfunction
 " }}}
 
+" }}}
+
+" spawn {{{
+" let s:stdin = lsp#callbag#createSubject()
+" call lsp#callbag#spawn(['bash', '-c', 'read i; echo $i'], {
+"   \ 'stdin': s:stdin.asObservable(),
+"   \ 'stdout': 0,
+"   \ 'stderr': 0,
+"   \ 'exit': 0,
+"   \ 'start': 0, " notify when job starts before subscribing to stdin
+"   \ 'ready': 0, " notiy when job starts and after subscribing to stdin
+"   \ 'pid': 0,
+"   \ 'failOnNonZeroExitCode': 1,
+"   \ 'failOnStdinError': 1,
+"   \ 'normalize': 'raw' | 'string' | 'array', (defaults to raw),
+"   \ 'env': {},
+"   \ })
+"   call s:stdin.next('hi')
+"   call s:stdin.complete() " required to close stdin
+function! lsp#callbag#spawn(cmd, ...) abort
+    let l:ctx = { 'cmd': a:cmd, 'opt': a:0 > 0 ? copy(a:000[0]) : {} }
+    return lsp#callbag#create(function('s:spawnCreate', [l:ctx]))
+endfunction
+
+function! s:spawnCreate(ctx, next, error, complete) abort
+    let l:ctxCreate = { 'ctx': a:ctx, 'next': a:next, 'error': a:error, 'complete': a:complete }
+    let l:ctxCreate['state'] = {}
+    let l:ctxCreate['dispose'] = 0
+    let l:ctxCreate['exit'] = 0
+    let l:ctxCreate['close'] = 0
+
+    let l:normalize = get(a:ctx['opt'], 'normalize', 'raw')
+
+    if has('nvim')
+        let l:ctxCreate['jobopt'] = {
+            \ 'on_exit': function('s:spawnNeovimOnExit', [l:ctxCreate]),
+            \ }
+        if l:normalize ==# 'string'
+            let l:ctxCreate['normalize'] = function('s:spawnNormalizeNeovimString')
+        else
+            let l:ctxCreate['normalize'] = function('s:spawnNormalizeRaw')
+        endif
+        if get(a:ctx['opt'], 'stdout', 0) | let l:ctxCreate['jobopt']['on_stdout'] = function('s:spawnNeovimOnStdout', [l:ctxCreate]) | endif
+        if get(a:ctx['opt'], 'stderr', 0) | let l:ctxCreate['jobopt']['on_stderr'] = function('s:spawnNeovimOnStderr', [l:ctxCreate]) | endif
+        if has_key(a:ctx['opt'], 'env') | let l:ctxCreate['jobopt']['env'] = a:ctx['opt']['env'] | endif
+        let l:ctxCreate['jobid'] = jobstart(a:ctx['cmd'], l:ctxCreate['jobopt'])
+    else
+        let l:ctxCreate['jobopt'] = {
+            \ 'exit_cb': function('s:spawnVimExitCb', [l:ctxCreate]),
+            \ 'close_cb': function('s:spawnVimCloseCb', [l:ctxCreate]),
+            \ }
+        if get(a:ctx['opt'], 'stdout', 0) | let l:ctxCreate['jobopt']['out_cb'] = function('s:spawnVimOutCb', [l:ctxCreate]) | endif
+        if get(a:ctx['opt'], 'stderr', 0) | let l:ctxCreate['jobopt']['err_cb'] = function('s:spawnVimErrCb', [l:ctxCreate]) | endif
+        if has_key(a:ctx['opt'], 'env') | let l:ctxCreate['jobopt']['env'] = a:ctx['opt']['env'] | endif
+        if l:normalize ==# 'array'
+            let l:ctxCreate['normalize'] = function('s:spawnNormalizeVimArray')
+        else
+            let l:ctxCreate['normalize'] = function('s:spawnNormalizeRaw')
+        endif
+        if has('patch-8.1.350') | let l:ctxCreate['jobopt']['noblock'] = 1 | endif
+        let l:ctxCreate['stdinBuffer'] = ''
+        let l:ctxCreate['job'] = job_start(a:ctx['cmd'], l:ctxCreate['jobopt'])
+        let l:ctxCreate['jobchannel'] = job_getchannel(l:ctxCreate['job'])
+        let l:ctxCreate['jobid'] = ch_info(l:ctxCreate['jobchannel'])['id']
+    endif
+
+    if l:ctxCreate['jobid'] < 0 | return | endif " jobstart failed. on_exit will notify with error
+
+    let l:startData = {}
+    if get(a:ctx['opt'], 'pid', 0)
+        if has('nvim')
+            let l:ctxCreate['pid'] = jobpid(l:ctxCreate['jobid'])
+            let l:startData['pid'] = l:ctxCreate['pid']
+        else
+            let l:jobinfo = job_info(a:ctxCreate['job'])
+            if type(l:jobinfo) == type({}) && has_key(l:jobinfo, 'process')
+                let l:ctxCreate['pid'] = l:jobinfo['process']
+                let l:startData['pid'] = l:ctxCreate['pid']
+            endif
+        endif
+    endif
+
+    if get(a:ctx['opt'], 'start', 0)
+        let l:startData = { 'id': l:ctxCreate['jobid'], 'state': l:ctxCreate['state'] }
+        call a:next({ 'event': 'start', 'data': l:startData })
+    endif
+
+    if has_key(a:ctx['opt'], 'stdin')
+        let l:ctxCreate['stdinDispose'] = lsp#callbag#pipe(
+            \ a:ctx['opt']['stdin'],
+            \ lsp#callbag#subscribe({
+            \   'next': (has('nvim') ? function('s:spawnNeovimStdinNext', [l:ctxCreate]) : function('s:spawnVimStdinNext', [l:ctxCreate])),
+            \   'error': (has('nvim') ? function('s:spawnNeovimStdinError', [l:ctxCreate]) : function('s:spawnVimStdinError', [l:ctxCreate])),
+            \   'complete': (has('nvim') ? function('s:spawnNeovimStdinComplete', [l:ctxCreate]) : function('s:spawnVimStdinComplete', [l:ctxCreate])),
+            \ }),
+            \ )
+    endif
+
+    if get(a:ctx['opt'], 'ready', 0)
+        let l:readyData = { 'id': l:ctxCreate['jobid'], 'state': l:ctxCreate['state'] }
+        if has_key(l:ctxCreate, 'pid') | let l:readyData['pid'] = l:ctxCreate['pid'] | endif
+        call a:next({ 'event': 'ready', 'data': l:readyData })
+    endif
+
+    return function('s:spawnDispose', [l:ctxCreate])
+endfunction
+
+function! s:spawnJobStop(ctxCreate) abort
+    if has('nvim')
+        try
+            call jobstop(a:ctxCreate['jobid'])
+        catch /^Vim\%((\a\+)\)\=:E900/
+            " NOTE:
+            " Vim does not raise exception even the job has already closed so fail
+            " silently for 'E900: Invalid job id' exception
+        endtry
+    else
+        call job_stop(a:ctxCreate['job'])
+    endif
+endfunction
+
+function! s:spawnDispose(ctxCreate) abort
+    let a:ctxCreate['dispose'] = 1
+    call s:spawnJobStop(a:ctxCreate)
+endfunction
+
+function! s:spawnNeovimStdinNext(ctxCreate, x) abort
+    call jobsend(a:ctxCreate['jobid'], a:x)
+endfunction
+
+function! s:spawnVimStdinNext(ctxCreate, x) abort
+    " Ref: https://groups.google.com/d/topic/vim_dev/UNNulkqb60k/discussion
+    let a:ctxCreate['stdinBuffer'] .= a:x
+    call s:spawnVimStdinNextFlushBuffer(a:ctxCreate)
+endfunction
+
+function! s:spawnVimStdinNextFlushBuffer(ctxCreate) abort
+    " https://github.com/vim/vim/issues/2548
+    " https://github.com/natebosch/vim-lsc/issues/67#issuecomment-357469091
+    sleep 1m
+    if len(a:ctxCreate['stdinBuffer']) <= 4096
+        call ch_sendraw(a:ctxCreate['jobchannel'], a:ctxCreate['stdinBuffer'])
+        let a:ctxCreate['stdinBuffer'] = ''
+    else
+        let l:to_send = a:ctxCreate['stdinBuffer'][:4095]
+        let a:ctxCreate['stdinBuffer'] = a:ctxCreate['stdinBuffer'][4096:]
+        call ch_sendraw(a:ctxCreate['jobchannel'], l:to_send)
+        call timer_start(1, function('s:spawnVimStdinNextFlushBuffer', [a:ctxCreate]))
+    endif
+endfunction
+
+function! s:spawnNeovimStdinError(ctxCreate, x) abort
+    let a:ctxCreate['stdinError'] = a:x
+    if get(a:ctxCreate['ctx']['opt'], 'failOnStdinError', 1) | call s:spawnJobStop(a:ctxCreate) | endif
+endfunction
+
+function! s:spawnVimStdinError(ctxCreate, x) abort
+    let a:ctxCreate['stdinError'] = a:x
+    if get(a:ctxCreate['ctx']['opt'], 'failOnStdinError', 1) | call s:spawnJobStop(a:ctxCreate) | endif
+endfunction
+
+function! s:spawnNeovimStdinComplete(ctxCreate) abort
+    call chanclose(a:ctxCreate['jobid'], 'stdin')
+endfunction
+
+function! s:spawnVimStdinComplete(ctxCreate) abort
+   " There is no easy way to know when ch_sendraw() finishes writing data
+   " on a non-blocking channels -- has('patch-8.1.889') -- and because of
+   " this, we cannot safely call ch_close_in().
+    while len(a:ctxCreate['stdinBuffer']) != 0
+        sleep 1m
+    endwhile
+    call ch_close_in(a:ctxCreate['jobchannel'])
+endfunction
+
+function! s:spawnNormalizeRaw(data) abort
+    return a:data
+endfunction
+
+function! s:spawnNormalizeNeovimString(data) abort
+    " convert array to string since neovim uses array split by \n by default
+    return join(a:data, "\n")
+endfunction
+
+function! s:spawnNormalizeVimArray(data) abort
+    " convert string to array since vim uses string by default.
+    return split(a:data, "\n", 1)
+endfunction
+
+function! s:spawnNeovimOnStdout(ctxCreate, id, d, event) abort
+    call a:ctxCreate['next']({ 'event': 'stdout', 'data': a:ctxCreate['normalize'](a:d), 'state': a:ctxCreate['state'] })
+endfunction
+
+function! s:spawnNeovimOnStderr(ctxCreate, id, d, event) abort
+    call a:ctxCreate['next']({ 'event': 'stderr', 'data': a:ctxCreate['normalize'](a:d), 'state': a:ctxCreate['state'] })
+endfunction
+
+function! s:spawnNeovimOnExit(ctxCreate, id, d, event) abort
+    let a:ctxCreate['exit'] = 1
+    let a:ctxCreate['close'] = 1
+    let a:ctxCreate['exitcode'] = a:d
+    call s:spawnNotifyExit(a:ctxCreate)
+endfunction
+
+function! s:spawnVimOutCb(ctxCreate, id, d, ...) abort
+    echom 'out'
+    call a:ctxCreate['next']({ 'event': 'stdout', 'data': a:ctxCreate['normalize'](a:d), 'state': a:ctxCreate['state'] })
+endfunction
+
+function! s:spawnVimErrCb(ctxCreate, id, d, ...) abort
+    call a:ctxCreate['next']({ 'event': 'stderr', 'data': a:ctxCreate['normalize'](a:d), 'state': a:ctxCreate['state'] })
+endfunction
+
+function! s:spawnVimExitCb(ctxCreate, id, d) abort
+    let a:ctxCreate['exit'] = 1
+    let a:ctxCreate['exitcode'] = a:d
+    " for more info refer to :h job-start
+    " job may exit before we read the output and output may be lost.
+    " in unix this happens because closing the write end of a pipe
+    " causes the read end to get EOF.
+    " close and exit has race condition, so wait for both to complete
+    if a:ctxCreate['close'] && a:ctxCreate['exit']
+        call s:spawnNotifyExit(a:ctxCreate)
+    endif
+endfunction
+
+function! s:spawnVimCloseCb(ctxCreate, id) abort
+    let a:ctxCreate['close'] = 1
+    if a:ctxCreate['close'] && a:ctxCreate['exit']
+        call s:spawnNotifyExit(a:ctxCreate)
+    endif
+endfunction
+
+function! s:spawnNotifyExit(ctxCreate) abort
+    if a:ctxCreate['dispose'] | return | end
+    if has_key(a:ctxCreate, 'stdinDispose') | call a:ctxCreate['stdinDispose']() | endif
+    if get(a:ctxCreate['ctx']['opt'], 'failOnStdinError', 1) && has_key(a:ctxCreate, 'stdinError')
+        call a:ctxCreate['error'](a:ctxCreate['stdinError'])
+        return
+    endif
+    if get(a:ctxCreate['ctx']['opt'], 'exit', 0)
+        call a:ctxCreate['next']({ 'event': 'exit', 'data': a:ctxCreate['exitcode'], 'state': a:ctxCreate['state'] })
+    endif
+    if get(a:ctxCreate['ctx']['opt'], 'failOnNonZeroExitCode', 1) && a:ctxCreate['exitcode'] != 0
+        call a:ctxCreate['error']('Spawn for job ' . a:ctxCreate['jobid'] .' failed with exit code ' . a:ctxCreate['exitcode'] . '. ')
+    else
+        call a:ctxCreate['complete']()
+    endif
+endfunction
 " }}}
 
 " vim: set sw=4 ts=4 sts=4 et tw=78 foldmarker={{{,}}} foldmethod=marker foldlevel=1 spell:
