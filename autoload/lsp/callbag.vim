@@ -1,4 +1,4 @@
-" https://github.com/prabirshrestha/callbag.vim#6be349ed89331550fc7b24e70b3dd7fc24bd153b
+" https://github.com/prabirshrestha/callbag.vim#9ec3b3e3de8b38c63d2aae03082cbd8e48990db8
 "    :CallbagEmbed path=autoload/lsp/callbag.vim namespace=lsp#callbag
 
 function! s:noop(...) abort
@@ -215,7 +215,7 @@ function! lsp#callbag#createBehaviorSubject(initialValue) abort
         \ 'next': l:ctx['subscribeSubjectNextFn'],
         \ 'error': l:ctx['subject']['error'],
         \ 'complete': l:ctx['subject']['complete'],
-        \ 'subscribe': l:ctx['subscribe']
+        \ 'subscribe': l:ctx['subscribe'],
         \ 'asObservable': l:ctx['asObservable'],
         \ }
 endfunction
