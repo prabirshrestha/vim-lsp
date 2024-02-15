@@ -160,7 +160,7 @@ function! s:place_highlights(server, diagnostics_response, bufnr) abort
                 endif
 
                 call nvim_buf_add_highlight(a:bufnr, s:namespace_id, l:hl_group,
-                   \ l:line - 1, l:highlight_start_col - 1, l:highlight_end_col == -1 ? -1 : l:highlight_end_col)
+                   \ l:line - 1, l:highlight_start_col - 1, l:highlight_end_col == -1 ? -1 : l:highlight_end_col - 1)
             endfor
         else
             if l:start_line == l:end_line
