@@ -180,7 +180,6 @@ function! s:place_virtual_text(server, diagnostics_response, bufnr) abort
             " anymore due to async processing, just skip such diagnostics
             if l:line <= l:linecount
                 let l:type = 'vim_lsp_' . l:name . '_virtual_text'
-                call prop_remove({'all': v:true, 'type': l:type, 'bufnr': a:bufnr}, l:line)
                 call prop_add(
                 \ l:line, 0,
                 \ {
