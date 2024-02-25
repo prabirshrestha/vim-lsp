@@ -453,7 +453,7 @@ function! lsp#client#send_response(client_id, opts) abort
         catch
             " vim only supports id as number and fails when string, hence add a try catch: https://github.com/vim/vim/issues/14091
             call lsp#log('lsp#client#send_response error', v:exception, v:throwpoint,
-                \  has_key(l:request, 'id') && type(l:request['id']) != 'number')
+                \  has_key(l:request, 'id') && type(l:request['id']) != type(1))
         endtry
         return 0
     else
