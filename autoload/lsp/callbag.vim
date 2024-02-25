@@ -1,4 +1,4 @@
-" https://github.com/prabirshrestha/callbag.vim#18e481c94f49a90b9484ca378ffafca33834ff2c
+" https://github.com/prabirshrestha/callbag.vim#e289ec6f849b041578c5483df2fe35e96c9f241e
 "    :CallbagEmbed path=autoload/lsp/callbag.vim namespace=lsp#callbag
 
 function! s:noop(...) abort
@@ -1077,7 +1077,7 @@ function! s:shareDisposeFn(ctxSource, o) abort
         endif
         let l:i += 1
     endwhile
-    if len(a:ctxSource['observers']) == 0 && has_key(a:ctxSource, 'unsubscribe'))
+    if len(a:ctxSource['observers']) == 0 && has_key(a:ctxSource, 'unsubscribe')
       call a:ctxSource['unsubscribe']()
     endif
 endfunction
