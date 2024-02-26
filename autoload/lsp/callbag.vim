@@ -1,4 +1,4 @@
-" https://github.com/prabirshrestha/callbag.vim#e289ec6f849b041578c5483df2fe35e96c9f241e
+" https://github.com/prabirshrestha/callbag.vim#6951996ea16ab096b35630f9ae744793be896b9a
 "    :CallbagEmbed path=autoload/lsp/callbag.vim namespace=lsp#callbag
 
 function! s:noop(...) abort
@@ -1176,39 +1176,29 @@ function! s:takeUntilCreateSource(ctxSource, o) abort
     let l:ctxTakeUntilCreateSource = {
         \ 'ctxSource': a:ctxSource,
         \ 'o': a:o,
-        \ 'sourceUnsubscribe': function('s:noop'),
-        \ 'notifierUnsubscribe': function('s:noop'),
         \ }
 
-    let l:observer = {
-        \ 'next': function('s:takeUntilNextFn', [l:ctxTakeUntilCreateSource]),
+    let l:ctxTakeUntilCreateSource['sourceSubscription'] = lsp#callbag#subscribe({
+        \ 'next': a:o['next'],
         \ 'error': a:o['error'],
-        \ 'complete': function('s:noop')
-        \ }
+        \ 'complete': a:o['complete'],
+        \ })(a:ctxSource['source'])
 
-    let l:ctxTakeUntilCreateSource['sourceUnsubscribe'] = lsp#callbag#subscribe(l:observer)(a:ctxSource['source'])
-
-    let l:notifierObserver = {
-        \ 'next': function('s:takeUntilNotifierObserverNextFn', [l:ctxTakeUntilCreateSource]),
+    let l:ctxTakeUntilCreateSource['notifierSubscription'] = lsp#callbag#subscribe({
+        \ 'next': function('s:takeUntilNotifierNextFn', [l:ctxTakeUntilCreateSource]),
         \ 'error': a:o['error'],
-        \ 'complete': function('s:noop')
-        \ }
-    let l:ctxTakeUntilCreateSource['notifierUnsubscribe'] = lsp#callbag#subscribe(l:notifierObserver)(l:ctxTakeUntilCreateSource['ctxSource']['ctx']['notifier'])
+        \ 'complete': a:o['complete'],
+        \ })(a:ctxSource['ctx']['notifier'])
 
     return function('s:takeUntilDisposeFn', [l:ctxTakeUntilCreateSource])
 endfunction
 
 function! s:takeUntilDisposeFn(ctxTakeUntilCreateSource) abort
-    call a:ctxTakeUntilCreateSource['sourceUnsubscribe']()
-    call a:ctxTakeUntilCreateSource['notifierUnsubscribe']()
+    call a:ctxTakeUntilCreateSource['sourceSubscription']()
+    call a:ctxTakeUntilCreateSource['notifierSubscription']()
 endfunction
 
-function! s:takeUntilNextFn(ctxTakeUntilCreateSource, value) abort
-    call a:ctxTakeUntilCreateSource['o']['next'](a:value)
-endfunction
-
-function! s:takeUntilNotifierObserverNextFn(ctxTakeUntilCreateSource, value) abort
-    call a:ctxTakeUntilCreateSource['sourceUnsubscribe']()
+function! s:takeUntilNotifierNextFn(ctxTakeUntilCreateSource, value) abort
     call a:ctxTakeUntilCreateSource['o']['complete']()
 endfunction
 " }}}
