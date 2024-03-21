@@ -130,7 +130,8 @@ command! -nargs=* LspNextDiagnostic call lsp#internal#diagnostics#movement#_next
 command! -nargs=* LspPreviousDiagnostic call lsp#internal#diagnostics#movement#_previous_diagnostics(<f-args>)
 command! LspReferences call lsp#ui#vim#references({})
 command! LspAddTreeReferences call lsp#ui#vim#add_tree_references()
-command! LspRename call lsp#ui#vim#rename()
+command! LspRename call lsp#ui#vim#rename(
+            \ extend({}, lsp#utils#args#_parse(<q-args>, {}, v:null)))
 command! LspTypeDefinition call lsp#ui#vim#type_definition(0, <q-mods>)
 command! LspTypeHierarchy call lsp#internal#type_hierarchy#show()
 command! LspPeekTypeDefinition call lsp#ui#vim#type_definition(1)
@@ -191,7 +192,7 @@ nnoremap <silent> <plug>(lsp-next-diagnostic-nowrap) :<c-u>call lsp#internal#dia
 nnoremap <silent> <plug>(lsp-previous-diagnostic) :<c-u>call lsp#internal#diagnostics#movement#_previous_diagnostics()<cr>
 nnoremap <silent> <plug>(lsp-previous-diagnostic-nowrap) :<c-u>call lsp#internal#diagnostics#movement#_previous_diagnostics("-wrap=0")<cr>
 nnoremap <silent> <plug>(lsp-references) :<c-u>call lsp#ui#vim#references({})<cr>
-nnoremap <silent> <plug>(lsp-rename) :<c-u>call lsp#ui#vim#rename()<cr>
+nnoremap <silent> <plug>(lsp-rename) :<c-u>call lsp#ui#vim#rename({})<cr>
 nnoremap <silent> <plug>(lsp-type-definition) :<c-u>call lsp#ui#vim#type_definition(0)<cr>
 nnoremap <silent> <plug>(lsp-type-hierarchy) :<c-u>call lsp#internal#type_hierarchy#show()<cr>
 nnoremap <silent> <plug>(lsp-peek-type-definition) :<c-u>call lsp#ui#vim#type_definition(1)<cr>
