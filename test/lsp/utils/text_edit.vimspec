@@ -2,7 +2,7 @@ function! s:set_text(lines)
     % delete _
     put =a:lines
     execute 'normal ggdd'
-    execute 'write! /tmp/xyz'
+    execute 'file my-file'
 endfunction
 
 function! s:get_text()
