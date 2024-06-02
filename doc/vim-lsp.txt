@@ -1402,6 +1402,13 @@ The vim |dict| containing information about the server.
 	    Example: >
 		'config': { 'diagnostics': v:false }
 <
+ * env:
+    optional vim |dict|
+    Used to pass environment variables to the cmd.
+    Example: >
+	'env': { 'GOFLAGS': '-tags=wireinject' }
+<
+
 refresh_pattern                                    *vim-lsp-refresh_pattern*
     Type: |String| (|pattern|)
     Default: `'\k*$'`
