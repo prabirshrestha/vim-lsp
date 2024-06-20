@@ -750,7 +750,7 @@ function! s:text_changes(buf, server_name) abort
     endif
 
     " When syncKind is Incremental and previous content is saved.
-    if l:sync_kind == 2 && has_key(s:file_content, a:buf)
+    if l:sync_kind == 2 && has_key(s:file_content, a:buf) && has_key(s:file_content[a:buf], a:server_name)
         " compute diff
         let l:old_content = s:get_last_file_content(a:buf, a:server_name)
         let l:new_content = lsp#utils#buffer#_get_lines(a:buf)
