@@ -45,9 +45,55 @@ endfunction
 if has('nvim')
   function! s:info(winid) abort
     let l:info = getwininfo(a:winid)[0]
+
+    if s:is_floating(a:winid)
+      let l:config = nvim_win_get_config(a:winid)
+      let l:config.border = get(l:config, 'border', 'none')
+      if type(l:config.border) !=# type([])
+        if index(['rounded', 'single', 'double', 'solid'], l:config.border) >= 0
+          let l:width_off = 2
+          let l:height_off = 2
+        elseif l:config.border ==# 'shadow'
+          let l:width_off = 1
+          let l:height_off = 1
+        else
+          let l:width_off = 0
+          let l:height_off = 0
+        endif
+      else
+        let l:has_top = v:false
+        let l:has_top = l:has_top || get(l:config.border, 0, '') !=# ''
+        let l:has_top = l:has_top || get(l:config.border, 1, '') !=# ''
+        let l:has_top = l:has_top || get(l:config.border, 2, '') !=# ''
+        let l:has_right = v:false
+        let l:has_right = l:has_right || get(l:config.border, 2, '') !=# ''
+        let l:has_right = l:has_right || get(l:config.border, 3, '') !=# ''
+        let l:has_right = l:has_right || get(l:config.border, 4, '') !=# ''
+        let l:has_bottom = v:false
+        let l:has_bottom = l:has_bottom || get(l:config.border, 4, '') !=# ''
+        let l:has_bottom = l:has_bottom || get(l:config.border, 5, '') !=# ''
+        let l:has_bottom = l:has_bottom || get(l:config.border, 6, '') !=# ''
+        let l:has_left = v:false
+        let l:has_left = l:has_left || get(l:config.border, 6, '') !=# ''
+        let l:has_left = l:has_left || get(l:config.border, 7, '') !=# ''
+        let l:has_left = l:has_left || get(l:config.border, 0, '') !=# ''
+
+        let l:width_off = (l:has_left ? 1 : 0) + (l:has_right ? 1 : 0)
+        let l:height_off = (l:has_top ? 1 : 0) + (l:has_bottom ? 1 : 0)
+      endif
+      let l:left = get(l:config, '')
+      let l:info.core_width = l:config.width - l:width_off
+      let l:info.core_height = l:config.height - l:height_off
+    else
+      let l:info.core_width = l:info.width
+      let l:info.core_height = l:info.height
+    endif
+
     return {
     \   'width': l:info.width,
     \   'height': l:info.height,
+    \   'core_width': l:info.core_width,
+    \   'core_height': l:info.core_height,
     \   'topline': l:info.topline,
     \ }
   endfunction
@@ -58,6 +104,8 @@ else
       return {
       \   'width': l:info.width,
       \   'height': l:info.height,
+      \   'core_width': l:info.core_width,
+      \   'core_height': l:info.core_height,
       \   'topline': l:info.firstline
       \ }
     endif
@@ -67,6 +115,8 @@ else
     function! l:ctx.callback() abort
       let self.info.width = winwidth(0)
       let self.info.height = winheight(0)
+      let self.info.core_width = self.info.width
+      let self.info.core_height = self.info.height
       let self.info.topline = line('w0')
     endfunction
     call s:do(a:winid, { -> l:ctx.callback() })
@@ -106,7 +156,7 @@ function! s:scroll(winid, topline) abort
   function! l:ctx.callback(winid, topline) abort
     let l:wininfo = s:info(a:winid)
     let l:topline = a:topline
-    let l:topline = min([l:topline, line('$') - l:wininfo.height + 1])
+    let l:topline = min([l:topline, line('$') - l:wininfo.core_height + 1])
     let l:topline = max([l:topline, 1])
 
     if l:topline == l:wininfo.topline

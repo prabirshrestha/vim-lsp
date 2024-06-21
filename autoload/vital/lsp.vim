@@ -218,7 +218,7 @@ endfunction
 " @vimlint(EVL102, 0, l:__)
 " @vimlint(EVL102, 0, l:_)
 
-" s:_get_module() returns module object wihch has all script local functions.
+" s:_get_module() returns module object which has all script local functions.
 function! s:_get_module(name) abort dict
   let funcname = s:_import_func_name(self.plugin_name(), a:name)
   try

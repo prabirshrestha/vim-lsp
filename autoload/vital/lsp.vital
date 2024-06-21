@@ -1,8 +1,9 @@
 lsp
-b1e91b41f5028d65fa3d31a425ff21591d5d957f
+969a97cb6b3e634490ba168db0f2606c410cf9a7
 
 VS.LSP.MarkupContent
-VS.Vim.Window.FloatingWindow
-VS.Vim.Syntax.Markdown
+VS.LSP.Text
 VS.Vim.Buffer
+VS.Vim.Syntax.Markdown
 VS.Vim.Window
+VS.Vim.Window.FloatingWindow
