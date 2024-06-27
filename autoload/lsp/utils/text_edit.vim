@@ -200,18 +200,17 @@ function! s:_compare(text_edit1, text_edit2) abort
     return a:text_edit1.range.start.character - a:text_edit2.range.start.character
   endif
   return l:diff
-endfunction
+endfunction 
 
 "
 " _switch
 "
 function! s:_switch(path) abort
-  if bufnr(a:path) >= 0
-    execute printf('keepalt keepjumps %sbuffer!', bufnr(a:path))
-  else
-    execute printf('keepalt keepjumps edit! %s', fnameescape(a:path))
+  if bufnr(a:path) == -1
+    execute printf('badd %s', fnameescape(a:path))
   endif
-endfunction
+  execute printf('keepalt keepjumps %sbuffer!', bufnr(a:path))
+endfunction 
 
 "
 " delete
