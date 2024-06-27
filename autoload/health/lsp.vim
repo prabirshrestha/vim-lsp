@@ -8,7 +8,7 @@ endf
 
 
 function! health#lsp#check() abort
-    call health#report_start('server status')
+    call s:report_start('server status')
     let l:server_status = lsp#collect_server_status()
 
     let l:has_printed = v:false
@@ -17,21 +17,21 @@ function! health#lsp#check() abort
 
         let l:status_msg = printf('%s: %s', l:k, l:report.status)
         if l:report.status == 'running'
-            call health#report_ok(l:status_msg)
+            call s:report_ok(l:status_msg)
         elseif l:report.status == 'failed'
             call health#report_error(l:status_msg, 'See :help g:lsp_log_verbose to debug server failure.')
         else
-            call health#report_warn(l:status_msg)
+            call s:report_warn(l:status_msg)
         endif
         let l:has_printed = v:true
     endfor
 
     if !l:has_printed
-        call health#report_warn('no servers connected')
+        call s:report_warn('no servers connected')
     endif
 
     for l:k in sort(keys(l:server_status))
-        call health#report_start(printf('server configuration: %s', l:k))
+        call s:report_start(printf('server configuration: %s', l:k))
         let l:report = l:server_status[l:k]
 
         let l:msg = "\t\n"
@@ -54,12 +54,35 @@ function! health#lsp#check() abort
         call health#report_info(l:msg)
     endfor
 
-    call health#report_start('Performance')
+    call s:report_start('Performance')
     if lsp#utils#has_lua() && g:lsp_use_lua
-        call health#report_ok('Using lua for faster performance.')
+        call s:report_ok('Using lua for faster performance.')
     else
-        call health#report_warn('Missing requirements to enable lua for faster performance.')
+        call s:report_warn('Missing requirements to enable lua for faster performance.')
     endif
 
 endf
 
+function! s:report_start(report) abort
+  if has('nvim-0.10')
+    call v:lua.vim.health.start(a:report)
+  else
+    call health#report_start(a:report)
+  endif
+endf
+
+function! s:report_warn(report) abort
+  if has('nvim-0.10')
+    call v:lua.vim.health.warn(a:report)
+  else
+    call health#report_warn(a:report)
+  endif
+endf
+
+function! s:report_ok(report) abort
+  if has('nvim-0.10')
+    call v:lua.vim.health.ok(a:report)
+  else
+    call health#report_ok(a:report)
+  endif
+endf
