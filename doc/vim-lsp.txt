@@ -58,9 +58,9 @@ CONTENTS                                                  *vim-lsp-contents*
       g:lsp_diagnostics_virtual_text_wrap
 			     |g:lsp_diagnostics_virtual_text_wrap|
       g:lsp_document_code_action_signs_enabled
-			     |g:lsp_document_code_actions_signs_enabled|
+			     |g:lsp_document_code_action_signs_enabled|
       g:lsp_document_code_action_signs_delay
-			     |g:lsp_document_code_actions_signs_delay|
+			     |g:lsp_document_code_action_signs_delay|
       g:lsp_inlay_hints_enabled
 			     |g:lsp_inlay_hints_enabled|
       g:lsp_inlay_hints_delay
