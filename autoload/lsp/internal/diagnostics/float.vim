@@ -19,28 +19,10 @@ function! lsp#internal#diagnostics#float#_enable() abort
     " float and, potentially, show it later after a delay of
     " 'g:lsp_diagnostics_float_delay'.  So we always call 'hide_float()' for
     " this event, and may call 'show_float()' later.
-    "
-    " CursorHold - If the cursor did not move long enough in the normal mode, we
-    " want to hide the float.  So we want to call 'hide_float()'.  Because of
-    " the 'curpos' check, 'show_float()' is not going to be called, but we could
-    " be more explicit and just not call it at all.
-    "
-    " InsertEnter - If insert mode is entered and we do not show floats in the
-    " insert mode (g:lsp_diagnostics_float_insert_mode_enabled) we want to hide
-    " the cursor.  Similar to |CursorHold| we do not show the float due to the
-    " "mode() is# 'n'" check, but it seems more like an accident than the
-    " intended action.
-    let s:Dispose = lsp#callbag#pipe(
-        \ lsp#callbag#merge(
-        \   lsp#callbag#fromEvent(['CursorMoved']),
-        \   lsp#callbag#pipe(
-        \       lsp#callbag#fromEvent(['InsertEnter']),
-        \       lsp#callbag#filter({_->!g:lsp_diagnostics_float_insert_mode_enabled}),
-        \       lsp#callbag#tap({_->s:hide_float()}),
-        \   )
-        \ ),
-        \ lsp#callbag#filter({_->g:lsp_diagnostics_float_cursor}),
+    let s:Dispose_CursorMoved = lsp#callbag#pipe(
+        \ lsp#callbag#fromEvent(['CursorMoved']),
         \ lsp#callbag#tap({_->s:hide_float()}),
+        \ lsp#callbag#filter({_->g:lsp_diagnostics_float_cursor}),
         \ lsp#callbag#map({_->{
         \   'bufnr': bufnr('%'),
         \   'curpos': getcurpos()[0:2],
@@ -57,13 +39,37 @@ function! lsp#internal#diagnostics#float#_enable() abort
         \ lsp#callbag#map({_->lsp#internal#diagnostics#under_cursor#get_diagnostic()}),
         \ lsp#callbag#subscribe({x->s:show_float(x)}),
         \ )
+
+    " CursorHold - If the cursor did not move long enough in the normal mode, we
+    " want to hide the float.
+    let s:Dispose_CursorHold = lsp#callbag#pipe(
+        \ lsp#callbag#fromEvent(['CursorHold']),
+        \ lsp#callbag#subscribe({_->s:hide_float()}),
+        \ )
+
+    " InsertEnter - If insert mode is entered and we do not show floats in the
+    " insert mode (g:lsp_diagnostics_float_insert_mode_enabled) we want to hide
+    " the float.
+    let s:Dispose_InsertEnter = lsp#callbag#pipe(
+        \ lsp#callbag#fromEvent(['InsertEnter']),
+        \ lsp#callbag#filter({_->!g:lsp_diagnostics_float_insert_mode_enabled}),
+        \ lsp#callbag#subscribe({_->s:hide_float()}),
+        \ )
 endfunction
 
 function! lsp#internal#diagnostics#float#_disable() abort
     if !s:enabled | return | endif
-    if exists('s:Dispose')
-        call s:Dispose()
-        unlet s:Dispose
+    if exists('s:Dispose_CursorMoved')
+        call s:Dispose_CursorMoved()
+        unlet s:Dispose_CursorMoved
+    endif
+    if exists('s:Dispose_CursorHold')
+        call s:Dispose_CursorHold()
+        unlet s:Dispose_CursorHold
+    endif
+    if exists('s:Dispose_InsertEnter')
+        call s:Dispose_InsertEnter()
+        unlet s:Dispose_InsertEnter
     endif
     let s:enabled = 0
 endfunction
