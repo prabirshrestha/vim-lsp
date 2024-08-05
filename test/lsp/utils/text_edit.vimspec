@@ -2,6 +2,7 @@ function! s:set_text(lines)
     % delete _
     put =a:lines
     execute 'normal ggdd'
+    execute 'file my-file'
 endfunction
 
 function! s:get_text()
@@ -641,6 +642,45 @@ Describe lsp#utils#text_edit
             \ }])
 
             Assert Equals(getbufline(l:target, 1), ['aiueo'])
+        End
+
+        It should apply edits to buffer and unloaded file
+            let l:text = ['plop']
+            call s:set_text(l:text)
+            let l:buffer_text = s:get_text()
+            Assert Equals(l:buffer_text, ['plop', ''])
+            let l:target = globpath(&runtimepath, 'test/lsp/utils/text_edit.vimspec')
+            call lsp#utils#text_edit#apply_text_edits(
+              \ lsp#utils#path_to_uri(expand('%')),
+              \  [{
+              \   'range': {
+              \     'start': {
+              \       'line': 0,
+              \       'character': 0,
+              \     },
+              \     'end': {
+              \       'line': 1,
+              \       'character': 0,
+              \     }
+              \   },
+              \   'newText': "buffer\n"
+              \ }])
+            call lsp#utils#text_edit#apply_text_edits(lsp#utils#path_to_uri(l:target), [{
+              \   'range': {
+              \     'start': {
+              \       'line': 0,
+              \       'character': 0,
+              \     },
+              \     'end': {
+              \       'line': 1,
+              \       'character': 0,
+              \     }
+              \   },
+              \   'newText': "unloaded\n"
+              \ }])
+
+            Assert Equals(getbufline(l:target, 1), ['unloaded'])
+            Assert Equals(getbufline(expand('%'), 1), ['buffer'])
         End
     End
 End
