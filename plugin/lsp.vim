@@ -207,6 +207,7 @@ nnoremap <silent> <plug>(lsp-status) :<c-u>echo lsp#get_server_status()<cr>
 nnoremap <silent> <plug>(lsp-next-reference) :<c-u>call lsp#internal#document_highlight#jump(+1)<cr>
 nnoremap <silent> <plug>(lsp-previous-reference) :<c-u>call lsp#internal#document_highlight#jump(-1)<cr>
 nnoremap <silent> <plug>(lsp-signature-help) :<c-u>call lsp#ui#vim#signature_help#get_signature_help_under_cursor()<cr>
+nnoremap <silent> <plug>(lsp-diagnostic-open-float-under-cursor) :<c-u>call lsp#internal#diagnostics#float#open_under_cursor()<cr>
 
 if has('gui_running')
   anoremenu <silent> L&sp.Goto.Definition :LspDefinition<CR>

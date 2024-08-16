@@ -45,6 +45,13 @@ function! lsp#internal#diagnostics#float#_disable() abort
     let s:enabled = 0
 endfunction
 
+function! lsp#internal#diagnostics#float#open_under_cursor() abort
+    let l:diagnostic = lsp#internal#diagnostics#under_cursor#get_diagnostic()
+    if empty(l:diagnostic) | return | endif
+    call s:show_float(l:diagnostic)
+    call timer_start(0, {-> execute("au CursorMoved,InsertEnter * ++once :call s:hide_float()")})
+endfunction
+
 function! s:show_float(diagnostic) abort
     let l:doc_win = s:get_doc_win()
     if !empty(a:diagnostic) && has_key(a:diagnostic, 'message')
@@ -81,6 +88,7 @@ function! s:show_float(diagnostic) abort
         call s:hide_float()
     endif
 endfunction
+
 
 function! s:hide_float() abort
     let l:doc_win = s:get_doc_win()
