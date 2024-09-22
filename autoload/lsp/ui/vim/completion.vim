@@ -197,11 +197,7 @@ function! s:resolve_completion_item(completion_item, server_name) abort
   endif
 
   " check server capabilities.
-  let l:capabilities = lsp#get_server_capabilities(a:server_name)
-  if !has_key(l:capabilities, 'completionProvider')
-        \ || type(l:capabilities['completionProvider']) != v:t_dict
-        \ || !has_key(l:capabilities['completionProvider'], 'resolveProvider')
-        \ || !l:capabilities['completionProvider']['resolveProvider']
+  if !lsp#capabilities#has_completion_resolve_provider(a:server_name)
     return a:completion_item
   endif
 
