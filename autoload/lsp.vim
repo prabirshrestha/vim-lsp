@@ -472,7 +472,7 @@ function! s:ensure_start(buf, server_name, cb) abort
     endif
 
     if has_key(l:server_info, 'tcp')
-        let l:tcp = l:server_info['tcp'](l:server_info)
+        let l:tcp = l:server_info['tcp']
         let l:lsp_id = lsp#client#start({
             \ 'tcp': l:tcp,
             \ 'on_stderr': function('s:on_stderr', [a:server_name]),
