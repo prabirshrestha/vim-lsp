@@ -58,9 +58,9 @@ CONTENTS                                                  *vim-lsp-contents*
       g:lsp_diagnostics_virtual_text_wrap
 			     |g:lsp_diagnostics_virtual_text_wrap|
       g:lsp_document_code_action_signs_enabled
-			     |g:lsp_document_code_actions_signs_enabled|
+			     |g:lsp_document_code_action_signs_enabled|
       g:lsp_document_code_action_signs_delay
-			     |g:lsp_document_code_actions_signs_delay|
+			     |g:lsp_document_code_action_signs_delay|
       g:lsp_inlay_hints_enabled
 			     |g:lsp_inlay_hints_enabled|
       g:lsp_inlay_hints_delay
@@ -271,7 +271,7 @@ You can use tcp to connect to LSP servers that don't support stdio. Set host
 and port to tcp. The Godot game engine uses 6008 as its LSP port and godot
 ftplugins define gdscript or gdscript3 filetype: >
 
-	au User lsp_setup 
+	au User lsp_setup
 	    \ call lsp#register_server({
 	    \     'name': 'godot',
 	    \     'tcp': "localhost:6008",
@@ -290,7 +290,7 @@ vim-lsp supports the |:CheckHealth| command which can be useful when debugging
 lsp configuration issues.
 
 This command is implemented in vim with the
-[vim-healthcheck](https://github.com/rhysd/vim-healthcheck) plugin. 
+[vim-healthcheck](https://github.com/rhysd/vim-healthcheck) plugin.
 
 WIKI                                               *vim-lsp-configure-wiki*
 For documentation on how to configure other language servers refer
@@ -905,7 +905,7 @@ g:lsp_max_buffer_size                               *g:lsp_max_buffer_size*
     `g:lsp_max_buffer_size` (measured in bytes), the following features
     are disabled:
     * Semantic highlighting
-    
+
     This functionality can be disabled by setting `g:lsp_max_buffer_size`
     to a negative value.
 
@@ -1402,6 +1402,13 @@ The vim |dict| containing information about the server.
 	    Example: >
 		'config': { 'diagnostics': v:false }
 <
+  * env:
+    optional vim |dict|
+    Used to pass environment variables to the cmd.
+    Example: >
+	'env': { 'GOFLAGS': '-tags=wireinject' }
+<
+
 refresh_pattern                                    *vim-lsp-refresh_pattern*
     Type: |String| (|pattern|)
     Default: `'\k*$'`
@@ -2245,7 +2252,7 @@ Popup Formatting                                      *vim-lsp-popup-format*
 
 Popup windows use the |gq| operator for formatting content to the window.
 
-For customization, see 
+For customization, see
 |formatprg|.
 
 ==============================================================================
