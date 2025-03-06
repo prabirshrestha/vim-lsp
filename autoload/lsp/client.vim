@@ -139,7 +139,7 @@ function! s:on_stdout(id, data, event) abort
 endfunction
 
 function! s:get_content_length(headers) abort
-    for l:header in split(a:headers, "\r\n")
+    for l:header in split(a:headers, '\r\n\|\n')
         let l:kvp = split(l:header, ':')
         if len(l:kvp) == 2
             if l:kvp[0] =~? '^Content-Length'
