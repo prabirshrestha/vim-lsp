@@ -46,6 +46,8 @@ function! lsp#internal#document_highlight#_enable() abort
 endfunction
 
 function! lsp#internal#document_highlight#_disable() abort
+    call s:clear_highlights()
+
     if exists('s:Dispose')
         call s:Dispose()
         unlet s:Dispose
