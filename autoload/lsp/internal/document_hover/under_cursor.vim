@@ -81,11 +81,30 @@ function! lsp#internal#document_hover#under_cursor#getpreviewwinid() abort
     return v:null
 endfunction
 
+function s:check_hover_response_empty(response) abort
+    if !has_key(a:response, 'result')
+        return 1
+    endif
+
+    if empty(a:response['result'])
+        return 1
+    endif
+
+    if empty(a:response['result']['contents'])
+        return 1
+    endif
+
+    return 0
+endfunction
+
 function! s:show_hover(ui, server_name, request, response) abort
-    if !has_key(a:response, 'result') || empty(a:response['result']) || 
-        \ empty(a:response['result']['contents'])
-        call lsp#utils#error('No hover information found in server - ' . a:server_name)
-        return
+    if s:check_hover_response_empty(a:response)
+        if g:lsp_hover_echo_empty_message
+            call lsp#utils#error('No hover information found in server - ' . a:server_name)
+            return
+        else
+            return
+        endif
     endif
 
     echo ''
