@@ -84,6 +84,7 @@ CONTENTS                                                  *vim-lsp-contents*
       g:lsp_fold_enabled                    |g:lsp_fold_enabled|
       g:lsp_hover_conceal                   |g:lsp_hover_conceal|
       g:lsp_hover_ui                        |g:lsp_hover_ui|
+      g:lsp_hover_echo_empty_message	    |g:lsp_hover_echo_empty_message|
       g:lsp_ignorecase                      |g:lsp_ignorecase|
       g:lsp_log_file                        |g:lsp_log_file|
       g:lsp_log_verbose                     |g:lsp_log_verbose|
@@ -1079,6 +1080,18 @@ g:lsp_hover_ui                                                *g:lsp_hover_ui*
 	let g:lsp_hover_ui = ''
 	let g:lsp_hover_ui = 'float'
 	let g:lsp_hover_ui = 'preview'
+
+g:lsp_hover_echo_empty_message                                *g:lsp_hover_echo_empty_message*
+    Type: |Boolean
+    Default: `1`
+
+    Determines whether or not to echo empty hover messages. Set to `1` to
+    enable.
+
+    Example: >
+	let g:lsp_hover_echo_empty_message = 1
+	let g:lsp_hover_echo_empty_message = 0
+
 
 g:lsp_ignorecase                                         *g:lsp_ignorecase*
     Type: |Boolean|
