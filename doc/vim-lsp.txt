@@ -1082,7 +1082,7 @@ g:lsp_hover_ui                                                *g:lsp_hover_ui*
 	let g:lsp_hover_ui = 'preview'
 
 g:lsp_hover_echo_empty_message                                *g:lsp_hover_echo_empty_message*
-    Type: |Boolean
+    Type: |Boolean|
     Default: `1`
 
     Determines whether or not to echo empty hover messages. Set to `1` to
