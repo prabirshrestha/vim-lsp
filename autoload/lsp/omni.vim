@@ -312,15 +312,7 @@ function! lsp#omni#get_vim_completion_items(options) abort
         let l:range = lsp#utils#text_edit#get_range(get(l:completion_item, 'textEdit', {}))
         let l:complete_word = ''
         if has_key(l:completion_item, 'textEdit') && type(l:completion_item['textEdit']) == s:t_dict && !empty(l:range) && has_key(l:completion_item['textEdit'], 'newText')
-            let l:text_edit_new_text = l:completion_item['textEdit']['newText']
-            if has_key(l:completion_item, 'filterText') && !empty(l:completion_item['filterText']) && matchstr(l:text_edit_new_text, '^' . l:refresh_pattern) ==# ''
-                " Use filterText as word.
-                let l:complete_word = l:completion_item['filterText']
-            else
-                " Use textEdit.newText as word.
-                let l:complete_word = l:text_edit_new_text
-            endif
-
+            let l:complete_word = l:completion_item['textEdit']['newText']
             let l:item_start_character = l:range['start']['character']
             let l:start_character = min([l:item_start_character, l:start_character])
             let l:start_characters += [l:item_start_character]
