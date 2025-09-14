@@ -85,8 +85,27 @@ function! s:get_filter_label(item) abort
     return lsp#utils#_trim(a:item['word'])
 endfunction
 
+function! s:get_filter_text(item) abort
+    let l:completed_item = lsp#omni#get_managed_user_data_from_completed_item(a:item)
+    if !has_key(l:completed_item, 'completion_item')
+      return ''
+    endif
+
+    if !has_key(l:completed_item['completion_item'], 'filterText')
+      return ''
+    endif
+
+    let l:filter_text = l:completed_item['completion_item']['filterText']
+    if empty(l:filter_text)
+      return ''
+    endif
+
+    return l:filter_text
+endfunction
+
 function! s:prefix_filter(item, last_typed_word) abort
-    let l:label = s:get_filter_label(a:item)
+    let l:filter_text = s:get_filter_text(a:item)
+    let l:label = empty(l:filter_text) ? s:get_filter_label(a:item) : l:filter_text
 
     if g:lsp_ignorecase
         return stridx(tolower(l:label), tolower(a:last_typed_word)) == 0
@@ -96,7 +115,8 @@ function! s:prefix_filter(item, last_typed_word) abort
 endfunction
 
 function! s:contains_filter(item, last_typed_word) abort
-    let l:label = s:get_filter_label(a:item)
+    let l:filter_text = s:get_filter_text(a:item)
+    let l:label = empty(l:filter_text) ? s:get_filter_label(a:item) : l:filter_text
 
     if g:lsp_ignorecase
         return stridx(tolower(l:label), tolower(a:last_typed_word)) >= 0
