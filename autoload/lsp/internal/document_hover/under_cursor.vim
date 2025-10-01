@@ -118,6 +118,8 @@ function! s:show_preview_window(server_name, request, response) abort
     setlocal nobuflisted
     setlocal buftype=nofile
     setlocal noswapfile
+    setlocal noreadonly
+    setlocal modifiable
     %d _
     call setline(1, l:lines)
     call s:Window.do(win_getid(), {->s:Markdown.apply()})
