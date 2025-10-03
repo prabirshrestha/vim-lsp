@@ -95,12 +95,7 @@ function! s:get_filter_text(item) abort
       return ''
     endif
 
-    let l:filter_text = l:completed_item['completion_item']['filterText']
-    if empty(l:filter_text)
-      return ''
-    endif
-
-    return l:filter_text
+    return l:completed_item['completion_item']['filterText']
 endfunction
 
 function! s:prefix_filter(item, last_typed_word) abort
