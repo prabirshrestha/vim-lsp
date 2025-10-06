@@ -108,7 +108,7 @@ endfunction
 function! s:on_exit(response) abort
     let l:server = a:response['params']['server']
     let l:notify = 0
-    for [l:key, l:value] in items(s:diagnostics_state)
+    for l:value in values(s:diagnostics_state)
         if has_key(l:value, l:server)
             let l:notify = 1
             call remove(l:value, l:server)
@@ -162,7 +162,7 @@ function! lsp#internal#diagnostics#state#_get_diagnostics_count_for_buffer(bufnr
         \ }
     if lsp#internal#diagnostics#state#_is_enabled_for_buffer(a:bufnr)
         let l:uri = lsp#utils#get_buffer_uri(a:bufnr)
-        for [l:_, l:response] in items(lsp#internal#diagnostics#state#_get_all_diagnostics_grouped_by_server_for_uri(l:uri))
+        for l:response in values(lsp#internal#diagnostics#state#_get_all_diagnostics_grouped_by_server_for_uri(l:uri))
             for l:diagnostic in lsp#utils#iteratable(l:response['params']['diagnostics'])
                 let l:key = get(s:diagnostic_kinds, get(l:diagnostic, 'severity', 1) , 'error')
                 let l:counts[l:key] += 1
