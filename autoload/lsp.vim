@@ -393,7 +393,7 @@ function! s:on_buf_wipeout(buf) abort
     endif
 endfunction
 
-function! s:ensure_flush_all(buf, server_names) abort
+function! lsp#ensure_flush_all(buf, server_names) abort
     for l:server_name in a:server_names
         call s:ensure_flush(a:buf, l:server_name, function('s:Noop'))
     endfor
