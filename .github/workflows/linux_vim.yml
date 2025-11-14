@@ -83,6 +83,6 @@ jobs:
           export THEMIS_VIM=vim
           # https://github.com/project-slippi/Ishiiruka/issues/323
           # It was needed to detect the actual path of `libgmodule` via `ldconfig -p | grep libg`.
-          LD_PRELOAD=/lib/x86_64-linux-gnu/libgmodule-2.0.so vim --version
-          LD_PRELOAD=/lib/x86_64-linux-gnu/libgmodule-2.0.so themis
+          LD_PRELOAD=/lib/x86_64-linux-gnu/libgmodule-2.0.so.0 vim --version
+          LD_PRELOAD=/lib/x86_64-linux-gnu/libgmodule-2.0.so.0 themis
 
