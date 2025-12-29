@@ -1,10 +1,14 @@
 " vint: -ProhibitUnusedVariable
 "
 let s:context = {}
+let s:previous_state = {}
 
 function! lsp#ui#vim#completion#_setup() abort
   augroup lsp_ui_vim_completion
     autocmd!
+    if exists('##CompleteChanged')
+      autocmd CompleteChanged * call s:on_complete_changed()
+    endif
     autocmd CompleteDone * call s:on_complete_done()
   augroup END
 endfunction
@@ -32,6 +36,7 @@ function! s:on_complete_done() abort
   " Sometimes, vim occurs `CompleteDone` unexpectedly.
   " We try to detect it by checking empty completed_item.
   if empty(v:completed_item) || get(v:completed_item, 'word', '') ==# '' && get(v:completed_item, 'abbr', '') ==# ''
+    call s:clear_previous_state()
     doautocmd <nomodeline> User lsp_complete_done
     return
   endif
@@ -44,6 +49,7 @@ function! s:on_complete_done() abort
 
   " If managed user_data does not exists, skip it.
   if empty(l:managed_user_data)
+    call s:clear_previous_state()
     doautocmd <nomodeline> User lsp_complete_done
     return
   endif
@@ -56,7 +62,102 @@ function! s:on_complete_done() abort
   let s:context['completion_item'] = l:managed_user_data['completion_item']
   let s:context['start_character'] = l:managed_user_data['start_character']
   let s:context['complete_word'] = l:managed_user_data['complete_word']
+
+  " Check if textEdit was already applied by CompleteChanged
+  let s:context['text_edit_applied_by_complete_changed'] = get(s:previous_state, 'text_edit_applied', 0)
+
   call feedkeys(printf("\<C-r>=<SNR>%d_on_complete_done_after()\<CR>", s:SID()), 'n')
+endfunction
+
+"
+" Called when completion selection changes (CompleteChanged event)
+" This applies textEdit immediately when a completion item is selected
+"
+function! s:on_complete_changed() abort
+  " Do nothing if textEdit is disabled
+  if !g:lsp_text_edit_enabled
+    return
+  endif
+
+  " Check if v:event exists and has completed_item
+  if empty(v:event) || !has_key(v:event, 'completed_item')
+    call s:clear_previous_state()
+    return
+  endif
+
+  let l:completed_item = v:event['completed_item']
+
+  " Skip if completed_item is empty
+  if empty(l:completed_item)
+    call s:clear_previous_state()
+    return
+  endif
+
+  " Try to get managed user_data
+  let l:managed_user_data = lsp#omni#get_managed_user_data_from_completed_item(l:completed_item)
+
+  " If managed user_data does not exist, skip it
+  if empty(l:managed_user_data)
+    call s:clear_previous_state()
+    return
+  endif
+
+  " Check if the completion item has textEdit
+  let l:completion_item = l:managed_user_data['completion_item']
+  if !has_key(l:completion_item, 'textEdit') || empty(l:completion_item['textEdit'])
+    " No textEdit to apply, but we still need to track state for later
+    call s:save_state_for_complete_changed(l:managed_user_data)
+    return
+  endif
+
+  " Skip if this is a snippet (insertTextFormat == 2)
+  " Snippets should be handled by CompleteDone, not CompleteChanged
+  if get(l:completion_item, 'insertTextFormat', 1) == 2
+    call s:save_state_for_complete_changed(l:managed_user_data)
+    return
+  endif
+
+  " Save context for delayed execution
+  let s:context['changed_line'] = getline('.')
+  let s:context['changed_line_nr'] = line('.')
+  let s:context['changed_position'] = lsp#utils#position#vim_to_lsp('%', getpos('.')[1 : 2])
+  let s:context['changed_managed_user_data'] = l:managed_user_data
+  let s:context['changed_completed_item'] = l:completed_item
+
+  " Use feedkeys to execute textEdit outside of the event handler
+  call feedkeys(printf("\<C-r>=<SNR>%d_on_complete_changed_after()\<CR>", s:SID()), 'n')
+endfunction
+
+"
+" Apply textEdit after CompleteChanged (delayed execution via feedkeys)
+"
+function! s:on_complete_changed_after() abort
+  " Clear message line
+  echo ''
+
+  " Ignore if not in insert mode
+  if mode(1)[0] !=# 'i'
+    return ''
+  endif
+
+  " Check if context is set
+  if !has_key(s:context, 'changed_managed_user_data')
+    return ''
+  endif
+
+  let l:managed_user_data = s:context['changed_managed_user_data']
+  let l:completed_item = s:context['changed_completed_item']
+
+  " Restore previous state if exists
+  call s:restore_previous_state()
+
+  " Apply textEdit for the currently selected completion item
+  call s:apply_text_edit_for_complete_changed(l:managed_user_data, l:completed_item)
+
+  " Save current state for next CompleteChanged
+  call s:save_state_for_complete_changed(l:managed_user_data)
+
+  return ''
 endfunction
 
 "
@@ -94,7 +195,21 @@ function! s:on_complete_done_after() abort
 
   let l:completion_item = s:resolve_completion_item(l:completion_item, l:server_name)
 
-  " clear completed string if need.
+  " Check if textEdit was already applied by CompleteChanged
+  let l:text_edit_applied = get(s:context, 'text_edit_applied_by_complete_changed', 0)
+
+  " If textEdit was already applied in CompleteChanged, only apply additionalTextEdits
+  if l:text_edit_applied && exists('##CompleteChanged')
+    " apply additionalTextEdits only
+    if has_key(l:completion_item, 'additionalTextEdits') && !empty(l:completion_item['additionalTextEdits'])
+      call lsp#utils#text_edit#apply_text_edits(lsp#utils#get_buffer_uri(bufnr('%')), l:completion_item['additionalTextEdits'])
+    endif
+    call s:clear_previous_state()
+    doautocmd <nomodeline> User lsp_complete_done
+    return ''
+  endif
+
+  " Original behavior: clear completed string if need and apply textEdit
   let l:is_expandable = s:is_expandable(l:done_line, l:done_position, l:complete_position, l:completion_item, l:complete_word)
   if l:is_expandable
     call s:clear_auto_inserted_text(l:done_line, l:done_position, l:complete_position)
@@ -155,6 +270,7 @@ function! s:on_complete_done_after() abort
     endif
   endif
 
+  call s:clear_previous_state()
   doautocmd <nomodeline> User lsp_complete_done
   return ''
 endfunction
@@ -295,5 +411,99 @@ endfunction
 "
 function! s:SID() abort
   return matchstr(expand('<sfile>'), '<SNR>\zs\d\+\ze_SID$')
+endfunction
+
+"
+" Clear previous completion state
+"
+function! s:clear_previous_state() abort
+  let s:previous_state = {}
+endfunction
+
+"
+" Save current state for CompleteChanged
+"
+function! s:save_state_for_complete_changed(managed_user_data) abort
+  let l:completion_item = a:managed_user_data['completion_item']
+  let l:has_text_edit = has_key(l:completion_item, 'textEdit') && !empty(l:completion_item['textEdit'])
+
+  " Don't mark as applied if it's a snippet (insertTextFormat == 2)
+  " Snippets should be handled by CompleteDone
+  let l:is_snippet = get(l:completion_item, 'insertTextFormat', 1) == 2
+  let l:text_edit_applied = l:has_text_edit && !l:is_snippet
+
+  let s:previous_state = {
+  \   'line': getline('.'),
+  \   'line_nr': line('.'),
+  \   'position': lsp#utils#position#vim_to_lsp('%', getpos('.')[1 : 2]),
+  \   'managed_user_data': a:managed_user_data,
+  \   'text_edit_applied': l:text_edit_applied
+  \ }
+endfunction
+
+"
+" Restore previous state before applying new textEdit
+"
+function! s:restore_previous_state() abort
+  if empty(s:previous_state)
+    return
+  endif
+
+  " Restore the previous line state
+  if has_key(s:previous_state, 'line') && has_key(s:previous_state, 'line_nr')
+    call setline(s:previous_state['line_nr'], s:previous_state['line'])
+  endif
+
+  " Restore cursor position
+  if has_key(s:previous_state, 'position')
+    let l:vim_pos = lsp#utils#position#lsp_to_vim('%', s:previous_state['position'])
+    call cursor(l:vim_pos)
+  endif
+endfunction
+
+"
+" Apply textEdit for CompleteChanged event
+"
+function! s:apply_text_edit_for_complete_changed(managed_user_data, completed_item) abort
+  let l:completion_item = a:managed_user_data['completion_item']
+  let l:complete_position = a:managed_user_data['complete_position']
+  let l:start_character = a:managed_user_data['start_character']
+
+  " Get current position
+  let l:current_position = lsp#utils#position#vim_to_lsp('%', getpos('.')[1 : 2])
+  let l:current_line = getline('.')
+
+  " Get textEdit range
+  let l:text_edit = l:completion_item['textEdit']
+  let l:range = lsp#utils#text_edit#get_range(l:text_edit)
+  let l:new_text = l:text_edit['newText']
+
+  " Calculate how much text vim has auto-inserted
+  " Vim inserts the 'word' field, so we need to remove it before applying textEdit
+  let l:word = get(a:completed_item, 'word', '')
+  let l:word_len = strchars(l:word)
+
+  " Remove the auto-inserted word
+  if l:word_len > 0
+    let l:before = strcharpart(l:current_line, 0, l:current_position['character'] - l:word_len)
+    let l:after = strcharpart(l:current_line, l:current_position['character'], strchars(l:current_line) - l:current_position['character'])
+    call setline('.', l:before . l:after)
+    call cursor([line('.'), strlen(l:before) + 1])
+    let l:current_position = lsp#utils#position#vim_to_lsp('%', getpos('.')[1 : 2])
+  endif
+
+  " Apply the textEdit
+  call lsp#utils#text_edit#apply_text_edits('%', [l:text_edit])
+
+  " Update cursor position to end of inserted text
+  let l:lines = lsp#utils#_split_by_eol(l:new_text)
+  let l:end_pos = copy(l:range['start'])
+  let l:end_pos['line'] += len(l:lines) - 1
+  if len(l:lines) == 1
+    let l:end_pos['character'] = l:range['start']['character'] + strchars(l:lines[0])
+  else
+    let l:end_pos['character'] = strchars(l:lines[-1])
+  endif
+  call cursor(lsp#utils#position#lsp_to_vim('%', l:end_pos))
 endfunction
 
