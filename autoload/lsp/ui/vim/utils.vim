@@ -67,31 +67,21 @@ function! lsp#ui#vim#utils#symbols_to_loc_list(server, result) abort
                 let l:location = l:symbol['location']
                 if lsp#utils#is_file_uri(l:location['uri'])
                     let l:path = lsp#utils#uri_to_path(l:location['uri'])
-                    let [l:line, l:col] = lsp#utils#position#lsp_to_vim(l:path, l:location['range']['start'])
-                    let [l:end_line, l:end_col] = lsp#utils#position#lsp_to_vim(l:path, l:location['range']['end'])
-                    call add(l:list, {
+                    let l:loc_range = lsp#utils#range#lsp_to_vim_loc(l:path, l:location['range'])
+                    call add(l:list, extend({
                         \ 'filename': l:path,
-                        \ 'lnum': l:line,
-                        \ 'col': l:col,
-                        \ 'end_lnum': l:end_line,
-                        \ 'end_col': l:end_col,
                         \ 'text': lsp#ui#vim#utils#_get_symbol_text_from_kind(a:server, l:symbol['kind']) . ' : ' . (g:lsp_document_symbol_detail ? l:symbol['detail'] : l:symbol['name']),
-                        \ })
+                        \ }, l:loc_range))
                 endif
             else
                 let l:location = a:result['request']['params']['textDocument']['uri']
                 if lsp#utils#is_file_uri(l:location)
                     let l:path = lsp#utils#uri_to_path(l:location)
-                    let [l:line, l:col] = lsp#utils#position#lsp_to_vim(l:path, l:symbol['range']['start'])
-                    let [l:end_line, l:end_col] = lsp#utils#position#lsp_to_vim(l:path, l:location['range']['end'])
-                    call add(l:list, {
+                    let l:loc_range = lsp#utils#range#lsp_to_vim_loc(l:path, l:symbol['range'])
+                    call add(l:list, extend({
                         \ 'filename': l:path,
-                        \ 'lnum': l:line,
-                        \ 'col': l:col,
-                        \ 'end_lnum': l:end_line,
-                        \ 'end_col': l:end_col,
                         \ 'text': lsp#ui#vim#utils#_get_symbol_text_from_kind(a:server, l:symbol['kind']) . ' : ' . (g:lsp_document_symbol_detail ? l:symbol['detail'] : l:symbol['name']),
-                        \ })
+                        \ }, l:loc_range)
                     if has_key(l:symbol, 'children') && !empty(l:symbol['children'])
                         call s:symbols_to_loc_list_children(a:server, l:path, l:list, l:symbol['children'], 1)
                     endif
@@ -131,16 +121,11 @@ function! lsp#ui#vim#utils#diagnostics_to_loc_list(result) abort
                 let l:text .= l:item['code'] . ':'
             endif
             let l:text .= l:item['message']
-            let [l:line, l:col] = lsp#utils#position#lsp_to_vim(l:path, l:item['range']['start'])
-            let [l:end_line, l:end_col] = lsp#utils#position#lsp_to_vim(l:path, l:item['range']['end'])
-            let l:location_item = {
+            let l:loc_range = lsp#utils#range#lsp_to_vim_loc(l:path, l:item['range'])
+            let l:location_item = extend({
                 \ 'filename': l:path,
-                \ 'lnum': l:line,
-                \ 'col': l:col,
-                \ 'end_lnum': l:end_line,
-                \ 'end_col': l:end_col,
                 \ 'text': l:text,
-                \ }
+                \ }, l:loc_range)
             if l:severity_text !=# ''
                 " 'E' for error, 'W' for warning, 'I' for information, 'H' for hint
                 let l:location_item['type'] = l:severity_text[0]

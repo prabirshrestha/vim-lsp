@@ -75,10 +75,9 @@ function! s:lsp_location_item_to_vim(loc, cache) abort
     endif
 
     let l:path = lsp#utils#uri_to_path(l:uri)
-    let [l:line, l:col] = lsp#utils#position#lsp_to_vim(l:path, l:range['start'])
-    let [l:end_line, l:end_col] = lsp#utils#position#lsp_to_vim(l:path, l:range['end'])
+    let l:loc_range = lsp#utils#range#lsp_to_vim_loc(l:path, l:range)
 
-    let l:index = l:line - 1
+    let l:index = l:loc_range['lnum'] - 1
     if has_key(a:cache, l:path)
         let l:text = a:cache[l:path][l:index]
     else
@@ -94,25 +93,17 @@ function! s:lsp_location_item_to_vim(loc, cache) abort
 
     if l:use_link
         " viewstart/end decremented to account for incrementing in _lsp_to_vim
-        return {
+        return extend({
             \ 'filename': l:path,
-            \ 'lnum': l:line,
-            \ 'col': l:col,
-            \ 'end_lnum': l:end_line,
-            \ 'end_col': l:end_col,
             \ 'text': l:text,
             \ 'viewstart': lsp#utils#position#lsp_to_vim(l:path, a:loc['targetRange']['start'])[0] - 1,
             \ 'viewend': lsp#utils#position#lsp_to_vim(l:path, a:loc['targetRange']['end'])[0] - 1,
-            \ }
+            \ }, l:loc_range)
     else
-        return {
+        return extend({
             \ 'filename': l:path,
-            \ 'lnum': l:line,
-            \ 'col': l:col,
-            \ 'end_lnum': l:end_line,
-            \ 'end_col': l:end_col,
             \ 'text': l:text,
-            \ }
+            \ }, l:loc_range)
     endif
 endfunction
 
