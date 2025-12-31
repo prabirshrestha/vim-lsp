@@ -552,6 +552,7 @@ function! s:hierarchy_item_to_vim(item, server) abort
 
     let l:path = lsp#utils#uri_to_path(l:uri)
     let [l:line, l:col] = lsp#utils#position#lsp_to_vim(l:path, a:item['range']['start'])
+    let [l:end_line, l:end_col] = lsp#utils#position#lsp_to_vim(l:path, a:item['range']['end'])
     let l:text = '[' . lsp#ui#vim#utils#_get_symbol_text_from_kind(a:server, a:item['kind']) . '] ' . a:item['name']
     if has_key(a:item, 'detail')
         let l:text .= ": " . a:item['detail']
@@ -561,6 +562,8 @@ function! s:hierarchy_item_to_vim(item, server) abort
         \ 'filename': l:path,
         \ 'lnum': l:line,
         \ 'col': l:col,
+        \ 'end_lnum': l:end_line,
+        \ 'end_col': l:end_col,
         \ 'text': l:text,
         \ }
 endfunction

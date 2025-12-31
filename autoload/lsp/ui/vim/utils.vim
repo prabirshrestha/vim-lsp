@@ -68,10 +68,13 @@ function! lsp#ui#vim#utils#symbols_to_loc_list(server, result) abort
                 if lsp#utils#is_file_uri(l:location['uri'])
                     let l:path = lsp#utils#uri_to_path(l:location['uri'])
                     let [l:line, l:col] = lsp#utils#position#lsp_to_vim(l:path, l:location['range']['start'])
+                    let [l:end_line, l:end_col] = lsp#utils#position#lsp_to_vim(l:path, l:location['range']['end'])
                     call add(l:list, {
                         \ 'filename': l:path,
                         \ 'lnum': l:line,
                         \ 'col': l:col,
+                        \ 'end_lnum': l:end_line,
+                        \ 'end_col': l:end_col,
                         \ 'text': lsp#ui#vim#utils#_get_symbol_text_from_kind(a:server, l:symbol['kind']) . ' : ' . (g:lsp_document_symbol_detail ? l:symbol['detail'] : l:symbol['name']),
                         \ })
                 endif
@@ -80,10 +83,13 @@ function! lsp#ui#vim#utils#symbols_to_loc_list(server, result) abort
                 if lsp#utils#is_file_uri(l:location)
                     let l:path = lsp#utils#uri_to_path(l:location)
                     let [l:line, l:col] = lsp#utils#position#lsp_to_vim(l:path, l:symbol['range']['start'])
+                    let [l:end_line, l:end_col] = lsp#utils#position#lsp_to_vim(l:path, l:location['range']['end'])
                     call add(l:list, {
                         \ 'filename': l:path,
                         \ 'lnum': l:line,
                         \ 'col': l:col,
+                        \ 'end_lnum': l:end_line,
+                        \ 'end_col': l:end_col,
                         \ 'text': lsp#ui#vim#utils#_get_symbol_text_from_kind(a:server, l:symbol['kind']) . ' : ' . (g:lsp_document_symbol_detail ? l:symbol['detail'] : l:symbol['name']),
                         \ })
                     if has_key(l:symbol, 'children') && !empty(l:symbol['children'])
@@ -126,10 +132,13 @@ function! lsp#ui#vim#utils#diagnostics_to_loc_list(result) abort
             endif
             let l:text .= l:item['message']
             let [l:line, l:col] = lsp#utils#position#lsp_to_vim(l:path, l:item['range']['start'])
+            let [l:end_line, l:end_col] = lsp#utils#position#lsp_to_vim(l:path, l:item['range']['end'])
             let l:location_item = {
                 \ 'filename': l:path,
                 \ 'lnum': l:line,
                 \ 'col': l:col,
+                \ 'end_lnum': l:end_line,
+                \ 'end_col': l:end_col,
                 \ 'text': l:text,
                 \ }
             if l:severity_text !=# ''

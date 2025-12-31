@@ -53,6 +53,8 @@ endfunction
 "   'filename',
 "   'lnum',
 "   'col',
+"   'end_lnum',
+"   'end_col',
 "   'text',
 "   'viewstart?',
 "   'viewend?',
@@ -74,6 +76,7 @@ function! s:lsp_location_item_to_vim(loc, cache) abort
 
     let l:path = lsp#utils#uri_to_path(l:uri)
     let [l:line, l:col] = lsp#utils#position#lsp_to_vim(l:path, l:range['start'])
+    let [l:end_line, l:end_col] = lsp#utils#position#lsp_to_vim(l:path, l:range['end'])
 
     let l:index = l:line - 1
     if has_key(a:cache, l:path)
@@ -95,6 +98,8 @@ function! s:lsp_location_item_to_vim(loc, cache) abort
             \ 'filename': l:path,
             \ 'lnum': l:line,
             \ 'col': l:col,
+            \ 'end_lnum': l:end_line,
+            \ 'end_col': l:end_col,
             \ 'text': l:text,
             \ 'viewstart': lsp#utils#position#lsp_to_vim(l:path, a:loc['targetRange']['start'])[0] - 1,
             \ 'viewend': lsp#utils#position#lsp_to_vim(l:path, a:loc['targetRange']['end'])[0] - 1,
@@ -104,6 +109,8 @@ function! s:lsp_location_item_to_vim(loc, cache) abort
             \ 'filename': l:path,
             \ 'lnum': l:line,
             \ 'col': l:col,
+            \ 'end_lnum': l:end_line,
+            \ 'end_col': l:end_col,
             \ 'text': l:text,
             \ }
     endif
