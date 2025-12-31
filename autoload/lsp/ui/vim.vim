@@ -551,16 +551,14 @@ function! s:hierarchy_item_to_vim(item, server) abort
     endif
 
     let l:path = lsp#utils#uri_to_path(l:uri)
-    let [l:line, l:col] = lsp#utils#position#lsp_to_vim(l:path, a:item['range']['start'])
+    let l:loc_range = lsp#utils#range#lsp_to_vim_loc(l:path, a:item['range'])
     let l:text = '[' . lsp#ui#vim#utils#_get_symbol_text_from_kind(a:server, a:item['kind']) . '] ' . a:item['name']
     if has_key(a:item, 'detail')
         let l:text .= ": " . a:item['detail']
     endif
 
-    return {
+    return exend({
         \ 'filename': l:path,
-        \ 'lnum': l:line,
-        \ 'col': l:col,
         \ 'text': l:text,
-        \ }
+        \ }, l:loc_range)
 endfunction
