@@ -36,13 +36,13 @@ Describe lsp#internal#diagnostics#document_diagnostics_command
         let l:bufnr = bufnr('%')
 
         let l:server1_response1 = {'method': 'textDocument/publishDiagnostics', 'params': {'uri': l:uri, 'diagnostics': [
-            \ {'severity': 1, 'message': 'm1', 'range': { 'start': { 'line': 1, 'character': 1, 'end': { 'line': 1, 'character': 1 } } }},
-            \ {'severity': 1, 'message': 'm2', 'range': { 'start': { 'line': 1, 'character': 2, 'end': { 'line': 1, 'character': 3 } } }},
+            \ {'severity': 1, 'message': 'm1', 'range': { 'start': { 'line': 1, 'character': 1 }, 'end': { 'line': 1, 'character': 1 } }},
+            \ {'severity': 1, 'message': 'm2', 'range': { 'start': { 'line': 1, 'character': 2 }, 'end': { 'line': 1, 'character': 3 } }},
             \ ]}}
 
         let l:server1_response2 = {'method': 'textDocument/publishDiagnostics', 'params': {'uri': l:uri2, 'diagnostics': [
-            \ {'severity': 2, 'message': 'm3', 'range': { 'start': { 'line': 2, 'character': 1, 'end': { 'line': 1, 'character': 1 } } }},
-            \ {'severity': 2, 'message': 'm4', 'range': { 'start': { 'line': 3, 'character': 2, 'end': { 'line': 1, 'character': 3 } } }},
+            \ {'severity': 2, 'message': 'm3', 'range': { 'start': { 'line': 2, 'character': 1 }, 'end': { 'line': 1, 'character': 1 } }},
+            \ {'severity': 2, 'message': 'm4', 'range': { 'start': { 'line': 3, 'character': 2 }, 'end': { 'line': 1, 'character': 3 } }},
             \ ]}}
 
         call lsp#stream(1, { 'server': 'server1', 'response': l:server1_response1 })
