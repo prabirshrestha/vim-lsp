@@ -85,8 +85,22 @@ function! s:get_filter_label(item) abort
     return lsp#utils#_trim(a:item['word'])
 endfunction
 
+function! s:get_filter_text(item) abort
+    let l:completed_item = lsp#omni#get_managed_user_data_from_completed_item(a:item)
+    if !has_key(l:completed_item, 'completion_item')
+      return ''
+    endif
+
+    if !has_key(l:completed_item['completion_item'], 'filterText')
+      return ''
+    endif
+
+    return l:completed_item['completion_item']['filterText']
+endfunction
+
 function! s:prefix_filter(item, last_typed_word) abort
-    let l:label = s:get_filter_label(a:item)
+    let l:filter_text = s:get_filter_text(a:item)
+    let l:label = empty(l:filter_text) ? s:get_filter_label(a:item) : l:filter_text
 
     if g:lsp_ignorecase
         return stridx(tolower(l:label), tolower(a:last_typed_word)) == 0
@@ -96,7 +110,8 @@ function! s:prefix_filter(item, last_typed_word) abort
 endfunction
 
 function! s:contains_filter(item, last_typed_word) abort
-    let l:label = s:get_filter_label(a:item)
+    let l:filter_text = s:get_filter_text(a:item)
+    let l:label = empty(l:filter_text) ? s:get_filter_label(a:item) : l:filter_text
 
     if g:lsp_ignorecase
         return stridx(tolower(l:label), tolower(a:last_typed_word)) >= 0
@@ -312,15 +327,7 @@ function! lsp#omni#get_vim_completion_items(options) abort
         let l:range = lsp#utils#text_edit#get_range(get(l:completion_item, 'textEdit', {}))
         let l:complete_word = ''
         if has_key(l:completion_item, 'textEdit') && type(l:completion_item['textEdit']) == s:t_dict && !empty(l:range) && has_key(l:completion_item['textEdit'], 'newText')
-            let l:text_edit_new_text = l:completion_item['textEdit']['newText']
-            if has_key(l:completion_item, 'filterText') && !empty(l:completion_item['filterText']) && matchstr(l:text_edit_new_text, '^' . l:refresh_pattern) ==# ''
-                " Use filterText as word.
-                let l:complete_word = l:completion_item['filterText']
-            else
-                " Use textEdit.newText as word.
-                let l:complete_word = l:text_edit_new_text
-            endif
-
+            let l:complete_word = l:completion_item['textEdit']['newText']
             let l:item_start_character = l:range['start']['character']
             let l:start_character = min([l:item_start_character, l:start_character])
             let l:start_characters += [l:item_start_character]

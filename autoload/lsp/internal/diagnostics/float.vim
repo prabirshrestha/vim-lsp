@@ -17,7 +17,7 @@ function! lsp#internal#diagnostics#float#_enable() abort
 
     let s:Dispose = lsp#callbag#pipe(
         \ lsp#callbag#merge(
-        \   lsp#callbag#fromEvent(['CursorMoved', 'CursorHold']),
+        \   lsp#callbag#fromEvent(['CursorMoved']),
         \   lsp#callbag#pipe(
         \       lsp#callbag#fromEvent(['InsertEnter']),
         \       lsp#callbag#filter({_->!g:lsp_diagnostics_float_insert_mode_enabled}),
@@ -112,6 +112,8 @@ function! s:get_doc_win() abort
     call setbufvar(s:doc_win.get_bufnr(), '&bufhidden', 'hide')
     call setbufvar(s:doc_win.get_bufnr(), '&buflisted', 0)
     call setbufvar(s:doc_win.get_bufnr(), '&swapfile', 0)
+    call setbufvar(s:doc_win.get_bufnr(), '&modifiable', 1)
+    call setbufvar(s:doc_win.get_bufnr(), '&readonly', 0)
     return s:doc_win
 endfunction
 
