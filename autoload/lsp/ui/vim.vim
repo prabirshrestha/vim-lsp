@@ -35,10 +35,15 @@ function! lsp#ui#vim#definition(in_preview, ...) abort
     call s:list_location('definition', l:ctx)
 endfunction
 
-function! lsp#ui#vim#references() abort
-    let l:ctx = { 'jump_if_one': 0 }
-    let l:request_params = { 'context': { 'includeDeclaration': v:false } }
+function! lsp#ui#vim#references(ctx) abort
+    let l:ctx = extend({ 'jump_if_one': 0 }, a:ctx)
+    let l:request_params = { 'context': { 'includeDeclaration': v:true } }
     call s:list_location('references', l:ctx, l:request_params)
+endfunction
+
+function! lsp#ui#vim#add_tree_references() abort
+    let l:ctx = { 'add_tree': v:true }
+    call lsp#ui#vim#references(l:ctx)
 endfunction
 
 function! s:list_location(method, ctx, ...) abort
@@ -94,7 +99,10 @@ function! s:rename(server, new_name, pos) abort
     echo ' ... Renaming ...'
 endfunction
 
-function! lsp#ui#vim#rename() abort
+" options - {
+"   server - 'server_name'		" optional
+" }
+function! lsp#ui#vim#rename(options) abort
     let l:servers = filter(lsp#get_allowed_servers(), 'lsp#capabilities#has_rename_prepare_provider(v:val)')
     let l:prepare_support = 1
     if len(l:servers) == 0
@@ -110,7 +118,16 @@ function! lsp#ui#vim#rename() abort
     endif
 
     " TODO: ask the user which server it should use to rename if there are multiple
-    let l:server = l:servers[0]
+    if has_key(a:options, 'server')
+        if index(l:servers, a:options['server']) >= 0
+            let l:server = a:options['server']
+        else
+            call s:not_supported('Renaming by ' .. a:options['server'])
+            return
+        endif
+    else
+        let l:server = l:servers[0]
+    endif
 
     if l:prepare_support
         call lsp#send_request(l:server, {
@@ -127,15 +144,76 @@ function! lsp#ui#vim#rename() abort
     call s:rename(l:server, input('new name: ', expand('<cword>')), lsp#get_position())
 endfunction
 
-function! lsp#ui#vim#stop_server(...) abort
-    let l:name = get(a:000, 0, '')
-    for l:server in lsp#get_allowed_servers()
-        if !empty(l:name) && l:server != l:name
+function! s:stop_all_servers() abort
+    for l:server in lsp#get_server_names()
+        if !lsp#is_server_running(l:server)
             continue
         endif
+
         echo 'Stopping' l:server 'server ...'
         call lsp#stop_server(l:server)
     endfor
+endfunction
+
+function! s:stop_named_server(name) abort
+    if !lsp#is_valid_server_name(a:name)
+        call lsp#utils#warning('No LSP servers named "' . a:name . '"')
+        return
+    endif
+
+    if lsp#is_server_running(a:name)
+        echo 'Stopping "' . a:name . '" server...'
+        call lsp#stop_server(a:name)
+    else
+        call lsp#utils#warning(
+            \ 'Server "' . a:name . '" is not running: '
+            \ . lsp#get_server_status(a:name)
+            \ )
+    endif
+endfunction
+
+function! s:stop_buffer_servers() abort
+    let l:servers = lsp#get_allowed_servers()
+    let l:servers =
+        \ filter(l:servers, {idx, name -> lsp#is_server_running(name)})
+
+    if empty(l:servers)
+        call lsp#utils#warning('No active LSP servers for the current buffer')
+        return
+    endif
+
+    for l:server in l:servers
+        echo 'Stopping "' . l:server . '" server ...'
+        call lsp#stop_server(l:server)
+    endfor
+endfunction
+
+function! lsp#ui#vim#stop_server(stop_all, ...) abort
+    if a:0 != 0 && a:0 != 1
+        call lsp#utils#error(
+            \ 'lsp#ui#vim#stop_server(): expected 1 optional "name" argument.'
+            \ . ' Got: "' . join(a:000, '", "') . '".')
+        return
+    endif
+    let l:stop_all = a:stop_all ==# '!'
+    let l:name = get(a:000, 0, '')
+
+    if l:stop_all
+        if !empty(l:name)
+            call lsp#utils#error(
+                \ '"!" stops all servers: name is ignored: "' . l:name . '"')
+        endif
+
+        call s:stop_all_servers()
+        return
+    endif
+
+    if !empty(l:name)
+        call s:stop_named_server(l:name)
+        return
+    endif
+
+    call s:stop_buffer_servers()
 endfunction
 
 function! lsp#ui#vim#workspace_symbol(query) abort
@@ -204,13 +282,7 @@ function! s:handle_symbol(server, last_command_id, type, data) abort
 
     let l:list = lsp#ui#vim#utils#symbols_to_loc_list(a:server, a:data)
 
-    if has('patch-8.2.2147')
-      call setqflist(l:list)
-      call setqflist([], 'a', {'title': a:type})
-    else
-      call setqflist([])
-      call setqflist(l:list)
-    endif
+    call lsp#ui#vim#utils#setqflist(l:list, a:type)
 
     if empty(l:list)
         call lsp#utils#error('No ' . a:type .' found')
@@ -246,10 +318,20 @@ function! s:handle_location(ctx, server, type, data) abort "ctx = {counter, list
                 echo 'Retrieved ' . a:type
                 redraw
             elseif !a:ctx['in_preview']
-                call setqflist([])
-                call setqflist(a:ctx['list'])
+                if get(a:ctx, 'add_tree', v:false)
+                    let l:qf = getqflist({'idx' : 0, 'items': []})
+                    let l:pos = l:qf.idx
+                    let l:parent = l:qf.items
+                    let l:level = count(l:parent[l:pos-1].text, g:lsp_tree_incoming_prefix)
+                    let a:ctx['list'] = extend(l:parent, map(a:ctx['list'], 'extend(v:val, {"text": repeat("' . g:lsp_tree_incoming_prefix . '", l:level+1) . v:val.text})'), l:pos)
+                endif
+                call lsp#ui#vim#utils#setqflist(a:ctx['list'], a:type)
                 echo 'Retrieved ' . a:type
                 botright copen
+                if get(a:ctx, 'add_tree', v:false)
+                    " move the cursor to the newly added item
+                    execute l:pos + 1
+                endif
             else
                 let l:lines = readfile(l:loc['filename'])
                 if has_key(l:loc,'viewstart') " showing a locationLink
@@ -463,8 +545,7 @@ function! s:handle_call_hierarchy(ctx, server, type, data) abort
                 let l:level = count(l:parent[l:pos-1].text, g:lsp_tree_incoming_prefix)
                 let a:ctx['list'] = extend(l:parent, map(a:ctx['list'], 'extend(v:val, {"text": repeat("' . g:lsp_tree_incoming_prefix . '", l:level+1) . v:val.text})'), l:pos)
             endif
-            call setqflist([])
-            call setqflist(a:ctx['list'])
+            call lsp#ui#vim#utils#setqflist(a:ctx['list'], a:type)
             echo 'Retrieved ' . a:type
             botright copen
             if get(a:ctx, 'add_tree', v:false)
@@ -482,16 +563,14 @@ function! s:hierarchy_item_to_vim(item, server) abort
     endif
 
     let l:path = lsp#utils#uri_to_path(l:uri)
-    let [l:line, l:col] = lsp#utils#position#lsp_to_vim(l:path, a:item['range']['start'])
+    let l:loc_range = lsp#utils#range#lsp_to_vim_loc(l:path, a:item['range'])
     let l:text = '[' . lsp#ui#vim#utils#_get_symbol_text_from_kind(a:server, a:item['kind']) . '] ' . a:item['name']
     if has_key(a:item, 'detail')
         let l:text .= ": " . a:item['detail']
     endif
 
-    return {
+    return exend({
         \ 'filename': l:path,
-        \ 'lnum': l:line,
-        \ 'col': l:col,
         \ 'text': l:text,
-        \ }
+        \ }, l:loc_range)
 endfunction

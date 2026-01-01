@@ -56,6 +56,8 @@ endfunction
 "   'filename',
 "   'lnum',
 "   'col',
+"   'end_lnum',
+"   'end_col',
 "   'text',
 " }
 function! s:lsp_text_edit_item_to_vim(uri, text_edit, cache) abort
@@ -64,10 +66,9 @@ function! s:lsp_text_edit_item_to_vim(uri, text_edit, cache) abort
     endif
 
     let l:path = lsp#utils#uri_to_path(a:uri)
-    let l:range = a:text_edit['range']
-    let [l:line, l:col] = lsp#utils#position#lsp_to_vim(l:path, l:range['start'])
+    let l:loc_range = lsp#utils#range#lsp_to_vim_loc(l:path, a:text_edit['range'])
 
-    let l:index = l:line - 1
+    let l:index = l:loc_range['lnum'] - 1
     if has_key(a:cache, l:path)
         let l:text = a:cache[l:path][l:index]
     else
@@ -81,12 +82,10 @@ function! s:lsp_text_edit_item_to_vim(uri, text_edit, cache) abort
         endif
     endif
 
-    return {
+    return extend({
         \ 'filename': l:path,
-        \ 'lnum': l:line,
-        \ 'col': l:col,
         \ 'text': l:text
-        \ }
+        \ }, l:loc_range)
 endfunction
 
 "
@@ -200,18 +199,17 @@ function! s:_compare(text_edit1, text_edit2) abort
     return a:text_edit1.range.start.character - a:text_edit2.range.start.character
   endif
   return l:diff
-endfunction
+endfunction 
 
 "
 " _switch
 "
 function! s:_switch(path) abort
-  if bufnr(a:path) >= 0
-    execute printf('keepalt keepjumps %sbuffer!', bufnr(a:path))
-  else
-    execute printf('keepalt keepjumps edit! %s', fnameescape(a:path))
+  if bufnr(a:path) == -1
+    execute printf('badd %s', fnameescape(a:path))
   endif
-endfunction
+  execute printf('keepalt keepjumps %sbuffer!', bufnr(a:path))
+endfunction 
 
 "
 " delete

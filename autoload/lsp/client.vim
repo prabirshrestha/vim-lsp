@@ -448,7 +448,13 @@ function! lsp#client#send_response(client_id, opts) abort
         if has_key(a:opts, 'id') | let l:request['id'] = a:opts['id'] | endif
         if has_key(a:opts, 'result') | let l:request['result'] = a:opts['result'] | endif
         if has_key(a:opts, 'error') | let l:request['error'] = a:opts['error'] | endif
-        call ch_sendexpr(l:ctx['channel'], l:request)
+        try
+            call ch_sendexpr(l:ctx['channel'], l:request)
+        catch
+            " vim only supports id as number and fails when string, hence add a try catch: https://github.com/vim/vim/issues/14091
+            call lsp#log('lsp#client#send_response error', v:exception, v:throwpoint,
+                \  has_key(l:request, 'id') && type(l:request['id']) != type(1))
+        endtry
         return 0
     else
         return s:lsp_send(a:client_id, a:opts, s:send_type_response)

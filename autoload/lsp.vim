@@ -95,6 +95,10 @@ function! lsp#get_server_names() abort
     return keys(s:servers)
 endfunction
 
+function! lsp#is_valid_server_name(name) abort
+    return has_key(s:servers, a:name)
+endfunction
+
 function! lsp#get_server_info(server_name) abort
     return get(get(s:servers, a:server_name, {}), 'server_info', {})
 endfunction
@@ -126,6 +130,19 @@ function! s:server_status(server_name) abort
         return 'running'
     endif
     return 'not running'
+endfunction
+
+function! lsp#is_server_running(name) abort
+    if !has_key(s:servers, a:name)
+      return 0
+    endif
+
+    let l:server = s:servers[a:name]
+
+    return has_key(l:server, 'init_result')
+        \ && !has_key(l:server, 'exited')
+        \ && !has_key(l:server, 'init_callbacks')
+        \ && !has_key(l:server, 'failed')
 endfunction
 
 " Returns the current status of all servers (if called with no arguments) or
@@ -376,7 +393,7 @@ function! s:on_buf_wipeout(buf) abort
     endif
 endfunction
 
-function! s:ensure_flush_all(buf, server_names) abort
+function! lsp#ensure_flush_all(buf, server_names) abort
     for l:server_name in a:server_names
         call s:ensure_flush(a:buf, l:server_name, function('s:Noop'))
     endfor
@@ -733,7 +750,7 @@ function! s:text_changes(buf, server_name) abort
     endif
 
     " When syncKind is Incremental and previous content is saved.
-    if l:sync_kind == 2 && has_key(s:file_content, a:buf)
+    if l:sync_kind == 2 && has_key(s:file_content, a:buf) && has_key(s:file_content[a:buf], a:server_name)
         " compute diff
         let l:old_content = s:get_last_file_content(a:buf, a:server_name)
         let l:new_content = lsp#utils#buffer#_get_lines(a:buf)
@@ -1052,7 +1069,7 @@ endfunction
 function! s:get_text_document(buf, server_name, buffer_info) abort
     let l:server = s:servers[a:server_name]
     let l:server_info = l:server['server_info']
-    let l:language_id = has_key(l:server_info, 'languageId') ?  l:server_info['languageId'](l:server_info) : &filetype
+    let l:language_id = has_key(l:server_info, 'languageId') ?  l:server_info['languageId'](l:server_info) : getbufvar(a:buf, '&filetype')
     return {
         \ 'uri': lsp#utils#get_buffer_uri(a:buf),
         \ 'languageId': l:language_id,
@@ -1327,6 +1344,13 @@ endfunction
 
 function! lsp#server_complete(lead, line, pos) abort
     return filter(sort(keys(s:servers)), 'stridx(v:val, a:lead)==0 && has_key(s:servers[v:val], "init_result")')
+endfunction
+
+function! lsp#server_complete_running(lead, line, pos) abort
+    let l:all_servers = sort(keys(s:servers))
+    return filter(l:all_servers, {idx, name ->
+        \ stridx(name, a:lead) == 0 && lsp#is_server_running(name)
+        \ })
 endfunction
 
 function! lsp#_new_command() abort
