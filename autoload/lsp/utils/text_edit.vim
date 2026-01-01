@@ -90,6 +90,8 @@ endfunction
 "   'filename',
 "   'lnum',
 "   'col',
+"   'end_lnum',
+"   'end_col',
 "   'text',
 " }
 function! s:lsp_text_edit_item_to_vim(uri, text_edit, cache) abort
@@ -98,10 +100,9 @@ function! s:lsp_text_edit_item_to_vim(uri, text_edit, cache) abort
     endif
 
     let l:path = lsp#utils#uri_to_path(a:uri)
-    let l:range = a:text_edit['range']
-    let [l:line, l:col] = lsp#utils#position#lsp_to_vim(l:path, l:range['start'])
+    let l:loc_range = lsp#utils#range#lsp_to_vim_loc(l:path, a:text_edit['range'])
 
-    let l:index = l:line - 1
+    let l:index = l:loc_range['lnum'] - 1
     if has_key(a:cache, l:path)
         let l:text = a:cache[l:path][l:index]
     else
@@ -115,12 +116,10 @@ function! s:lsp_text_edit_item_to_vim(uri, text_edit, cache) abort
         endif
     endif
 
-    return {
+    return extend({
         \ 'filename': l:path,
-        \ 'lnum': l:line,
-        \ 'col': l:col,
         \ 'text': l:text
-        \ }
+        \ }, l:loc_range)
 endfunction
 
 "
