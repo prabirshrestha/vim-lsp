@@ -29,6 +29,19 @@ function! lsp#utils#range#_get_current_line_range() abort
   return l:range
 endfunction
 
+" Convert a LSP range to a form of quickfix/location list item.
+function! lsp#utils#range#lsp_to_vim_loc(bufnr, range) abort
+    let [l:start_line, l:start_col] = lsp#utils#position#lsp_to_vim(a:bufnr, a:range['start'])
+    let [l:end_line, l:end_col] = lsp#utils#position#lsp_to_vim(a:bufnr, a:range['end'])
+
+    return {
+        \ 'lnum': l:start_line,
+        \ 'col': l:start_col,
+        \ 'end_lnum': l:end_line,
+        \ 'end_col': l:end_col,
+        \ }
+endfunction
+
 " Convert a LSP range to one or more vim match positions.
 " If the range spans over multiple lines, break it down to multiple
 " positions, one for each line.
