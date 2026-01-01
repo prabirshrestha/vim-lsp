@@ -1,0 +1,88 @@
+Describe lsp#internal#diagnostics#under_cursor
+    " refer to lsp#test#projectdir('go') . '/documentdiagnostics.go'
+
+    It should not trigger diagnostics when cursor is outside diagnostic range
+        let l:diagnostics = [
+            \     { 'range': {'start': {'character': 12, 'line': 6}, 'end': {'character': 5, 'line': 8}} }
+            \   ]
+        Assert Equals(lsp#internal#diagnostics#under_cursor#_get_closest_diagnostic(l:diagnostics, 1, 1), {})
+    End
+
+    It should trigger diagnostic when cursor is exactly at start position
+        let l:diagnostics = [
+            \     { 'range': {'start': {'character': 12, 'line': 6}, 'end': {'character': 5, 'line': 8}} }
+            \   ]
+        let l:expected = { 'range': {'start': {'character': 12, 'line': 6}, 'end': {'character': 5, 'line': 8}} }
+        Assert Equals(lsp#internal#diagnostics#under_cursor#_get_closest_diagnostic(l:diagnostics, 7, 13), l:expected)
+    End
+
+    It should not trigger diagnostic when cursor is at line before start position
+        let l:diagnostics = [
+            \     { 'range': {'start': {'character': 12, 'line': 6}, 'end': {'character': 5, 'line': 8}} }
+            \   ]
+        Assert Equals(lsp#internal#diagnostics#under_cursor#_get_closest_diagnostic(l:diagnostics, 6, 13), {})
+    End
+
+    It should not trigger diagnostic when cursor is one character before start position
+        let l:diagnostics = [
+            \     { 'range': {'start': {'character': 12, 'line': 6}, 'end': {'character': 5, 'line': 8}} }
+            \   ]
+        Assert Equals(lsp#internal#diagnostics#under_cursor#_get_closest_diagnostic(l:diagnostics, 7, 12), {})
+    End
+
+    It should trigger diagnostic when cursor is at start column on an intermediate line within range
+        let l:diagnostics = [
+            \     { 'range': {'start': {'character': 12, 'line': 6}, 'end': {'character': 5, 'line': 8}} }
+            \   ]
+        let l:expected = { 'range': {'start': {'character': 12, 'line': 6}, 'end': {'character': 5, 'line': 8}} }
+        Assert Equals(lsp#internal#diagnostics#under_cursor#_get_closest_diagnostic(l:diagnostics, 8, 1), l:expected)
+    End
+
+    It should trigger diagnostic when cursor is at end column on an intermediate line within range
+        let l:diagnostics = [
+            \     { 'range': {'start': {'character': 12, 'line': 6}, 'end': {'character': 5, 'line': 8}} }
+            \   ]
+        let l:expected = { 'range': {'start': {'character': 12, 'line': 6}, 'end': {'character': 5, 'line': 8}} }
+        Assert Equals(lsp#internal#diagnostics#under_cursor#_get_closest_diagnostic(l:diagnostics, 8, 15), l:expected)
+    End
+
+    It should trigger diagnostic when cursor is exactly at end position
+        let l:diagnostics = [
+            \     { 'range': {'start': {'character': 12, 'line': 6}, 'end': {'character': 5, 'line': 8}} }
+            \   ]
+        let l:expected = { 'range': {'start': {'character': 12, 'line': 6}, 'end': {'character': 5, 'line': 8}} }
+        Assert Equals(lsp#internal#diagnostics#under_cursor#_get_closest_diagnostic(l:diagnostics, 9, 5), l:expected)
+    End
+
+    It should not trigger diagnostic when cursor is at line after end position
+        let l:diagnostics = [
+            \     { 'range': {'start': {'character': 12, 'line': 6}, 'end': {'character': 5, 'line': 8}} }
+            \   ]
+        Assert Equals(lsp#internal#diagnostics#under_cursor#_get_closest_diagnostic(l:diagnostics, 10, 5), {})
+    End
+
+    It should not return diagnostic when cursor is one character after end position
+        let l:diagnostics = [
+            \     { 'range': {'start': {'character': 12, 'line': 6}, 'end': {'character': 5, 'line': 8}} }
+            \   ]
+        Assert Equals(lsp#internal#diagnostics#under_cursor#_get_closest_diagnostic(l:diagnostics, 9, 6), {})
+    End
+
+    It should return the closest diagnostic when multiple diagnostics exist across different ranges
+        let l:diagnostics = [
+            \     { 'range': {'start': {'character': 10, 'line': 4}, 'end': {'character': 7, 'line': 10}} },
+            \     { 'range': {'start': {'character': 12, 'line': 6}, 'end': {'character': 5, 'line': 8}} }
+            \   ]
+        let l:expected = { 'range': {'start': {'character': 10, 'line': 4}, 'end': {'character': 7, 'line': 10}} }
+        Assert Equals(lsp#internal#diagnostics#under_cursor#_get_closest_diagnostic(l:diagnostics, 7, 3), l:expected)
+    End
+
+    It should return the most specific diagnostic when multiple diagnostics overlap at cursor position
+        let l:diagnostics = [
+            \     { 'range': {'start': {'character': 10, 'line': 4}, 'end': {'character': 15, 'line': 4}} },
+            \     { 'range': {'start': {'character': 12, 'line': 4}, 'end': {'character': 14, 'line': 4}} }
+            \   ]
+        let l:expected = { 'range': {'start': {'character': 12, 'line': 4}, 'end': {'character': 14, 'line': 4}} }
+        Assert Equals(lsp#internal#diagnostics#under_cursor#_get_closest_diagnostic(l:diagnostics, 5, 13), l:expected)
+    End
+End

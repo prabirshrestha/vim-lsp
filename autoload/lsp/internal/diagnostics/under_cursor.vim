@@ -29,20 +29,29 @@ function! lsp#internal#diagnostics#under_cursor#get_diagnostic(...) abort
     let l:line = line('.')
     let l:col = col('.')
 
+    return lsp#internal#diagnostics#under_cursor#_get_closest_diagnostic(l:diagnostics, l:line, l:col)
+endfunction
+
+" Returns a diagnostic object, or empty dictionary if no diagnostics are
+" available.
+function! lsp#internal#diagnostics#under_cursor#_get_closest_diagnostic(diagnostics, line, col) abort
     let l:closest_diagnostic = {}
     let l:closest_distance = -1
+    let l:closest_end_col = -1
 
-    for l:diagnostic in l:diagnostics
+    for l:diagnostic in a:diagnostics
         let [l:start_line, l:start_col] = lsp#utils#position#lsp_to_vim('%', l:diagnostic['range']['start'])
+        let [l:end_line, l:end_col] = lsp#utils#position#lsp_to_vim('%', l:diagnostic['range']['end'])
 
-        if l:line == l:start_line
-            let l:distance = abs(l:start_col - l:col)
+        if (a:line > l:start_line || (a:line == l:start_line && a:col >= l:start_col)) &&
+              \ (a:line < l:end_line || (a:line == l:end_line && a:col < l:end_col))
+            let l:distance = abs(l:start_col - a:col)
             if l:closest_distance < 0 || l:distance < l:closest_distance
+                let l:closest_end_col = l:end_col
                 let l:closest_diagnostic = l:diagnostic
                 let l:closest_distance = l:distance
             endif
         endif
     endfor
-
     return l:closest_diagnostic
 endfunction
