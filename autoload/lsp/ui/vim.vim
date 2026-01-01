@@ -99,7 +99,10 @@ function! s:rename(server, new_name, pos) abort
     echo ' ... Renaming ...'
 endfunction
 
-function! lsp#ui#vim#rename() abort
+" options - {
+"   server - 'server_name'		" optional
+" }
+function! lsp#ui#vim#rename(options) abort
     let l:servers = filter(lsp#get_allowed_servers(), 'lsp#capabilities#has_rename_prepare_provider(v:val)')
     let l:prepare_support = 1
     if len(l:servers) == 0
@@ -115,7 +118,16 @@ function! lsp#ui#vim#rename() abort
     endif
 
     " TODO: ask the user which server it should use to rename if there are multiple
-    let l:server = l:servers[0]
+    if has_key(a:options, 'server')
+        if index(l:servers, a:options['server']) >= 0
+            let l:server = a:options['server']
+        else
+            call s:not_supported('Renaming by ' .. a:options['server'])
+            return
+        endif
+    else
+        let l:server = l:servers[0]
+    endif
 
     if l:prepare_support
         call lsp#send_request(l:server, {
