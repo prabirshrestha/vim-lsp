@@ -52,7 +52,7 @@ jobs:
           path: ./vim-themis
           ref: v1.5.5
       - name: Install Go for gopls
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6
         with:
           go-version: ${{ env.VIM_LSP_GO_VERSION }}
       - name: Install gopls
