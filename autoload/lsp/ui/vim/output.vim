@@ -102,6 +102,7 @@ function! s:get_float_positioning(height, width) abort
     let l:height = min([l:height, max([&lines - &cmdheight - l:row, &previewheight])])
 
     let l:style = 'minimal'
+    let l:border = 'double'
     " Positioning is not window but screen relative
     let l:opts = {
         \ 'relative': 'editor',
@@ -110,6 +111,7 @@ function! s:get_float_positioning(height, width) abort
         \ 'width': l:width,
         \ 'height': l:height,
         \ 'style': l:style,
+        \ 'border': l:border,
         \ }
     return l:opts
 endfunction

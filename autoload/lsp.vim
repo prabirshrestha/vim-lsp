@@ -393,7 +393,7 @@ function! s:on_buf_wipeout(buf) abort
     endif
 endfunction
 
-function! s:ensure_flush_all(buf, server_names) abort
+function! lsp#ensure_flush_all(buf, server_names) abort
     for l:server_name in a:server_names
         call s:ensure_flush(a:buf, l:server_name, function('s:Noop'))
     endfor
@@ -750,7 +750,7 @@ function! s:text_changes(buf, server_name) abort
     endif
 
     " When syncKind is Incremental and previous content is saved.
-    if l:sync_kind == 2 && has_key(s:file_content, a:buf)
+    if l:sync_kind == 2 && has_key(s:file_content, a:buf) && has_key(s:file_content[a:buf], a:server_name)
         " compute diff
         let l:old_content = s:get_last_file_content(a:buf, a:server_name)
         let l:new_content = lsp#utils#buffer#_get_lines(a:buf)
