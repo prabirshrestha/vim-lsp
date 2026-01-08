@@ -38,7 +38,7 @@ function! s:_apply_document(text_document_edits) abort
     if a:text_document_edits['kind'] == 'create'
         let l:uri = lsp#utils#uri_to_path(a:text_document_edits['uri'])
         return [{
-            \ '  filename': l:uri,
+            \   'filename': l:uri,
             \   'lnum': 1,
             \   'col': 1,
             \   'text': l:uri,

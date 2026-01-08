@@ -1,4 +1,6 @@
 set encoding=utf-8
+set maxfuncdepth=200 " vim-themis adds extra function calls causing tests to go over the mfd default (100)
+
 call themis#option('recursive', 1)
 call themis#option('reporter', 'spec')
 call themis#helper('command').with(themis#helper('assert'))

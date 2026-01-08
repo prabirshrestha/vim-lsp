@@ -1,0 +1,62 @@
+Describe integration#go#text_document_edits
+    Before
+        %bwipeout!
+        if lsp#test#hasproject('go')
+            call lsp#test#openproject('go', {})
+        endif
+    End
+
+    After all
+        %bwipeout!
+        call lsp#test#closeproject('go')
+        call delete(lsp#test#projectdir('go') . '/math_test.go')
+    End
+
+    It should create a new test file
+        if !lsp#test#hasproject('go')
+            Skip go project not supported
+        endif
+
+        Assert Equals(lsp#get_server_status('gopls'), 'running')
+
+        execute printf('keepalt keepjumps edit %s', lsp#test#projectdir('go') . '/math.go')
+        execute 'call search("func Add")'
+        execute 'LspCodeActionSync source.addTest'
+        execute 'lclose'
+
+        Assert Equals(expand("%:p:t"), "math_test.go")
+
+        let got = getline(1, "$")
+        let want = [
+                \    'package main_test',
+                \    '',
+                \    'import(',
+                \    '	"github.com/prabirshrestha/vim-lsp/test/testproject-go"',
+                \    '	"testing"',
+                \    ')',
+                \    '',
+                \    'func TestAdd(t *testing.T) {',
+                \    '	tests := []struct {',
+                \    '		name string // description of this test case',
+                \    '		// Named input parameters for target function.',
+                \    '		a    int',
+                \    '		b    int',
+                \    '		want int',
+                \    '	}{',
+                \    '		// TODO: Add test cases.',
+                \    '	}',
+                \    '	for _, tt := range tests {',
+                \    '		t.Run(tt.name, func(t *testing.T) {',
+                \    '			got := main.Add(tt.a, tt.b)',
+                \    '			// TODO: update the condition below to compare got with tt.want.',
+                \    '			if true {',
+                \    '				t.Errorf("Add() = %v, want %v", got, tt.want)',
+                \    '			}',
+                \    '		})',
+                \    '	}',
+                \    '}',
+                \    '',
+            \ ]
+        Assert Equals(got, want)
+    End
+End

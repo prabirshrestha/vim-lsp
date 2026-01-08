@@ -41,10 +41,10 @@ function! lsp#utils#text_edit#apply_text_document_edits(text_document_edit) abor
         let l:newUri = lsp#utils#uri_to_path(a:text_document_edit['newUri'])
         let l:options = get(a:text_document_edit, 'options', {})
 
-        if !filereadable(l:uri) || !get(l:options, 'overwrite', v:false)
+        if !filereadable(l:newUri) || !get(l:options, 'overwrite', v:false)
             call rename(l:oldUri, l:newUri)
         endif
-        call s:_switch(l:uri)
+        call s:_switch(l:newUri)
     elseif l:kind == 'delete'
         let l:uri = lsp#utils#uri_to_path(a:text_document_edit['uri'])
         let l:options = get(a:text_document_edit, 'options', {})
