@@ -2,9 +2,10 @@ function! lsp#utils#text_edit#get_range(text_edit) abort
   if type(a:text_edit) != v:t_dict
     return v:null
   endif
-  let l:insert = get(a:text_edit, 'insert', v:null)
-  if type(l:insert) == v:t_dict
-    return l:insert
+  let l:completion_action = get(g:, 'lsp_completion_action', 'insert')
+  let l:range = get(a:text_edit, l:completion_action, v:null)
+  if type(l:range) == v:t_dict
+    return l:range
   endif
   return get(a:text_edit, 'range', v:null)
 endfunction

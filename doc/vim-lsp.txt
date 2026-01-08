@@ -21,6 +21,7 @@ CONTENTS                                                  *vim-lsp-contents*
       g:lsp_preview_doubletap               |g:lsp_preview_doubletap|
       g:lsp_insert_text_enabled             |g:lsp_insert_text_enabled|
       g:lsp_text_edit_enabled               |g:lsp_text_edit_enabled|
+      g:lsp_completion_action               |g:lsp_completion_action|
       g:lsp_completion_documentation_enabled
 					|g:lsp_completion_documentation_enabled|
       g:lsp_completion_documentation_delay
@@ -57,6 +58,8 @@ CONTENTS                                                  *vim-lsp-contents*
 			     |g:lsp_diagnostics_virtual_text_padding_left|
       g:lsp_diagnostics_virtual_text_wrap
 			     |g:lsp_diagnostics_virtual_text_wrap|
+      g:lsp_diagnostics_virtual_text_tidy
+			     |g:lsp_diagnostics_virtual_text_tidy|
       g:lsp_document_code_action_signs_enabled
 			     |g:lsp_document_code_action_signs_enabled|
       g:lsp_document_code_action_signs_delay
@@ -453,6 +456,25 @@ g:lsp_text_edit_enabled                           *g:lsp_text_edit_enabled*
 	let g:lsp_text_edit_enabled = 1
 	let g:lsp_text_edit_enabled = 0
 
+g:lsp_completion_action   *g:lsp_completion_action*
+    Type: |String|
+    Default: `insert`
+
+    The action to take on a completion. Possible values are one of `insert`,
+    `replace`. `insert` causes the completion text to be inserted at the
+    cursor. `replace` causes the completion text to replace the text under the
+    cursor. The text to be replaced is decided by the language server, and is
+    usually the word under the cursor.
+
+    Some language servers do not support both actions. For such a server, this
+    option is silently ignored and the actual action taken is decided by the
+    server.
+
+    Example: >
+	let g:lsp_completion_action = 'replace'
+	let g:lsp_completion_action = 'insert'
+
+
 g:lsp_completion_documentation_enabled   *g:lsp_completion_documentation_enabled*
     Type: |Number|
     Default: `1`
@@ -784,6 +806,20 @@ g:lsp_diagnostics_virtual_text_wrap       *g:lsp_diagnostics_virtual_text_wrap*
 
     Example: >
 	let g:lsp_diagnostics_virtual_text_wrap = "truncate"
+
+g:lsp_diagnostics_virtual_text_tidy
+		  *g:lsp_diagnostics_virtual_text_tidy*
+    Type: |Boolean|
+    Default: `0`
+
+    Determines whether or not to show only the diagnostic virtual text
+    with the highest severity per line. Requires
+    |g:lsp_diagnostics_virtual_text_enabled|.
+    This prevents unintentional newlines in the view inserted by diagnostics
+    messages.
+
+    Example: >
+	let g:lsp_diagnostics_virtual_text_tidy = 0
 
 g:lsp_document_code_action_signs_enabled
 				      *g:lsp_document_code_action_signs_enabled*

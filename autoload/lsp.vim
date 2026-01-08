@@ -545,6 +545,7 @@ function! lsp#default_get_supported_capabilities(server_info) abort
     \           'dynamicRegistration': v:false,
     \           'completionItem': {
     \              'documentationFormat': ['markdown', 'plaintext'],
+    \              'insertReplaceSupport': v:true,
     \              'snippetSupport': v:false,
     \              'resolveSupport': {
     \                  'properties': ['additionalTextEdits']
