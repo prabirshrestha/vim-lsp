@@ -200,6 +200,7 @@ function! s:get_doc_win() abort
     \ })
     call s:doc_win.set_var('&wrap', 1)
     call s:doc_win.set_var('&conceallevel', 2)
+    call s:doc_win.set_var('&concealcursor', 'nvic')
     noautocmd silent let l:bufnr = s:Buffer.create()
     call s:doc_win.set_bufnr(l:bufnr)
     call setbufvar(s:doc_win.get_bufnr(), '&buftype', 'nofile')
