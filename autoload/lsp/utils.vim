@@ -39,9 +39,9 @@ function! lsp#utils#_has_prop_remove_types() abort
     return s:has_prop_remove_types
 endfunction
 
-let s:has_higlights = has('nvim') ? lsp#utils#_has_nvim_buf_highlight() : lsp#utils#_has_textprops()
+let s:has_highlights = has('nvim') ? lsp#utils#_has_nvim_buf_highlight() : lsp#utils#_has_textprops()
 function! lsp#utils#_has_highlights() abort
-    return s:has_higlights
+    return s:has_highlights
 endfunction
 
 let s:has_popup_menu = exists('*popup_menu')
@@ -518,6 +518,6 @@ else
     endfunction
 endif
 
-function! lsp#utils#iteratable(list) abort
+function! lsp#utils#iterable(list) abort
     return type(a:list) !=# v:t_list ? [] : a:list
 endfunction

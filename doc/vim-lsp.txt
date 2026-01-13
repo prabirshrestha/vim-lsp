@@ -1253,7 +1253,7 @@ one parameter which is a vim |dict| and is referred to as |vim-lsp-server_info|
 	if (executable('pylsp'))
 	    au User lsp_setup call lsp#register_server({
 		\ 'name': 'name-of-server',
-		\ 'cmd': {server_info->['server-exectuable']},
+		\ 'cmd': {server_info->['server-executable']},
 		\ 'allowlist': ['filetype to allowlist'],
 		\ 'blocklist': ['filetype to blocklist'],
 		\ 'config': {},
@@ -1619,7 +1619,7 @@ Convert vim's pos to LSP's position ({ 'line': ..., 'character': ... }).
 lsp#utils#find_nearest_parent_file_directory({path}, {filename})
 
 Find the nearest parent directory which contains the specific files or
-diretories. The method has two parameters. The first is the path where
+directories. The method has two parameters. The first is the path where
 searching starts. The second is the files or directories names which
 you want to find. The return value is the directory path which is found
 the most times.
@@ -1644,7 +1644,7 @@ This method is mainly used to generate 'root_uri' when registering server.
 	* The second parameter can be a |String| or a string |List|.
 	* For the second parameter, the string ends with '/' or '\' will
 	  be regarded as a directory name, otherwise as a file name.
-	* If there is not directory with the specific files or diretories
+	* If there is not directory with the specific files or directories
 	  found, the method will return an empty string.
 
 lsp#enable_diagnostics_for_buffer()          *lsp#enable_diagnostic_for_buffer()*
@@ -1658,7 +1658,7 @@ enabled for all buffers.
 
 lsp#disable_diagnostics_for_buffer()       *lsp#disable_diagnostics_for_buffer()*
 
-Diable diagnostics for the specified buffer. By default diagnostics are
+Disable diagnostics for the specified buffer. By default diagnostics are
 enabled for all buffers.
 
     Example: >

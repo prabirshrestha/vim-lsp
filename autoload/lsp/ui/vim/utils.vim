@@ -99,7 +99,7 @@ function! lsp#ui#vim#utils#diagnostics_to_loc_list(result) abort
     endif
 
     let l:uri = a:result['response']['params']['uri']
-    let l:diagnostics = lsp#utils#iteratable(a:result['response']['params']['diagnostics'])
+    let l:diagnostics = lsp#utils#iterable(a:result['response']['params']['diagnostics'])
 
     let l:list = []
 
