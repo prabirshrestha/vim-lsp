@@ -569,7 +569,7 @@ function! s:hierarchy_item_to_vim(item, server) abort
         let l:text .= ": " . a:item['detail']
     endif
 
-    return exend({
+    return extend({
         \ 'filename': l:path,
         \ 'text': l:text,
         \ }, l:loc_range)
