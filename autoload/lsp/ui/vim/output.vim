@@ -333,6 +333,15 @@ function! lsp#ui#vim#output#preview(server, data, options) abort
         return
     endif
 
+    let l:prev_topline = 1
+    if s:winid
+        if s:use_vim_popup
+            let l:prev_topline = get(popup_getpos(s:winid), 'firstline', 1)
+        else
+            let l:prev_topline = line('w0', s:winid)
+        endif
+    endif
+
     if s:winid && type(s:preview_data) ==# type(a:data)
         \ && s:preview_data ==# a:data
         \ && type(g:lsp_preview_doubletap) ==# 3
@@ -365,6 +374,8 @@ function! lsp#ui#vim#output#preview(server, data, options) abort
 
     call setbufvar(winbufnr(s:winid), 'lsp_syntax_highlights', l:syntax_lines)
     call setbufvar(winbufnr(s:winid), 'lsp_do_conceal', l:do_conceal)
+    call setwinvar(s:winid, '&conceallevel', l:do_conceal ? 2 : 0)
+    call setwinvar(s:winid, '&concealcursor', l:do_conceal ? 'nvic' : '')
     call lsp#ui#vim#output#setcontent(s:winid, l:lines, l:ft)
 
     let [l:bufferlines, l:maxwidth] = lsp#ui#vim#output#get_size_info(s:winid)
@@ -392,6 +403,13 @@ function! lsp#ui#vim#output#preview(server, data, options) abort
       elseif s:use_vim_popup
         " Vim popups
         call s:set_cursor(l:current_window_id, a:options)
+      endif
+      if l:prev_topline > 1
+        if s:use_vim_popup
+          call popup_setoptions(s:winid, {'firstline': l:prev_topline})
+        elseif s:use_nvim_float
+          call nvim_win_set_cursor(s:winid, [l:prev_topline, 0])
+        endif
       endif
       doautocmd <nomodeline> User lsp_float_opened
     endif
