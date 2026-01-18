@@ -7,9 +7,9 @@
 "           'method': 'textDocument/publishDiagnostics',
 "           'params': {
 "               'uri': 'uri',        " this uri is not normalized and is exactly what server returns
-"               'dignostics': [      " array can never be null but can be empty
+"               'diagnostics': [      " array can never be null but can be empty
 "                   https://microsoft.github.io/language-server-protocol/specifications/specification-current/#diagnostic
-"                   { range, message, severity?, code?, codeDesciption?, source?, tags?, relatedInformation?, data? }
+"                   { range, message, severity?, code?, codeDescription?, source?, tags?, relatedInformation?, data? }
 "               ]
 "           }
 "       }
@@ -163,7 +163,7 @@ function! lsp#internal#diagnostics#state#_get_diagnostics_count_for_buffer(bufnr
     if lsp#internal#diagnostics#state#_is_enabled_for_buffer(a:bufnr)
         let l:uri = lsp#utils#get_buffer_uri(a:bufnr)
         for l:response in values(lsp#internal#diagnostics#state#_get_all_diagnostics_grouped_by_server_for_uri(l:uri))
-            for l:diagnostic in lsp#utils#iteratable(l:response['params']['diagnostics'])
+            for l:diagnostic in lsp#utils#iterable(l:response['params']['diagnostics'])
                 let l:key = get(s:diagnostic_kinds, get(l:diagnostic, 'severity', 1) , 'error')
                 let l:counts[l:key] += 1
             endfor
