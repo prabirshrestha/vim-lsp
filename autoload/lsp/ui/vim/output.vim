@@ -426,7 +426,8 @@ function! lsp#ui#vim#output#append(data, lines, syntax_lines) abort
         let l:new_lines = split(s:escape_string_for_display(a:data.value), '\n')
 
         let l:i = 1
-        while l:i <= len(l:new_lines)
+        let l:newlineslen = len(l:new_lines)
+        while l:i <= l:newlineslen
             call add(a:syntax_lines, { 'line': len(a:lines) + l:i, 'language': a:data.language })
             let l:i += 1
         endwhile
