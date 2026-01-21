@@ -2,11 +2,31 @@
 "
 let s:context = {}
 
+function! s:run_complete_done_after_in_normal_mode() abort
+  " Only run if we are in regular normal mode (and not visual or operator-pending mode)
+  if mode(1) ==# 'n'
+    return printf(":\<C-U>call \<SNR>%d_on_complete_done_after()\<CR>", s:SID())
+  else
+    return ''
+  endif
+endfunction
+
+function! s:run_complete_done_after_in_insert_mode() abort
+  if mode(1)[0] ==# 'i'
+    return printf("\<C-R>=\<SNR>%d_on_complete_done_after()\<CR>", s:SID())
+  else
+    return ''
+  endif
+endfunction
+
 function! lsp#ui#vim#completion#_setup() abort
   augroup lsp_ui_vim_completion
     autocmd!
     autocmd CompleteDone * call s:on_complete_done()
   augroup END
+
+  nnoremap <silent> <expr> <Plug>(__lsp-internal-on-complete-done-after) <SID>run_complete_done_after_in_normal_mode()
+  inoremap <silent> <expr> <Plug>(__lsp-internal-on-complete-done-after) <SID>run_complete_done_after_in_insert_mode()
 endfunction
 
 function! lsp#ui#vim#completion#_disable() abort
@@ -56,21 +76,13 @@ function! s:on_complete_done() abort
   let s:context['completion_item'] = l:managed_user_data['completion_item']
   let s:context['start_character'] = l:managed_user_data['start_character']
   let s:context['complete_word'] = l:managed_user_data['complete_word']
-  call feedkeys(printf("\<C-r>=<SNR>%d_on_complete_done_after()\<CR>", s:SID()), 'n')
+  call feedkeys("\<Plug>(__lsp-internal-on-complete-done-after)", 'n')
 endfunction
 
 "
 " Apply textEdit or insertText(snippet) and additionalTextEdits.
 "
 function! s:on_complete_done_after() abort
-  " Clear message line. feedkeys above leave garbage on message line.
-  echo ''
-
-  " Ignore process if the mode() is not insert-mode after feedkeys.
-  if mode(1)[0] !=# 'i'
-    return ''
-  endif
-
   let l:done_line = s:context['done_line']
   let l:done_line_nr = s:context['done_line_nr']
   let l:done_position = s:context['done_position']
@@ -97,6 +109,11 @@ function! s:on_complete_done_after() abort
   " clear completed string if need.
   let l:is_expandable = s:is_expandable(l:done_line, l:done_position, l:complete_position, l:completion_item, l:complete_word)
   if l:is_expandable
+    " clear_auto_inserted_text() wants to move the cursor to just after
+    " complete_position, which in normal mode may need 'onemore' in
+    " 'virtualedit'.
+    let l:old_virtualedit = &l:virtualedit
+    setlocal virtualedit+=onemore
     call s:clear_auto_inserted_text(l:done_line, l:done_position, l:complete_position)
   endif
 
@@ -131,6 +148,7 @@ function! s:on_complete_done_after() abort
     \     'character': l:position['character'] + l:overflow_after,
     \   }
     \ }
+    let &l:virtualedit = l:old_virtualedit
 
     if get(l:completion_item, 'insertTextFormat', 1) == 2
       " insert Snippet.
