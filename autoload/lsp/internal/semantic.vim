@@ -213,9 +213,16 @@ endfunction
 function! s:handle_semantic_tokens_response(server, buf, result) abort
     let l:highlights = {}
     let l:legend = lsp#internal#semantic#get_legend(a:server)
-    for l:token in s:decode_tokens(a:result['data'])
+    let l:tokens = s:decode_tokens(a:result['data'])
+
+    " Precompute all positions and highlight info
+    for l:token in l:tokens
         let [l:key, l:value] = s:add_highlight(a:server, l:legend, a:buf, l:token)
-        let l:highlights[l:key] = get(l:highlights, l:key, []) + l:value
+        if has_key(l:highlights, l:key)
+            call extend(l:highlights[l:key], l:value)
+        else
+            let l:highlights[l:key] = l:value
+        endif
     endfor
     call s:apply_highlights(a:server, a:buf, l:highlights)
 
@@ -246,20 +253,26 @@ function! s:handle_semantic_tokens_delta_response(server, buf, result) abort
     let l:legend = lsp#internal#semantic#get_legend(a:server)
     for l:token in s:decode_tokens(l:localdata)
         let [l:key, l:value] = s:add_highlight(a:server, l:legend, a:buf, l:token)
-        let l:highlights[l:key] = get(l:highlights, l:key, []) + l:value
+        if has_key(l:highlights, l:key)
+            call extend(l:highlights[l:key], l:value)
+        else
+            let l:highlights[l:key] = l:value
+        endif
     endfor
     call s:apply_highlights(a:server, a:buf, l:highlights)
 endfunction
 
 function! s:decode_tokens(data) abort
     let l:tokens = []
+    let l:datalen = len(a:data)
 
     let l:i = 0
     let l:line = 0
     let l:char = 0
-    while l:i < len(a:data)
-        let l:line = l:line + a:data[l:i]
-        if a:data[l:i] > 0
+    while l:i < l:datalen
+        let l:line_delta = a:data[l:i]
+        let l:line = l:line + l:line_delta
+        if l:line_delta > 0
             let l:char = 0
         endif
         let l:char = l:char + a:data[l:i + 1]
@@ -293,15 +306,14 @@ endfunction
 
 function! s:add_highlight(server, legend, buf, token) abort
     let l:startpos = lsp#utils#position#lsp_to_vim(a:buf, a:token['pos'])
-    let l:endpos = a:token['pos']
-    let l:endpos['character'] = l:endpos['character'] + a:token['length']
-    let l:endpos = lsp#utils#position#lsp_to_vim(a:buf, l:endpos)
+    let l:endpos_line = a:token['pos']['line']
+    let l:endpos_char = a:token['pos']['character'] + a:token['length']
+    let l:endpos = lsp#utils#position#lsp_to_vim(a:buf, {'line': l:endpos_line, 'character': l:endpos_char})
 
     if s:use_vim_textprops
         let l:textprop_name = s:get_textprop_type(a:server, a:legend, a:token['token_idx'], a:token['token_modifiers'])
-         return [l:textprop_name, [[l:startpos[0], l:startpos[1], l:endpos[0], l:endpos[1]]]]
+        return [l:textprop_name, [[l:startpos[0], l:startpos[1], l:endpos[0], l:endpos[1]]]]
     elseif s:use_nvim_highlight
-        let l:char = a:token['pos']['character']
         let l:hl_name = s:get_hl_group(a:server, a:legend, a:token['token_idx'], a:token['token_modifiers'])
         return [l:hl_name, [[l:startpos[0] - 1, l:startpos[1] - 1, l:endpos[1] - 1]]]
     endif
@@ -315,7 +327,6 @@ function! s:apply_highlights(server, buf, highlights) abort
             call prop_add_list({'type': l:type, 'bufnr': a:buf}, l:prop_list)
         endfor
     elseif s:use_nvim_highlight
-        call lsp#log(a:highlights)
         for [l:hl_name, l:instances] in items(a:highlights)
             for l:instance in l:instances
                 let [l:line, l:startcol, l:endcol] = l:instance
@@ -356,7 +367,15 @@ let s:default_highlight_groups = {
     \ s:hl_group_prefix . 'Decorator': 'Macro'
 \ }
 
+let s:hl_group_cache = {}
+
 function! s:get_hl_group(server, legend, token_idx, token_modifiers) abort
+    " Cache key to avoid recalculation
+    let l:cache_key = a:server . ':' . a:token_idx . ':' . a:token_modifiers
+    if has_key(s:hl_group_cache, l:cache_key)
+        return s:hl_group_cache[l:cache_key]
+    endif
+
     " get highlight group name
     let l:Capitalise = {str -> toupper(str[0]) . str[1:]}
     let l:token_name = l:Capitalise(a:legend['tokenTypes'][a:token_idx])
@@ -387,6 +406,7 @@ function! s:get_hl_group(server, legend, token_idx, token_modifiers) abort
         endif
     endif
 
+    let s:hl_group_cache[l:cache_key] = l:hl_group
     return l:hl_group
 endfunction
 
