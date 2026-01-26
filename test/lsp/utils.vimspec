@@ -299,18 +299,18 @@ Describe lsp#utils
         End
     End
 
-    Describe lsp#utils#iteratable
+    Describe lsp#utils#iterable
         It should return empty list if non-list is given
-            Assert Equals(lsp#utils#iteratable(''), [])
-            Assert Equals(lsp#utils#iteratable(1), [])
-            Assert Equals(lsp#utils#iteratable(2.3), [])
-            Assert Equals(lsp#utils#iteratable(v:false), [])
-            Assert Equals(lsp#utils#iteratable(v:true), [])
-            Assert Equals(lsp#utils#iteratable({}), [])
+            Assert Equals(lsp#utils#iterable(''), [])
+            Assert Equals(lsp#utils#iterable(1), [])
+            Assert Equals(lsp#utils#iterable(2.3), [])
+            Assert Equals(lsp#utils#iterable(v:false), [])
+            Assert Equals(lsp#utils#iterable(v:true), [])
+            Assert Equals(lsp#utils#iterable({}), [])
         End
 
         It should return the list it self if list is given
-            Assert Equals(lsp#utils#iteratable([1,2,3]), [1,2,3])
+            Assert Equals(lsp#utils#iterable([1,2,3]), [1,2,3])
         End
     End
 End

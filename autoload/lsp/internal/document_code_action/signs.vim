@@ -20,7 +20,7 @@ function! lsp#internal#document_code_action#signs#_enable() abort
     call s:define_sign('LspCodeAction', 'A>', g:lsp_document_code_action_signs_hint)
 
     " Note:
-    " - update CodeAction signs when CusorMoved or CursorHold
+    " - update CodeAction signs when CursorMoved or CursorHold
     " - clear signs when InsertEnter or BufLeave
     " - debounce code action requests
     " - automatically switch to latest code action request via switchMap()
