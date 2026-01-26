@@ -257,7 +257,8 @@ function! s:decode_tokens(data) abort
     let l:i = 0
     let l:line = 0
     let l:char = 0
-    while l:i < len(a:data)
+    let l:datalen = len(a:data)
+    while l:i < l:datalen
         let l:line = l:line + a:data[l:i]
         if a:data[l:i] > 0
             let l:char = 0
