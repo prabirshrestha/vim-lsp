@@ -1356,7 +1356,8 @@ function! s:shareTalkbackCallback(data, sink, t, d) abort
     if a:t == 2
         let l:i = 0
         let l:found = 0
-        while l:i < len(a:data['sinks'])
+        let l:sinkslen = len(a:data['sinks'])
+        while l:i < l:sinkslen
             if a:data['sinks'][l:i] == a:sink
                 let l:found = 1
                 break
