@@ -94,7 +94,7 @@ Describe lsp#utils#workspace_edit
             call lsp#utils#workspace_edit#apply_workspace_edit({
                 \ 'documentChanges': [{
                 \     'kind': 'create',
-                \     'uri': 'file:///' .. l:path,
+                \     'uri': 'file://' .. l:path,
                 \ }]})
 
             let l:loclist = getloclist(0)
@@ -118,8 +118,8 @@ Describe lsp#utils#workspace_edit
             call lsp#utils#workspace_edit#apply_workspace_edit({
                 \ 'documentChanges': [{
                 \     'kind': 'rename',
-                \     'oldUri': 'file:///' .. l:oldPath,
-                \     'newUri': 'file:///' .. l:newPath,
+                \     'oldUri': 'file://' .. l:oldPath,
+                \     'newUri': 'file://' .. l:newPath,
                 \ }]})
 
             let l:loclist = getloclist(0)
