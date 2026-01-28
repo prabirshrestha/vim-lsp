@@ -94,7 +94,7 @@ Describe lsp#utils#workspace_edit
             call lsp#utils#workspace_edit#apply_workspace_edit({
                 \ 'documentChanges': [{
                 \     'kind': 'create',
-                \     'uri': 'file://' .. l:path,
+                \     'uri': lsp#utils#path_to_uri(l:path),
                 \ }]})
 
             let l:loclist = getloclist(0)
@@ -118,8 +118,8 @@ Describe lsp#utils#workspace_edit
             call lsp#utils#workspace_edit#apply_workspace_edit({
                 \ 'documentChanges': [{
                 \     'kind': 'rename',
-                \     'oldUri': 'file://' .. l:oldPath,
-                \     'newUri': 'file://' .. l:newPath,
+                \     'oldUri': lsp#utils#path_to_uri(l:oldPath),
+                \     'newUri': lsp#utils#path_to_uri(l:newPath),
                 \ }]})
 
             let l:loclist = getloclist(0)
@@ -143,7 +143,7 @@ Describe lsp#utils#workspace_edit
             call lsp#utils#workspace_edit#apply_workspace_edit({
                 \ 'documentChanges': [{
                 \     'kind': 'delete',
-                \     'uri': 'file:///' .. l:path,
+                \     'uri': lsp#utils#path_to_uri(l:path),
                 \ }]})
 
             Assert !filereadable(l:path)
