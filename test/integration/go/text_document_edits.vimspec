@@ -21,7 +21,11 @@ Describe integration#go#text_document_edits
 
         execute printf('keepalt keepjumps edit %s', lsp#test#projectdir('go') . '/math.go')
         execute 'call search("func Add")'
-        execute 'LspCodeActionSync source.addTest'
+
+        " TODO: remove sleep and replace with LspCodeActionSync
+        execute 'LspCodeAction source.addTest'
+        sleep 500m
+
         execute 'lclose'
 
         Assert Equals(expand("%:p:t"), "math_test.go")
