@@ -1227,6 +1227,16 @@ g:lsp_untitled_buffer_enabled                *g:lsp_untitled_buffer_enabled*
     Determines whether or not vim-lsp plugin is enabled for untitled buffer.
     Set to `0` to disable for untitled buffer.
 
+b:lsp_hover_server			    *b:lsp_hover_server*
+    Type: |String|
+    Default: `''`
+
+    Specifies the server is used for textDocument/hover.
+    This can be specify which server handles textDocument/hover separately.
+
+    Example: >
+    autocmd FileType python let b:lsp_hover_server = 'pyright-langserver'
+
 ==============================================================================
 FUNCTIONS                                               *vim-lsp-functions*
 
