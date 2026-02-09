@@ -81,7 +81,7 @@ function! lsp#ui#vim#utils#symbols_to_loc_list(server, result) abort
                     call add(l:list, extend({
                         \ 'filename': l:path,
                         \ 'text': lsp#ui#vim#utils#_get_symbol_text_from_kind(a:server, l:symbol['kind']) . ' : ' . (g:lsp_document_symbol_detail ? l:symbol['detail'] : l:symbol['name']),
-                        \ }, l:loc_range)
+                        \ }, l:loc_range))
                     if has_key(l:symbol, 'children') && !empty(l:symbol['children'])
                         call s:symbols_to_loc_list_children(a:server, l:path, l:list, l:symbol['children'], 1)
                     endif
