@@ -1,4 +1,14 @@
 Describe lsp#utils#workspace_edit
+    Before
+        %bwipeout!
+    End
+
+    let l:original_lsp_show_workspace_edits = g:lsp_show_workspace_edits
+
+    After all
+        let g:lsp_show_workspace_edits = l:original_lsp_show_workspace_edits
+        %bwipeout!
+    End
 
     Describe lsp#utils#text_edit#apply_workspace_edit
         It populates location list with changes
@@ -76,6 +86,67 @@ Describe lsp#utils#workspace_edit
 
             Assert Equals(len(getloclist(0)), 0)
         End
+
+        It should create a new file if kind is create
+            let g:lsp_show_workspace_edits = 1
+            let l:path = tempname()
+
+            call lsp#utils#workspace_edit#apply_workspace_edit({
+                \ 'documentChanges': [{
+                \     'kind': 'create',
+                \     'uri': lsp#utils#path_to_uri(l:path),
+                \ }]})
+
+            let l:loclist = getloclist(0)
+
+            Assert Equals(len(l:loclist), 1)
+
+            Assert Equals(l:loclist[0]['lnum'], 1)
+            Assert Equals(l:loclist[0]['col'], 1)
+            Assert Equals(l:loclist[0]['text'], l:path)
+
+            Assert filereadable(l:path)
+        end
+
+        It should rename a new file if kind is rename
+            let g:lsp_show_workspace_edits = 1
+            let l:oldPath = tempname()
+            let l:newPath = tempname()
+
+            call writefile([], l:oldPath, 's')
+
+            call lsp#utils#workspace_edit#apply_workspace_edit({
+                \ 'documentChanges': [{
+                \     'kind': 'rename',
+                \     'oldUri': lsp#utils#path_to_uri(l:oldPath),
+                \     'newUri': lsp#utils#path_to_uri(l:newPath),
+                \ }]})
+
+            let l:loclist = getloclist(0)
+
+            Assert Equals(len(l:loclist), 1)
+
+            Assert Equals(l:loclist[0]['lnum'], 1)
+            Assert Equals(l:loclist[0]['col'], 1)
+            Assert Equals(l:loclist[0]['text'], l:newPath)
+
+            Assert filereadable(l:newPath)
+            Assert !filereadable(l:oldPath)
+        end
+
+        It should delete the file if kind is delete
+            let g:lsp_show_workspace_edits = 1
+            let l:path = tempname()
+
+            call writefile([], l:path, 's')
+
+            call lsp#utils#workspace_edit#apply_workspace_edit({
+                \ 'documentChanges': [{
+                \     'kind': 'delete',
+                \     'uri': lsp#utils#path_to_uri(l:path),
+                \ }]})
+
+            Assert !filereadable(l:path)
+        end
     End
 End
-

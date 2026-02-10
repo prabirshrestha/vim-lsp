@@ -26,6 +26,40 @@ function! lsp#utils#text_edit#apply_text_edits(uri, text_edits) abort
     endif
 endfunction
 
+function! lsp#utils#text_edit#apply_text_document_edits(text_document_edit) abort
+    let l:kind = get(a:text_document_edit, 'kind')
+
+    if l:kind == 'create'
+        let l:uri = lsp#utils#uri_to_path(a:text_document_edit['uri'])
+        let l:options = get(a:text_document_edit, 'options', {})
+
+        if !filereadable(l:uri) || !get(l:options, 'overwrite', v:false)
+            call writefile([], l:uri, "s")
+        endif
+        call s:_switch(l:uri)
+    elseif l:kind == 'rename'
+        let l:oldUri = lsp#utils#uri_to_path(a:text_document_edit['oldUri'])
+        let l:newUri = lsp#utils#uri_to_path(a:text_document_edit['newUri'])
+        let l:options = get(a:text_document_edit, 'options', {})
+
+        if !filereadable(l:newUri) || !get(l:options, 'overwrite', v:false)
+            call rename(l:oldUri, l:newUri)
+        endif
+        call s:_switch(l:newUri)
+    elseif l:kind == 'delete'
+        let l:uri = lsp#utils#uri_to_path(a:text_document_edit['uri'])
+        let l:options = get(a:text_document_edit, 'options', {})
+        let l:flags = ""
+
+        if isdirectory(l:uri) && get(l:options, "recursive")
+            let l:flags += "r"
+        endif
+        if filereadable(l:uri) || isdirectory(l:uri)
+            call delete(l:uri, l:flags)
+        endif
+    endif
+endfunction
+
 " @summary Use this to convert textedit to vim list that is compatible with
 " quickfix and locllist items
 " @param uri = DocumentUri
