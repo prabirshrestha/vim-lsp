@@ -131,7 +131,7 @@ endfunction
 
 function! s:place_signs(server, diagnostics_response, bufnr) abort
     let l:linecount = s:Buffer.get_line_count(a:bufnr)
-    for l:item in lsp#utils#iteratable(a:diagnostics_response['params']['diagnostics'])
+    for l:item in lsp#utils#iterable(a:diagnostics_response['params']['diagnostics'])
         let l:line = lsp#utils#position#lsp_line_to_vim(a:bufnr, l:item['range']['start'])
 
         " Some language servers report an unexpected EOF one line past the end

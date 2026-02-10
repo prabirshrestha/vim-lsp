@@ -14,7 +14,7 @@ let g:lsp_format_sync_timeout = get(g:, 'lsp_format_sync_timeout', -1)
 let g:lsp_max_buffer_size = get(g:, 'lsp_max_buffer_size', 5000000)
 
 let g:lsp_completion_documentation_enabled = get(g:, 'lsp_completion_documentation_enabled', 1)
-let g:lsp_completion_documentation_delay = get(g:, 'lsp_completion_documention_delay', 80)
+let g:lsp_completion_documentation_delay = get(g:, 'lsp_completion_documentation_delay', 80)
 
 let g:lsp_diagnostics_enabled = get(g:, 'lsp_diagnostics_enabled', 1)
 let g:lsp_diagnostics_echo_cursor = get(g:, 'lsp_diagnostics_echo_cursor', 0)
