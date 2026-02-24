@@ -44,12 +44,31 @@ function! lsp#ui#vim#execute_command#_execute(params) abort
 
   " execute command on server.
   if !empty(l:server_name)
-    call lsp#send_request(l:server_name, {
-    \   'method': 'workspace/executeCommand',
-    \   'params': l:command,
-    \   'sync': l:sync,
-    \   'on_notification': function('s:handle_execute_command', [l:server_name, l:command]),
-    \ })
+    if l:sync
+      let l:req = lsp#request_with_context(l:server_name, {
+      \   'method': 'workspace/executeCommand',
+      \   'params': l:command,
+      \   'sync': l:sync,
+      \ })
+      try
+        let l:result = lsp#callbag#pipe(
+        \ l:req['callbag'],
+        \ lsp#callbag#toList(),
+        \ ).wait({
+        \   'on_interrupt': {opt -> lsp#cancel_request(l:req['ctx'])},
+        \ })
+        call s:handle_execute_command(l:server_name, l:command, l:result[0])
+      catch
+        call lsp#utils#error('Execute command failed: ' . v:exception)
+      endtry
+    else
+      call lsp#send_request(l:server_name, {
+      \   'method': 'workspace/executeCommand',
+      \   'params': l:command,
+      \   'sync': l:sync,
+      \   'on_notification': function('s:handle_execute_command', [l:server_name, l:command]),
+      \ })
+    endif
   endif
 endfunction
 
