@@ -53,12 +53,19 @@ function! lsp#internal#document_formatting#format(options) abort
                 \ ).wait({
                 \   'sleep': get(a:options, 'sleep', 1),
                 \   'timeout': get(a:options, 'timeout', g:lsp_format_sync_timeout),
-                \   'on_interrupt': {opt -> [lsp#cancel_request(l:req['ctx']), extend(opt, {'timedout': 1})]},
+                \   'on_interrupt': {opt -> [
+                \     lsp#cancel_request(l:req['ctx']),
+                \     extend(opt, {'timedout': 1}),
+                \   ]},
                 \ })
             call s:format_next(l:x[0])
             call s:format_complete()
         catch
-            call s:format_error(v:exception . ' ' . v:throwpoint)
+            if get(l:req['ctx'], 'cancelled', 0)
+                call s:format_error('canceld')
+            else
+                call s:format_error(v:exception . ' ' . v:throwpoint)
+            endif
         endtry
     else
         return lsp#callbag#pipe(

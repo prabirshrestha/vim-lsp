@@ -55,11 +55,18 @@ function! lsp#ui#vim#execute_command#_execute(params) abort
         \ l:req['callbag'],
         \ lsp#callbag#toList(),
         \ ).wait({
-        \   'on_interrupt': {opt -> lsp#cancel_request(l:req['ctx'])},
+        \   'on_interrupt': {opt -> [
+        \     lsp#cancel_request(l:req['ctx']),
+        \     extend(opt, {'timedout': 1}),
+        \   ]},
         \ })
         call s:handle_execute_command(l:server_name, l:command, l:result[0])
       catch
-        call lsp#utils#error('Execute command failed: ' . v:exception)
+        if get(l:req['ctx'], 'cancelled', 0)
+          call s:format_error('canceld')
+        else
+          call lsp#utils#error('Execute command failed: ' . v:exception)
+        endif
       endtry
     else
       call lsp#send_request(l:server_name, {
