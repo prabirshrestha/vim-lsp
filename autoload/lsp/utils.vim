@@ -338,6 +338,9 @@ function! lsp#utils#to_char(expr, lnum, col) abort
         let l:lines = readfile(a:expr, '', a:lnum)
     endif
     let l:linestr = l:lines[-1]
+    if exists('*utf16idx')
+        return utf16idx(l:linestr, a:col - 1)
+    endif
     return strchars(strpart(l:linestr, 0, a:col - 1))
 endfunction
 

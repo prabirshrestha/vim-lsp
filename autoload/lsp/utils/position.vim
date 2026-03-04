@@ -3,6 +3,12 @@
 " Convert a character-index (0-based) to byte-index (1-based)
 " This function requires a buffer specifier (expr, see :help bufname()),
 " a line number (lnum, 1-based), and a character-index (char, 0-based).
+"
+" When utf16idx() is available (Vim 9.0.1485+), the character-index is
+" treated as a UTF-16 code unit offset, which is correct per the LSP
+" specification. Otherwise falls back to Unicode codepoint counting.
+let s:has_utf16idx = exists('*utf16idx')
+
 function! s:to_col(expr, lnum, char) abort
     let l:lines = getbufline(a:expr, a:lnum)
     if l:lines == []
@@ -18,6 +24,9 @@ function! s:to_col(expr, lnum, char) abort
         endif
     endif
     let l:linestr = l:lines[-1]
+    if s:has_utf16idx
+        return byteidx(l:linestr, a:char, v:true) + 1
+    endif
     return strlen(strcharpart(l:linestr, 0, a:char)) + 1
 endfunction
 
@@ -34,6 +43,9 @@ function! s:to_char(expr, lnum, col) abort
         let l:lines = readfile(a:expr, '', a:lnum)
     endif
     let l:linestr = l:lines[-1]
+    if s:has_utf16idx
+        return utf16idx(l:linestr, a:col - 1)
+    endif
     return strchars(strpart(l:linestr, 0, a:col - 1))
 endfunction
 
