@@ -339,7 +339,18 @@ if exists('*utf16idx')
             let l:lines = readfile(a:expr, '', a:lnum)
         endif
         let l:linestr = l:lines[-1]
-        return utf16idx(l:linestr, a:col - 1)
+        let l:byteidx = a:col - 1
+        if l:byteidx >= strlen(l:linestr)
+            return utf16idx(l:linestr, strlen(l:linestr))
+        endif
+        let l:utf16 = utf16idx(l:linestr, l:byteidx)
+        " If byteidx is in the middle of a multi-byte character, round up
+        " to match the old strchars(strpart()) behavior
+        let l:round_trip = byteidx(l:linestr, l:utf16, v:true)
+        if l:round_trip >= 0 && l:round_trip < l:byteidx
+            return l:utf16 + 1
+        endif
+        return l:utf16
     endfunction
 else
     function! lsp#utils#to_char(expr, lnum, col) abort
