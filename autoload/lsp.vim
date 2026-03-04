@@ -1138,6 +1138,20 @@ function! lsp#request(server_name, request) abort
     return lsp#callbag#create(function('s:request_create', [l:ctx]))
 endfunction
 
+function! lsp#request_with_context(server_name, request) abort
+    let l:ctx = {
+        \ 'server_name': a:server_name,
+        \ 'request': copy(a:request),
+        \ 'request_id': 0,
+        \ 'done': 0,
+        \ 'cancelled': 0,
+        \ }
+    return {
+        \ 'callbag': lsp#callbag#create(function('s:request_create', [l:ctx])),
+        \ 'ctx': l:ctx,
+    \}
+endfunction
+
 function! s:request_create(ctx, next, error, complete) abort
     let a:ctx['next'] = a:next
     let a:ctx['error'] = a:error
@@ -1185,6 +1199,10 @@ function! s:request_cancel(ctx) abort
         \   'complete':{->s:send_request_dispose(a:ctx)},
         \ })
         \)
+endfunction
+
+function! lsp#cancel_request(ctx) abort
+    call s:request_cancel(a:ctx)
 endfunction
 
 function! lsp#send_request(server_name, request) abort

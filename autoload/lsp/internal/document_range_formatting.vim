@@ -46,18 +46,30 @@ function! lsp#internal#document_range_formatting#format(options) abort
 
     if get(a:options, 'sync', 0) == 1
         try
+            let l:req = lsp#request_with_context(l:server, l:request)
             let l:x = lsp#callbag#pipe(
-                \ lsp#request(l:server, l:request),
+                \ l:req['callbag'],
                 \ lsp#callbag#takeUntil(lsp#callbag#pipe(
                 \   lsp#stream(),
                 \   lsp#callbag#filter({x->has_key(x, 'command')}),
                 \ )),
                 \ lsp#callbag#toList(),
-                \ ).wait({ 'sleep': get(a:options, 'sleep', 1), 'timeout': get(a:options, 'timeout', g:lsp_format_sync_timeout) })
+                \ ).wait({
+                \   'sleep': get(a:options, 'sleep', 1),
+                \   'timeout': get(a:options, 'timeout', g:lsp_format_sync_timeout),
+                \   'on_interrupt': {opt -> [
+                \     lsp#cancel_request(l:req['ctx']),
+                \     extend(opt, {'timedout': 1}),
+                \   ]},
+                \ })
             call s:format_next(l:x[0])
             call s:format_complete()
         catch
-            call s:format_error(v:exception . ' ' . v:throwpoint)
+            if get(l:req['ctx'], 'cancelled', 0)
+                call s:format_error('canceld')
+            else
+                call s:format_error(v:exception . ' ' . v:throwpoint)
+            endif
         endtry
     else
         return lsp#callbag#pipe(
