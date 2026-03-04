@@ -92,7 +92,15 @@ function! s:encode_uri(path, start_pos_encode, default_prefix) abort
 endfunction
 
 let s:path_to_uri_cache = {}
-if has('win32') || has('win64') || has('win32unix')
+if exists('*fnametouri')
+    function! lsp#utils#path_to_uri(path) abort
+        if has_key(s:path_to_uri_cache, a:path)
+            return s:path_to_uri_cache[a:path]
+        endif
+        let s:path_to_uri_cache[a:path] = fnametouri(a:path)
+        return s:path_to_uri_cache[a:path]
+    endfunction
+elseif has('win32') || has('win64') || has('win32unix')
     function! lsp#utils#path_to_uri(path) abort
         if has_key(s:path_to_uri_cache, a:path)
             return s:path_to_uri_cache[a:path]
@@ -137,7 +145,15 @@ else
 endif
 
 let s:uri_to_path_cache = {}
-if has('win32') || has('win64') || has('win32unix')
+if exists('*fnamefromuri')
+    function! lsp#utils#uri_to_path(uri) abort
+        if has_key(s:uri_to_path_cache, a:uri)
+            return s:uri_to_path_cache[a:uri]
+        endif
+        let s:uri_to_path_cache[a:uri] = fnamefromuri(a:uri)
+        return s:uri_to_path_cache[a:uri]
+    endfunction
+elseif has('win32') || has('win64') || has('win32unix')
     function! lsp#utils#uri_to_path(uri) abort
         if has_key(s:uri_to_path_cache, a:uri)
             return s:uri_to_path_cache[a:uri]
@@ -327,6 +343,7 @@ endfunction
 " Convert a byte-index (1-based) to a character-index (0-based)
 " This function requires a buffer specifier (expr, see :help bufname()),
 " a line number (lnum, 1-based), and a byte-index (char, 1-based).
+let s:has_utf16idx = exists('*utf16idx')
 function! lsp#utils#to_char(expr, lnum, col) abort
     let l:lines = getbufline(a:expr, a:lnum)
     if l:lines == []
@@ -338,7 +355,7 @@ function! lsp#utils#to_char(expr, lnum, col) abort
         let l:lines = readfile(a:expr, '', a:lnum)
     endif
     let l:linestr = l:lines[-1]
-    if exists('*utf16idx')
+    if s:has_utf16idx
         return utf16idx(l:linestr, a:col - 1)
     endif
     return strchars(strpart(l:linestr, 0, a:col - 1))
