@@ -92,15 +92,7 @@ function! s:encode_uri(path, start_pos_encode, default_prefix) abort
 endfunction
 
 let s:path_to_uri_cache = {}
-if exists('*fnametouri')
-    function! lsp#utils#path_to_uri(path) abort
-        if has_key(s:path_to_uri_cache, a:path)
-            return s:path_to_uri_cache[a:path]
-        endif
-        let s:path_to_uri_cache[a:path] = fnametouri(a:path)
-        return s:path_to_uri_cache[a:path]
-    endfunction
-elseif has('win32') || has('win64') || has('win32unix')
+if has('win32') || has('win64') || has('win32unix')
     function! lsp#utils#path_to_uri(path) abort
         if has_key(s:path_to_uri_cache, a:path)
             return s:path_to_uri_cache[a:path]
@@ -145,15 +137,7 @@ else
 endif
 
 let s:uri_to_path_cache = {}
-if exists('*fnamefromuri')
-    function! lsp#utils#uri_to_path(uri) abort
-        if has_key(s:uri_to_path_cache, a:uri)
-            return s:uri_to_path_cache[a:uri]
-        endif
-        let s:uri_to_path_cache[a:uri] = fnamefromuri(a:uri)
-        return s:uri_to_path_cache[a:uri]
-    endfunction
-elseif has('win32') || has('win64') || has('win32unix')
+if has('win32') || has('win64') || has('win32unix')
     function! lsp#utils#uri_to_path(uri) abort
         if has_key(s:uri_to_path_cache, a:uri)
             return s:uri_to_path_cache[a:uri]
