@@ -13,47 +13,56 @@ function! s:_get_line(expr, lnum) abort
     let l:lines = getbufline(a:expr, a:lnum)
     if l:lines == []
         if type(a:expr) != v:t_string || !filereadable(a:expr)
-            return v:none
+            return []
         endif
         let l:lines = readfile(a:expr, '', a:lnum)
-        if l:lines == []
-            return v:none
-        endif
     endif
-    return l:lines[-1]
+    return l:lines
 endfunction
 
 if exists('*utf16idx')
     function! s:to_col(expr, lnum, char) abort
-        let l:linestr = s:_get_line(a:expr, a:lnum)
-        if l:linestr is v:none
+        let l:lines = s:_get_line(a:expr, a:lnum)
+        if l:lines == []
             return a:char + 1
         endif
-        return byteidx(l:linestr, a:char, v:true) + 1
+        return byteidx(l:lines[-1], a:char, v:true) + 1
     endfunction
 
     function! s:to_char(expr, lnum, col) abort
-        let l:linestr = s:_get_line(a:expr, a:lnum)
-        if l:linestr is v:none
+        let l:lines = s:_get_line(a:expr, a:lnum)
+        if l:lines == []
             return a:col - 1
         endif
-        return utf16idx(l:linestr, a:col - 1)
+        let l:linestr = l:lines[-1]
+        let l:byteidx = a:col - 1
+        if l:byteidx >= strlen(l:linestr)
+            return utf16idx(l:linestr, strlen(l:linestr))
+        endif
+        let l:utf16 = utf16idx(l:linestr, l:byteidx)
+        " If byteidx is in the middle of a multi-byte character, round up
+        " to match the old strchars(strpart()) behavior
+        let l:round_trip = byteidx(l:linestr, l:utf16, v:true)
+        if l:round_trip >= 0 && l:round_trip < l:byteidx
+            return l:utf16 + 1
+        endif
+        return l:utf16
     endfunction
 else
     function! s:to_col(expr, lnum, char) abort
-        let l:linestr = s:_get_line(a:expr, a:lnum)
-        if l:linestr is v:none
+        let l:lines = s:_get_line(a:expr, a:lnum)
+        if l:lines == []
             return a:char + 1
         endif
-        return strlen(strcharpart(l:linestr, 0, a:char)) + 1
+        return strlen(strcharpart(l:lines[-1], 0, a:char)) + 1
     endfunction
 
     function! s:to_char(expr, lnum, col) abort
-        let l:linestr = s:_get_line(a:expr, a:lnum)
-        if l:linestr is v:none
+        let l:lines = s:_get_line(a:expr, a:lnum)
+        if l:lines == []
             return a:col - 1
         endif
-        return strchars(strpart(l:linestr, 0, a:col - 1))
+        return strchars(strpart(l:lines[-1], 0, a:col - 1))
     endfunction
 endif
 
