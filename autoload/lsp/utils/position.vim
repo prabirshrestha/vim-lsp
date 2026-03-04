@@ -4,50 +4,58 @@
 " This function requires a buffer specifier (expr, see :help bufname()),
 " a line number (lnum, 1-based), and a character-index (char, 0-based).
 "
-" When utf16idx() is available (Vim 9.0.1485+), the character-index is
-" treated as a UTF-16 code unit offset, which is correct per the LSP
-" specification. Otherwise falls back to Unicode codepoint counting.
-let s:has_utf16idx = exists('*utf16idx')
+" When utf16idx()/byteidx() with UTF-16 support are available (Vim 9.0.1485+),
+" the character-index is treated as a UTF-16 code unit offset, which is
+" correct per the LSP specification. Otherwise falls back to Unicode
+" codepoint counting.
 
-function! s:to_col(expr, lnum, char) abort
+function! s:_get_line(expr, lnum) abort
     let l:lines = getbufline(a:expr, a:lnum)
     if l:lines == []
         if type(a:expr) != v:t_string || !filereadable(a:expr)
-            " invalid a:expr
-            return a:char + 1
+            return v:none
         endif
-        " a:expr is a file that is not yet loaded as a buffer
         let l:lines = readfile(a:expr, '', a:lnum)
         if l:lines == []
-            " when the file is empty. a:char should be 0 in the case
-            return a:char + 1
+            return v:none
         endif
     endif
-    let l:linestr = l:lines[-1]
-    if s:has_utf16idx
-        return byteidx(l:linestr, a:char, v:true) + 1
-    endif
-    return strlen(strcharpart(l:linestr, 0, a:char)) + 1
+    return l:lines[-1]
 endfunction
 
-" The inverse version of `s:to_col`.
-" Convert [lnum, col] to LSP's `Position`.
-function! s:to_char(expr, lnum, col) abort
-    let l:lines = getbufline(a:expr, a:lnum)
-    if l:lines == []
-        if type(a:expr) != v:t_string || !filereadable(a:expr)
-            " invalid a:expr
+if exists('*utf16idx')
+    function! s:to_col(expr, lnum, char) abort
+        let l:linestr = s:_get_line(a:expr, a:lnum)
+        if l:linestr is v:none
+            return a:char + 1
+        endif
+        return byteidx(l:linestr, a:char, v:true) + 1
+    endfunction
+
+    function! s:to_char(expr, lnum, col) abort
+        let l:linestr = s:_get_line(a:expr, a:lnum)
+        if l:linestr is v:none
             return a:col - 1
         endif
-        " a:expr is a file that is not yet loaded as a buffer
-        let l:lines = readfile(a:expr, '', a:lnum)
-    endif
-    let l:linestr = l:lines[-1]
-    if s:has_utf16idx
         return utf16idx(l:linestr, a:col - 1)
-    endif
-    return strchars(strpart(l:linestr, 0, a:col - 1))
-endfunction
+    endfunction
+else
+    function! s:to_col(expr, lnum, char) abort
+        let l:linestr = s:_get_line(a:expr, a:lnum)
+        if l:linestr is v:none
+            return a:char + 1
+        endif
+        return strlen(strcharpart(l:linestr, 0, a:char)) + 1
+    endfunction
+
+    function! s:to_char(expr, lnum, col) abort
+        let l:linestr = s:_get_line(a:expr, a:lnum)
+        if l:linestr is v:none
+            return a:col - 1
+        endif
+        return strchars(strpart(l:linestr, 0, a:col - 1))
+    endfunction
+endif
 
 " @param expr = see :help bufname()
 " @param position = {
@@ -100,4 +108,3 @@ function! lsp#utils#position#vim_to_lsp(expr, pos) abort
          \   'character': s:to_char(a:expr, a:pos[0], a:pos[1])
          \ }
 endfunction
-

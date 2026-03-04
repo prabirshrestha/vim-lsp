@@ -343,23 +343,35 @@ endfunction
 " Convert a byte-index (1-based) to a character-index (0-based)
 " This function requires a buffer specifier (expr, see :help bufname()),
 " a line number (lnum, 1-based), and a byte-index (char, 1-based).
-let s:has_utf16idx = exists('*utf16idx')
-function! lsp#utils#to_char(expr, lnum, col) abort
-    let l:lines = getbufline(a:expr, a:lnum)
-    if l:lines == []
-        if type(a:expr) != v:t_string || !filereadable(a:expr)
-            " invalid a:expr
-            return a:col - 1
+if exists('*utf16idx')
+    function! lsp#utils#to_char(expr, lnum, col) abort
+        let l:lines = getbufline(a:expr, a:lnum)
+        if l:lines == []
+            if type(a:expr) != v:t_string || !filereadable(a:expr)
+                " invalid a:expr
+                return a:col - 1
+            endif
+            " a:expr is a file that is not yet loaded as a buffer
+            let l:lines = readfile(a:expr, '', a:lnum)
         endif
-        " a:expr is a file that is not yet loaded as a buffer
-        let l:lines = readfile(a:expr, '', a:lnum)
-    endif
-    let l:linestr = l:lines[-1]
-    if s:has_utf16idx
+        let l:linestr = l:lines[-1]
         return utf16idx(l:linestr, a:col - 1)
-    endif
-    return strchars(strpart(l:linestr, 0, a:col - 1))
-endfunction
+    endfunction
+else
+    function! lsp#utils#to_char(expr, lnum, col) abort
+        let l:lines = getbufline(a:expr, a:lnum)
+        if l:lines == []
+            if type(a:expr) != v:t_string || !filereadable(a:expr)
+                " invalid a:expr
+                return a:col - 1
+            endif
+            " a:expr is a file that is not yet loaded as a buffer
+            let l:lines = readfile(a:expr, '', a:lnum)
+        endif
+        let l:linestr = l:lines[-1]
+        return strchars(strpart(l:linestr, 0, a:col - 1))
+    endfunction
+endif
 
 function! s:get_base64_alphabet() abort
     let l:alphabet = []
