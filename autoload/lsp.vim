@@ -22,6 +22,8 @@ let s:has_listener = exists('*listener_add')
 let s:buf_listener_ids = {}
 let s:buf_listener_changes = {}
 let s:buf_listener_lsp_cache = {}
+let s:buf_lines_cache = {}
+let s:buf_diff_cache = {}
 
 " do nothing, place it here only to avoid the message
 augroup _lsp_silent_
@@ -465,6 +467,12 @@ function! s:on_buf_wipeout(buf) abort
         call remove(s:file_content, a:buf)
     endif
     call s:stop_listener(a:buf)
+    if has_key(s:buf_lines_cache, a:buf)
+        call remove(s:buf_lines_cache, a:buf)
+    endif
+    if has_key(s:buf_diff_cache, a:buf)
+        call remove(s:buf_diff_cache, a:buf)
+    endif
 endfunction
 
 function! lsp#ensure_flush_all(buf, server_names) abort
@@ -817,6 +825,16 @@ function! s:ensure_conf(buf, server_name, cb) abort
     call a:cb(l:msg)
 endfunction
 
+function! s:get_buf_lines_cached(buf) abort
+    let l:tick = getbufvar(a:buf, 'changedtick')
+    if has_key(s:buf_lines_cache, a:buf) && s:buf_lines_cache[a:buf].tick == l:tick
+        return s:buf_lines_cache[a:buf].lines
+    endif
+    let l:lines = lsp#utils#buffer#_get_lines(a:buf)
+    let s:buf_lines_cache[a:buf] = {'tick': l:tick, 'lines': l:lines}
+    return l:lines
+endfunction
+
 function! s:text_changes(buf, server_name) abort
     let l:sync_kind = lsp#capabilities#get_text_document_change_sync_kind(a:server_name)
     " When syncKind is None, return null for contentChanges.
@@ -837,8 +855,16 @@ function! s:text_changes(buf, server_name) abort
 
         " Fallback: compute diff (O(total lines))
         let l:old_content = s:get_last_file_content(a:buf, a:server_name)
-        let l:new_content = lsp#utils#buffer#_get_lines(a:buf)
-        let l:changes = lsp#utils#diff#compute(l:old_content, l:new_content)
+        let l:new_content = s:get_buf_lines_cached(a:buf)
+        " Reuse cached diff if old content is the same reference
+        let l:tick = getbufvar(a:buf, 'changedtick')
+        if has_key(s:buf_diff_cache, a:buf) && s:buf_diff_cache[a:buf].tick == l:tick
+                    \ && s:buf_diff_cache[a:buf].old is l:old_content
+            let l:changes = s:buf_diff_cache[a:buf].changes
+        else
+            let l:changes = lsp#utils#diff#compute(l:old_content, l:new_content)
+            let s:buf_diff_cache[a:buf] = {'tick': l:tick, 'old': l:old_content, 'changes': l:changes}
+        endif
         if empty(l:changes.text) && l:changes.rangeLength ==# 0
             return []
         endif
@@ -846,7 +872,7 @@ function! s:text_changes(buf, server_name) abort
         return [l:changes]
     endif
 
-    let l:new_content = lsp#utils#buffer#_get_lines(a:buf)
+    let l:new_content = s:get_buf_lines_cached(a:buf)
     let l:changes = {'text': join(l:new_content, "\n")}
     call s:update_file_content(a:buf, a:server_name, l:new_content)
     return [l:changes]
