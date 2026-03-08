@@ -941,16 +941,26 @@ function! s:ensure_open(buf, server_name, cb) abort
         call s:workspace_add_folder(a:server_name)
     endif
 
-    call s:update_file_content(a:buf, a:server_name, lsp#utils#buffer#_get_lines(a:buf))
+    let l:lines = lsp#utils#buffer#_get_lines(a:buf)
+    if !s:has_listener
+        call s:update_file_content(a:buf, a:server_name, l:lines)
+    endif
     call s:start_listener(a:buf)
 
     let l:buffer_info = { 'changed_tick': getbufvar(a:buf, 'changedtick'), 'version': 1, 'uri': l:path }
     let l:buffers[l:path] = l:buffer_info
 
+    let l:server_info = s:servers[a:server_name]['server_info']
+    let l:language_id = has_key(l:server_info, 'languageId') ? l:server_info['languageId'](l:server_info) : getbufvar(a:buf, '&filetype')
     call s:send_notification(a:server_name, {
         \ 'method': 'textDocument/didOpen',
         \ 'params': {
-        \   'textDocument': s:get_text_document(a:buf, a:server_name, l:buffer_info)
+        \   'textDocument': {
+        \     'uri': lsp#utils#get_buffer_uri(a:buf),
+        \     'languageId': l:language_id,
+        \     'version': l:buffer_info['version'],
+        \     'text': join(l:lines, "\n"),
+        \   }
         \ },
         \ })
 
