@@ -18,6 +18,12 @@ let s:notification_callbacks = [] " { name, callback }
 "      }
 "    }
 let s:file_content = {}
+let s:has_listener = exists('*listener_add')
+let s:buf_listener_ids = {}
+let s:buf_listener_changes = {}
+let s:buf_listener_lsp_cache = {}
+let s:buf_lines_cache = {}
+let s:buf_diff_cache = {}
 
 " do nothing, place it here only to avoid the message
 augroup _lsp_silent_
@@ -387,9 +393,85 @@ function! s:update_file_content(buf, server_name, new) abort
     let s:file_content[a:buf][a:server_name] = a:new
 endfunction
 
+function! s:on_listener_change(buf, start, end, added, changes) abort
+    if !has_key(s:buf_listener_changes, a:buf)
+        let s:buf_listener_changes[a:buf] = []
+    endif
+    for l:change in a:changes
+        call add(s:buf_listener_changes[a:buf], {
+            \ 'lnum': l:change.lnum,
+            \ 'end': l:change.end,
+            \ 'added': l:change.added,
+            \ })
+    endfor
+endfunction
+
+function! s:start_listener(buf) abort
+    if !s:has_listener || has_key(s:buf_listener_ids, a:buf)
+        return
+    endif
+    let s:buf_listener_ids[a:buf] = listener_add(function('s:on_listener_change'), a:buf)
+    let s:buf_listener_changes[a:buf] = []
+endfunction
+
+function! s:stop_listener(buf) abort
+    if has_key(s:buf_listener_ids, a:buf)
+        call listener_remove(s:buf_listener_ids[a:buf])
+        call remove(s:buf_listener_ids, a:buf)
+    endif
+    if has_key(s:buf_listener_changes, a:buf)
+        call remove(s:buf_listener_changes, a:buf)
+    endif
+    if has_key(s:buf_listener_lsp_cache, a:buf)
+        call remove(s:buf_listener_lsp_cache, a:buf)
+    endif
+endfunction
+
+function! s:flush_listener_changes(buf) abort
+    if !s:has_listener || !has_key(s:buf_listener_ids, a:buf)
+        return []
+    endif
+    call listener_flush(a:buf)
+    let l:tick = getbufvar(a:buf, 'changedtick')
+    if has_key(s:buf_listener_lsp_cache, a:buf) && s:buf_listener_lsp_cache[a:buf].tick == l:tick
+        return s:buf_listener_lsp_cache[a:buf].changes
+    endif
+    let l:raw = get(s:buf_listener_changes, a:buf, [])
+    let s:buf_listener_changes[a:buf] = []
+    if empty(l:raw)
+        let s:buf_listener_lsp_cache[a:buf] = {'tick': l:tick, 'changes': []}
+        return []
+    endif
+    let l:lsp_changes = []
+    for l:c in l:raw
+        let l:new_end = l:c.lnum + (l:c.end - l:c.lnum) + l:c.added
+        if l:c.lnum < l:new_end
+            let l:text = join(getbufline(a:buf, l:c.lnum, l:new_end - 1), "\n") . "\n"
+        else
+            let l:text = ''
+        endif
+        call add(l:lsp_changes, {
+            \ 'range': {
+            \   'start': {'line': l:c.lnum - 1, 'character': 0},
+            \   'end': {'line': l:c.end - 1, 'character': 0},
+            \ },
+            \ 'text': l:text,
+            \ })
+    endfor
+    let s:buf_listener_lsp_cache[a:buf] = {'tick': l:tick, 'changes': l:lsp_changes}
+    return l:lsp_changes
+endfunction
+
 function! s:on_buf_wipeout(buf) abort
     if has_key(s:file_content, a:buf)
         call remove(s:file_content, a:buf)
+    endif
+    call s:stop_listener(a:buf)
+    if has_key(s:buf_lines_cache, a:buf)
+        call remove(s:buf_lines_cache, a:buf)
+    endif
+    if has_key(s:buf_diff_cache, a:buf)
+        call remove(s:buf_diff_cache, a:buf)
     endif
 endfunction
 
@@ -743,6 +825,16 @@ function! s:ensure_conf(buf, server_name, cb) abort
     call a:cb(l:msg)
 endfunction
 
+function! s:get_buf_lines_cached(buf) abort
+    let l:tick = getbufvar(a:buf, 'changedtick')
+    if has_key(s:buf_lines_cache, a:buf) && s:buf_lines_cache[a:buf].tick == l:tick
+        return s:buf_lines_cache[a:buf].lines
+    endif
+    let l:lines = lsp#utils#buffer#_get_lines(a:buf)
+    let s:buf_lines_cache[a:buf] = {'tick': l:tick, 'lines': l:lines}
+    return l:lines
+endfunction
+
 function! s:text_changes(buf, server_name) abort
     let l:sync_kind = lsp#capabilities#get_text_document_change_sync_kind(a:server_name)
     " When syncKind is None, return null for contentChanges.
@@ -752,10 +844,27 @@ function! s:text_changes(buf, server_name) abort
 
     " When syncKind is Incremental and previous content is saved.
     if l:sync_kind == 2 && has_key(s:file_content, a:buf) && has_key(s:file_content[a:buf], a:server_name)
-        " compute diff
+        " Use listener_add if available (O(changed lines) instead of O(total lines))
+        if s:has_listener && has_key(s:buf_listener_ids, a:buf)
+            let l:lsp_changes = s:flush_listener_changes(a:buf)
+            if !empty(l:lsp_changes)
+                return l:lsp_changes
+            endif
+            return []
+        endif
+
+        " Fallback: compute diff (O(total lines))
         let l:old_content = s:get_last_file_content(a:buf, a:server_name)
-        let l:new_content = lsp#utils#buffer#_get_lines(a:buf)
-        let l:changes = lsp#utils#diff#compute(l:old_content, l:new_content)
+        let l:new_content = s:get_buf_lines_cached(a:buf)
+        " Reuse cached diff if old content is the same reference
+        let l:tick = getbufvar(a:buf, 'changedtick')
+        if has_key(s:buf_diff_cache, a:buf) && s:buf_diff_cache[a:buf].tick == l:tick
+                    \ && s:buf_diff_cache[a:buf].old is l:old_content
+            let l:changes = s:buf_diff_cache[a:buf].changes
+        else
+            let l:changes = lsp#utils#diff#compute(l:old_content, l:new_content)
+            let s:buf_diff_cache[a:buf] = {'tick': l:tick, 'old': l:old_content, 'changes': l:changes}
+        endif
         if empty(l:changes.text) && l:changes.rangeLength ==# 0
             return []
         endif
@@ -763,7 +872,7 @@ function! s:text_changes(buf, server_name) abort
         return [l:changes]
     endif
 
-    let l:new_content = lsp#utils#buffer#_get_lines(a:buf)
+    let l:new_content = s:get_buf_lines_cached(a:buf)
     let l:changes = {'text': join(l:new_content, "\n")}
     call s:update_file_content(a:buf, a:server_name, l:new_content)
     return [l:changes]
@@ -832,15 +941,26 @@ function! s:ensure_open(buf, server_name, cb) abort
         call s:workspace_add_folder(a:server_name)
     endif
 
-    call s:update_file_content(a:buf, a:server_name, lsp#utils#buffer#_get_lines(a:buf))
+    let l:lines = lsp#utils#buffer#_get_lines(a:buf)
+    if !s:has_listener
+        call s:update_file_content(a:buf, a:server_name, l:lines)
+    endif
+    call s:start_listener(a:buf)
 
     let l:buffer_info = { 'changed_tick': getbufvar(a:buf, 'changedtick'), 'version': 1, 'uri': l:path }
     let l:buffers[l:path] = l:buffer_info
 
+    let l:server_info = s:servers[a:server_name]['server_info']
+    let l:language_id = has_key(l:server_info, 'languageId') ? l:server_info['languageId'](l:server_info) : getbufvar(a:buf, '&filetype')
     call s:send_notification(a:server_name, {
         \ 'method': 'textDocument/didOpen',
         \ 'params': {
-        \   'textDocument': s:get_text_document(a:buf, a:server_name, l:buffer_info)
+        \   'textDocument': {
+        \     'uri': lsp#utils#get_buffer_uri(a:buf),
+        \     'languageId': l:language_id,
+        \     'version': l:buffer_info['version'],
+        \     'text': join(l:lines, "\n"),
+        \   }
         \ },
         \ })
 
