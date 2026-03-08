@@ -24,7 +24,7 @@ Describe integration#go#text_document_edits
 
         " TODO: remove sleep and replace with LspCodeActionSync
         execute 'LspCodeAction source.addTest'
-        sleep 500m
+        sleep 1500m
 
         execute 'lclose'
 
