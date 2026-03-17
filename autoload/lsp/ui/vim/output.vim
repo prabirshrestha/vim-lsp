@@ -158,6 +158,15 @@ function! lsp#ui#vim#output#floatingpreview(data) abort
             let l:options['maxheight'] = g:lsp_preview_max_height
         endif
 
+        let l:opacity = get(g:, 'lsp_popup_opacity', 100)
+        if l:opacity < 100
+            let l:options['opacity'] = l:opacity
+        endif
+        let l:highlight = get(g:, 'lsp_popup_highlight', '')
+        if !empty(l:highlight)
+            let l:options['highlight'] = l:highlight
+        endif
+
         let s:winid = popup_atcursor('...', l:options)
     endif
     return s:winid
