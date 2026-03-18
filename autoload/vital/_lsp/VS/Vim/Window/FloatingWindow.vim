@@ -263,9 +263,18 @@ if has('nvim')
   endfunction
 else
   function! s:_open(bufnr, style, callback) abort
-    return popup_create(a:bufnr, extend(s:_style(a:style), {
+    let l:opts = extend(s:_style(a:style), {
     \  'callback': a:callback,
-    \ }, 'force'))
+    \ }, 'force')
+    let l:opacity = get(g:, 'lsp_popup_opacity', 100)
+    if l:opacity < 100
+      let l:opts['opacity'] = l:opacity
+    endif
+    let l:highlight = get(g:, 'lsp_popup_highlight', '')
+    if !empty(l:highlight)
+      let l:opts['highlight'] = l:highlight
+    endif
+    return popup_create(a:bufnr, l:opts)
   endfunction
 endif
 
@@ -306,6 +315,14 @@ else
       return s:_open(a:bufnr, a:style, { -> a:self._on_closed() })
     endif
     let l:style = s:_style(a:style)
+    let l:opacity = get(g:, 'lsp_popup_opacity', 100)
+    if l:opacity < 100
+      let l:style['opacity'] = l:opacity
+    endif
+    let l:highlight = get(g:, 'lsp_popup_highlight', '')
+    if !empty(l:highlight)
+      let l:style['highlight'] = l:highlight
+    endif
     call popup_move(a:winid, l:style)
     call popup_setoptions(a:winid, l:style)
     return a:winid

@@ -28,6 +28,15 @@ function! lsp#internal#ui#popupmenu#open(opt) abort
         \   'filter': funcref('Filter'),
         \ }, a:opt)
 
+    let l:opacity = get(g:, 'lsp_popup_opacity', 100)
+    if l:opacity < 100
+        let l:popup_opt['opacity'] = l:opacity
+    endif
+    let l:highlight = get(g:, 'lsp_popup_highlight', '')
+    if !empty(l:highlight)
+        let l:popup_opt['highlight'] = l:highlight
+    endif
+
     let l:winid = popup_menu(l:items_with_shortcuts, l:popup_opt)
     call s:Window.do(l:winid, { -> s:Markdown.apply() })
     execute('doautocmd <nomodeline> User lsp_float_opened')
