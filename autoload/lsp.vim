@@ -391,6 +391,7 @@ function! s:on_buf_wipeout(buf) abort
     if has_key(s:file_content, a:buf)
         call remove(s:file_content, a:buf)
     endif
+    call lsp#internal#listener#stop(a:buf)
 endfunction
 
 function! lsp#ensure_flush_all(buf, server_names) abort
@@ -752,10 +753,15 @@ function! s:text_changes(buf, server_name) abort
 
     " When syncKind is Incremental and previous content is saved.
     if l:sync_kind == 2 && has_key(s:file_content, a:buf) && has_key(s:file_content[a:buf], a:server_name)
-        " compute diff
+        " Use listener_add if available (O(changed lines) instead of O(total lines))
+        if lsp#internal#listener#is_enabled()
+            return lsp#internal#listener#flush(a:buf)
+        endif
+
+        " Fallback: compute diff (O(total lines))
         let l:old_content = s:get_last_file_content(a:buf, a:server_name)
-        let l:new_content = lsp#utils#buffer#_get_lines(a:buf)
-        let l:changes = lsp#utils#diff#compute(l:old_content, l:new_content)
+        let l:new_content = lsp#internal#listener#get_lines_cached(a:buf)
+        let l:changes = lsp#internal#listener#get_diff_cached(a:buf, l:old_content)
         if empty(l:changes.text) && l:changes.rangeLength ==# 0
             return []
         endif
@@ -763,7 +769,7 @@ function! s:text_changes(buf, server_name) abort
         return [l:changes]
     endif
 
-    let l:new_content = lsp#utils#buffer#_get_lines(a:buf)
+    let l:new_content = lsp#internal#listener#get_lines_cached(a:buf)
     let l:changes = {'text': join(l:new_content, "\n")}
     call s:update_file_content(a:buf, a:server_name, l:new_content)
     return [l:changes]
@@ -833,6 +839,7 @@ function! s:ensure_open(buf, server_name, cb) abort
     endif
 
     call s:update_file_content(a:buf, a:server_name, lsp#utils#buffer#_get_lines(a:buf))
+    call lsp#internal#listener#start(a:buf)
 
     let l:buffer_info = { 'changed_tick': getbufvar(a:buf, 'changedtick'), 'version': 1, 'uri': l:path }
     let l:buffers[l:path] = l:buffer_info
