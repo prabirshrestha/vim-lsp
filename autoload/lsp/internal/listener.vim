@@ -45,22 +45,28 @@ function! lsp#internal#listener#flush(buf) abort
         let l:state.lsp_cache = {'tick': l:tick, 'changes': []}
         return []
     endif
-    let l:lsp_changes = []
-    for l:c in l:raw
+    if len(l:raw) == 1
+        let l:c = l:raw[0]
         let l:new_end = l:c.lnum + (l:c.end - l:c.lnum) + l:c.added
         if l:c.lnum < l:new_end
             let l:text = join(getbufline(a:buf, l:c.lnum, l:new_end - 1), "\n") . "\n"
         else
             let l:text = ''
         endif
-        call add(l:lsp_changes, {
+        let l:lsp_changes = [{
             \ 'range': {
             \   'start': {'line': l:c.lnum - 1, 'character': 0},
             \   'end': {'line': l:c.end - 1, 'character': 0},
             \ },
             \ 'text': l:text,
-            \ })
-    endfor
+            \ }]
+    else
+        " Multiple changes accumulated: line numbers from earlier changes
+        " reference intermediate buffer states, but getbufline() reads the
+        " final state, so individual ranges would carry wrong text.
+        " Send full content instead (always valid per LSP spec).
+        let l:lsp_changes = [{'text': join(getbufline(a:buf, 1, '$'), "\n")}]
+    endif
     let l:state.lsp_cache = {'tick': l:tick, 'changes': l:lsp_changes}
     return l:lsp_changes
 endfunction
