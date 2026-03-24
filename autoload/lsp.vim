@@ -755,7 +755,12 @@ function! s:text_changes(buf, server_name) abort
     if l:sync_kind == 2 && has_key(s:file_content, a:buf) && has_key(s:file_content[a:buf], a:server_name)
         " Use listener_add if available (O(changed lines) instead of O(total lines))
         if lsp#internal#listener#is_enabled()
-            return lsp#internal#listener#flush(a:buf)
+            let l:listener_changes = lsp#internal#listener#flush(a:buf)
+            if !empty(l:listener_changes)
+                let l:new_content = lsp#internal#listener#get_lines_cached(a:buf)
+                call s:update_file_content(a:buf, a:server_name, l:new_content)
+            endif
+            return l:listener_changes
         endif
 
         " Fallback: compute diff (O(total lines))
