@@ -36,6 +36,10 @@ function! lsp#internal#ui#popupmenu#open(opt) abort
     if !empty(l:highlight)
         let l:popup_opt['highlight'] = l:highlight
     endif
+    let l:borderchars = get(g:, 'lsp_popup_borderchars', [])
+    if !empty(l:borderchars)
+        let l:popup_opt['borderchars'] = l:borderchars
+    endif
 
     let l:winid = popup_menu(l:items_with_shortcuts, l:popup_opt)
     call s:Window.do(l:winid, { -> s:Markdown.apply() })
