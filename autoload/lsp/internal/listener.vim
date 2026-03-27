@@ -65,7 +65,7 @@ function! lsp#internal#listener#flush(buf) abort
         " reference intermediate buffer states, but getbufline() reads the
         " final state, so individual ranges would carry wrong text.
         " Send full content instead (always valid per LSP spec).
-        let l:lsp_changes = [{'text': join(getbufline(a:buf, 1, '$'), "\n")}]
+        let l:lsp_changes = [{'text': join(lsp#utils#buffer#_get_lines(a:buf), "\n")}]
     endif
     let l:state.lsp_cache = {'tick': l:tick, 'changes': l:lsp_changes}
     return l:lsp_changes
