@@ -166,6 +166,10 @@ function! lsp#ui#vim#output#floatingpreview(data) abort
         if !empty(l:highlight)
             let l:options['highlight'] = l:highlight
         endif
+        let l:borderchars = get(g:, 'lsp_popup_borderchars', [])
+        if !empty(l:borderchars)
+            let l:options['borderchars'] = l:borderchars
+        endif
 
         let s:winid = popup_atcursor('...', l:options)
     endif
