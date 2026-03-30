@@ -126,6 +126,8 @@ CONTENTS                                                  *vim-lsp-contents*
       LspDocumentDiagnostics                |:LspDocumentDiagnostics|
       LspDeclaration                        |:LspDeclaration|
       LspDefinition                         |:LspDefinition|
+      LspDocumentLink                       |:LspDocumentLink|
+      LspDocumentLinkOpen                   |:LspDocumentLinkOpen|
       LspDocumentFold                       |:LspDocumentFold|
       LspDocumentFoldSync                   |:LspDocumentFoldSync|
       LspDocumentFormat                     |:LspDocumentFormat|
@@ -1798,6 +1800,18 @@ Go to definition.
 This accepts |<mods>|.
 
 Also see |:LspPeekDefinition|.
+
+LspDocumentLink                                           *:LspDocumentLink*
+
+List all document links in the current buffer in the quickfix list.
+Document links include URLs, file references, and import paths that the
+language server recognizes.
+
+LspDocumentLinkOpen                                   *:LspDocumentLinkOpen*
+
+Open the document link on the current cursor line. If the target is a URL,
+it opens in the default browser. If the target is a file URI, it opens the
+file in the current editor.
 
 LspDocumentFold                                           *:LspDocumentFold*
 

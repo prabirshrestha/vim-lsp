@@ -433,6 +433,163 @@ function! s:handle_text_edit(server, last_command_id, type, data) abort
     redraw | echo 'Document formatted'
 endfunction
 
+function! lsp#ui#vim#document_link() abort
+    let l:servers = filter(lsp#get_allowed_servers(), 'lsp#capabilities#has_document_link_provider(v:val)')
+    let l:command_id = lsp#_new_command()
+
+    if len(l:servers) == 0
+        call s:not_supported('Retrieving document links')
+        return
+    endif
+
+    let l:ctx = { 'counter': len(l:servers), 'list': [], 'last_command_id': l:command_id }
+
+    for l:server in l:servers
+        call lsp#send_request(l:server, {
+            \ 'method': 'textDocument/documentLink',
+            \ 'params': {
+            \   'textDocument': lsp#get_text_document_identifier(),
+            \ },
+            \ 'on_notification': function('s:handle_document_link', [l:ctx, l:server]),
+            \ })
+    endfor
+
+    echo 'Retrieving document links ...'
+endfunction
+
+function! s:handle_document_link(ctx, server, data) abort
+    if a:ctx['last_command_id'] != lsp#_last_command()
+        return
+    endif
+
+    let a:ctx['counter'] = a:ctx['counter'] - 1
+
+    if lsp#client#is_error(a:data['response']) || !has_key(a:data['response'], 'result')
+        call lsp#utils#error('Failed to retrieve document links for ' . a:server . ': ' . lsp#client#error_message(a:data['response']))
+    elseif a:data['response']['result'] isnot v:null
+        for l:link in a:data['response']['result']
+            let l:range = l:link['range']
+            let [l:start_line, l:start_col] = lsp#utils#position#lsp_to_vim('%', l:range['start'])
+            let l:target = get(l:link, 'target', '')
+            let l:text = l:target
+            if empty(l:text)
+                let l:text = get(l:link, 'tooltip', '(no target)')
+            endif
+            call add(a:ctx['list'], {
+                \ 'filename': expand('%:p'),
+                \ 'lnum': l:start_line,
+                \ 'col': l:start_col,
+                \ 'text': l:text,
+                \ })
+        endfor
+    endif
+
+    if a:ctx['counter'] == 0
+        if empty(a:ctx['list'])
+            call lsp#utils#error('No document links found')
+        else
+            call lsp#ui#vim#utils#setqflist(a:ctx['list'], 'documentLink')
+            echo 'Retrieved document links'
+            botright copen
+        endif
+    endif
+endfunction
+
+function! lsp#ui#vim#document_link_open() abort
+    let l:servers = filter(lsp#get_allowed_servers(), 'lsp#capabilities#has_document_link_provider(v:val)')
+
+    if len(l:servers) == 0
+        call s:not_supported('Retrieving document links')
+        return
+    endif
+
+    let l:position = lsp#get_position()
+    let l:ctx = { 'counter': len(l:servers), 'position': l:position, 'done': 0 }
+
+    for l:server in l:servers
+        call lsp#send_request(l:server, {
+            \ 'method': 'textDocument/documentLink',
+            \ 'params': {
+            \   'textDocument': lsp#get_text_document_identifier(),
+            \ },
+            \ 'on_notification': function('s:handle_document_link_open', [l:ctx, l:server]),
+            \ })
+    endfor
+
+    echo 'Retrieving document link ...'
+endfunction
+
+function! s:handle_document_link_open(ctx, server, data) abort
+    let a:ctx['counter'] = a:ctx['counter'] - 1
+
+    if a:ctx['done']
+        return
+    endif
+
+    if lsp#client#is_error(a:data['response']) || !has_key(a:data['response'], 'result')
+                \ || a:data['response']['result'] is v:null || empty(a:data['response']['result'])
+        if a:ctx['counter'] == 0
+            call lsp#utils#error('No document link found at cursor position')
+        endif
+        return
+    endif
+
+    let l:cursor_line = a:ctx['position']['line']
+    let l:cursor_char = a:ctx['position']['character']
+
+    " First try exact match (cursor within link range)
+    for l:link in a:data['response']['result']
+        let l:range = l:link['range']
+        if l:range['start']['line'] <= l:cursor_line && l:cursor_line <= l:range['end']['line']
+            if l:cursor_line == l:range['start']['line'] && l:cursor_char < l:range['start']['character']
+                continue
+            endif
+            if l:cursor_line == l:range['end']['line'] && l:cursor_char > l:range['end']['character']
+                continue
+            endif
+            let l:target = get(l:link, 'target', '')
+            if !empty(l:target)
+                let a:ctx['done'] = 1
+                call s:open_document_link_target(l:target)
+                return
+            endif
+        endif
+    endfor
+
+    " Fallback: find link on the same line
+    for l:link in a:data['response']['result']
+        let l:range = l:link['range']
+        if l:range['start']['line'] <= l:cursor_line && l:cursor_line <= l:range['end']['line']
+            let l:target = get(l:link, 'target', '')
+            if !empty(l:target)
+                let a:ctx['done'] = 1
+                call s:open_document_link_target(l:target)
+                return
+            endif
+        endif
+    endfor
+
+    if a:ctx['counter'] == 0
+        call lsp#utils#error('No document link found at cursor position')
+    endif
+endfunction
+
+function! s:open_document_link_target(target) abort
+    if lsp#utils#is_file_uri(a:target)
+        let l:path = lsp#utils#uri_to_path(a:target)
+        execute 'edit' fnameescape(l:path)
+    else
+        if has('mac')
+            call system('open ' . shellescape(a:target) . ' &')
+        elseif has('win32') || has('win64')
+            call system('start "" ' . shellescape(a:target))
+        else
+            call system('xdg-open ' . shellescape(a:target) . ' &')
+        endif
+        echo 'Opened ' . a:target
+    endif
+endfunction
+
 function! lsp#ui#vim#code_action(opts) abort
     call lsp#ui#vim#code_action#do(extend({
         \   'sync': v:false,
