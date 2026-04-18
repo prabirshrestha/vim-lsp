@@ -135,6 +135,17 @@ function! s:show_floating_window(event, managed_user_data) abort
         return
     endif
 
+    " Preserve scroll position when the window already exists.
+    let l:topline = 1
+    if l:doc_win.is_visible()
+        let l:winid = l:doc_win.get_winid()
+        if has('nvim')
+            let l:topline = line('w0', l:winid)
+        else
+            let l:topline = get(popup_getpos(l:winid), 'firstline', 1)
+        endif
+    endif
+
     " Show popupmenu and apply markdown syntax.
     call l:doc_win.open({
     \     'row': l:pos[0] + 1,
@@ -142,7 +153,7 @@ function! s:show_floating_window(event, managed_user_data) abort
     \     'width': l:size.width,
     \     'height': l:size.height,
     \     'border': v:true,
-    \     'topline': 1,
+    \     'topline': l:topline,
     \ })
     call s:Window.do(l:doc_win.get_winid(), { -> s:Markdown.apply() })
 endfunction
@@ -189,6 +200,7 @@ function! s:get_doc_win() abort
     \ })
     call s:doc_win.set_var('&wrap', 1)
     call s:doc_win.set_var('&conceallevel', 2)
+    call s:doc_win.set_var('&concealcursor', 'nvic')
     noautocmd silent let l:bufnr = s:Buffer.create()
     call s:doc_win.set_bufnr(l:bufnr)
     call setbufvar(s:doc_win.get_bufnr(), '&buftype', 'nofile')
