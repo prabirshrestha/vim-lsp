@@ -1,4 +1,4 @@
-" https://github.com/prabirshrestha/callbag.vim#3c736ae697c3fc43e8ecd8e4d8150ce13eba4506
+" https://github.com/prabirshrestha/callbag.vim#d359c05c9885fe208ac863db8b16785f25e79453
 "    :CallbagEmbed path=autoload/lsp/callbag.vim namespace=lsp#callbag
 
 let s:undefined_token = '__callbag_undefined__'
