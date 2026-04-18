@@ -154,7 +154,7 @@ function! s:display_completions(timer, info) abort
 
     let s:completion['status'] = ''
 
-    if mode() is# 'i'
+    if mode() is# 'i' && !empty(s:completion['matches'])
         call complete(s:completion['startcol'], s:completion['matches'])
     endif
 endfunction
