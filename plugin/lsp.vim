@@ -14,7 +14,7 @@ let g:lsp_format_sync_timeout = get(g:, 'lsp_format_sync_timeout', -1)
 let g:lsp_max_buffer_size = get(g:, 'lsp_max_buffer_size', 5000000)
 
 let g:lsp_completion_documentation_enabled = get(g:, 'lsp_completion_documentation_enabled', 1)
-let g:lsp_completion_documentation_delay = get(g:, 'lsp_completion_documention_delay', 80)
+let g:lsp_completion_documentation_delay = get(g:, 'lsp_completion_documentation_delay', 80)
 
 let g:lsp_diagnostics_enabled = get(g:, 'lsp_diagnostics_enabled', 1)
 let g:lsp_diagnostics_echo_cursor = get(g:, 'lsp_diagnostics_echo_cursor', 0)
@@ -160,6 +160,8 @@ command! LspNextReference call lsp#internal#document_highlight#jump(+1)
 command! LspPreviousReference call lsp#internal#document_highlight#jump(-1)
 command! -nargs=? -bang -complete=customlist,lsp#server_complete_running LspStopServer call lsp#ui#vim#stop_server("<bang>", <f-args>)
 command! -nargs=? -complete=customlist,lsp#utils#empty_complete LspSignatureHelp call lsp#ui#vim#signature_help#get_signature_help_under_cursor()
+command! LspDocumentLink call lsp#ui#vim#document_link()
+command! LspDocumentLinkOpen call lsp#ui#vim#document_link_open()
 command! LspDocumentFold call lsp#ui#vim#folding#fold(0)
 command! LspDocumentFoldSync call lsp#ui#vim#folding#fold(1)
 command! -nargs=0 LspSemanticTokenTypes echo lsp#internal#semantic#get_token_types()
@@ -211,6 +213,8 @@ nnoremap <silent> <plug>(lsp-peek-implementation) :<c-u>call lsp#ui#vim#implemen
 nnoremap <silent> <plug>(lsp-status) :<c-u>echo lsp#get_server_status()<cr>
 nnoremap <silent> <plug>(lsp-next-reference) :<c-u>call lsp#internal#document_highlight#jump(+1)<cr>
 nnoremap <silent> <plug>(lsp-previous-reference) :<c-u>call lsp#internal#document_highlight#jump(-1)<cr>
+nnoremap <silent> <plug>(lsp-document-link) :<c-u>call lsp#ui#vim#document_link()<cr>
+nnoremap <silent> <plug>(lsp-document-link-open) :<c-u>call lsp#ui#vim#document_link_open()<cr>
 nnoremap <silent> <plug>(lsp-signature-help) :<c-u>call lsp#ui#vim#signature_help#get_signature_help_under_cursor()<cr>
 
 if has('gui_running')
