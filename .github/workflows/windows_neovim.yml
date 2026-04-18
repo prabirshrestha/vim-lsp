@@ -39,7 +39,7 @@ jobs:
     runs-on: ${{matrix.os}}
     continue-on-error: ${{matrix.allow_failure}}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Download neovim
         shell: PowerShell
         run: Invoke-WebRequest -Uri https://github.com/neovim/neovim/releases/download/${{matrix.neovim_version}}/nvim-${{matrix.neovim_arch}}.zip -OutFile neovim.zip
@@ -50,13 +50,13 @@ jobs:
         continue-on-error: ${{matrix.allow_failure}}
       - name: Cache gopls
         id: cache-gopls
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: bin/gopls
           key: ${{ runner.os }}-${{ env.VIM_LSP_GO_VERSION }}-${{ env.VIM_LSP_GOPLS_VERSION }}-${{ env.VIM_LSP_GOPLS_CACHE_VER }}-gopls
       - name: Install Go for gopls
         if: steps.cache-gopls.outputs.cache-hit != 'true'
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6
         with:
           go-version: ${{ env.VIM_LSP_GO_VERSION }}
       - name: Install gopls
@@ -70,7 +70,7 @@ jobs:
         env:
           GO111MODULE: 'on'
       - name: Download test runner
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           repository: thinca/vim-themis
           path: ./vim-themis

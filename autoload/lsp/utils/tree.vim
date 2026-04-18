@@ -181,7 +181,7 @@ function! s:tree_render(tree) abort
 endfunction
 
 " If {status} equals 'success', update all nodes of {tree} representing
-" an {obect} with given {tree_item} representation.
+" an {object} with given {tree_item} representation.
 function! s:node_update(tree, object, status, tree_item) abort
     if a:status !=? 'success'
         return

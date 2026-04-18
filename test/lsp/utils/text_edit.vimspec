@@ -626,7 +626,6 @@ Describe lsp#utils#text_edit
 
         It should apply edits to unloaded file
             let l:target = globpath(&runtimepath, 'test/lsp/utils/text_edit.vimspec')
-            call themis#log(l:target)
             call lsp#utils#text_edit#apply_text_edits(lsp#utils#path_to_uri(l:target), [{
             \   'range': {
             \     'start': {

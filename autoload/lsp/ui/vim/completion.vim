@@ -56,7 +56,7 @@ function! s:on_complete_done() abort
   let s:context['completion_item'] = l:managed_user_data['completion_item']
   let s:context['start_character'] = l:managed_user_data['start_character']
   let s:context['complete_word'] = l:managed_user_data['complete_word']
-  call feedkeys(printf("\<C-r>=<SNR>%d_on_complete_done_after()\<CR>", s:SID()), 'n')
+  call timer_start(0, {-> s:on_complete_done_after()})
 endfunction
 
 "
@@ -197,11 +197,7 @@ function! s:resolve_completion_item(completion_item, server_name) abort
   endif
 
   " check server capabilities.
-  let l:capabilities = lsp#get_server_capabilities(a:server_name)
-  if !has_key(l:capabilities, 'completionProvider')
-        \ || type(l:capabilities['completionProvider']) != v:t_dict
-        \ || !has_key(l:capabilities['completionProvider'], 'resolveProvider')
-        \ || !l:capabilities['completionProvider']['resolveProvider']
+  if !lsp#capabilities#has_completion_resolve_provider(a:server_name)
     return a:completion_item
   endif
 

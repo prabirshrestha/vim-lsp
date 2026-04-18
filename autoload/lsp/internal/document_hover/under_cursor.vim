@@ -38,6 +38,8 @@ function! lsp#internal#document_hover#under_cursor#do(options) abort
 
     if has_key(a:options, 'server')
         let l:servers = [a:options['server']]
+    elseif !empty(getbufvar(l:bufnr, 'lsp_hover_server', ''))
+        let l:servers = [getbufvar(l:bufnr, 'lsp_hover_server')]
     else
         let l:servers = filter(lsp#get_allowed_servers(), 'lsp#capabilities#has_hover_provider(v:val)')
     endif
@@ -118,6 +120,8 @@ function! s:show_preview_window(server_name, request, response) abort
     setlocal nobuflisted
     setlocal buftype=nofile
     setlocal noswapfile
+    setlocal noreadonly
+    setlocal modifiable
     %d _
     call setline(1, l:lines)
     call s:Window.do(win_getid(), {->s:Markdown.apply()})

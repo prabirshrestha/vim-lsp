@@ -14,7 +14,7 @@ let g:lsp_format_sync_timeout = get(g:, 'lsp_format_sync_timeout', -1)
 let g:lsp_max_buffer_size = get(g:, 'lsp_max_buffer_size', 5000000)
 
 let g:lsp_completion_documentation_enabled = get(g:, 'lsp_completion_documentation_enabled', 1)
-let g:lsp_completion_documentation_delay = get(g:, 'lsp_completion_documention_delay', 80)
+let g:lsp_completion_documentation_delay = get(g:, 'lsp_completion_documentation_delay', 80)
 
 let g:lsp_diagnostics_enabled = get(g:, 'lsp_diagnostics_enabled', 1)
 let g:lsp_diagnostics_echo_cursor = get(g:, 'lsp_diagnostics_echo_cursor', 0)
@@ -41,6 +41,7 @@ let g:lsp_diagnostics_virtual_text_prefix = get(g:, 'lsp_diagnostics_virtual_tex
 let g:lsp_diagnostics_virtual_text_align = get(g:, 'lsp_diagnostics_virtual_text_align', 'below')
 let g:lsp_diagnostics_virtual_text_wrap = get(g:, 'lsp_diagnostics_virtual_text_wrap', 'wrap')
 let g:lsp_diagnostics_virtual_text_padding_left = get(g:, 'lsp_diagnostics_virtual_text_padding_left', 1)
+let g:lsp_diagnostics_virtual_text_tidy = get(g:, 'lsp_diagnostics_virtual_text_tidy', 0)
 
 let g:lsp_document_code_action_signs_enabled = get(g:, 'lsp_document_code_action_signs_enabled', 1)
 let g:lsp_document_code_action_signs_delay = get(g:, 'lsp_document_code_action_signs_delay', 500)
@@ -63,6 +64,9 @@ let g:lsp_peek_alignment = get(g:, 'lsp_peek_alignment', 'center')
 let g:lsp_preview_max_width = get(g:, 'lsp_preview_max_width', -1)
 let g:lsp_preview_max_height = get(g:, 'lsp_preview_max_height', -1)
 let g:lsp_float_max_width = get(g:, 'lsp_float_max_width', -1)
+let g:lsp_popup_opacity = get(g:, 'lsp_popup_opacity', 100)
+let g:lsp_popup_highlight = get(g:, 'lsp_popup_highlight', '')
+let g:lsp_popup_borderchars = get(g:, 'lsp_popup_borderchars', [])
 let g:lsp_signature_help_enabled = get(g:, 'lsp_signature_help_enabled', 1)
 let g:lsp_signature_help_delay = get(g:, 'lsp_signature_help_delay', 200)
 let g:lsp_show_workspace_edits = get(g:, 'lsp_show_workspace_edits', 0)
@@ -130,7 +134,8 @@ command! -nargs=* LspNextDiagnostic call lsp#internal#diagnostics#movement#_next
 command! -nargs=* LspPreviousDiagnostic call lsp#internal#diagnostics#movement#_previous_diagnostics(<f-args>)
 command! LspReferences call lsp#ui#vim#references({})
 command! LspAddTreeReferences call lsp#ui#vim#add_tree_references()
-command! LspRename call lsp#ui#vim#rename()
+command! LspRename call lsp#ui#vim#rename(
+            \ extend({}, lsp#utils#args#_parse(<q-args>, {}, v:null)))
 command! LspTypeDefinition call lsp#ui#vim#type_definition(0, <q-mods>)
 command! LspTypeHierarchy call lsp#internal#type_hierarchy#show()
 command! LspPeekTypeDefinition call lsp#ui#vim#type_definition(1)
@@ -155,6 +160,8 @@ command! LspNextReference call lsp#internal#document_highlight#jump(+1)
 command! LspPreviousReference call lsp#internal#document_highlight#jump(-1)
 command! -nargs=? -bang -complete=customlist,lsp#server_complete_running LspStopServer call lsp#ui#vim#stop_server("<bang>", <f-args>)
 command! -nargs=? -complete=customlist,lsp#utils#empty_complete LspSignatureHelp call lsp#ui#vim#signature_help#get_signature_help_under_cursor()
+command! LspDocumentLink call lsp#ui#vim#document_link()
+command! LspDocumentLinkOpen call lsp#ui#vim#document_link_open()
 command! LspDocumentFold call lsp#ui#vim#folding#fold(0)
 command! LspDocumentFoldSync call lsp#ui#vim#folding#fold(1)
 command! -nargs=0 LspSemanticTokenTypes echo lsp#internal#semantic#get_token_types()
@@ -191,7 +198,7 @@ nnoremap <silent> <plug>(lsp-next-diagnostic-nowrap) :<c-u>call lsp#internal#dia
 nnoremap <silent> <plug>(lsp-previous-diagnostic) :<c-u>call lsp#internal#diagnostics#movement#_previous_diagnostics()<cr>
 nnoremap <silent> <plug>(lsp-previous-diagnostic-nowrap) :<c-u>call lsp#internal#diagnostics#movement#_previous_diagnostics("-wrap=0")<cr>
 nnoremap <silent> <plug>(lsp-references) :<c-u>call lsp#ui#vim#references({})<cr>
-nnoremap <silent> <plug>(lsp-rename) :<c-u>call lsp#ui#vim#rename()<cr>
+nnoremap <silent> <plug>(lsp-rename) :<c-u>call lsp#ui#vim#rename({})<cr>
 nnoremap <silent> <plug>(lsp-type-definition) :<c-u>call lsp#ui#vim#type_definition(0)<cr>
 nnoremap <silent> <plug>(lsp-type-hierarchy) :<c-u>call lsp#internal#type_hierarchy#show()<cr>
 nnoremap <silent> <plug>(lsp-peek-type-definition) :<c-u>call lsp#ui#vim#type_definition(1)<cr>
@@ -206,6 +213,8 @@ nnoremap <silent> <plug>(lsp-peek-implementation) :<c-u>call lsp#ui#vim#implemen
 nnoremap <silent> <plug>(lsp-status) :<c-u>echo lsp#get_server_status()<cr>
 nnoremap <silent> <plug>(lsp-next-reference) :<c-u>call lsp#internal#document_highlight#jump(+1)<cr>
 nnoremap <silent> <plug>(lsp-previous-reference) :<c-u>call lsp#internal#document_highlight#jump(-1)<cr>
+nnoremap <silent> <plug>(lsp-document-link) :<c-u>call lsp#ui#vim#document_link()<cr>
+nnoremap <silent> <plug>(lsp-document-link-open) :<c-u>call lsp#ui#vim#document_link_open()<cr>
 nnoremap <silent> <plug>(lsp-signature-help) :<c-u>call lsp#ui#vim#signature_help#get_signature_help_under_cursor()<cr>
 
 if has('gui_running')
