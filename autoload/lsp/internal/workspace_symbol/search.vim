@@ -8,7 +8,7 @@ function! lsp#internal#workspace_symbol#search#do(options) abort
     if has_key(a:options, 'server')
         let l:servers = [a:options['server']]
     else
-        let l:servers = filter(lsp#get_allowed_servers(), 'lsp#capabilities#has_document_symbol_provider(v:val)')
+        let l:servers = filter(lsp#get_allowed_servers(), 'lsp#capabilities#has_workspace_symbol_provider(v:val)')
     endif
 
     if len(l:servers) == 0
@@ -71,14 +71,45 @@ endfunction
 function! s:update_ui_items(x) abort
     let l:items = []
     for l:i in a:x
-        let l:items += lsp#ui#vim#utils#symbols_to_loc_list(l:i['server'], l:i)
+        let l:items += s:workspace_symbols_to_ui_list(l:i['server'], l:i)
     endfor
     call lsp#internal#ui#quickpick#items(l:items)
 endfunction
 
+function! s:workspace_symbols_to_ui_list(server, result) abort
+    if !has_key(a:result['response'], 'result')
+        return []
+    endif
+
+    let l:list = []
+
+    let l:entries = type(a:result['response']['result']) == type({}) ? [a:result['response']['result']] : a:result['response']['result']
+
+    if !empty(l:entries) " some servers also return null so check to make sure it isn't empty
+        for l:symbol in a:result['response']['result']
+            let l:location = l:symbol['location']
+            call add(l:list, {
+              \ 'uri': l:location['uri'],
+              \ 'text': lsp#ui#vim#utils#_get_symbol_text_from_kind(a:server, l:symbol['kind']) . ' : ' . (g:lsp_document_symbol_detail ? l:symbol['detail'] : l:symbol['name']),
+              \ 'range': l:location['range']
+              \ })
+        endfor
+    endif
+
+    return l:list
+endfunction
+
+
 function! s:on_accept(data, name) abort
     call lsp#internal#ui#quickpick#close()
-    call lsp#utils#location#_open_vim_list_item(a:data['items'][0], '')
+    let l:data = a:data['items'][0]
+    let l:path = lsp#utils#uri_to_path(l:data['uri'])
+    let [l:line, l:col] = lsp#utils#position#lsp_to_vim(l:path, l:data['range']['start'])
+    call lsp#utils#location#_open_vim_list_item({
+      \ 'filename': l:path,
+      \ 'lnum': l:line,
+      \ 'col': l:col,
+      \ }, '')
 endfunction
 
 function! s:on_close(...) abort

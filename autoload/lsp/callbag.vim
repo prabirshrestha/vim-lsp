@@ -1,4 +1,4 @@
-" https://github.com/prabirshrestha/callbag.vim#3c736ae697c3fc43e8ecd8e4d8150ce13eba4506
+" https://github.com/prabirshrestha/callbag.vim#d359c05c9885fe208ac863db8b16785f25e79453
 "    :CallbagEmbed path=autoload/lsp/callbag.vim namespace=lsp#callbag
 
 let s:undefined_token = '__callbag_undefined__'
@@ -276,10 +276,10 @@ endfunction
 
 function! s:tapFactory(data, source) abort
     let a:data['source'] = a:source
-    return function('s:tapSouceFactory', [a:data])
+    return function('s:tapSourceFactory', [a:data])
 endfunction
 
-function! s:tapSouceFactory(data, start, sink) abort
+function! s:tapSourceFactory(data, start, sink) abort
     if a:start != 0 | return | endif
     let a:data['sink'] = a:sink
     call a:data['source'](0, function('s:tapSourceCallback', [a:data]))
@@ -413,10 +413,10 @@ function! s:skipMaxSource(data, start, sink) abort
     if a:start != 0 | return | endif
     let a:data['sink'] = a:sink
     let a:data['skipped'] = 0
-    call a:data['source'](0, function('s:skipSouceCallback', [a:data]))
+    call a:data['source'](0, function('s:skipSourceCallback', [a:data]))
 endfunction
 
-function! s:skipSouceCallback(data, t, d) abort
+function! s:skipSourceCallback(data, t, d) abort
     if a:t == 0
         let a:data['talkback'] = a:d
         call a:data['sink'](a:t, a:d)
@@ -1050,7 +1050,7 @@ function! s:takeUntilFactory(data, start, sink) abort
     let a:data['sink'] = a:sink
     let a:data['inited'] = 1
     let a:data['sourceTalkback'] = 0
-    let a:data['notiferTalkback'] = 0
+    let a:data['notifierTalkback'] = 0
     let a:data['done'] = s:takeUntilUniqueToken
     call a:data['source'](0, function('s:takeUntilSourceCallback', [a:data]))
 endfunction
@@ -1499,7 +1499,7 @@ endfunction
 "   \ 'env': {},
 "   \ })
 "   call s:Stdin(1, 'hi')
-"   call s:Stdin(2, lsp#callbag#undefined()) " requried to close stdin
+"   call s:Stdin(2, lsp#callbag#undefined()) " required to close stdin
 function! lsp#callbag#spawn(cmd, ...) abort
     let l:data = { 'cmd': a:cmd, 'opt': a:0 > 0 ? copy(a:000[0]) : {} }
     return lsp#callbag#create(function('s:spawnCreate', [l:data]))

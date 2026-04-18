@@ -33,7 +33,7 @@ endfunction
 
 function! lsp#test#closeproject(name) abort
     if lsp#test#hasproject(a:name)
-        silent! call lsp#stop_sserver(a:name)
+        silent! call lsp#stop_server(a:name)
     endif
 endfunction
 
