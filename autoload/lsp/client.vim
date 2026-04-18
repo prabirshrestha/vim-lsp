@@ -246,7 +246,6 @@ function! s:lsp_send(id, opts, type) abort " opts = { id?, method?, result?, par
 
     let l:json = json_encode(l:request)
     let l:payload = 'Content-Length: ' . len(l:json) . "\r\n\r\n" . l:json
-
     call lsp#utils#job#send(a:id, l:payload)
 
     if (a:type == s:send_type_request)

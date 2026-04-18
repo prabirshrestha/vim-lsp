@@ -38,6 +38,8 @@ function! lsp#internal#document_hover#under_cursor#do(options) abort
 
     if has_key(a:options, 'server')
         let l:servers = [a:options['server']]
+    elseif !empty(getbufvar(l:bufnr, 'lsp_hover_server', ''))
+        let l:servers = [getbufvar(l:bufnr, 'lsp_hover_server')]
     else
         let l:servers = filter(lsp#get_allowed_servers(), 'lsp#capabilities#has_hover_provider(v:val)')
     endif

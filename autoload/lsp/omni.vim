@@ -154,7 +154,7 @@ function! s:display_completions(timer, info) abort
 
     let s:completion['status'] = ''
 
-    if mode() is# 'i'
+    if mode() is# 'i' && !empty(s:completion['matches'])
         call complete(s:completion['startcol'], s:completion['matches'])
     endif
 endfunction
@@ -276,7 +276,7 @@ endfunction
 "   server: {}, " needs to be server_info and not server_name
 "   position: lsp#get_position(),
 "   response: {}, " needs to be the entire lsp response. errors need to be
-"   handled before calling the fuction
+"   handled before calling the function
 " }
 "
 " * The returned` startcol` may be the same as the cursor position, in which case you need to decide which one to use.

@@ -15,6 +15,21 @@ function! lsp#internal#diagnostics#float#_enable() abort
     if s:enabled | return | endif
     let s:enabled = 1
 
+    " CursorMoved - Movement in normal or insert mode is expected to hide the
+    " float and, potentially, show it later after a delay of
+    " 'g:lsp_diagnostics_float_delay'.  So we always call 'hide_float()' for
+    " this event, and may call 'show_float()' later.
+    "
+    " CursorHold - If the cursor did not move long enough in the normal mode, we
+    " want to hide the float.  So we want to call 'hide_float()'.  Because of
+    " the 'curpos' check, 'show_float()' is not going to be called, but we could
+    " be more explicit and just not call it at all.
+    "
+    " InsertEnter - If insert mode is entered and we do not show floats in the
+    " insert mode (g:lsp_diagnostics_float_insert_mode_enabled) we want to hide
+    " the cursor.  Similar to |CursorHold| we do not show the float due to the
+    " "mode() is# 'n'" check, but it seems more like an accident than the
+    " intended action.
     let s:Dispose = lsp#callbag#pipe(
         \ lsp#callbag#merge(
         \   lsp#callbag#fromEvent(['CursorMoved']),

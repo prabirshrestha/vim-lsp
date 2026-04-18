@@ -158,6 +158,19 @@ function! lsp#ui#vim#output#floatingpreview(data) abort
             let l:options['maxheight'] = g:lsp_preview_max_height
         endif
 
+        let l:opacity = get(g:, 'lsp_popup_opacity', 100)
+        if l:opacity < 100
+            let l:options['opacity'] = l:opacity
+        endif
+        let l:highlight = get(g:, 'lsp_popup_highlight', '')
+        if !empty(l:highlight)
+            let l:options['highlight'] = l:highlight
+        endif
+        let l:borderchars = get(g:, 'lsp_popup_borderchars', [])
+        if !empty(l:borderchars)
+            let l:options['borderchars'] = l:borderchars
+        endif
+
         let s:winid = popup_atcursor('...', l:options)
     endif
     return s:winid
@@ -444,7 +457,8 @@ function! lsp#ui#vim#output#append(data, lines, syntax_lines) abort
         let l:new_lines = split(s:escape_string_for_display(a:data.value), '\n')
 
         let l:i = 1
-        while l:i <= len(l:new_lines)
+        let l:newlineslen = len(l:new_lines)
+        while l:i <= l:newlineslen
             call add(a:syntax_lines, { 'line': len(a:lines) + l:i, 'language': a:data.language })
             let l:i += 1
         endwhile

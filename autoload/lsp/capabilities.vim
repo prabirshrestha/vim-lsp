@@ -200,3 +200,7 @@ endfunction
 function! lsp#capabilities#has_inlay_hint_provider(server_name) abort
     return s:has_provider(a:server_name, 'inlayHintProvider')
 endfunction
+
+function! lsp#capabilities#has_document_link_provider(server_name) abort
+    return s:has_provider(a:server_name, 'documentLinkProvider')
+endfunction
