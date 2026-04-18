@@ -597,6 +597,9 @@ function! lsp#default_get_supported_capabilities(server_info) abort
     \       'documentHighlight': {
     \           'dynamicRegistration': v:false,
     \       },
+    \       'documentLink': {
+    \           'dynamicRegistration': v:false,
+    \       },
     \       'documentSymbol': {
     \           'dynamicRegistration': v:false,
     \           'symbolKind': {
