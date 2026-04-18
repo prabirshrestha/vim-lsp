@@ -253,15 +253,14 @@ function! s:register_events() abort
         autocmd BufNewFile * call s:on_text_document_did_open()
         autocmd BufReadPost * call s:on_text_document_did_open()
         autocmd BufWritePost * call s:on_text_document_did_save()
-        autocmd BufWinLeave * call s:on_text_document_did_close()
-        autocmd BufWipeout * call s:on_buf_wipeout(expand('<afile>'))
+        autocmd BufDelete,BufWipeout * call s:on_text_document_did_close(str2nr(expand('<abuf>')))
         autocmd InsertLeave * call s:on_text_document_did_change()
         autocmd TextChanged * call s:on_text_document_did_change()
         if exists('##TextChangedP')
             autocmd TextChangedP * call s:on_text_document_did_change()
         endif
         if g:lsp_untitled_buffer_enabled
-            autocmd FileType * call s:on_filetype_changed(bufnr(expand('<afile>')))
+            autocmd FileType * call s:on_filetype_changed(str2nr(expand('<abuf>')))
         endif
     augroup END
 
@@ -280,9 +279,15 @@ function! s:unregister_events() abort
 endfunction
 
 function! s:on_filetype_changed(buf) abort
-  call s:on_buf_wipeout(a:buf)
+  if a:buf <= 0
+    return
+  endif
+  if !empty(bufname(a:buf))
+    return
+  endif
+  call s:on_buf_wipeout(a:buf, v:false)
   " TODO: stop unused servers
-  call s:on_text_document_did_open()
+  call s:on_text_document_did_open(a:buf)
 endfunction
 
 function! s:on_text_document_did_open(...) abort
@@ -366,10 +371,42 @@ function! s:call_did_save(buf, server_name, result, cb) abort
     call a:cb(l:msg)
 endfunction
 
-function! s:on_text_document_did_close() abort
-    let l:buf = bufnr('%')
+function! s:on_buf_wipeout(buf, send_did_close) abort
+    if a:buf <= 0
+        return
+    endif
+
+    let l:path = lsp#utils#get_buffer_uri(a:buf)
+    if !empty(l:path)
+        for [l:server_name, l:server] in items(s:servers)
+            if !has_key(l:server, 'buffers') || !has_key(l:server['buffers'], l:path)
+                continue
+            endif
+
+            if a:send_did_close && get(l:server, 'lsp_id', 0) > 0
+                call s:send_notification(l:server_name, {
+                    \ 'method': 'textDocument/didClose',
+                    \ 'params': {
+                    \   'textDocument': { 'uri': l:path },
+                    \ }
+                    \ })
+            endif
+
+            call remove(l:server['buffers'], l:path)
+        endfor
+    endif
+
+    if has_key(s:file_content, a:buf)
+        call remove(s:file_content, a:buf)
+    endif
+    call lsp#internal#listener#stop(a:buf)
+endfunction
+
+function! s:on_text_document_did_close(...) abort
+    let l:buf = a:0 > 0 ? a:1 : bufnr('%')
     if getbufvar(l:buf, '&buftype') ==# 'terminal' | return | endif
     call lsp#log('s:on_text_document_did_close()', l:buf)
+    call s:on_buf_wipeout(l:buf, v:true)
 endfunction
 
 function! s:get_last_file_content(buf, server_name) abort
@@ -385,12 +422,6 @@ function! s:update_file_content(buf, server_name, new) abort
     endif
     call lsp#log('s:update_file_content()', a:buf)
     let s:file_content[a:buf][a:server_name] = a:new
-endfunction
-
-function! s:on_buf_wipeout(buf) abort
-    if has_key(s:file_content, a:buf)
-        call remove(s:file_content, a:buf)
-    endif
 endfunction
 
 function! lsp#ensure_flush_all(buf, server_names) abort
@@ -548,7 +579,7 @@ function! lsp#default_get_supported_capabilities(server_info) abort
     \              'insertReplaceSupport': v:true,
     \              'snippetSupport': v:false,
     \              'resolveSupport': {
-    \                  'properties': ['additionalTextEdits']
+    \                  'properties': ['additionalTextEdits', 'detail']
     \              }
     \           },
     \           'completionItemKind': {
@@ -752,10 +783,20 @@ function! s:text_changes(buf, server_name) abort
 
     " When syncKind is Incremental and previous content is saved.
     if l:sync_kind == 2 && has_key(s:file_content, a:buf) && has_key(s:file_content[a:buf], a:server_name)
-        " compute diff
+        " Use listener_add if available (O(changed lines) instead of O(total lines))
+        if lsp#internal#listener#is_enabled()
+            let l:listener_changes = lsp#internal#listener#flush(a:buf)
+            if !empty(l:listener_changes)
+                let l:new_content = lsp#internal#listener#get_lines_cached(a:buf)
+                call s:update_file_content(a:buf, a:server_name, l:new_content)
+            endif
+            return l:listener_changes
+        endif
+
+        " Fallback: compute diff (O(total lines))
         let l:old_content = s:get_last_file_content(a:buf, a:server_name)
-        let l:new_content = lsp#utils#buffer#_get_lines(a:buf)
-        let l:changes = lsp#utils#diff#compute(l:old_content, l:new_content)
+        let l:new_content = lsp#internal#listener#get_lines_cached(a:buf)
+        let l:changes = lsp#internal#listener#get_diff_cached(a:buf, l:old_content)
         if empty(l:changes.text) && l:changes.rangeLength ==# 0
             return []
         endif
@@ -763,7 +804,7 @@ function! s:text_changes(buf, server_name) abort
         return [l:changes]
     endif
 
-    let l:new_content = lsp#utils#buffer#_get_lines(a:buf)
+    let l:new_content = lsp#internal#listener#get_lines_cached(a:buf)
     let l:changes = {'text': join(l:new_content, "\n")}
     call s:update_file_content(a:buf, a:server_name, l:new_content)
     return [l:changes]
@@ -791,6 +832,15 @@ function! s:ensure_changed(buf, server_name, cb) abort
         return
     endif
 
+    let l:content_changes = s:text_changes(a:buf, a:server_name)
+    if type(l:content_changes) == type([]) && empty(l:content_changes)
+        let l:buffer_info['changed_tick'] = l:changed_tick
+        let l:msg = s:new_rpc_success('not dirty', { 'server_name': a:server_name, 'path': l:path })
+        call lsp#log_verbose(l:msg)
+        call a:cb(l:msg)
+        return
+    endif
+
     let l:buffer_info['changed_tick'] = l:changed_tick
     let l:buffer_info['version'] = l:buffer_info['version'] + 1
 
@@ -798,7 +848,7 @@ function! s:ensure_changed(buf, server_name, cb) abort
         \ 'method': 'textDocument/didChange',
         \ 'params': {
         \   'textDocument': s:get_versioned_text_document_identifier(a:buf, l:buffer_info),
-        \   'contentChanges': s:text_changes(a:buf, a:server_name),
+        \   'contentChanges': l:content_changes,
         \ }
         \ })
     call lsp#ui#vim#folding#send_request(a:server_name, a:buf, 0)
@@ -833,6 +883,7 @@ function! s:ensure_open(buf, server_name, cb) abort
     endif
 
     call s:update_file_content(a:buf, a:server_name, lsp#utils#buffer#_get_lines(a:buf))
+    call lsp#internal#listener#start(a:buf)
 
     let l:buffer_info = { 'changed_tick': getbufvar(a:buf, 'changedtick'), 'version': 1, 'uri': l:path }
     let l:buffers[l:path] = l:buffer_info
@@ -1138,6 +1189,20 @@ function! lsp#request(server_name, request) abort
     return lsp#callbag#create(function('s:request_create', [l:ctx]))
 endfunction
 
+function! lsp#request_with_context(server_name, request) abort
+    let l:ctx = {
+        \ 'server_name': a:server_name,
+        \ 'request': copy(a:request),
+        \ 'request_id': 0,
+        \ 'done': 0,
+        \ 'cancelled': 0,
+        \ }
+    return {
+        \ 'callbag': lsp#callbag#create(function('s:request_create', [l:ctx])),
+        \ 'ctx': l:ctx,
+    \}
+endfunction
+
 function! s:request_create(ctx, next, error, complete) abort
     let a:ctx['next'] = a:next
     let a:ctx['error'] = a:error
@@ -1185,6 +1250,10 @@ function! s:request_cancel(ctx) abort
         \   'complete':{->s:send_request_dispose(a:ctx)},
         \ })
         \)
+endfunction
+
+function! lsp#cancel_request(ctx) abort
+    call s:request_cancel(a:ctx)
 endfunction
 
 function! lsp#send_request(server_name, request) abort

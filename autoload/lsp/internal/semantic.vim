@@ -1,6 +1,6 @@
 let s:use_vim_textprops = lsp#utils#_has_textprops() && !has('nvim')
 let s:use_nvim_highlight = lsp#utils#_has_nvim_buf_highlight()
-let s:textprop_cache = 'vim-lsp-semantic-cache'
+let s:semantic_textprop_types = {}
 
 if s:use_nvim_highlight
     let s:namespace_id = nvim_create_namespace('vim-lsp-semantic')
@@ -213,9 +213,13 @@ endfunction
 function! s:handle_semantic_tokens_response(server, buf, result) abort
     let l:highlights = {}
     let l:legend = lsp#internal#semantic#get_legend(a:server)
+    let l:line_cache = {}
     for l:token in s:decode_tokens(a:result['data'])
-        let [l:key, l:value] = s:add_highlight(a:server, l:legend, a:buf, l:token)
-        let l:highlights[l:key] = get(l:highlights, l:key, []) + l:value
+        let [l:key, l:value] = s:add_highlight(a:server, l:legend, a:buf, l:token, l:line_cache)
+        if !has_key(l:highlights, l:key)
+            let l:highlights[l:key] = []
+        endif
+        call add(l:highlights[l:key], l:value)
     endfor
     call s:apply_highlights(a:server, a:buf, l:highlights)
 
@@ -244,9 +248,13 @@ function! s:handle_semantic_tokens_delta_response(server, buf, result) abort
 
     let l:highlights = {}
     let l:legend = lsp#internal#semantic#get_legend(a:server)
+    let l:line_cache = {}
     for l:token in s:decode_tokens(l:localdata)
-        let [l:key, l:value] = s:add_highlight(a:server, l:legend, a:buf, l:token)
-        let l:highlights[l:key] = get(l:highlights, l:key, []) + l:value
+        let [l:key, l:value] = s:add_highlight(a:server, l:legend, a:buf, l:token, l:line_cache)
+        if !has_key(l:highlights, l:key)
+            let l:highlights[l:key] = []
+        endif
+        call add(l:highlights[l:key], l:value)
     endfor
     call s:apply_highlights(a:server, a:buf, l:highlights)
 endfunction
@@ -280,11 +288,7 @@ endfunction
 
 function! s:clear_highlights(server, buf) abort
     if s:use_vim_textprops
-        let l:BeginsWith = {str, prefix -> str[0:len(prefix) - 1] ==# prefix}
-        let l:IsSemanticTextprop = {_, textprop -> l:BeginsWith(textprop, s:textprop_type_prefix)}
-        let l:textprop_types = prop_type_list()
-        call filter(l:textprop_types, l:IsSemanticTextprop)
-        for l:textprop_type in l:textprop_types
+        for l:textprop_type in keys(s:semantic_textprop_types)
             silent! call prop_remove({'type': l:textprop_type, 'bufnr': a:buf, 'all': v:true})
         endfor
     elseif s:use_nvim_highlight
@@ -292,19 +296,27 @@ function! s:clear_highlights(server, buf) abort
     endif
 endfunction
 
-function! s:add_highlight(server, legend, buf, token) abort
-    let l:startpos = lsp#utils#position#lsp_to_vim(a:buf, a:token['pos'])
-    let l:endpos = a:token['pos']
-    let l:endpos['character'] = l:endpos['character'] + a:token['length']
-    let l:endpos = lsp#utils#position#lsp_to_vim(a:buf, l:endpos)
+function! s:to_col_cached(buf, lnum, char, line_cache) abort
+    if !has_key(a:line_cache, a:lnum)
+        let l:lines = getbufline(a:buf, a:lnum)
+        let a:line_cache[a:lnum] = empty(l:lines) ? '' : l:lines[0]
+    endif
+    return strlen(strcharpart(a:line_cache[a:lnum], 0, a:char)) + 1
+endfunction
+
+function! s:add_highlight(server, legend, buf, token, line_cache) abort
+    let l:lnum = a:token['pos']['line'] + 1
+    let l:start_char = a:token['pos']['character']
+    let l:end_char = l:start_char + a:token['length']
+    let l:startcol = s:to_col_cached(a:buf, l:lnum, l:start_char, a:line_cache)
+    let l:endcol = s:to_col_cached(a:buf, l:lnum, l:end_char, a:line_cache)
 
     if s:use_vim_textprops
         let l:textprop_name = s:get_textprop_type(a:server, a:legend, a:token['token_idx'], a:token['token_modifiers'])
-         return [l:textprop_name, [[l:startpos[0], l:startpos[1], l:endpos[0], l:endpos[1]]]]
+        return [l:textprop_name, [l:lnum, l:startcol, l:lnum, l:endcol]]
     elseif s:use_nvim_highlight
-        let l:char = a:token['pos']['character']
         let l:hl_name = s:get_hl_group(a:server, a:legend, a:token['token_idx'], a:token['token_modifiers'])
-        return [l:hl_name, [[l:startpos[0] - 1, l:startpos[1] - 1, l:endpos[1] - 1]]]
+        return [l:hl_name, [l:lnum - 1, l:startcol - 1, l:endcol - 1]]
     endif
 endfunction
 
@@ -398,12 +410,15 @@ function! s:get_textprop_type(server, legend, token_idx, token_modifiers) abort
     let l:textprop_type = s:textprop_type_prefix . a:server . '-' . a:token_idx . '-' . a:token_modifiers
 
     " create the textprop type if it does not already exist
-    if prop_type_get(l:textprop_type) ==# {}
+    if !has_key(s:semantic_textprop_types, l:textprop_type)
         let l:hl_group = s:get_hl_group(a:server, a:legend, a:token_idx, a:token_modifiers)
-        silent! call prop_type_add(l:textprop_type, {
-                                \ 'highlight': l:hl_group,
-                                \ 'combine': v:true,
-                                \ 'priority': lsp#internal#textprop#priority('semantic')})
+        if prop_type_get(l:textprop_type) ==# {}
+            silent! call prop_type_add(l:textprop_type, {
+                                    \ 'highlight': l:hl_group,
+                                    \ 'combine': v:true,
+                                    \ 'priority': lsp#internal#textprop#priority('semantic')})
+        endif
+        let s:semantic_textprop_types[l:textprop_type] = 1
     endif
 
     return l:textprop_type

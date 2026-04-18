@@ -1,4 +1,4 @@
-" https://github.com/prabirshrestha/callbag.vim#82f96a7d97342fbf0286e6578b65a60f2bc1ce33
+" https://github.com/prabirshrestha/callbag.vim#3c736ae697c3fc43e8ecd8e4d8150ce13eba4506
 "    :CallbagEmbed path=autoload/lsp/callbag.vim namespace=lsp#callbag
 
 let s:undefined_token = '__callbag_undefined__'
@@ -109,52 +109,80 @@ endfunction
 " }}}
 
 " create() {{{
+" create {{{
+" Create a source similar to rxjs observable creation.
+" https://www.learnrxjs.io/learn-rxjs/operators/creation/create
+" @param fn - optional source creator function (producer)
+" @example
+"   " emits next value message
+"   lsp#callbag#create({next, error, complete->next('value')})
+"   " emits error message
+"   lsp#callbag#create({next, error, complete->error('error')})
+"   " emits completion message
+"   lsp#callbag#create({next, error, complete->complete()})
+"
+"   " when a producer returns a function, it is treated as a cleanup function
+"   function! s:producer_with_cleanup_logic(next, error, complete) abort
+"       let l:timer = timer_start(1000, {->a:next('value')}, {'repeat': -1})
+"       return {-> timer_stop(l:timer)}
+"   endfunction
+"   lsp#callbag#create(function('s:producer_with_cleanup_logic'))
+"
+"   " When a noop producer is passed, it never emits the completion message.
+"   " This behaves similar to rxjs never().
+"   function! s:noop() abort
+"   endfunction
+"   lsp#callbag#create(function('s:noop'))
+"
+"   " When a producer is not passed or is not a function, it emits no value and immediately emits the completion message.
+"   " This behaves similar to rxjs empty().
+"   lsp#callbag#create()
 function! lsp#callbag#create(...) abort
-    let l:data = {}
+    let l:ctx = {}
     if a:0 > 0
-        let l:data['prod'] = a:1
+        let l:ctx['prod'] = a:1
     endif
-    return function('s:createProd', [l:data])
+    return function('s:createFn', [l:ctx])
 endfunction
 
-function! s:createProd(data, start, sink) abort
+function! s:createFn(ctx, start, sink) abort
     if a:start != 0 | return | endif
-    let a:data['sink'] = a:sink
-    if !has_key(a:data, 'prod') || type(a:data['prod']) != type(function('s:noop'))
+    let a:ctx['sink'] = a:sink
+    if !has_key(a:ctx, 'prod') || type(a:ctx['prod']) != type(function('s:noop'))
         call a:sink(0, function('s:noop'))
         call a:sink(2, lsp#callbag#undefined())
         return
     endif
-    let a:data['end'] = 0
-    call a:sink(0, function('s:createSinkCallback', [a:data]))
-    if a:data['end'] | return | endif
-    let a:data['clean'] = a:data['prod'](function('s:createNext', [a:data]), function('s:createError', [a:data]), function('s:createComplete', [a:data]))
+    let a:ctx['end'] = 0
+    call a:sink(0, function('s:createSinkFn', [a:ctx]))
+    if a:ctx['end'] | return | endif
+    let a:ctx['clean'] = a:ctx['prod'](function('s:createNext', [a:ctx]), function('s:createError', [a:ctx]), function('s:createComplete', [a:ctx]))
 endfunction
 
-function! s:createSinkCallback(data, t, ...) abort
-    if !a:data['end']
-        let a:data['end'] = (a:t == 2)
-        if a:data['end'] && has_key(a:data, 'clean') && type(a:data['clean']) == type(function('s:noop'))
-            call a:data['clean']()
+function! s:createSinkFn(ctx, t, ...) abort
+    if !a:ctx['end']
+        let a:ctx['end'] = (a:t == 2)
+        if a:ctx['end'] && has_key(a:ctx, 'clean') && type(a:ctx['clean']) == type(function('s:noop'))
+            call a:ctx['clean']()
         endif
     endif
 endfunction
 
-function! s:createNext(data, d) abort
-    if !a:data['end'] | call a:data['sink'](1, a:d) | endif
+function! s:createNext(ctx, d) abort
+    if !a:ctx['end'] | call a:ctx['sink'](1, a:d) | endif
 endfunction
 
-function! s:createError(data, e) abort
-    if !a:data['end'] && !lsp#callbag#isUndefined(a:e)
-        let a:data['end'] = 1
-        call a:data['sink'](2, a:e)
+function! s:createError(ctx, e) abort
+    if !a:ctx['end'] && !lsp#callbag#isUndefined(a:e)
+        let a:ctx['end'] = 1
+        call a:ctx['sink'](2, a:e)
     endif
 endfunction
 
-function! s:createComplete(data) abort
-    if !a:data['end']
-        let a:data['end'] = 1
-        call a:data['sink'](2, lsp#callbag#undefined())
+function! s:createComplete(ctx) abort
+    if !a:ctx['end']
+        let a:ctx['end'] = 1
+        call a:ctx['sink'](2, lsp#callbag#undefined())
     endif
 endfunction
 " }}}
@@ -683,13 +711,20 @@ function! s:toListWait(data, ...) abort
         let l:opt['timedout'] = 0
         let l:opt['sleep'] = get(l:opt, 'sleep', 1)
         let l:opt['timeout'] = get(l:opt, 'timeout', -1)
+        let l:opt['on_interrupt'] = get(l:opt, 'on_interrupt', v:null)
 
         if l:opt['timeout'] > -1
             let l:opt['timer'] = timer_start(l:opt['timeout'], function('s:toListTimeoutCallback', [l:opt]))
         endif
 
         while !a:data['done'] && !l:opt['timedout']
-            exec 'sleep ' . l:opt['sleep'] . 'm'
+            try
+                exec 'sleep ' . l:opt['sleep'] . 'm'
+            catch /^Vim:Interrupt$/
+                if l:opt['on_interrupt'] isnot v:null
+                    call l:opt['on_interrupt'](l:opt)
+                endif
+            endtry
         endwhile
 
         if has_key(l:opt, 'timer')
@@ -1356,8 +1391,7 @@ function! s:shareTalkbackCallback(data, sink, t, d) abort
     if a:t == 2
         let l:i = 0
         let l:found = 0
-        let l:sinkslen = len(a:data['sinks'])
-        while l:i < l:sinkslen
+        while l:i < len(a:data['sinks'])
             if a:data['sinks'][l:i] == a:sink
                 let l:found = 1
                 break
