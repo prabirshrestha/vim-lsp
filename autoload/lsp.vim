@@ -579,7 +579,7 @@ function! lsp#default_get_supported_capabilities(server_info) abort
     \              'insertReplaceSupport': v:true,
     \              'snippetSupport': v:false,
     \              'resolveSupport': {
-    \                  'properties': ['additionalTextEdits']
+    \                  'properties': ['additionalTextEdits', 'detail']
     \              }
     \           },
     \           'completionItemKind': {
