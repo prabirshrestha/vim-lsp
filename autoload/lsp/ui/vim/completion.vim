@@ -177,7 +177,7 @@ function! s:is_expandable(done_line, done_position, complete_position, completio
     let l:text_edit_after = strcharpart(l:completed_line, l:range['end']['character'], strchars(l:completed_line) - l:range['end']['character'])
     return a:done_line !=# l:text_edit_before . s:trim_unmeaning_tabstop(a:completion_item['textEdit']['newText']) . l:text_edit_after
   endif
-  return s:get_completion_text(a:completion_item) !=# s:trim_unmeaning_tabstop(a:complete_word)
+  return s:get_completion_text(a:completion_item) ==# s:trim_unmeaning_tabstop(a:complete_word)
 endfunction
 
 "
