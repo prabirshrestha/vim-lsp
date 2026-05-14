@@ -189,7 +189,16 @@ You can get detailed status on your servers using `:CheckHealth` with a plugin o
 if !has('nvim') | Plug 'rhysd/vim-healthcheck' | endif
 CheckHealth
 ```
+## Toggle location and quickfix behaviour
 
+The default behaviour is to open the location or quickfix list automatically
+when triggering a command.
+
+You may use the the configuration parameters below to prevent this from happening:
+```vim
+let g:lsp_auto_open_loclist = 0
+let g:lsp_auto_open_qflist = 0
+```
 ## Tests
 
 [vim-themis](https://github.com/thinca/vim-themis) is used for testing. To run

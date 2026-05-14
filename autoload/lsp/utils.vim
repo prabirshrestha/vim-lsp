@@ -195,6 +195,20 @@ function! lsp#utils#get_buffer_uri(...) abort
     return lsp#utils#path_to_uri(fnamemodify(l:name, ':p'))
 endfunction
 
+function! lsp#utils#maybe_execute_list_command(kind, cmd) abort
+  if a:kind ==# 'location'
+    if !get(g:, 'lsp_auto_open_loclist', 1)
+      return
+    endif
+  elseif a:kind ==# 'quickfix'
+    if !get(g:, 'lsp_auto_open_qflist', 1)
+      return
+    endif
+  endif
+
+  execute a:cmd
+endfunction
+
 " Find a nearest to a `path` parent directory `directoryname` by traversing the filesystem upwards
 function! lsp#utils#find_nearest_parent_directory(path, directoryname) abort
     let l:relative_path = finddir(a:directoryname, fnameescape(a:path) . ';')
