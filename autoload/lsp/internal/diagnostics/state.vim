@@ -19,6 +19,7 @@
 " buffer state is removed when server exits.
 " TODO: reset buffer state when server initializes. ignoring for now for perf.
 let s:diagnostics_state = {}
+let s:diagnostic_result_ids = {}
 
 " internal state for whether it is enabled or not to avoid multiple subscriptions
 let s:enabled = 0
@@ -73,6 +74,7 @@ endfunction
 
 function! lsp#internal#diagnostics#state#_reset() abort
     let s:diagnostics_state = {}
+    let s:diagnostic_result_ids = {}
     let s:diagnostics_disabled_buffers = {}
 endfunction
 
@@ -105,12 +107,62 @@ function! s:on_text_documentation_publish_diagnostics(server, response) abort
     call s:notify_diagnostics_update(a:server, l:normalized_uri)
 endfunction
 
+function! lsp#internal#diagnostics#state#_get_previous_result_id(uri, server, identifier) abort
+    let l:normalized_uri = lsp#utils#normalize_uri(a:uri)
+    let l:server_result_ids = get(get(s:diagnostic_result_ids, l:normalized_uri, {}), a:server, {})
+    return get(l:server_result_ids, a:identifier, '')
+endfunction
+
+function! lsp#internal#diagnostics#state#_handle_text_document_diagnostic(server, request, response) abort
+    if lsp#client#is_error(a:response) | return | endif
+    if !has_key(a:request, 'params') || !has_key(a:request['params'], 'textDocument')
+        return
+    endif
+    if !has_key(a:response, 'result') || type(a:response['result']) != type({})
+        return
+    endif
+
+    let l:uri = a:request['params']['textDocument']['uri']
+    let l:normalized_uri = lsp#utils#normalize_uri(l:uri)
+    let l:identifier = get(a:request['params'], 'identifier', '')
+    let l:result = a:response['result']
+
+    if !has_key(s:diagnostic_result_ids, l:normalized_uri)
+        let s:diagnostic_result_ids[l:normalized_uri] = {}
+    endif
+    if !has_key(s:diagnostic_result_ids[l:normalized_uri], a:server)
+        let s:diagnostic_result_ids[l:normalized_uri][a:server] = {}
+    endif
+    let s:diagnostic_result_ids[l:normalized_uri][a:server][l:identifier] = get(l:result, 'resultId', '')
+
+    if get(l:result, 'kind', 'full') ==# 'unchanged'
+        return
+    endif
+
+    if !has_key(s:diagnostics_state, l:normalized_uri)
+        let s:diagnostics_state[l:normalized_uri] = {}
+    endif
+    let s:diagnostics_state[l:normalized_uri][a:server] = {
+        \ 'method': 'textDocument/publishDiagnostics',
+        \ 'params': {
+        \   'uri': l:uri,
+        \   'diagnostics': get(l:result, 'items', []),
+        \ },
+        \ }
+    call s:notify_diagnostics_update(a:server, l:normalized_uri)
+endfunction
+
 function! s:on_exit(response) abort
     let l:server = a:response['params']['server']
     let l:notify = 0
     for l:value in values(s:diagnostics_state)
         if has_key(l:value, l:server)
             let l:notify = 1
+            call remove(l:value, l:server)
+        endif
+    endfor
+    for l:value in values(s:diagnostic_result_ids)
+        if has_key(l:value, l:server)
             call remove(l:value, l:server)
         endif
     endfor
