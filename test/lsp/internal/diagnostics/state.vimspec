@@ -53,6 +53,81 @@ Describe lsp#internal#diagnostics#state
         Assert Equals(lsp#internal#diagnostics#state#_get_all_diagnostics_grouped_by_uri_and_server(), l:want)
     End
 
+    It should be able to handle textDocument/diagnostic response and update state correctly
+        let l:uri = 'file://some/uri'
+
+        let l:server1_request1 = {'params': {'textDocument': {'uri': l:uri}, 'identifier': 'server1'}}
+        let l:server1_response1 = {'result': {'kind': 'full', 'resultId': 'server1-result-1', 'items': [
+            \ {'severity': 1, 'message': 'm1', 'range': { 'start': { 'line': 1, 'character': 1 }, 'end': { 'line': 1, 'character': 1 } }},
+            \ {'severity': 1, 'message': 'm2', 'range': { 'start': { 'line': 1, 'character': 2 }, 'end': { 'line': 1, 'character': 3 } }},
+            \ ]}}
+        let l:server2_request1 = {'params': {'textDocument': {'uri': l:uri}, 'identifier': 'server2'}}
+        let l:server2_response1 = {'result': {'kind': 'full', 'resultId': 'server2-result-1', 'items': [
+            \ {'severity': 1, 'message': 's2', 'range': { 'start': { 'line': 2, 'character': 3 }, 'end': { 'line': 4, 'character': 5 } }},
+            \ ]}}
+        let l:server1_request2 = {'params': {'textDocument': {'uri': l:uri}, 'identifier': 'server1', 'previousResultId': 'server1-result-1'}}
+        let l:server1_response2 = {'result': {'kind': 'full', 'resultId': 'server1-result-2', 'items': [
+            \ {'severity': 1, 'message': 'm2', 'range': { 'start': { 'line': 1, 'character': 2 }, 'end': { 'line': 1, 'character': 3 } }},
+            \ ]}}
+
+        Assert Equals(lsp#internal#diagnostics#state#_get_all_diagnostics_grouped_by_server_for_uri(l:uri), {})
+
+        call lsp#internal#diagnostics#state#_handle_text_document_diagnostic('server1', l:server1_request1, l:server1_response1)
+        let l:server1_want1 = {'method': 'textDocument/publishDiagnostics', 'params': {'uri': l:uri, 'diagnostics': l:server1_response1['result']['items']}}
+        Assert Equals(lsp#internal#diagnostics#state#_get_all_diagnostics_grouped_by_server_for_uri(l:uri), { 'server1': l:server1_want1 })
+        let l:want = {}
+        let l:want[l:uri] = { 'server1': l:server1_want1 }
+        Assert Equals(lsp#internal#diagnostics#state#_get_all_diagnostics_grouped_by_uri_and_server(), l:want)
+        Assert Equals(lsp#internal#diagnostics#state#_get_previous_result_id(l:uri, 'server1', 'server1'), 'server1-result-1')
+
+        call lsp#internal#diagnostics#state#_handle_text_document_diagnostic('server2', l:server2_request1, l:server2_response1)
+        let l:server2_want1 = {'method': 'textDocument/publishDiagnostics', 'params': {'uri': l:uri, 'diagnostics': l:server2_response1['result']['items']}}
+        Assert Equals(lsp#internal#diagnostics#state#_get_all_diagnostics_grouped_by_server_for_uri(l:uri), { 'server1': l:server1_want1, 'server2': l:server2_want1 })
+        let l:want = {}
+        let l:want[l:uri] = { 'server1': l:server1_want1, 'server2': l:server2_want1 }
+        Assert Equals(lsp#internal#diagnostics#state#_get_all_diagnostics_grouped_by_uri_and_server(), l:want)
+        Assert Equals(lsp#internal#diagnostics#state#_get_previous_result_id(l:uri, 'server2', 'server2'), 'server2-result-1')
+
+        call lsp#internal#diagnostics#state#_handle_text_document_diagnostic('server1', l:server1_request2, l:server1_response2)
+        let l:server1_want2 = {'method': 'textDocument/publishDiagnostics', 'params': {'uri': l:uri, 'diagnostics': l:server1_response2['result']['items']}}
+        Assert Equals(lsp#internal#diagnostics#state#_get_all_diagnostics_grouped_by_server_for_uri(l:uri), { 'server1': l:server1_want2, 'server2': l:server2_want1 })
+        let l:want = {}
+        let l:want[l:uri] = { 'server1': l:server1_want2, 'server2': l:server2_want1 }
+        Assert Equals(lsp#internal#diagnostics#state#_get_all_diagnostics_grouped_by_uri_and_server(), l:want)
+        Assert Equals(lsp#internal#diagnostics#state#_get_previous_result_id(l:uri, 'server1', 'server1'), 'server1-result-2')
+
+        call lsp#stream(1, { 'server': '$vimlsp',
+            \ 'response': { 'method': '$/vimlsp/lsp_server_exit', 'params': { 'server': 'server1' } } })
+        let l:want = {}
+        let l:want[l:uri] = { 'server2': l:server2_want1 }
+        Assert Equals(lsp#internal#diagnostics#state#_get_all_diagnostics_grouped_by_uri_and_server(), l:want)
+        Assert Equals(lsp#internal#diagnostics#state#_get_previous_result_id(l:uri, 'server1', 'server1'), '')
+    End
+
+    It should keep existing diagnostics when textDocument/diagnostic response kind is unchanged
+        let l:uri = 'file://some/uri'
+
+        let l:server1_request1 = {'params': {'textDocument': {'uri': l:uri}, 'identifier': 'server1'}}
+        let l:server1_response1 = {'result': {'kind': 'full', 'resultId': 'server1-result-1', 'items': [
+            \ {'severity': 1, 'message': 'm1', 'range': { 'start': { 'line': 1, 'character': 1 }, 'end': { 'line': 1, 'character': 1 } }},
+            \ {'severity': 1, 'message': 'm2', 'range': { 'start': { 'line': 1, 'character': 2 }, 'end': { 'line': 1, 'character': 3 } }},
+            \ ]}}
+        let l:server1_request2 = {'params': {'textDocument': {'uri': l:uri}, 'identifier': 'server1', 'previousResultId': 'server1-result-1'}}
+        let l:server1_response2 = {'result': {'kind': 'unchanged', 'resultId': 'server1-result-2'}}
+
+        call lsp#internal#diagnostics#state#_handle_text_document_diagnostic('server1', l:server1_request1, l:server1_response1)
+        let l:server1_want1 = {'method': 'textDocument/publishDiagnostics', 'params': {'uri': l:uri, 'diagnostics': l:server1_response1['result']['items']}}
+        Assert Equals(lsp#internal#diagnostics#state#_get_all_diagnostics_grouped_by_server_for_uri(l:uri), { 'server1': l:server1_want1 })
+        Assert Equals(lsp#internal#diagnostics#state#_get_previous_result_id(l:uri, 'server1', 'server1'), 'server1-result-1')
+
+        call lsp#internal#diagnostics#state#_handle_text_document_diagnostic('server1', l:server1_request2, l:server1_response2)
+        Assert Equals(lsp#internal#diagnostics#state#_get_all_diagnostics_grouped_by_server_for_uri(l:uri), { 'server1': l:server1_want1 })
+        let l:want = {}
+        let l:want[l:uri] = { 'server1': l:server1_want1 }
+        Assert Equals(lsp#internal#diagnostics#state#_get_all_diagnostics_grouped_by_uri_and_server(), l:want)
+        Assert Equals(lsp#internal#diagnostics#state#_get_previous_result_id(l:uri, 'server1', 'server1'), 'server1-result-2')
+    End
+
 
     It should correctly return the state of buffer
         call lsp#internal#diagnostics#state#_disable()

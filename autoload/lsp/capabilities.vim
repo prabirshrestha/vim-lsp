@@ -109,6 +109,19 @@ function! lsp#capabilities#has_call_hierarchy_provider(server_name) abort
     return s:has_provider(a:server_name, 'callHierarchyProvider')
 endfunction
 
+function! lsp#capabilities#has_diagnostic_provider(server_name) abort
+    return s:has_provider(a:server_name, 'diagnosticProvider')
+endfunction
+
+function! lsp#capabilities#get_diagnostic_provider(server_name) abort
+    let l:capabilities = lsp#get_server_capabilities(a:server_name)
+    if !empty(l:capabilities) && has_key(l:capabilities, 'diagnosticProvider')
+        let l:provider = l:capabilities['diagnosticProvider']
+        return type(l:provider) == type({}) ? l:provider : {}
+    endif
+    return {}
+endfunction
+
 function! lsp#capabilities#has_semantic_tokens(server_name) abort
     return s:has_provider(a:server_name, 'semanticTokensProvider')
 endfunction

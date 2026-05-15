@@ -854,6 +854,7 @@ function! s:ensure_changed(buf, server_name, cb) abort
         \   'contentChanges': l:content_changes,
         \ }
         \ })
+    call s:send_document_diagnostic_request(a:buf, a:server_name)
     call lsp#ui#vim#folding#send_request(a:server_name, a:buf, 0)
 
     let l:msg = s:new_rpc_success('textDocument/didChange sent', { 'server_name': a:server_name, 'path': l:path })
@@ -898,6 +899,7 @@ function! s:ensure_open(buf, server_name, cb) abort
         \ },
         \ })
 
+    call s:send_document_diagnostic_request(a:buf, a:server_name)
     call lsp#ui#vim#folding#send_request(a:server_name, a:buf, 0)
 
     let l:msg = s:new_rpc_success('textDocument/open sent', { 'server_name': a:server_name, 'path': l:path, 'filetype': getbufvar(a:buf, '&filetype') })
@@ -1305,6 +1307,41 @@ endfunction
 
 let s:didchange_queue = []
 let s:didchange_timer = -1
+
+function! s:on_document_diagnostic_response(server_name, client_id, data, event) abort
+    call lsp#internal#diagnostics#state#_handle_text_document_diagnostic(a:server_name, a:data['request'], a:data['response'])
+endfunction
+
+function! s:send_document_diagnostic_request(buf, server_name) abort
+    if !g:lsp_diagnostics_enabled || !lsp#capabilities#has_diagnostic_provider(a:server_name)
+        return
+    endif
+
+    let l:uri = lsp#utils#get_buffer_uri(a:buf)
+    if empty(l:uri)
+        return
+    endif
+
+    let l:provider = lsp#capabilities#get_diagnostic_provider(a:server_name)
+    let l:identifier = get(l:provider, 'identifier', '')
+    let l:params = {
+        \ 'textDocument': s:get_text_document_identifier(a:buf),
+        \ }
+    if !empty(l:identifier)
+        let l:params['identifier'] = l:identifier
+    endif
+
+    let l:previous_result_id = lsp#internal#diagnostics#state#_get_previous_result_id(l:uri, a:server_name, l:identifier)
+    if !empty(l:previous_result_id)
+        let l:params['previousResultId'] = l:previous_result_id
+    endif
+
+    call s:send_request(a:server_name, {
+        \ 'method': 'textDocument/diagnostic',
+        \ 'params': l:params,
+        \ 'on_notification': function('s:on_document_diagnostic_response', [a:server_name]),
+        \ })
+endfunction
 
 function! s:add_didchange_queue(buf) abort
     if g:lsp_use_event_queue == 0
