@@ -916,7 +916,10 @@ function! s:workspace_add_folder(server_name) abort
         call s:send_notification(a:server_name, {
             \ 'method': 'workspace/didChangeWorkspaceFolders',
             \ 'params': {
-            \    'added': [l:workspace_folder],
+            \    'event': {
+            \        'added': [l:workspace_folder],
+            \        'removed': [],
+            \    },
             \  }
             \ })
         let l:server['workspace_folders'][l:root_uri] = l:workspace_folder
