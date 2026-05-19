@@ -166,6 +166,8 @@ command! LspDocumentFold call lsp#ui#vim#folding#fold(0)
 command! LspDocumentFoldSync call lsp#ui#vim#folding#fold(1)
 command! -nargs=0 LspSemanticTokenTypes echo lsp#internal#semantic#get_token_types()
 command! -nargs=0 LspSemanticTokenModifiers echo lsp#internal#semantic#get_token_modifiers()
+command! -nargs=+ -complete=customlist,lsp#server_complete_running LspAddWorkspaceFolder call lsp#_add_workspace_folder_cmd(<f-args>)
+command! -nargs=+ -complete=customlist,lsp#server_complete_running LspRemoveWorkspaceFolder call lsp#_remove_workspace_folder_cmd(<f-args>)
 
 nnoremap <silent> <plug>(lsp-call-hierarchy-incoming) :<c-u>call lsp#ui#vim#call_hierarchy_incoming({})<cr>
 nnoremap <silent> <plug>(lsp-call-hierarchy-outgoing) :<c-u>call lsp#ui#vim#call_hierarchy_outgoing()<cr>
