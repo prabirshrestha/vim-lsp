@@ -722,7 +722,7 @@ function! s:ensure_init(buf, server_name, cb) abort
         let l:root_uri = lsp#utils#get_default_root_uri()
     endif
     let l:server['server_info']['_root_uri_resolved'] = l:root_uri
-    let l:server['workspace_folders'][l:root_uri] = { 'name': l:root_uri, 'uri': l:root_uri }
+    let l:server['workspace_folders'][l:root_uri] = { 'name': lsp#utils#uri_to_path(l:root_uri), 'uri': l:root_uri }
 
     if has_key(l:server_info, 'capabilities')
         let l:capabilities = l:server_info['capabilities']
@@ -744,9 +744,8 @@ function! s:ensure_init(buf, server_name, cb) abort
     
     let l:workspace_capabilities = get(l:capabilities, 'workspace', {})
     if get(l:workspace_capabilities, 'workspaceFolders', v:false)
-        " TODO: extract folder name for l:root_uri
         let l:server_info['workspaceFolders'] = [
-            \ { 'uri': l:root_uri, 'name': l:root_uri }
+            \ { 'uri': l:root_uri, 'name': lsp#utils#uri_to_path(l:root_uri) }
             \ ]
         let l:request['params']['workspaceFolders'] = l:server_info['workspaceFolders']
     endif
@@ -911,12 +910,15 @@ function! s:workspace_add_folder(server_name) abort
     let l:server_info = l:server['server_info']
     let l:root_uri = has_key(l:server_info, 'root_uri') ?  l:server_info['root_uri'](l:server_info) : lsp#utils#get_default_root_uri()
     if !has_key(l:server['workspace_folders'], l:root_uri)
-        let l:workspace_folder = { 'name': l:root_uri, 'uri': l:root_uri }
+        let l:workspace_folder = { 'name': lsp#utils#uri_to_path(l:root_uri), 'uri': l:root_uri }
         call lsp#log('adding workspace folder', a:server_name, l:workspace_folder)
         call s:send_notification(a:server_name, {
             \ 'method': 'workspace/didChangeWorkspaceFolders',
             \ 'params': {
-            \    'added': [l:workspace_folder],
+            \    'event': {
+            \        'added': [l:workspace_folder],
+            \        'removed': [],
+            \    },
             \  }
             \ })
         let l:server['workspace_folders'][l:root_uri] = l:workspace_folder
@@ -1413,6 +1415,111 @@ function! lsp#update_workspace_config(server_name, workspace_config) abort
     endif
     let l:server_info['_workspace_config_sent'] = v:false
     call s:ensure_conf(bufnr('%'), a:server_name, function('s:Noop'))
+endfunction
+
+function! lsp#add_workspace_folder(server_name, path_or_uri) abort
+    if !g:lsp_experimental_workspace_folders
+        call lsp#utils#error('workspace folders require g:lsp_experimental_workspace_folders to be enabled')
+        return
+    endif
+    if !has_key(s:servers, a:server_name)
+        call lsp#utils#error('Server not found: ' . a:server_name)
+        return
+    endif
+    if !lsp#is_server_running(a:server_name)
+        call lsp#utils#error('Server is not running: ' . a:server_name)
+        return
+    endif
+    if !lsp#capabilities#has_workspace_folders_change_notifications(a:server_name)
+        call lsp#utils#error('Server does not support workspace folder notifications: ' . a:server_name)
+        return
+    endif
+
+    let l:uri = a:path_or_uri =~# '^\w\+://' ? a:path_or_uri : lsp#utils#path_to_uri(a:path_or_uri)
+    let l:server = s:servers[a:server_name]
+
+    if has_key(l:server['workspace_folders'], l:uri)
+        return
+    endif
+
+    let l:workspace_folder = { 'name': lsp#utils#uri_to_path(l:uri), 'uri': l:uri }
+    call lsp#log('adding workspace folder', a:server_name, l:workspace_folder)
+    call s:send_notification(a:server_name, {
+        \ 'method': 'workspace/didChangeWorkspaceFolders',
+        \ 'params': {
+        \    'event': {
+        \        'added': [l:workspace_folder],
+        \        'removed': [],
+        \    },
+        \  }
+        \ })
+    let l:server['workspace_folders'][l:uri] = l:workspace_folder
+
+    let l:server_info = l:server['server_info']
+    if !has_key(l:server_info, 'workspaceFolders')
+        let l:server_info['workspaceFolders'] = []
+    endif
+    call add(l:server_info['workspaceFolders'], l:workspace_folder)
+endfunction
+
+function! lsp#remove_workspace_folder(server_name, path_or_uri) abort
+    if !g:lsp_experimental_workspace_folders
+        call lsp#utils#error('workspace folders require g:lsp_experimental_workspace_folders to be enabled')
+        return
+    endif
+    if !has_key(s:servers, a:server_name)
+        call lsp#utils#error('Server not found: ' . a:server_name)
+        return
+    endif
+    if !lsp#is_server_running(a:server_name)
+        call lsp#utils#error('Server is not running: ' . a:server_name)
+        return
+    endif
+    if !lsp#capabilities#has_workspace_folders_change_notifications(a:server_name)
+        call lsp#utils#error('Server does not support workspace folder notifications: ' . a:server_name)
+        return
+    endif
+
+    let l:uri = a:path_or_uri =~# '^\w\+://' ? a:path_or_uri : lsp#utils#path_to_uri(a:path_or_uri)
+    let l:server = s:servers[a:server_name]
+
+    if !has_key(l:server['workspace_folders'], l:uri)
+        return
+    endif
+
+    let l:workspace_folder = l:server['workspace_folders'][l:uri]
+    call lsp#log('removing workspace folder', a:server_name, l:workspace_folder)
+    call s:send_notification(a:server_name, {
+        \ 'method': 'workspace/didChangeWorkspaceFolders',
+        \ 'params': {
+        \    'event': {
+        \        'added': [],
+        \        'removed': [l:workspace_folder],
+        \    },
+        \  }
+        \ })
+    unlet l:server['workspace_folders'][l:uri]
+
+    let l:server_info = l:server['server_info']
+    if has_key(l:server_info, 'workspaceFolders')
+        call filter(l:server_info['workspaceFolders'], {idx, val -> val['uri'] !=# l:uri})
+    endif
+endfunction
+
+function! lsp#_add_workspace_folder_cmd(...) abort
+    if a:0 < 2
+        call lsp#utils#error('Usage: LspAddWorkspaceFolder {server_name} {path}')
+        return
+    endif
+    call lsp#add_workspace_folder(a:1, join(a:000[1:], ' '))
+endfunction
+
+function! lsp#_remove_workspace_folder_cmd(...) abort
+    if a:0 < 2
+        call lsp#utils#error('Usage: LspRemoveWorkspaceFolder {server_name} {path}')
+        return
+    endif
+    call lsp#remove_workspace_folder(a:1, join(a:000[1:], ' '))
 endfunction
 
 function! lsp#server_complete(lead, line, pos) abort
