@@ -288,7 +288,7 @@ function! s:handle_symbol(server, last_command_id, type, data) abort
         call lsp#utils#error('No ' . a:type .' found')
     else
         echo 'Retrieved ' . a:type
-        botright copen
+        call lsp#utils#maybe_execute_list_command('quickfix', 'botright copen')
     endif
 endfunction
 
@@ -327,7 +327,7 @@ function! s:handle_location(ctx, server, type, data) abort "ctx = {counter, list
                 endif
                 call lsp#ui#vim#utils#setqflist(a:ctx['list'], a:type)
                 echo 'Retrieved ' . a:type
-                botright copen
+                call lsp#utils#maybe_execute_list_command('quickfix', 'botright copen')
                 if get(a:ctx, 'add_tree', v:false)
                     " move the cursor to the newly added item
                     execute l:pos + 1
@@ -490,7 +490,7 @@ function! s:handle_document_link(ctx, server, data) abort
         else
             call lsp#ui#vim#utils#setqflist(a:ctx['list'], 'documentLink')
             echo 'Retrieved document links'
-            botright copen
+            call lsp#utils#maybe_execute_list_command('quickfix', 'botright copen')
         endif
     endif
 endfunction
@@ -704,7 +704,7 @@ function! s:handle_call_hierarchy(ctx, server, type, data) abort
             endif
             call lsp#ui#vim#utils#setqflist(a:ctx['list'], a:type)
             echo 'Retrieved ' . a:type
-            botright copen
+            call lsp#utils#maybe_execute_list_command('quickfix', 'botright copen')
             if get(a:ctx, 'add_tree', v:false)
                 " move the cursor to the newly added item
                 execute l:pos + 1
