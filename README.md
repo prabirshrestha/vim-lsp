@@ -194,7 +194,7 @@ CheckHealth
 The default behaviour is to open the location or quickfix list automatically
 when triggering a command.
 
-You may use the the configuration parameters below to prevent this from happening:
+You may use the configuration parameters below to prevent this from happening:
 ```vim
 let g:lsp_auto_open_loclist = 0
 let g:lsp_auto_open_qflist = 0
