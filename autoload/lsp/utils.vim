@@ -196,17 +196,17 @@ function! lsp#utils#get_buffer_uri(...) abort
 endfunction
 
 function! lsp#utils#maybe_execute_list_command(kind, cmd) abort
-  if a:kind ==# 'location'
-    if !get(g:, 'lsp_auto_open_loclist', 1)
-      return
+    if a:kind ==# 'location'
+        if !get(g:, 'lsp_auto_open_loclist', 1)
+            return
+        endif
+    elseif a:kind ==# 'quickfix'
+        if !get(g:, 'lsp_auto_open_qflist', 1)
+            return
+        endif
     endif
-  elseif a:kind ==# 'quickfix'
-    if !get(g:, 'lsp_auto_open_qflist', 1)
-      return
-    endif
-  endif
 
-  execute a:cmd
+    execute a:cmd
 endfunction
 
 " Find a nearest to a `path` parent directory `directoryname` by traversing the filesystem upwards
