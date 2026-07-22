@@ -733,15 +733,17 @@ function! s:ensure_init(buf, server_name, cb) abort
     let l:request = {
     \   'method': 'initialize',
     \   'params': {
-    \     'processId': getpid(),
+    \     'processId': has('win32unix') ? v:null : getpid(),
     \     'clientInfo': { 'name': 'vim-lsp' },
     \     'capabilities': l:capabilities,
     \     'rootUri': l:root_uri,
-    \     'rootPath': lsp#utils#uri_to_path(l:root_uri),
     \     'trace': 'off',
     \   },
     \ }
-    
+    if !has('win32unix')
+        let l:request.params.rootPath = lsp#utils#uri_to_path(l:root_uri)
+    endif
+
     let l:workspace_capabilities = get(l:capabilities, 'workspace', {})
     if get(l:workspace_capabilities, 'workspaceFolders', v:false)
         " TODO: extract folder name for l:root_uri
