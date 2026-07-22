@@ -10,7 +10,7 @@ Describe lsp#utils
 
     Describe lsp#utils#uri_to_path
         It should return path from uri (Windows)
-            if !has('win32')
+            if !(has('win32') || has('win64'))
               Skip This tests is not for UNIX
             endif
             let tests = [
@@ -28,7 +28,7 @@ Describe lsp#utils
         End
 
         It should return path from uri (UNIX)
-            if has('win32')
+            if has('win32') || has('win64') || has('win32unix')
               Skip This tests is not for Windows
             endif
             let tests = [
@@ -48,7 +48,7 @@ Describe lsp#utils
 
     Describe lsp#utils#path_to_uri
         It should return uri from path (Windows)
-            if !has('win32')
+            if !(has('win32') || has('win64'))
               Skip This tests is not for UNIX
             endif
             let tests = [
@@ -64,7 +64,7 @@ Describe lsp#utils
         End
 
         It should return uri from path (UNIX)
-            if has('win32')
+            if has('win32') || has('win64') || has('win32unix')
               Skip This tests is not for Windows
             endif
             let tests = [
@@ -82,7 +82,7 @@ Describe lsp#utils
 
     Describe lsp#utils#normalize_uri
         It should return normalized uri (Windows)
-            if !has('win32')
+            if !(has('win32') || has('win64') || has('win32unix'))
               Skip This tests is not for UNIX
             endif
             let tests = [
@@ -91,6 +91,7 @@ Describe lsp#utils
             \  {'path': 'file:///C%3A\path\to\the\file.txt', 'uri': 'file:///c:\path\to\the\file.txt'},
             \  {'path': 'file:///c%3a\path\to\the\file.txt', 'uri': 'file:///c:\path\to\the\file.txt'},
             \  {'path': 'http://foo/bar.txt', 'uri': 'http://foo/bar.txt'},
+            \  {'path': 'file:///Home/project', 'uri': 'file:///Home/project'},
             \]
             for test in tests
                 let uri = lsp#utils#normalize_uri(test.path)
@@ -99,7 +100,7 @@ Describe lsp#utils
         End
 
         It should return normalized uri (UNIX)
-            if has('win32')
+            if has('win32') || has('win64') || has('win32unix')
               Skip This tests is not for Windows
             endif
             let tests = [
