@@ -111,6 +111,10 @@ CONTENTS                                                  *vim-lsp-contents*
                               |lsp#utils#find_nearest_parent_file_directory()|
       lsp#enable_diagnostics_for_buffer() |lsp#enable_diagnostics_for_buffer()|
       lsp#disable_diagnostics_for_buffer()|lsp#disable_diagnostics_for_buffer()|
+      lsp#enable_diagnostics_virtual_text()
+                               |lsp#enable_diagnostics_virtual_text()|
+      lsp#disable_diagnostics_virtual_text()
+                               |lsp#disable_diagnostics_virtual_text()|
       lsp#get_buffer_diagnostics_counts() |lsp#get_buffer_diagnostics_counts()|
       lsp#get_buffer_first_error_line()   |lsp#get_buffer_first_error_line()|
       lsp#get_progress()                  |lsp#get_progress()|
@@ -1686,6 +1690,23 @@ other plugins.
 	    autocmd User EasyMotionPromptBegin call lsp#disable_diagnostics_for_buffer()<CR>
 	    autocmd User EasyMotionPromptEnd call lsp#enable_diagnostics_for_buffer()<CR>
 	augroup END
+
+lsp#enable_diagnostics_virtual_text()    *lsp#enable_diagnostics_virtual_text()*
+
+Enable diagnostic virtual text and display any diagnostics that have already
+been received. Requires |g:lsp_diagnostics_enabled| set to `1` and Vim or
+NeoVim virtual text support.
+
+    Example: >
+	:call lsp#enable_diagnostics_virtual_text()
+
+lsp#disable_diagnostics_virtual_text()  *lsp#disable_diagnostics_virtual_text()*
+
+Disable diagnostic virtual text and remove all diagnostic virtual text
+currently displayed.
+
+    Example: >
+	:call lsp#disable_diagnostics_virtual_text()
 
 lsp#get_buffer_diagnostics_counts()    *lsp#get_buffer_diagnostics_counts()*
 

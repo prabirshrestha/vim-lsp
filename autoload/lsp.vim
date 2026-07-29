@@ -1345,6 +1345,17 @@ function! lsp#disable_diagnostics_for_buffer(...) abort
     call lsp#internal#diagnostics#state#_disable_for_buffer(l:bufnr)
 endfunction
 
+function! lsp#enable_diagnostics_virtual_text() abort
+    let g:lsp_diagnostics_virtual_text_enabled = 1
+    call lsp#internal#diagnostics#virtual_text#_enable()
+    call lsp#internal#diagnostics#state#_force_notify_buffer(bufnr('%'))
+endfunction
+
+function! lsp#disable_diagnostics_virtual_text() abort
+    let g:lsp_diagnostics_virtual_text_enabled = 0
+    call lsp#internal#diagnostics#virtual_text#_disable()
+endfunction
+
 " Return dict with diagnostic counts for current buffer
 " { 'error': 1, 'warning': 0, 'information': 0, 'hint': 0 }
 function! lsp#get_buffer_diagnostics_counts() abort
