@@ -141,8 +141,9 @@ function! s:set_virtual_text(params) abort
         for l:bufnr in nvim_list_bufs()
             if lsp#internal#diagnostics#state#_is_enabled_for_buffer(l:bufnr) && bufexists(l:bufnr) && bufloaded(l:bufnr)
                 let l:uri = lsp#utils#get_buffer_uri(l:bufnr)
+                let l:line_props = {}
                 for [l:server, l:diagnostics_response] in items(lsp#internal#diagnostics#state#_get_all_diagnostics_grouped_by_server_for_uri(l:uri))
-                    call s:place_virtual_text(l:server, l:diagnostics_response, l:bufnr)
+                    call s:place_virtual_text(l:server, l:diagnostics_response, l:bufnr, l:line_props)
                 endfor
             endif
         endfor
@@ -150,17 +151,16 @@ function! s:set_virtual_text(params) abort
         for l:bufnr in map(copy(getbufinfo()), 'v:val.bufnr')
             if lsp#internal#diagnostics#state#_is_enabled_for_buffer(l:bufnr) && bufexists(l:bufnr) && bufloaded(l:bufnr)
                 let l:uri = lsp#utils#get_buffer_uri(l:bufnr)
+                let l:line_props = {}
                 for [l:server, l:diagnostics_response] in items(lsp#internal#diagnostics#state#_get_all_diagnostics_grouped_by_server_for_uri(l:uri))
-                    call s:place_virtual_text(l:server, l:diagnostics_response, l:bufnr)
+                    call s:place_virtual_text(l:server, l:diagnostics_response, l:bufnr, l:line_props)
                 endfor
             endif
         endfor
     endif
 endfunction
 
-function! s:place_virtual_text(server, diagnostics_response, bufnr) abort
-    let l:line_props = {}
-
+function! s:place_virtual_text(server, diagnostics_response, bufnr, line_props) abort
     let l:linecount = s:Buffer.get_line_count(a:bufnr)
     for l:item in lsp#utils#iterable(a:diagnostics_response['params']['diagnostics'])
         let l:line = lsp#utils#position#lsp_line_to_vim(a:bufnr, l:item['range']['start'])
@@ -182,17 +182,19 @@ function! s:place_virtual_text(server, diagnostics_response, bufnr) abort
             " it's an error to add virtual text on lines that don't exist
             " anymore due to async processing, just skip such diagnostics
             if l:line <= l:linecount
-                if g:lsp_diagnostics_virtual_text_tidy && has_key(l:line_props, l:line)
+                if g:lsp_diagnostics_virtual_text_tidy && has_key(a:line_props, l:line)
                   " Replace the existing virtual text with the one that has higher severity
-                  if l:severity <= l:line_props[l:line]['severity']
-                    call prop_remove({'id': l:line_props[l:line]['prop_id']}, l:line)
+                  if l:severity <= a:line_props[l:line]['severity']
+                    call prop_remove({
+                        \ 'id': a:line_props[l:line]['prop_id'],
+                        \ 'bufnr': a:bufnr,
+                        \ }, l:line)
                   else
                     continue
                   endif
                 endif
 
                 let l:type = 'vim_lsp_' . l:name . '_virtual_text'
-                call prop_remove({'all': v:true, 'type': l:type, 'bufnr': a:bufnr}, l:line)
                 let l:prop_id = prop_add(
                 \ l:line, 0,
                 \ {
@@ -202,7 +204,7 @@ function! s:place_virtual_text(server, diagnostics_response, bufnr) abort
                 \   'text_wrap': g:lsp_diagnostics_virtual_text_wrap,
                 \ })
 
-                let l:line_props[l:line] = {
+                let a:line_props[l:line] = {
                 \ 'prop_id': l:prop_id,
                 \ 'severity': l:severity,
                 \ }
