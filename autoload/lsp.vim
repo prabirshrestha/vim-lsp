@@ -1016,6 +1016,10 @@ function! s:on_request(server_name, id, request) abort
         endif
     elseif a:request['method'] ==# 'window/workDoneProgress/create'
         call s:send_response(a:server_name, { 'id': a:request['id'], 'result': v:null})
+    elseif a:request['method'] ==# 'client/registerCapability'
+        call s:send_response(a:server_name, { 'id': a:request['id'], 'result': v:null})
+    elseif a:request['method'] ==# 'client/unregisterCapability'
+        call s:send_response(a:server_name, { 'id': a:request['id'], 'result': v:null})
     else
         " TODO: for now comment this out until we figure out a better solution.
         " We need to comment this out so that others outside of vim-lsp can
