@@ -447,6 +447,19 @@ function! lsp#client#send_response(client_id, opts) abort
         if has_key(a:opts, 'id') | let l:request['id'] = a:opts['id'] | endif
         if has_key(a:opts, 'result') | let l:request['result'] = a:opts['result'] | endif
         if has_key(a:opts, 'error') | let l:request['error'] = a:opts['error'] | endif
+        if has_key(l:request, 'id') && type(l:request['id']) == v:t_string
+            " Vim's lsp channel mode only accepts number ids
+            " so build the frame manually and bypass ch_sendexpr.
+            " see: https://github.com/vim/vim/issues/14091
+            let l:request['jsonrpc'] = '2.0'
+            let l:body = json_encode(l:request)
+            try
+              call ch_sendraw(l:ctx['channel'], 'Content-Length: ' . len(l:body) . "\r\n\r\n" . l:body)
+            catch
+              call lsp#log('lsp#client#send_response error', v:exception, v:throwpoint)
+            endtry
+            return 0
+        endif
         try
             call ch_sendexpr(l:ctx['channel'], l:request)
         catch
