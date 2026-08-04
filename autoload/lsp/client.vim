@@ -453,7 +453,11 @@ function! lsp#client#send_response(client_id, opts) abort
             " see: https://github.com/vim/vim/issues/14091
             let l:request['jsonrpc'] = '2.0'
             let l:body = json_encode(l:request)
-            call ch_sendraw(l:ctx['channel'], 'Content-Length: ' . len(l:body) . "\r\n\r\n" . l:body)
+            try
+              call ch_sendraw(l:ctx['channel'], 'Content-Length: ' . len(l:body) . "\r\n\r\n" . l:body)
+            catch
+              call lsp#log('lsp#client#send_response error', v:exception, v:throwpoint)
+            endtry
             return 0
         endif
         try
