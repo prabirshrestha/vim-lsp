@@ -35,6 +35,6 @@ function! lsp#internal#diagnostics#document_diagnostics_command#do(options) abor
     else
         call setloclist(0, l:result)
         echo 'Retrieved diagnostics results'
-        botright lopen
+        call lsp#utils#maybe_execute_list_command('location', 'botright lopen')
     endif
 endfunction
