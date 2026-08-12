@@ -40,7 +40,8 @@ function! lsp#capabilities#has_workspace_folders_change_notifications(server_nam
         if type(l:workspace) == type({}) && !empty(l:workspace)
             let l:workspace_folders = get(l:workspace, 'workspaceFolders', {})
             if type(l:workspace_folders) == type({}) && !empty(l:workspace_folders)
-                if get(l:workspace_folders, 'supported', v:false) && get(l:workspace_folders, 'changeNotifications', '') ==# 'workspace/didChangeWorkspaceFolders'
+                let l:change_notifications = get(l:workspace_folders, 'changeNotifications', '')
+                if get(l:workspace_folders, 'supported', v:false) && (l:change_notifications ==# 'workspace/didChangeWorkspaceFolders' || l:change_notifications is v:true)
                     return v:true
                 endif
             endif

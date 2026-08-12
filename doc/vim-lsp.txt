@@ -107,6 +107,8 @@ CONTENTS                                                  *vim-lsp-contents*
       lsp#register_command                  |lsp#register_command()|
       lsp#stream			    |lsp#stream()|
       lsp#stop_server                       |lsp#stop_server()|
+      lsp#add_workspace_folder             |lsp#add_workspace_folder()|
+      lsp#remove_workspace_folder          |lsp#remove_workspace_folder()|
       lsp#utils#find_nearest_parent_file_directory()
                               |lsp#utils#find_nearest_parent_file_directory()|
       lsp#enable_diagnostics_for_buffer() |lsp#enable_diagnostics_for_buffer()|
@@ -155,6 +157,8 @@ CONTENTS                                                  *vim-lsp-contents*
       LspSemanticHighlightGroups            |:LspSemanticHighlightGroups|
       LspTypeDefinition                     |:LspTypeDefinition|
       LspTypeHierarchy                      |:LspTypeHierarchy|
+      LspAddWorkspaceFolder                 |:LspAddWorkspaceFolder|
+      LspRemoveWorkspaceFolder              |:LspRemoveWorkspaceFolder|
       LspWorkspaceSymbol                    |:LspWorkspaceSymbol|
       LspWorkspaceSymbolSearch              |:LspWorkspaceSymbolSearch|
       LspStatus                             |:LspStatus|
@@ -1601,6 +1605,42 @@ Used to stop the server.
 	* If the server is not running or is not registered it is a noop.
 	* The server is forcefully stopped without sending shutdown request.
 
+lsp#add_workspace_folder({server-name}, {path-or-uri})
+						    *lsp#add_workspace_folder()*
+
+Add a workspace folder to a running language server. The server must support
+workspace folder change notifications, and |g:lsp_experimental_workspace_folders|
+must be enabled.
+
+{path-or-uri} can be a filesystem path or a URI. Filesystem paths are
+automatically converted to URIs.
+
+If the folder is already registered, the call is a silent no-op.
+
+    Example: >
+	call lsp#add_workspace_folder('eclipse-jdt-ls', '/home/user/project')
+	call lsp#add_workspace_folder('eclipse-jdt-ls', 'file:///home/user/project')
+<
+    Note:
+	* The server must be running.
+	* |g:lsp_experimental_workspace_folders| must be set to 1.
+	* Sends workspace/didChangeWorkspaceFolders notification.
+
+lsp#remove_workspace_folder({server-name}, {path-or-uri})
+						 *lsp#remove_workspace_folder()*
+
+Remove a workspace folder from a running language server.
+
+If the folder is not registered, the call is a silent no-op.
+
+    Example: >
+	call lsp#remove_workspace_folder('eclipse-jdt-ls', '/home/user/project')
+<
+    Note:
+	* The server must be running.
+	* |g:lsp_experimental_workspace_folders| must be set to 1.
+	* Sends workspace/didChangeWorkspaceFolders notification.
+
 lsp#get_server_status({name-of-server})            *lsp#get_server_status()*
 
 Get the status of a server.
@@ -1968,6 +2008,25 @@ View type hierarchy for the symbol under cursor.
 
 Also see |:LspPeekTypeDefinition|.
 
+LspAddWorkspaceFolder {server-name} {path}        *:LspAddWorkspaceFolder*
+
+Add a workspace folder to a running language server. Requires
+|g:lsp_experimental_workspace_folders| to be enabled.
+
+    Example: >
+	:LspAddWorkspaceFolder eclipse-jdt-ls /home/user/project
+<
+    See |lsp#add_workspace_folder()| for details.
+
+LspRemoveWorkspaceFolder {server-name} {path}  *:LspRemoveWorkspaceFolder*
+
+Remove a workspace folder from a running language server.
+
+    Example: >
+	:LspRemoveWorkspaceFolder eclipse-jdt-ls /home/user/project
+<
+    See |lsp#remove_workspace_folder()| for details.
+
 LspWorkspaceSymbol                                     *:LspWorkspaceSymbol*
 
 Search and show workspace symbols in quickfix.
@@ -2326,6 +2385,10 @@ When a new buffer is opened, if the server supports workspace folder, it will
 call `root_uri` function to detect the workspace folder. If the folder is not
 part of workspace folder, it will automatically notify the server to add the
 workspace folder.
+
+Workspace folders can also be managed manually using
+|lsp#add_workspace_folder()| and |lsp#remove_workspace_folder()|, or with the
+|:LspAddWorkspaceFolder| and |:LspRemoveWorkspaceFolder| commands.
 
 =============================================================================
 License                                                    *vim-lsp-license*
