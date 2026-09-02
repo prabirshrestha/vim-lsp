@@ -554,7 +554,7 @@ endfunction
 
 function! lsp#default_get_supported_capabilities(server_info) abort
     " Sorted alphabetically
-    return {
+    let l:capabilities = {
     \   'textDocument': {
     \       'callHierarchy': {
     \           'dynamicRegistration': v:false,
@@ -692,6 +692,10 @@ function! lsp#default_get_supported_capabilities(server_info) abort
     \       'workspaceFolders': g:lsp_experimental_workspace_folders ? v:true : v:false,
     \   },
     \ }
+    if g:lsp_diagnostics_pull_enabled
+        let l:capabilities['textDocument']['diagnostic'] = { 'dynamicRegistration': v:false }
+    endif
+    return l:capabilities
 endfunction
 
 function! s:ensure_init(buf, server_name, cb) abort
