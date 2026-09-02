@@ -43,6 +43,34 @@ if s:has_lua && !exists('s:lua')
   call s:init_lua()
 endif
 
+" Compute LSP-style content changes using Vim 9.1's native diff() builtin.
+" Returns a list of TextDocumentContentChangeEvent dicts (line-granular hunks),
+" or an empty list when the buffers are identical.
+" Hunks are emitted in reverse document order so applying them sequentially
+" against the original state stays correct without offset bookkeeping.
+function! lsp#utils#diff#compute_native(old, new) abort
+  let l:hunks = diff(a:old, a:new, {'output': 'indices'})
+  if empty(l:hunks)
+    return []
+  endif
+  let l:changes = []
+  for l:h in reverse(l:hunks)
+    if l:h.to_count > 0
+      let l:text = join(a:new[l:h.to_idx : l:h.to_idx + l:h.to_count - 1], "\n") . "\n"
+    else
+      let l:text = ''
+    endif
+    call add(l:changes, {
+        \ 'range': {
+        \   'start': {'line': l:h.from_idx, 'character': 0},
+        \   'end': {'line': l:h.from_idx + l:h.from_count, 'character': 0},
+        \ },
+        \ 'text': l:text,
+        \ })
+  endfor
+  return l:changes
+endfunction
+
 function! lsp#utils#diff#compute(old, new) abort
   let [l:start_line, l:start_char] = s:FirstDifference(a:old, a:new)
   let [l:end_line, l:end_char] =

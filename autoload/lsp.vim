@@ -796,15 +796,15 @@ function! s:text_changes(buf, server_name) abort
             return l:listener_changes
         endif
 
-        " Fallback: compute diff (O(total lines))
+        " Fallback: compute diff (native diff() when available, else O(total lines))
         let l:old_content = s:get_last_file_content(a:buf, a:server_name)
         let l:new_content = lsp#internal#listener#get_lines_cached(a:buf)
         let l:changes = lsp#internal#listener#get_diff_cached(a:buf, l:old_content)
-        if empty(l:changes.text) && l:changes.rangeLength ==# 0
+        if empty(l:changes)
             return []
         endif
         call s:update_file_content(a:buf, a:server_name, l:new_content)
-        return [l:changes]
+        return l:changes
     endif
 
     let l:new_content = lsp#internal#listener#get_lines_cached(a:buf)
