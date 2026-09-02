@@ -83,4 +83,96 @@ Describe lsp#utils#diff
             Assert Equals(got, want)
         End
     End
+
+    Describe lsp#utils#diff#compute_native
+        Before
+            if !exists('*diff')
+                Skip diff() builtin (Vim 9.1.0099+) not available
+            endif
+        End
+
+        It should return empty list when identical
+            let lines = ['foo', 'bar', 'baz']
+            Assert Equals(lsp#utils#diff#compute_native(lines, lines), [])
+        End
+
+        It should diff a single line change
+            let lines1 = ['foo', 'bar', 'baz']
+            let lines2 = ['foo', 'baR', 'baz']
+            let got = lsp#utils#diff#compute_native(lines1, lines2)
+            let want = [{
+            \  'range': {
+            \    'start': { 'line': 1, 'character': 0 },
+            \    'end': { 'line': 2, 'character': 0 },
+            \  },
+            \  'text': "baR\n",
+            \}]
+            Assert Equals(got, want)
+        End
+
+        It should emit multiple hunks in reverse document order
+            let lines1 = ['a', 'b', 'c', 'd', 'e']
+            let lines2 = ['A', 'b', 'c', 'D', 'e']
+            let got = lsp#utils#diff#compute_native(lines1, lines2)
+            " Later hunk must come first so earlier line numbers stay valid
+            " when the server applies changes sequentially.
+            Assert Equals(len(got), 2)
+            Assert Equals(got[0].range.start.line, 3)
+            Assert Equals(got[0].text, "D\n")
+            Assert Equals(got[1].range.start.line, 0)
+            Assert Equals(got[1].text, "A\n")
+        End
+
+        It should represent pure insertion as a zero-width range
+            let lines1 = ['foo', 'baz']
+            let lines2 = ['foo', 'bar', 'baz']
+            let got = lsp#utils#diff#compute_native(lines1, lines2)
+            let want = [{
+            \  'range': {
+            \    'start': { 'line': 1, 'character': 0 },
+            \    'end': { 'line': 1, 'character': 0 },
+            \  },
+            \  'text': "bar\n",
+            \}]
+            Assert Equals(got, want)
+        End
+
+        It should represent pure deletion with empty text
+            let lines1 = ['foo', 'bar', 'baz']
+            let lines2 = ['foo', 'baz']
+            let got = lsp#utils#diff#compute_native(lines1, lines2)
+            let want = [{
+            \  'range': {
+            \    'start': { 'line': 1, 'character': 0 },
+            \    'end': { 'line': 2, 'character': 0 },
+            \  },
+            \  'text': '',
+            \}]
+            Assert Equals(got, want)
+        End
+
+        It should handle empty old list
+            let got = lsp#utils#diff#compute_native([], ['foo', 'bar', 'baz'])
+            let want = [{
+            \  'range': {
+            \    'start': { 'line': 0, 'character': 0 },
+            \    'end': { 'line': 0, 'character': 0 },
+            \  },
+            \  'text': "foo\nbar\nbaz\n",
+            \}]
+            Assert Equals(got, want)
+        End
+
+        It should handle empty new list
+            let got = lsp#utils#diff#compute_native(['foo', 'bar', 'baz'], [])
+            let want = [{
+            \  'range': {
+            \    'start': { 'line': 0, 'character': 0 },
+            \    'end': { 'line': 3, 'character': 0 },
+            \  },
+            \  'text': '',
+            \}]
+            Assert Equals(got, want)
+        End
+    End
 End

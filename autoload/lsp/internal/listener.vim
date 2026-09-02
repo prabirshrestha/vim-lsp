@@ -1,4 +1,5 @@
 let s:has_listener = exists('*listener_add')
+let s:has_native_diff = exists('*diff')
 let s:buf_state = {}
 
 function! lsp#internal#listener#is_enabled() abort
@@ -86,6 +87,9 @@ function! lsp#internal#listener#get_lines_cached(buf) abort
     return l:lines
 endfunction
 
+" Always returns a list of LSP TextDocumentContentChangeEvent dicts.
+" Prefers Vim 9.1's native diff() builtin (O(n) in C) and falls back to the
+" vim-lsc-derived prefix/suffix scan when unavailable.
 function! lsp#internal#listener#get_diff_cached(buf, old_content) abort
     let l:tick = getbufvar(a:buf, 'changedtick')
     if has_key(s:buf_state, a:buf)
@@ -95,7 +99,16 @@ function! lsp#internal#listener#get_diff_cached(buf, old_content) abort
         endif
     endif
     let l:new_content = lsp#internal#listener#get_lines_cached(a:buf)
-    let l:changes = lsp#utils#diff#compute(a:old_content, l:new_content)
+    if s:has_native_diff
+        let l:changes = lsp#utils#diff#compute_native(a:old_content, l:new_content)
+    else
+        let l:change = lsp#utils#diff#compute(a:old_content, l:new_content)
+        if empty(l:change.text) && l:change.rangeLength ==# 0
+            let l:changes = []
+        else
+            let l:changes = [l:change]
+        endif
+    endif
     if has_key(s:buf_state, a:buf)
         let s:buf_state[a:buf].diff_cache = {'tick': l:tick, 'old': a:old_content, 'changes': l:changes}
     endif
