@@ -554,7 +554,7 @@ endfunction
 
 function! lsp#default_get_supported_capabilities(server_info) abort
     " Sorted alphabetically
-    return {
+    let l:capabilities = {
     \   'textDocument': {
     \       'callHierarchy': {
     \           'dynamicRegistration': v:false,
@@ -692,6 +692,10 @@ function! lsp#default_get_supported_capabilities(server_info) abort
     \       'workspaceFolders': g:lsp_experimental_workspace_folders ? v:true : v:false,
     \   },
     \ }
+    if g:lsp_diagnostics_pull_enabled
+        let l:capabilities['textDocument']['diagnostic'] = { 'dynamicRegistration': v:false }
+    endif
+    return l:capabilities
 endfunction
 
 function! s:ensure_init(buf, server_name, cb) abort
@@ -1022,6 +1026,14 @@ function! s:on_request(server_name, id, request) abort
         call s:send_response(a:server_name, { 'id': a:request['id'], 'result': v:null})
     elseif a:request['method'] ==# 'client/unregisterCapability'
         call s:send_response(a:server_name, { 'id': a:request['id'], 'result': v:null})
+    elseif a:request['method'] ==# 'workspace/diagnostic/refresh'
+        call s:send_response(a:server_name, { 'id': a:request['id'], 'result': v:null})
+        for l:uri in keys(s:servers[a:server_name]['buffers'])
+            let l:refresh_buf = bufnr(lsp#utils#uri_to_path(l:uri))
+            if l:refresh_buf >= 0 && bufloaded(l:refresh_buf)
+                call s:send_document_diagnostic_request(l:refresh_buf, a:server_name)
+            endif
+        endfor
     else
         " TODO: for now comment this out until we figure out a better solution.
         " We need to comment this out so that others outside of vim-lsp can

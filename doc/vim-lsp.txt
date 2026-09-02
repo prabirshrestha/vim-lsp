@@ -39,6 +39,7 @@ CONTENTS                                                  *vim-lsp-contents*
 			     |g:lsp_diagnostics_highlights_insert_mode_enabled|
       g:lsp_diagnostics_highlights_delay
 			     |g:lsp_diagnostics_highlights_delay|
+      g:lsp_diagnostics_pull_enabled        |g:lsp_diagnostics_pull_enabled|
       g:lsp_diagnostics_signs_enabled       |g:lsp_diagnostics_signs_enabled|
       g:lsp_diagnostics_signs_insert_mode_enabled
 			     |g:lsp_diagnostics_signs_insert_mode_enabled|
@@ -633,6 +634,21 @@ g:lsp_diagnostics_highlights_delay	   *g:lsp_diagnostics_highlights_delay*
     Example: >
 	let g:lsp_diagnostics_highlights_delay = 200
 	let g:lsp_diagnostics_highlights_delay = 1000
+
+g:lsp_diagnostics_pull_enabled		       *g:lsp_diagnostics_pull_enabled*
+    Type: |Number|
+    Default: `0`
+
+    Advertise the `textDocument.diagnostic` client capability so that servers
+    supporting pull diagnostics (`textDocument/diagnostic`) enable it. Some
+    servers such as vscode-eslint-language-server deliver diagnostics only via
+    pull when the client declares this capability. vim-lsp sends pull requests
+    automatically whenever a server advertises `diagnosticProvider`,
+    regardless of this option. Requires |g:lsp_diagnostics_enabled| set to 1.
+
+    Example: >
+	let g:lsp_diagnostics_pull_enabled = 1
+	let g:lsp_diagnostics_pull_enabled = 0
 
 g:lsp_diagnostics_signs_enabled
 					      *g:lsp_diagnostics_signs_enabled*
