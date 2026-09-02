@@ -1,0 +1,17 @@
+Describe lsp#default_get_supported_capabilities
+    After each
+        let g:lsp_diagnostics_pull_enabled = 0
+    End
+
+    It should not declare textDocument.diagnostic capability by default
+        let g:lsp_diagnostics_pull_enabled = 0
+        let l:caps = lsp#default_get_supported_capabilities({})
+        Assert False(has_key(l:caps['textDocument'], 'diagnostic'))
+    End
+
+    It should declare textDocument.diagnostic capability when pull diagnostics is enabled
+        let g:lsp_diagnostics_pull_enabled = 1
+        let l:caps = lsp#default_get_supported_capabilities({})
+        Assert Equals(l:caps['textDocument']['diagnostic'], { 'dynamicRegistration': v:false })
+    End
+End

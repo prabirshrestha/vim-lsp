@@ -25,6 +25,7 @@ let g:lsp_diagnostics_float_insert_mode_enabled = get(g:, 'lsp_diagnostics_float
 let g:lsp_diagnostics_highlights_enabled = get(g:, 'lsp_diagnostics_highlights_enabled', lsp#utils#_has_highlights())
 let g:lsp_diagnostics_highlights_insert_mode_enabled = get(g:, 'lsp_diagnostics_highlights_insert_mode_enabled', 1)
 let g:lsp_diagnostics_highlights_delay = get(g:, 'lsp_diagnostics_highlights_delay', 500)
+let g:lsp_diagnostics_pull_enabled = get(g:, 'lsp_diagnostics_pull_enabled', 0)
 let g:lsp_diagnostics_signs_enabled = get(g:, 'lsp_diagnostics_signs_enabled', lsp#utils#_has_signs())
 let g:lsp_diagnostics_signs_insert_mode_enabled = get(g:, 'lsp_diagnostics_signs_insert_mode_enabled', 1)
 let g:lsp_diagnostics_signs_delay = get(g:, 'lsp_diagnostics_signs_delay', 500)
