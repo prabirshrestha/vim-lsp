@@ -507,6 +507,14 @@ g:lsp_diagnostics_enabled                           *g:lsp_diagnostics_enabled*
     Refer to |g:lsp_diagnostics_signs_enabled| to enable signs column.
     Refer to |g:lsp_diagnostics_virtual_text_enabled| to enable virtual text.
 
+    Diagnostics are received via `textDocument/publishDiagnostics`
+    notifications pushed by the server. For servers that advertise
+    `diagnosticProvider` in their capabilities, vim-lsp additionally pulls
+    diagnostics with `textDocument/diagnostic` requests when a document is
+    opened or changed (pull diagnostics, LSP 3.17+). This is required for
+    servers that never push diagnostics, such as the TypeScript 7 language
+    server.
+
     Example: >
 	let g:lsp_diagnostics_enabled = 1
 	let g:lsp_diagnostics_enabled = 0
