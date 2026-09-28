@@ -31,10 +31,9 @@ function! lsp#internal#diagnostics#document_diagnostics_command#do(options) abor
 
     if empty(l:result)
         call lsp#utils#error('No diagnostics results')
-        return
     else
-        call setloclist(0, l:result)
         echo 'Retrieved diagnostics results'
-        botright lopen
     endif
+    call setloclist(0, l:result)
+    botright lwindow
 endfunction
