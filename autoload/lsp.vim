@@ -1259,7 +1259,7 @@ function! s:request_cancel(ctx) abort
     if a:ctx['cancelled'] | return | endif
     let a:ctx['cancelled'] = 1
     if a:ctx['request_id'] <= 0 || a:ctx['done'] | return | endif " we have not made the request yet or request is complete, so nothing to cancel
-    if lsp#get_server_status(a:ctx['server_name']) !=# 'running' | return | endif " if server is not running we cant send the request
+    if lsp#get_server_status(a:ctx['server_name']) !=# 'running' | return | endif " if server is not running we can't send the request
     " send the actual cancel request
     let a:ctx['dispose'] = lsp#callbag#pipe(
         \ lsp#notification(a:ctx['server_name'], {
