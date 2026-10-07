@@ -43,42 +43,42 @@ function! s:handle_signature_help(server, data) abort
     endif
 
     if !empty(a:data['response']['result']) && !empty(a:data['response']['result']['signatures'])
-        " Compare the newly received signatures against the cached (if any)
-        let l:old_entry = get(s:last_signature_help, a:server, {})
-        let l:old_result = get(l:old_entry, 'result', {})
-        let l:old_position = get(l:old_entry, 'position', {})
-        let l:old_signatures = get(l:old_result, 'signatures', [])
-        let l:new_position = a:data['request']['params']['position']
-        let l:new_signatures = a:data['response']['result']['signatures']
-
-        let l:is_same_line = has_key(l:old_position, 'line') && has_key(l:new_position, 'line')
-            \ && l:old_position['line'] ==# l:new_position['line']
-        let l:is_same_call = l:is_same_line && l:old_signatures ==# l:new_signatures
-
-        " If this is still the same signature, try to advance to the next
-        " overload by incrementing the previously active signature index.
-        if l:is_same_call
-            let l:next_signature_index = get(l:old_result, 'activeSignature', 0) + 1
-            if l:next_signature_index < len(l:new_signatures)
-                let a:data['response']['result']['activeSignature'] = l:next_signature_index
-            else
-                let a:data['response']['result']['activeSignature'] = 0
-            endif
-        endif
-
-        " Cache the last signature
-        let s:last_signature_help[a:server] = {
-            \ 'result': a:data['response']['result'],
-            \ 'position': l:new_position,
-            \ }
-
         " Get current signature.
         let l:signatures = get(a:data['response']['result'], 'signatures', [])
         let l:signature_index = get(a:data['response']['result'], 'activeSignature', 0)
+        let l:signature_position = get(a:data['request']['params'], 'position', {})
+
+        " Compare the newly received signatures against the cached (if any)
+        let l:old_entry = get(s:last_signature_help, a:server, {})
+        if !empty(l:old_entry)
+            let l:old_position = l:old_entry['position']
+            let l:old_signatures = l:old_entry['signatures']
+            let l:old_signature_index = l:old_entry['signature_index']
+
+            let l:is_same_signature = l:old_signatures ==# l:signatures
+            let l:is_same_line = l:old_position ==# l:signature_position
+
+            " If this is still the same signature, try to advance to the next
+            " overload by incrementing the previously active signature index.
+            if l:is_same_line && l:is_same_signature
+                let l:signature_index = l:old_signature_index + 1
+                if l:signature_index >= len(l:signatures)
+                    let l:signature_index = 0
+                endif
+            endif
+        endif
+
         let l:signature = get(l:signatures, l:signature_index, {})
         if empty(l:signature)
             return
         endif
+
+        " Cache the last signature
+        let s:last_signature_help[a:server] = {
+            \ 'signatures': l:signatures,
+            \ 'signature_index': l:signature_index,
+            \ 'position': l:signature_position,
+            \ }
 
         " Signature label.
         let l:label = l:signature['label']
