@@ -1,6 +1,9 @@
 " vint: -ProhibitUnusedVariable
 let s:debounce_timer_id = 0
 
+" Keeps track of the last signature help invoked per server
+let s:last_signature_help = {}
+
 function! s:not_supported(what) abort
     return lsp#utils#error(a:what.' not supported for '.&filetype)
 endfunction
@@ -40,6 +43,26 @@ function! s:handle_signature_help(server, data) abort
     endif
 
     if !empty(a:data['response']['result']) && !empty(a:data['response']['result']['signatures'])
+        " Compare the newly received signatures against the cached (if any)
+        let l:old_result = get(s:last_signature_help, a:server, {})
+        let l:old_signatures = get(l:old_result, 'signatures', [])
+        let l:new_signatures = a:data['response']['result']['signatures']
+        let l:is_same_call = l:old_signatures ==# l:new_signatures
+
+        " If this is still the same call, try to advance to the next
+        " overload by incrementing the previously active signature index.
+        if l:is_same_call
+            let l:next_signature_index = get(l:old_result, 'activeSignature', 0) + 1
+            if l:next_signature_index < len(l:new_signatures)
+                let a:data['response']['result']['activeSignature'] = l:next_signature_index
+            else
+                let a:data['response']['result']['activeSignature'] = 0
+            endif
+        endif
+
+        " Cache the last signature
+        let s:last_signature_help[a:server] = a:data['response']['result']
+
         " Get current signature.
         let l:signatures = get(a:data['response']['result'], 'signatures', [])
         let l:signature_index = get(a:data['response']['result'], 'activeSignature', 0)
