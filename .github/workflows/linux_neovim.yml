@@ -9,8 +9,8 @@ on:
       - master
 
 env:
-  VIM_LSP_GO_VERSION: '1.17'
-  VIM_LSP_GOPLS_VERSION: '0.7.3'
+  VIM_LSP_GO_VERSION: '1.23'
+  VIM_LSP_GOPLS_VERSION: '0.17.0'
   VIM_LSP_GOPLS_CACHE_VER: 1
 
 jobs:
