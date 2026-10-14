@@ -271,7 +271,11 @@ function! s:compute_position(size) abort
     let l:pos = screenpos(0, line('.'), col('.'))
     if l:pos.row == 0 && l:pos.col == 0
         " workaround for float position
-        let l:pos = {'curscol': wincol(), 'row': winline()}
+        let l:winpos = win_screenpos(win_getid())
+        let l:pos = {
+            \ 'curscol': l:winpos[1] + wincol() - 1,
+            \ 'row': l:winpos[0] + winline() - 1,
+            \ }
     endif
     let l:pos = [l:pos.row + 1, l:pos.curscol + 1]
     if l:pos[0] + a:size.height > &lines
@@ -282,4 +286,3 @@ function! s:compute_position(size) abort
     endif
     return l:pos
 endfunction
-
