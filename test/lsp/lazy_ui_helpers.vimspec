@@ -1,0 +1,28 @@
+Describe lazy UI helpers
+    It should load helpers on first use and avoid creating buffers merely to close them
+        let l:script = tempname()
+        let l:result = tempname()
+        " The test runner's working directory is the plugin root.
+        let l:root = getcwd()
+        call writefile([
+            \ 'set rtp^=' . fnameescape(l:root),
+            \ 'try',
+            \ '  source ' . fnameescape(l:root . '/test/testfiles/lazy_ui_helpers.vim'),
+            \ 'catch',
+            \ '  call add(v:errors, v:exception . " at " . v:throwpoint)',
+            \ 'endtry',
+            \ 'call writefile(v:errors, ' . string(l:result) . ')',
+            \ 'qa!',
+            \ ], l:script)
+        try
+            let l:mode = has('nvim') ? ' --headless' : ' -es'
+            call system(shellescape(v:progpath) . ' -u NONE -i NONE -n -N'
+                \ . l:mode . ' -S ' . shellescape(l:script))
+            Assert Equals(v:shell_error, 0)
+            Assert Equals(readfile(l:result), [])
+        finally
+            call delete(l:script)
+            call delete(l:result)
+        endtry
+    End
+End
