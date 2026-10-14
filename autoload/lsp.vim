@@ -63,13 +63,19 @@ function! lsp#enable() abort
     call lsp#ui#vim#completion#_setup()
     call lsp#internal#document_highlight#_enable()
     call lsp#internal#diagnostics#_enable()
-    call lsp#internal#document_code_action#signs#_enable()
-    call lsp#internal#semantic#_enable()
+    if g:lsp_document_code_action_signs_enabled
+        call lsp#internal#document_code_action#signs#_enable()
+    endif
+    if g:lsp_semantic_enabled
+        call lsp#internal#semantic#_enable()
+    endif
     call lsp#internal#show_message_request#_enable()
     call lsp#internal#show_message#_enable()
     call lsp#internal#work_done_progress#_enable()
     call lsp#internal#completion#documentation#_enable()
-    call lsp#internal#inlay_hints#_enable()
+    if g:lsp_inlay_hints_enabled
+        call lsp#internal#inlay_hints#_enable()
+    endif
     call s:register_events()
 endfunction
 
@@ -81,8 +87,12 @@ function! lsp#disable() abort
     call lsp#ui#vim#completion#_disable()
     call lsp#internal#document_highlight#_disable()
     call lsp#internal#diagnostics#_disable()
-    call lsp#internal#document_code_action#signs#_disable()
-    call lsp#internal#semantic#_disable()
+    if exists('*lsp#internal#document_code_action#signs#_disable')
+        call lsp#internal#document_code_action#signs#_disable()
+    endif
+    if exists('*lsp#internal#semantic#_disable')
+        call lsp#internal#semantic#_disable()
+    endif
     call lsp#internal#show_message_request#_disable()
     call lsp#internal#show_message#_disable()
     call lsp#internal#work_done_progress#_disable()
