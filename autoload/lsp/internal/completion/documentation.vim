@@ -1,13 +1,12 @@
 " https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_completion
 let s:enabled = 0
 
-let s:FloatingWindow = vital#lsp#import('VS.Vim.Window.FloatingWindow')
-
 function! lsp#internal#completion#documentation#_enable() abort
     " don't even bother registering if the feature is disabled
     if !g:lsp_completion_documentation_enabled | return | endif
 
-    if !s:FloatingWindow.is_available() | return | endif
+    if !has('nvim') && !(exists('*popup_create') && exists('*popup_close')
+        \ && exists('*popup_move') && exists('*popup_getpos')) | return | endif
     if !exists('##CompleteChanged') | return | endif
 
     if s:enabled | return | endif
@@ -161,6 +160,7 @@ function! s:show_floating_window(event, managed_user_data) abort
 endfunction
 
 function! s:close_floating_window(force) abort
+    if !exists('s:doc_win') | return | endif
     " Ignore `CompleteDone` if it occurred by `complete()` because in this case, the popup menu will re-appear immediately.
     let l:ctx = {}
     function! l:ctx.callback(force) abort
@@ -196,6 +196,7 @@ function! s:get_doc_win() abort
         return s:doc_win
     endif
 
+    let s:FloatingWindow = vital#lsp#import('VS.Vim.Window.FloatingWindow')
     let s:Buffer = vital#lsp#import('VS.Vim.Buffer')
 
     let s:doc_win = s:FloatingWindow.new({
