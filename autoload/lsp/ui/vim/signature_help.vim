@@ -1,6 +1,9 @@
 " vint: -ProhibitUnusedVariable
 let s:debounce_timer_id = 0
 
+" Keeps track of the last signature help invoked per server
+let s:last_signature_help = {}
+
 function! s:not_supported(what) abort
     return lsp#utils#error(a:what.' not supported for '.&filetype)
 endfunction
@@ -43,10 +46,39 @@ function! s:handle_signature_help(server, data) abort
         " Get current signature.
         let l:signatures = get(a:data['response']['result'], 'signatures', [])
         let l:signature_index = get(a:data['response']['result'], 'activeSignature', 0)
+        let l:signature_position = get(a:data['request']['params'], 'position', {})
+
+        " Compare the newly received signatures against the cached (if any)
+        let l:old_entry = get(s:last_signature_help, a:server, {})
+        if !empty(l:old_entry)
+            let l:old_position = l:old_entry['position']
+            let l:old_signatures = l:old_entry['signatures']
+            let l:old_signature_index = l:old_entry['signature_index']
+
+            let l:is_same_signature = l:old_signatures ==# l:signatures
+            let l:is_same_line = l:old_position ==# l:signature_position
+
+            " If this is still the same signature, try to advance to the next
+            " overload by incrementing the previously active signature index.
+            if l:is_same_line && l:is_same_signature
+                let l:signature_index = l:old_signature_index + 1
+                if l:signature_index >= len(l:signatures)
+                    let l:signature_index = 0
+                endif
+            endif
+        endif
+
         let l:signature = get(l:signatures, l:signature_index, {})
         if empty(l:signature)
             return
         endif
+
+        " Cache the last signature
+        let s:last_signature_help[a:server] = {
+            \ 'signatures': l:signatures,
+            \ 'signature_index': l:signature_index,
+            \ 'position': l:signature_position,
+            \ }
 
         " Signature label.
         let l:label = l:signature['label']
