@@ -1,12 +1,6 @@
 " internal state for whether it is enabled or not to avoid multiple subscriptions
 let s:enabled = 0
 
-let s:Markdown = vital#lsp#import('VS.Vim.Syntax.Markdown')
-let s:MarkupContent = vital#lsp#import('VS.LSP.MarkupContent')
-let s:FloatingWindow = vital#lsp#import('VS.Vim.Window.FloatingWindow')
-let s:Window = vital#lsp#import('VS.Vim.Window')
-let s:Buffer = vital#lsp#import('VS.Vim.Buffer')
-
 function! lsp#internal#diagnostics#float#_enable() abort
     " don't even bother registering if the feature is disabled
     if !lsp#ui#vim#output#float_supported() | return | endif
@@ -69,8 +63,8 @@ function! lsp#internal#diagnostics#float#_disable() abort
 endfunction
 
 function! s:show_float(diagnostic) abort
-    let l:doc_win = s:get_doc_win()
     if !empty(a:diagnostic) && has_key(a:diagnostic, 'message')
+        let l:doc_win = s:get_doc_win()
         " Update contents. 
         call deletebufline(l:doc_win.get_bufnr(), 1, '$')
         call setbufline(l:doc_win.get_bufnr(), 1, lsp#utils#_split_by_eol(a:diagnostic['message']))
@@ -106,14 +100,19 @@ function! s:show_float(diagnostic) abort
 endfunction
 
 function! s:hide_float() abort
-    let l:doc_win = s:get_doc_win()
-    call l:doc_win.close()
+    if exists('s:doc_win')
+        call s:doc_win.close()
+    endif
 endfunction
 
 function! s:get_doc_win() abort
     if exists('s:doc_win')
         return s:doc_win
     endif
+
+    " Load window helpers only when there is a diagnostic to display.
+    let s:FloatingWindow = vital#lsp#import('VS.Vim.Window.FloatingWindow')
+    let s:Buffer = vital#lsp#import('VS.Vim.Buffer')
 
     let s:doc_win = s:FloatingWindow.new({
     \   'on_opened': { -> execute('doautocmd <nomodeline> User lsp_float_opened') },

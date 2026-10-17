@@ -25,9 +25,6 @@ if !hlexists('LspHintText')
     highlight link LspHintText Normal
 endif
 
-" imports
-let s:Buffer = vital#lsp#import('VS.Vim.Buffer')
-
 function! lsp#internal#diagnostics#signs#_enable() abort
     " don't even bother registering if the feature is disabled
     if !lsp#utils#_has_signs() | return | endif
@@ -130,6 +127,9 @@ function! s:set_signs(params) abort
 endfunction
 
 function! s:place_signs(server, diagnostics_response, bufnr) abort
+    if !exists('s:Buffer')
+        let s:Buffer = vital#lsp#import('VS.Vim.Buffer')
+    endif
     let l:linecount = s:Buffer.get_line_count(a:bufnr)
     for l:item in lsp#utils#iterable(a:diagnostics_response['params']['diagnostics'])
         let l:line = lsp#utils#position#lsp_line_to_vim(a:bufnr, l:item['range']['start'])
