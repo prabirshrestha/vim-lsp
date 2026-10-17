@@ -1683,7 +1683,7 @@ This method is mainly used to generate 'root_uri' when registering server.
 	* If there is not directory with the specific files or directories
 	  found, the method will return an empty string.
 
-lsp#enable_diagnostics_for_buffer()          *lsp#enable_diagnostic_for_buffer()*
+lsp#enable_diagnostics_for_buffer()         *lsp#enable_diagnostics_for_buffer()*
 
 Re-enable diagnostics for the specified buffer. By default diagnostics are
 enabled for all buffers.
@@ -1698,8 +1698,8 @@ Disable diagnostics for the specified buffer. By default diagnostics are
 enabled for all buffers.
 
     Example: >
-	:call lsp#enable_diagnostics_for_buffer()
-	:call lsp#enable_diagnostics_for_buffer(bufnr('%'))
+	:call lsp#disable_diagnostics_for_buffer()
+	:call lsp#disable_diagnostics_for_buffer(bufnr('%'))
 
 Diagnostics can be disabled for buffer to temporarily avoid conflicts with
 other plugins.
