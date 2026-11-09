@@ -327,19 +327,46 @@ endfunction
 " Convert a byte-index (1-based) to a character-index (0-based)
 " This function requires a buffer specifier (expr, see :help bufname()),
 " a line number (lnum, 1-based), and a byte-index (char, 1-based).
-function! lsp#utils#to_char(expr, lnum, col) abort
-    let l:lines = getbufline(a:expr, a:lnum)
-    if l:lines == []
-        if type(a:expr) != v:t_string || !filereadable(a:expr)
-            " invalid a:expr
-            return a:col - 1
+if exists('*utf16idx')
+    function! lsp#utils#to_char(expr, lnum, col) abort
+        let l:lines = getbufline(a:expr, a:lnum)
+        if l:lines == []
+            if type(a:expr) != v:t_string || !filereadable(a:expr)
+                " invalid a:expr
+                return a:col - 1
+            endif
+            " a:expr is a file that is not yet loaded as a buffer
+            let l:lines = readfile(a:expr, '', a:lnum)
         endif
-        " a:expr is a file that is not yet loaded as a buffer
-        let l:lines = readfile(a:expr, '', a:lnum)
-    endif
-    let l:linestr = l:lines[-1]
-    return strchars(strpart(l:linestr, 0, a:col - 1))
-endfunction
+        let l:linestr = l:lines[-1]
+        let l:byteidx = a:col - 1
+        if l:byteidx >= strlen(l:linestr)
+            return utf16idx(l:linestr, strlen(l:linestr))
+        endif
+        let l:utf16 = utf16idx(l:linestr, l:byteidx)
+        " If byteidx is in the middle of a multi-byte character, round up
+        " to match the old strchars(strpart()) behavior
+        let l:round_trip = byteidx(l:linestr, l:utf16, v:true)
+        if l:round_trip >= 0 && l:round_trip < l:byteidx
+            return l:utf16 + 1
+        endif
+        return l:utf16
+    endfunction
+else
+    function! lsp#utils#to_char(expr, lnum, col) abort
+        let l:lines = getbufline(a:expr, a:lnum)
+        if l:lines == []
+            if type(a:expr) != v:t_string || !filereadable(a:expr)
+                " invalid a:expr
+                return a:col - 1
+            endif
+            " a:expr is a file that is not yet loaded as a buffer
+            let l:lines = readfile(a:expr, '', a:lnum)
+        endif
+        let l:linestr = l:lines[-1]
+        return strchars(strpart(l:linestr, 0, a:col - 1))
+    endfunction
+endif
 
 function! s:get_base64_alphabet() abort
     let l:alphabet = []
