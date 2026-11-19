@@ -1,0 +1,81 @@
+function! s:reply(bufnr) abort
+    return {
+        \ 'request': {'params': {'textDocument': {'uri': lsp#utils#get_buffer_uri(a:bufnr)}}},
+        \ 'response': {'result': [{
+        \   'range': {'start': {'line': 0, 'character': 0}, 'end': {'line': 0, 'character': 3}},
+        \   'newText': 'FORMATTED',
+        \ }]},
+        \ }
+endfunction
+
+function! s:ctx() abort
+    return {'bufnr': bufnr('%'), 'lines': getline(1, '$')}
+endfunction
+
+Describe lsp#internal#document_formatting
+
+    Before all
+        let s:scope = themis#helper('scope')
+        runtime autoload/lsp/internal/document_formatting.vim
+        runtime autoload/lsp/internal/document_range_formatting.vim
+        let s:paths = [
+            \ 'autoload/lsp/internal/document_formatting.vim',
+            \ 'autoload/lsp/internal/document_range_formatting.vim',
+            \ ]
+    End
+
+    Before each
+        enew!
+        call setline(1, 'old user work')
+        execute 'file' fnameescape(tempname() . '-format.txt')
+    End
+
+    After each
+        %bwipeout!
+    End
+
+    It ignores a reply when the buffer changed after the request
+        for l:path in s:paths
+            let l:funcs = s:scope.funcs(l:path)
+            call setline(1, 'old user work')
+            let l:ctx = s:ctx()
+            call setline(1, 'new user work')
+            call l:funcs.format_next(s:reply(bufnr('%')), l:ctx)
+            Assert Equals(getline(1), 'new user work', l:path)
+        endfor
+    End
+
+    It reports a reply it ignored
+        for l:path in s:paths
+            let l:funcs = s:scope.funcs(l:path)
+            call setline(1, 'old user work')
+            let l:ctx = s:ctx()
+            call setline(1, 'new user work')
+            call l:funcs.format_next(s:reply(bufnr('%')), l:ctx)
+            Assert Match(execute('call l:funcs.format_complete(l:ctx)'), 'skipped', l:path)
+        endfor
+    End
+
+    It applies a reply when the buffer was only saved
+        for l:path in s:paths
+            let l:funcs = s:scope.funcs(l:path)
+            call setline(1, 'old user work')
+            let l:ctx = s:ctx()
+            silent write!
+            call l:funcs.format_next(s:reply(bufnr('%')), l:ctx)
+            Assert Equals(getline(1), 'FORMATTED user work', l:path)
+        endfor
+    End
+
+    It applies a reply when the buffer is unchanged
+        for l:path in s:paths
+            let l:funcs = s:scope.funcs(l:path)
+            call setline(1, 'old user work')
+            let l:ctx = s:ctx()
+            call l:funcs.format_next(s:reply(bufnr('%')), l:ctx)
+            Assert Equals(getline(1), 'FORMATTED user work', l:path)
+            Assert Match(execute('call l:funcs.format_complete(l:ctx)'), 'complete', l:path)
+        endfor
+    End
+
+End
