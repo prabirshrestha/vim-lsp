@@ -21,7 +21,7 @@ Describe lsp#utils#text_edit
     End
 
     Before each
-        enew!
+        %bwipeout!
     End
 
     Describe lsp#utils#text_edit#apply_text_edits
