@@ -28,6 +28,7 @@ function! lsp#internal#document_range_formatting#format(options) abort
     let l:start_char = lsp#utils#to_char('%', l:start_lnum, l:start_col)
     let l:end_char = lsp#utils#to_char('%', l:end_lnum, l:end_col)
 
+    let l:ctx = {'bufnr': a:options['bufnr'], 'lines': getbufline(a:options['bufnr'], 1, '$')}
     let l:request = {
         \ 'method': 'textDocument/rangeFormatting',
         \ 'params': {
@@ -62,8 +63,8 @@ function! lsp#internal#document_range_formatting#format(options) abort
                 \     extend(opt, {'timedout': 1}),
                 \   ]},
                 \ })
-            call s:format_next(l:x[0])
-            call s:format_complete()
+            call s:format_next(l:x[0], l:ctx)
+            call s:format_complete(l:ctx)
         catch
             if get(l:req['ctx'], 'cancelled', 0)
                 call s:format_error('canceld')
@@ -79,16 +80,21 @@ function! lsp#internal#document_range_formatting#format(options) abort
             \   lsp#callbag#filter({x->has_key(x, 'command')}),
             \ )),
             \ lsp#callbag#subscribe({
-            \   'next':{x->s:format_next(x)},
+            \   'next':{x->s:format_next(x, l:ctx)},
             \   'error': {x->s:format_error(e)},
-            \   'complete': {->s:format_complete()},
+            \   'complete': {->s:format_complete(l:ctx)},
             \ }),
             \ )
     endif
 endfunction
 
-function! s:format_next(x) abort
+function! s:format_next(x, ctx) abort
     if lsp#client#is_error(a:x['response']) | return | endif
+    " the buffer changed while the server was formatting; its edits target stale text
+    if getbufline(a:ctx['bufnr'], 1, '$') !=# a:ctx['lines']
+        let a:ctx['skipped'] = 1
+        return
+    endif
     call lsp#utils#text_edit#apply_text_edits(a:x['request']['params']['textDocument']['uri'], a:x['response']['result'])
 endfunction
 
@@ -97,7 +103,11 @@ function! s:format_error(e) abort
     call lsp#utils#error('Formatting Document Range Failed.' . (type(a:e) == type('') ? a:e : ''))
 endfunction
 
-function! s:format_complete() abort
+function! s:format_complete(ctx) abort
+    if get(a:ctx, 'skipped', 0)
+        redraw | call lsp#utils#warning('Formatting Document Range skipped: buffer changed while formatting')
+        return
+    endif
     redraw | echo 'Formatting Document Range complete'
 endfunction
 
