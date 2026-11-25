@@ -1,0 +1,23 @@
+Describe integration#go#server_pid
+    Before
+        %bwipeout!
+        if lsp#test#hasproject('go')
+            call lsp#test#openproject('go', {})
+        endif
+    End
+
+    After all
+        %bwipeout!
+        call lsp#test#closeproject('go')
+    End
+
+    It should return the process id of a running server
+        if !lsp#test#hasproject('go')
+            Skip go project not supported
+        endif
+
+        Assert Equals(lsp#get_server_status('gopls'), 'running')
+        Assert True(lsp#get_server_pid('gopls') > 0)
+    End
+
+End

@@ -1,0 +1,16 @@
+Describe lsp#get_server_pid
+
+    It should return 0 for an unknown server
+        Assert Equals(lsp#get_server_pid('unknown server'), 0)
+    End
+
+    It should return 0 for a server that has not started
+        call lsp#register_server({
+            \ 'name': 'pid test server',
+            \ 'cmd': [v:progpath, '-Nu', 'NONE', '-es'],
+            \ 'allowlist': [],
+            \ })
+        Assert Equals(lsp#get_server_pid('pid test server'), 0)
+    End
+
+End

@@ -477,6 +477,21 @@ function! lsp#client#get_last_request_id(client_id) abort
     return s:lsp_get_last_request_id(a:client_id)
 endfunction
 
+" Returns the process id of the client's server, or 0 when the client is
+" not running or is connected over TCP.
+function! lsp#client#get_pid(client_id) abort
+    let l:ctx = get(s:clients, a:client_id, {})
+    if empty(l:ctx)
+        return 0
+    endif
+    if has_key(l:ctx, 'job')
+        " native lsp client
+        let l:info = job_info(l:ctx['job'])
+        return l:info['status'] ==# 'run' ? l:info['process'] : 0
+    endif
+    return lsp#utils#job#pid(a:client_id)
+endfunction
+
 function! lsp#client#is_error(obj_or_response) abort
     return s:lsp_is_error(a:obj_or_response)
 endfunction
