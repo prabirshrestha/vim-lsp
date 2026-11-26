@@ -158,6 +158,13 @@ endfunction
 " Returns the current status of all servers (if called with no arguments) or
 " the given server (if given an argument). Can be one of "unknown server",
 " "exited", "starting", "failed", "running", "not running"
+" Returns the process id of the given server, or 0 when it is not running
+" or is connected over TCP.
+function! lsp#get_server_pid(server_name) abort
+    let l:lsp_id = get(get(s:servers, a:server_name, {}), 'lsp_id', 0)
+    return l:lsp_id > 0 ? lsp#client#get_pid(l:lsp_id) : 0
+endfunction
+
 function! lsp#get_server_status(...) abort
     if a:0 == 0
         let l:strs = map(keys(s:servers), {k, v -> v . ': ' . s:server_status(v)})

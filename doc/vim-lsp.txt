@@ -108,6 +108,7 @@ CONTENTS                                                  *vim-lsp-contents*
       lsp#register_command                  |lsp#register_command()|
       lsp#stream			    |lsp#stream()|
       lsp#stop_server                       |lsp#stop_server()|
+      lsp#get_server_pid                    |lsp#get_server_pid()|
       lsp#utils#find_nearest_parent_file_directory()
                               |lsp#utils#find_nearest_parent_file_directory()|
       lsp#enable_diagnostics_for_buffer() |lsp#enable_diagnostics_for_buffer()|
@@ -1634,6 +1635,16 @@ Get the status of a server.
 <
     Returns one of "unknown server", " "exited", "starting", "failed",
     "running", "not running".
+
+lsp#get_server_pid({name-of-server})                  *lsp#get_server_pid()*
+
+Get the process id of a server.
+
+    Example: >
+  echo lsp#get_server_pid('name-of-server')
+<
+    Returns 0 when the server is not registered, is not running, or is
+    connected over TCP.
 
 
 lsp#utils#position#lsp_to_vim({expr}, {position})  *lsp#utils#position#lsp_to_vim()*

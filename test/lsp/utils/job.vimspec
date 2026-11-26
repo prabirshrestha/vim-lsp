@@ -1,0 +1,45 @@
+Describe lsp#utils#job
+
+    Describe lsp#utils#job#pid
+        It should return the process id of a running job
+            " Vim and Neovim in Ex mode wait for input on the job's stdin.
+            let l:jobid = lsp#utils#job#start([v:progpath, '-Nu', 'NONE', '-es'], {})
+            try
+                Assert True(lsp#utils#job#pid(l:jobid) > 0)
+            finally
+                call lsp#utils#job#stop(l:jobid)
+            endtry
+        End
+
+        It should return 0 for an unknown job
+            Assert Equals(lsp#utils#job#pid(-1), 0)
+        End
+
+        It should return 0 for a TCP connection
+            if !exists('*ch_open') || !executable('python3')
+                Skip needs Vim channels and python3
+            endif
+            let l:portfile = tempname()
+            let l:listener = job_start(['python3', '-c', join([
+                \ 'import socket, sys',
+                \ 's = socket.socket()',
+                \ 's.bind(("127.0.0.1", 0))',
+                \ 's.listen(1)',
+                \ 'open(sys.argv[1], "w").write(str(s.getsockname()[1]))',
+                \ 's.accept()[0].recv(1)',
+                \ ], '; '), l:portfile])
+            try
+                call lsp#test#wait(5000, {-> filereadable(l:portfile) && !empty(join(readfile(l:portfile, '', 1)))})
+                let l:jobid = lsp#utils#job#connect('127.0.0.1:' . readfile(l:portfile)[0], {})
+                try
+                    Assert Equals(lsp#utils#job#pid(l:jobid), 0)
+                finally
+                    call lsp#utils#job#stop(l:jobid)
+                endtry
+            finally
+                call job_stop(l:listener)
+            endtry
+        End
+    End
+
+End
