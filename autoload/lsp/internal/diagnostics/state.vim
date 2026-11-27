@@ -19,6 +19,10 @@
 " buffer state is removed when server exits.
 " TODO: reset buffer state when server initializes. ignoring for now for perf.
 let s:diagnostics_state = {}
+" push and pull diagnostics are kept apart since a server may use both for the
+" same document (rust-analyzer: cargo check via push, its own via pull)
+let s:push_diagnostics_state = {}
+let s:pull_diagnostics_state = {}
 let s:diagnostic_result_ids = {}
 
 " internal state for whether it is enabled or not to avoid multiple subscriptions
@@ -74,6 +78,8 @@ endfunction
 
 function! lsp#internal#diagnostics#state#_reset() abort
     let s:diagnostics_state = {}
+    let s:push_diagnostics_state = {}
+    let s:pull_diagnostics_state = {}
     let s:diagnostic_result_ids = {}
     let s:diagnostics_disabled_buffers = {}
 endfunction
@@ -100,11 +106,35 @@ endfunction
 function! s:on_text_documentation_publish_diagnostics(server, response) abort
     if lsp#client#is_error(a:response) | return | endif
     let l:normalized_uri = lsp#utils#normalize_uri(a:response['params']['uri'])
-    if !has_key(s:diagnostics_state, l:normalized_uri)
-        let s:diagnostics_state[l:normalized_uri] = {}
+    if !has_key(s:push_diagnostics_state, l:normalized_uri)
+        let s:push_diagnostics_state[l:normalized_uri] = {}
     endif
-    let s:diagnostics_state[l:normalized_uri][a:server] = a:response
+    let s:push_diagnostics_state[l:normalized_uri][a:server] = a:response
+    call s:merge_diagnostics(a:server, l:normalized_uri)
     call s:notify_diagnostics_update(a:server, l:normalized_uri)
+endfunction
+
+" rebuild s:diagnostics_state of the server and uri from the push and pull state
+function! s:merge_diagnostics(server, normalized_uri) abort
+    let l:push = get(get(s:push_diagnostics_state, a:normalized_uri, {}), a:server, {})
+    let l:pull = get(get(s:pull_diagnostics_state, a:normalized_uri, {}), a:server, {})
+    if !has_key(s:diagnostics_state, a:normalized_uri)
+        let s:diagnostics_state[a:normalized_uri] = {}
+    endif
+    if empty(l:pull)
+        let s:diagnostics_state[a:normalized_uri][a:server] = l:push
+    elseif empty(l:push)
+        let s:diagnostics_state[a:normalized_uri][a:server] = l:pull
+    else
+        let s:diagnostics_state[a:normalized_uri][a:server] = {
+            \ 'method': 'textDocument/publishDiagnostics',
+            \ 'params': {
+            \   'uri': l:push['params']['uri'],
+            \   'diagnostics': lsp#utils#iterable(l:push['params']['diagnostics'])
+            \       + lsp#utils#iterable(l:pull['params']['diagnostics']),
+            \ },
+            \ }
+    endif
 endfunction
 
 function! lsp#internal#diagnostics#state#_get_previous_result_id(uri, server, identifier) abort
@@ -139,16 +169,17 @@ function! lsp#internal#diagnostics#state#_handle_text_document_diagnostic(server
         return
     endif
 
-    if !has_key(s:diagnostics_state, l:normalized_uri)
-        let s:diagnostics_state[l:normalized_uri] = {}
+    if !has_key(s:pull_diagnostics_state, l:normalized_uri)
+        let s:pull_diagnostics_state[l:normalized_uri] = {}
     endif
-    let s:diagnostics_state[l:normalized_uri][a:server] = {
+    let s:pull_diagnostics_state[l:normalized_uri][a:server] = {
         \ 'method': 'textDocument/publishDiagnostics',
         \ 'params': {
         \   'uri': l:uri,
         \   'diagnostics': get(l:result, 'items', []),
         \ },
         \ }
+    call s:merge_diagnostics(a:server, l:normalized_uri)
     call s:notify_diagnostics_update(a:server, l:normalized_uri)
 endfunction
 
@@ -158,6 +189,11 @@ function! s:on_exit(response) abort
     for l:value in values(s:diagnostics_state)
         if has_key(l:value, l:server)
             let l:notify = 1
+            call remove(l:value, l:server)
+        endif
+    endfor
+    for l:value in values(s:push_diagnostics_state) + values(s:pull_diagnostics_state)
+        if has_key(l:value, l:server)
             call remove(l:value, l:server)
         endif
     endfor
